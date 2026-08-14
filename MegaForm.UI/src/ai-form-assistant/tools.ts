@@ -460,27 +460,61 @@ export async function dispatchToolCall(call: ToolCall): Promise<any> {
  *   - Keep the small summary fields (slug, title, summary) intact
  */
 const MAX_TOOL_RESULT_CHARS = 3000;
+const MAX_STRING_CHARS = 600;
 
-export function serializeToolResult(value: any): string {
+/**
+ * [KbFetchBudget v20260812] Tools whose ENTIRE POINT is to deliver one long document, and
+ * which the system prompt orders the model to call before acting.
+ *
+ * The budget above is right for browsing (a list of forms, a table's columns) and wrong for
+ * these three, in a way that silently disabled both features built on them. Measured on the
+ * 178 form_template entries shipped in ai-knowledge-seed.json, the `examples` field — the
+ * `replace_form_schema` op the prompt says to "apply VERBATIM" — is at minimum 1007 characters
+ * and 2009 at the median. NOT ONE fits in 600. So every such op reached the model cut mid-JSON,
+ * and the "start from a production template" shortcut could never work as written. The design
+ * contracts behind get_template_guide (7-9 KB of markdown) were cut the same way, which means
+ * the guide the prompt calls "authoritative" arrived as its first paragraph.
+ *
+ * These are single-document, deliberately-slug-addressed fetches, so a larger budget costs one
+ * call, not a chain. Everything else keeps the old ceiling.
+ */
+// Sized from the payloads these actually return, not from a round number. Measured over the 68
+// templates published to the gallery, a get_knowledge response (body + examples for one
+// form_template entry) runs 1.0 KB min / 12.0 KB median / 39.9 KB max — the tail is real schema,
+// 34-field forms whose country/nationality Selects carry ~950 characters of options each, so it
+// cannot be trimmed without shipping a different form. Design guides top out at 11.3 KB.
+// 48000 clears the worst case with headroom; a single deliberate slug fetch is allowed to be big,
+// which is the whole point of separating it from the 3000-char browsing budget.
+const LARGE_RESULT_TOOLS: Record<string, number> = {
+  get_knowledge: 48000,
+  get_template_guide: 48000,
+  get_prompt_recipe: 48000,
+};
+
+export function serializeToolResult(value: any, toolName?: string): string {
+  const budget = (toolName && LARGE_RESULT_TOOLS[toolName]) || MAX_TOOL_RESULT_CHARS;
   try {
-    const slim = slimDeep(value);
+    // At the larger budget the per-string trim must lift too, or the cap change achieves
+    // nothing: the truncation that broke these payloads happened inside slimDeep, before the
+    // total was ever measured.
+    const slim = slimDeep(value, budget === MAX_TOOL_RESULT_CHARS ? MAX_STRING_CHARS : budget);
     let s = JSON.stringify(slim);
-    if (s.length > MAX_TOOL_RESULT_CHARS) {
-      s = s.slice(0, MAX_TOOL_RESULT_CHARS) + '…(truncated; ask for a more specific slug)"}';
+    if (s.length > budget) {
+      s = s.slice(0, budget) + '…(truncated; ask for a more specific slug)"}';
     }
     return s;
   } catch { return String(value); }
 }
 
-function slimDeep(v: any): any {
+function slimDeep(v: any, maxString: number = MAX_STRING_CHARS): any {
   if (v == null) return v;
-  if (Array.isArray(v)) return v.slice(0, 50).map(slimDeep);
+  if (Array.isArray(v)) return v.slice(0, 50).map((x) => slimDeep(x, maxString));
   if (typeof v === 'string') {
-    return v.length > 600 ? v.slice(0, 600) + '…(truncated)' : v;
+    return v.length > maxString ? v.slice(0, maxString) + '…(truncated)' : v;
   }
   if (typeof v === 'object') {
     const out: any = {};
-    for (const k of Object.keys(v)) out[k] = slimDeep(v[k]);
+    for (const k of Object.keys(v)) out[k] = slimDeep(v[k], maxString);
     return out;
   }
   return v;

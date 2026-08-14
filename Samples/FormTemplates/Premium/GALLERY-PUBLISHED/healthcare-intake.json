@@ -1,0 +1,135 @@
+{
+  "title": "Wellness Intake",
+  "slug": "healthcare-intake",
+  "description": "Wellness Intake premium wave form converted from mock route /forms/healthcare-intake.",
+  "category": "Premium",
+  "theme": "custom",
+  "fields": [
+    {
+      "key": "full_name",
+      "type": "Text",
+      "label": "Full name",
+      "placeholder": "Your name",
+      "required": true
+    },
+    {
+      "key": "email_address",
+      "type": "Email",
+      "label": "Email address",
+      "placeholder": "you@example.com",
+      "required": true
+    },
+    {
+      "key": "date_of_birth",
+      "type": "Date",
+      "label": "Date of birth",
+      "required": false
+    },
+    {
+      "key": "preferred_appointment",
+      "type": "Select",
+      "label": "Preferred appointment",
+      "placeholder": "Choose time",
+      "required": false,
+      "options": [
+        {
+          "0": "Morning",
+          "1": "Afternoon",
+          "2": "Evening",
+          "value": "morning",
+          "label": "Morning"
+        },
+        {
+          "0": "Morning",
+          "1": "Afternoon",
+          "2": "Evening",
+          "value": 1,
+          "label": "Afternoon"
+        },
+        {
+          "0": "Morning",
+          "1": "Afternoon",
+          "2": "Evening",
+          "value": 2,
+          "label": "Evening"
+        }
+      ]
+    },
+    {
+      "key": "primary_focus",
+      "type": "Select",
+      "label": "Primary focus",
+      "placeholder": "Choose focus",
+      "required": false,
+      "options": [
+        {
+          "0": "Stress & sleep",
+          "1": "Movement",
+          "2": "Nutrition",
+          "3": "General wellbeing",
+          "value": "stress_sleep",
+          "label": "Stress & sleep"
+        },
+        {
+          "0": "Stress & sleep",
+          "1": "Movement",
+          "2": "Nutrition",
+          "3": "General wellbeing",
+          "value": 1,
+          "label": "Movement"
+        },
+        {
+          "0": "Stress & sleep",
+          "1": "Movement",
+          "2": "Nutrition",
+          "3": "General wellbeing",
+          "value": 2,
+          "label": "Nutrition"
+        },
+        {
+          "0": "Stress & sleep",
+          "1": "Movement",
+          "2": "Nutrition",
+          "3": "General wellbeing",
+          "value": 3,
+          "label": "General wellbeing"
+        }
+      ]
+    },
+    {
+      "key": "emergency_contact",
+      "type": "Text",
+      "label": "Emergency contact",
+      "placeholder": "Name and phone",
+      "required": false
+    },
+    {
+      "key": "support_notes",
+      "type": "Textarea",
+      "label": "What would you like support with?",
+      "placeholder": "Share only what feels useful...",
+      "required": false
+    }
+  ],
+  "settings": {
+    "theme": "custom",
+    "customHtml": "\n<div class=\"mfp-mock11 mfp-premium-wave\" style=\"--pw-accent:#39736d;--pw-soft:#98c8bf;--pw-hero:url('/DesktopModules/MegaForm/Assets/img/mock/rose-wellness-hero.png')\">\n  <main class=\"pw-main\">\n    <section class=\"pw-shell\">\n      <aside class=\"pw-hero\"><div class=\"pw-brand\"><i class=\"fa-solid fa-wand-magic-sparkles\"></i><span>AURA HEALTH</span></div><div class=\"pw-hero-copy\"><p>Private care</p><h1>Wellness intake</h1><span>A calm first step toward a more considered care plan, prepared around your needs.</span></div><div class=\"pw-wave\"></div></aside>\n      <section class=\"pw-form\"><div class=\"pw-oval\"></div><header><p>Private care</p><h2>Wellness intake</h2><span>A calm first step toward a more considered care plan, prepared around your needs.</span><b>01 / of 01</b></header>\n        <div class=\"pw-section\"><i></i><span>Your wellbeing</span><em></em></div>\n        <div class=\"pw-grid\"><label class=\"pw-field \"><span>Full name *</span>{{field:full_name}}</label>\n        <label class=\"pw-field \"><span>Email address *</span>{{field:email_address}}</label>\n        <label class=\"pw-field \"><span>Date of birth</span>{{field:date_of_birth}}</label>\n        <label class=\"pw-field \"><span>Preferred appointment</span>{{field:preferred_appointment}}</label>\n        <label class=\"pw-field \"><span>Primary focus</span>{{field:primary_focus}}</label>\n        <label class=\"pw-field \"><span>Emergency contact</span>{{field:emergency_contact}}</label>\n        <label class=\"pw-field pw-span\"><span>What would you like support with?</span>{{field:support_notes}}</label></div>\n        <footer><span>Required fields are marked with an asterisk.<br>Your information stays private.</span><button type=\"submit\">Continue <i class=\"fa-solid fa-arrow-right\"></i></button></footer>\n      </section>\n    </section>\n  </main>\n</div>",
+    "customCss": "@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css');\n\n.mfp-mock11.mfp-mock11{position:relative!important;left:50%!important;right:50%!important;width:100vw!important;max-width:100vw!important;margin-left:-50vw!important;margin-right:-50vw!important}\n.mfp-mock11 .mf-field-group{margin:0!important;min-width:0!important;width:100%!important}\n.mfp-mock11 .mf-field-label{display:none!important}\n.mfp-mock11 label{line-height:1.2!important}\n.mfp-mock11 input[type='text'],.mfp-mock11 input[type='email'],.mfp-mock11 input[type='tel'],.mfp-mock11 input[type='number'],.mfp-mock11 input[type='date'],.mfp-mock11 select,.mfp-mock11 textarea,.mfp-mock11 .mf-input,.mfp-mock11 .mf-select,.mfp-mock11 .mf-textarea{box-sizing:border-box!important;width:100%!important;max-width:none!important;margin:0!important;box-shadow:none!important;outline:0!important;line-height:1.2!important}\n.mfp-mock11 .mf-option-group{flex-direction:row!important}\n.mfp-mock11 .mf-field-error:empty{display:none!important}\n.mfp-mock11 button[type='submit']{appearance:none;-webkit-appearance:none;cursor:pointer}\n\n.mfp-premium-wave{background:#f4f1ea!important;color:#0f172a!important;font-family:Inter,Geist,system-ui,sans-serif!important;width:100%!important;max-width:none!important;padding:32px 18px!important}\n.mfp-premium-wave *{box-sizing:border-box}\n.mfp-premium-wave .pw-main{min-height:720px;display:grid;place-items:center}\n.mfp-premium-wave .pw-shell{display:grid;grid-template-columns:390px minmax(0,1fr);width:min(100%,1152px);min-height:680px;background:#fff;box-shadow:0 28px 80px rgba(15,23,42,.16);overflow:hidden}\n.mfp-premium-wave .pw-hero{position:relative;min-height:680px;display:flex;flex-direction:column;justify-content:space-between;padding:40px;color:#fff;background-image:linear-gradient(180deg,rgba(15,23,42,.18),rgba(15,23,42,.62)),var(--pw-hero);background-position:center;background-size:cover;overflow:hidden}\n.mfp-premium-wave .pw-brand{display:inline-flex;align-items:center;gap:9px;text-transform:uppercase;letter-spacing:.18em;font-size:11px;font-weight:800}\n.mfp-premium-wave .pw-brand i{display:grid;place-items:center;width:28px;height:28px;border-radius:999px;background:rgba(255,255,255,.18);font-size:12px}\n.mfp-premium-wave .pw-hero-copy{position:relative;z-index:2;margin-top:auto;margin-bottom:58px}\n.mfp-premium-wave .pw-hero-copy p{margin:0 0 16px!important;text-transform:uppercase;letter-spacing:.24em!important;font-size:12px!important;font-weight:700!important;color:rgba(255,255,255,.7)!important;line-height:16px!important}\n.mfp-premium-wave .pw-hero-copy h1{margin:0!important;color:#fff!important;font-family:ui-serif,Georgia,Cambria,'Times New Roman',Times,serif!important;font-size:48px!important;line-height:49.92px!important;font-weight:600!important;letter-spacing:0!important;text-wrap:balance}\n.mfp-premium-wave .pw-hero-copy span{display:block;margin-top:20px;max-width:300px;color:rgba(255,255,255,.75)!important;font-size:15px!important;line-height:28px!important;font-weight:400!important}\n.mfp-premium-wave .pw-wave{position:absolute;left:-70px;right:-70px;bottom:-92px;height:190px;background:#fff;clip-path:ellipse(70% 48% at 42% 100%)}\n.mfp-premium-wave .pw-form{position:relative;padding:48px 64px;overflow:hidden;background:#fff}\n.mfp-premium-wave .pw-oval{position:absolute;right:-110px;top:-96px;width:260px;height:260px;border-radius:999px;background:var(--pw-soft);opacity:.1}\n.mfp-premium-wave .pw-form header{position:relative;border-bottom:1px solid #e2e8f0;padding-bottom:28px;margin-bottom:30px}\n.mfp-premium-wave .pw-form header p{margin:0 0 8px!important;color:var(--pw-accent)!important;text-transform:uppercase;letter-spacing:.2em!important;font-size:12px!important;font-weight:700!important;line-height:16px!important}\n.mfp-premium-wave .pw-form header h2{margin:0!important;color:#0f172a!important;font-family:ui-serif,Georgia,Cambria,'Times New Roman',Times,serif!important;font-size:48px!important;line-height:60px!important;font-weight:600!important;letter-spacing:0!important}\n.mfp-premium-wave .pw-form header span{display:block;margin-top:12px;max-width:560px;color:#64748b!important;font-size:14px!important;line-height:24px!important;font-weight:400!important}\n.mfp-premium-wave .pw-form header b{position:absolute;right:0;top:5px;color:#94a3b8;font-size:12px;letter-spacing:0;font-weight:400}\n.mfp-premium-wave .pw-section{display:flex;align-items:center;gap:10px;margin:0 0 22px}\n.mfp-premium-wave .pw-section i{width:9px;height:9px;border-radius:999px;background:var(--pw-accent)}\n.mfp-premium-wave .pw-section span{color:#334155!important;text-transform:uppercase;letter-spacing:.16em!important;font-size:12px!important;font-weight:700!important;line-height:16px!important}\n.mfp-premium-wave .pw-section em{height:1px;flex:1;background:#e2e8f0}\n.mfp-premium-wave .pw-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}\n.mfp-premium-wave .pw-span{grid-column:1/-1}\n.mfp-premium-wave .pw-field>span{display:block;margin:0 0 8px;color:#64748b;text-transform:uppercase;letter-spacing:.12em;font-size:12px;font-weight:600;line-height:16px}\n.mfp-premium-wave input,.mfp-premium-wave select,.mfp-premium-wave textarea,.mfp-premium-wave .mf-input,.mfp-premium-wave .mf-select,.mfp-premium-wave .mf-textarea{min-height:47px!important;border:1px solid #e2e8f0!important;border-radius:16px!important;background:#f8fafc!important;color:#0f172a!important;padding:12px 16px!important;font:400 14px/20px Inter,Geist,system-ui,sans-serif!important}\n.mfp-premium-wave textarea,.mfp-premium-wave .mf-textarea{min-height:122px!important}\n.mfp-premium-wave ::placeholder{color:#94a3b8!important;opacity:1}\n.mfp-premium-wave footer{display:flex;align-items:center;justify-content:space-between;gap:18px;border-top:1px solid #e2e8f0;margin-top:30px;padding-top:26px}\n.mfp-premium-wave footer span{color:#94a3b8!important;font-size:12px!important;line-height:20px!important;font-weight:400!important}\n.mfp-premium-wave footer button{display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:9px!important;border:0!important;border-radius:999px!important;background:var(--pw-accent)!important;color:#fff!important;min-height:48px!important;padding:0 24px!important;font-size:14px!important;font-weight:600!important;line-height:20px!important}\n@media(max-width:900px){.mfp-premium-wave .pw-shell{grid-template-columns:1fr}.mfp-premium-wave .pw-hero{min-height:420px}.mfp-premium-wave .pw-form{padding:34px 28px}.mfp-premium-wave .pw-form header h2{font-size:40px;line-height:48px}}\n@media(max-width:620px){.mfp-premium-wave{padding:12px}.mfp-premium-wave .pw-grid{grid-template-columns:1fr}.mfp-premium-wave .pw-form header b{position:static;display:block;margin-top:14px}.mfp-premium-wave footer{align-items:stretch;flex-direction:column}.mfp-premium-wave footer button{width:100%}.mfp-premium-wave .pw-hero-copy h1{font-size:42px}}",
+    "submitButtonText": "Continue",
+    "successMessage": "Your intake has been received securely. A care coordinator will contact you with the next steps.",
+    "hideHeader": true,
+    "templateSlug": "healthcare-intake",
+    "postSubmitExperience": {
+      "mode": "confirmation",
+      "title": "Form received",
+      "message": "Your intake has been received securely. A care coordinator will contact you with the next steps.",
+      "fillAgainLabel": "Submit another",
+      "doneLabel": "Done"
+    },
+    "templateGuideSlug": "tpl-healthcare-intake"
+  },
+  "submitButtonText": "Continue",
+  "successMessage": "Your intake has been received securely. A care coordinator will contact you with the next steps.",
+  "customHtml": "\n<div class=\"mfp-mock11 mfp-premium-wave\" style=\"--pw-accent:#39736d;--pw-soft:#98c8bf;--pw-hero:url('/DesktopModules/MegaForm/Assets/img/mock/rose-wellness-hero.png')\">\n  <main class=\"pw-main\">\n    <section class=\"pw-shell\">\n      <aside class=\"pw-hero\"><div class=\"pw-brand\"><i class=\"fa-solid fa-wand-magic-sparkles\"></i><span>AURA HEALTH</span></div><div class=\"pw-hero-copy\"><p>Private care</p><h1>Wellness intake</h1><span>A calm first step toward a more considered care plan, prepared around your needs.</span></div><div class=\"pw-wave\"></div></aside>\n      <section class=\"pw-form\"><div class=\"pw-oval\"></div><header><p>Private care</p><h2>Wellness intake</h2><span>A calm first step toward a more considered care plan, prepared around your needs.</span><b>01 / of 01</b></header>\n        <div class=\"pw-section\"><i></i><span>Your wellbeing</span><em></em></div>\n        <div class=\"pw-grid\"><label class=\"pw-field \"><span>Full name *</span>{{field:full_name}}</label>\n        <label class=\"pw-field \"><span>Email address *</span>{{field:email_address}}</label>\n        <label class=\"pw-field \"><span>Date of birth</span>{{field:date_of_birth}}</label>\n        <label class=\"pw-field \"><span>Preferred appointment</span>{{field:preferred_appointment}}</label>\n        <label class=\"pw-field \"><span>Primary focus</span>{{field:primary_focus}}</label>\n        <label class=\"pw-field \"><span>Emergency contact</span>{{field:emergency_contact}}</label>\n        <label class=\"pw-field pw-span\"><span>What would you like support with?</span>{{field:support_notes}}</label></div>\n        <footer><span>Required fields are marked with an asterisk.<br>Your information stays private.</span><button type=\"submit\">Continue <i class=\"fa-solid fa-arrow-right\"></i></button></footer>\n      </section>\n    </section>\n  </main>\n</div>",
+  "customCss": "@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css');\n\n.mfp-mock11.mfp-mock11{position:relative!important;left:50%!important;right:50%!important;width:100vw!important;max-width:100vw!important;margin-left:-50vw!important;margin-right:-50vw!important}\n.mfp-mock11 .mf-field-group{margin:0!important;min-width:0!important;width:100%!important}\n.mfp-mock11 .mf-field-label{display:none!important}\n.mfp-mock11 label{line-height:1.2!important}\n.mfp-mock11 input[type='text'],.mfp-mock11 input[type='email'],.mfp-mock11 input[type='tel'],.mfp-mock11 input[type='number'],.mfp-mock11 input[type='date'],.mfp-mock11 select,.mfp-mock11 textarea,.mfp-mock11 .mf-input,.mfp-mock11 .mf-select,.mfp-mock11 .mf-textarea{box-sizing:border-box!important;width:100%!important;max-width:none!important;margin:0!important;box-shadow:none!important;outline:0!important;line-height:1.2!important}\n.mfp-mock11 .mf-option-group{flex-direction:row!important}\n.mfp-mock11 .mf-field-error:empty{display:none!important}\n.mfp-mock11 button[type='submit']{appearance:none;-webkit-appearance:none;cursor:pointer}\n\n.mfp-premium-wave{background:#f4f1ea!important;color:#0f172a!important;font-family:Inter,Geist,system-ui,sans-serif!important;width:100%!important;max-width:none!important;padding:32px 18px!important}\n.mfp-premium-wave *{box-sizing:border-box}\n.mfp-premium-wave .pw-main{min-height:720px;display:grid;place-items:center}\n.mfp-premium-wave .pw-shell{display:grid;grid-template-columns:390px minmax(0,1fr);width:min(100%,1152px);min-height:680px;background:#fff;box-shadow:0 28px 80px rgba(15,23,42,.16);overflow:hidden}\n.mfp-premium-wave .pw-hero{position:relative;min-height:680px;display:flex;flex-direction:column;justify-content:space-between;padding:40px;color:#fff;background-image:linear-gradient(180deg,rgba(15,23,42,.18),rgba(15,23,42,.62)),var(--pw-hero);background-position:center;background-size:cover;overflow:hidden}\n.mfp-premium-wave .pw-brand{display:inline-flex;align-items:center;gap:9px;text-transform:uppercase;letter-spacing:.18em;font-size:11px;font-weight:800}\n.mfp-premium-wave .pw-brand i{display:grid;place-items:center;width:28px;height:28px;border-radius:999px;background:rgba(255,255,255,.18);font-size:12px}\n.mfp-premium-wave .pw-hero-copy{position:relative;z-index:2;margin-top:auto;margin-bottom:58px}\n.mfp-premium-wave .pw-hero-copy p{margin:0 0 16px!important;text-transform:uppercase;letter-spacing:.24em!important;font-size:12px!important;font-weight:700!important;color:rgba(255,255,255,.7)!important;line-height:16px!important}\n.mfp-premium-wave .pw-hero-copy h1{margin:0!important;color:#fff!important;font-family:ui-serif,Georgia,Cambria,'Times New Roman',Times,serif!important;font-size:48px!important;line-height:49.92px!important;font-weight:600!important;letter-spacing:0!important;text-wrap:balance}\n.mfp-premium-wave .pw-hero-copy span{display:block;margin-top:20px;max-width:300px;color:rgba(255,255,255,.75)!important;font-size:15px!important;line-height:28px!important;font-weight:400!important}\n.mfp-premium-wave .pw-wave{position:absolute;left:-70px;right:-70px;bottom:-92px;height:190px;background:#fff;clip-path:ellipse(70% 48% at 42% 100%)}\n.mfp-premium-wave .pw-form{position:relative;padding:48px 64px;overflow:hidden;background:#fff}\n.mfp-premium-wave .pw-oval{position:absolute;right:-110px;top:-96px;width:260px;height:260px;border-radius:999px;background:var(--pw-soft);opacity:.1}\n.mfp-premium-wave .pw-form header{position:relative;border-bottom:1px solid #e2e8f0;padding-bottom:28px;margin-bottom:30px}\n.mfp-premium-wave .pw-form header p{margin:0 0 8px!important;color:var(--pw-accent)!important;text-transform:uppercase;letter-spacing:.2em!important;font-size:12px!important;font-weight:700!important;line-height:16px!important}\n.mfp-premium-wave .pw-form header h2{margin:0!important;color:#0f172a!important;font-family:ui-serif,Georgia,Cambria,'Times New Roman',Times,serif!important;font-size:48px!important;line-height:60px!important;font-weight:600!important;letter-spacing:0!important}\n.mfp-premium-wave .pw-form header span{display:block;margin-top:12px;max-width:560px;color:#64748b!important;font-size:14px!important;line-height:24px!important;font-weight:400!important}\n.mfp-premium-wave .pw-form header b{position:absolute;right:0;top:5px;color:#94a3b8;font-size:12px;letter-spacing:0;font-weight:400}\n.mfp-premium-wave .pw-section{display:flex;align-items:center;gap:10px;margin:0 0 22px}\n.mfp-premium-wave .pw-section i{width:9px;height:9px;border-radius:999px;background:var(--pw-accent)}\n.mfp-premium-wave .pw-section span{color:#334155!important;text-transform:uppercase;letter-spacing:.16em!important;font-size:12px!important;font-weight:700!important;line-height:16px!important}\n.mfp-premium-wave .pw-section em{height:1px;flex:1;background:#e2e8f0}\n.mfp-premium-wave .pw-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}\n.mfp-premium-wave .pw-span{grid-column:1/-1}\n.mfp-premium-wave .pw-field>span{display:block;margin:0 0 8px;color:#64748b;text-transform:uppercase;letter-spacing:.12em;font-size:12px;font-weight:600;line-height:16px}\n.mfp-premium-wave input,.mfp-premium-wave select,.mfp-premium-wave textarea,.mfp-premium-wave .mf-input,.mfp-premium-wave .mf-select,.mfp-premium-wave .mf-textarea{min-height:47px!important;border:1px solid #e2e8f0!important;border-radius:16px!important;background:#f8fafc!important;color:#0f172a!important;padding:12px 16px!important;font:400 14px/20px Inter,Geist,system-ui,sans-serif!important}\n.mfp-premium-wave textarea,.mfp-premium-wave .mf-textarea{min-height:122px!important}\n.mfp-premium-wave ::placeholder{color:#94a3b8!important;opacity:1}\n.mfp-premium-wave footer{display:flex;align-items:center;justify-content:space-between;gap:18px;border-top:1px solid #e2e8f0;margin-top:30px;padding-top:26px}\n.mfp-premium-wave footer span{color:#94a3b8!important;font-size:12px!important;line-height:20px!important;font-weight:400!important}\n.mfp-premium-wave footer button{display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:9px!important;border:0!important;border-radius:999px!important;background:var(--pw-accent)!important;color:#fff!important;min-height:48px!important;padding:0 24px!important;font-size:14px!important;font-weight:600!important;line-height:20px!important}\n@media(max-width:900px){.mfp-premium-wave .pw-shell{grid-template-columns:1fr}.mfp-premium-wave .pw-hero{min-height:420px}.mfp-premium-wave .pw-form{padding:34px 28px}.mfp-premium-wave .pw-form header h2{font-size:40px;line-height:48px}}\n@media(max-width:620px){.mfp-premium-wave{padding:12px}.mfp-premium-wave .pw-grid{grid-template-columns:1fr}.mfp-premium-wave .pw-form header b{position:static;display:block;margin-top:14px}.mfp-premium-wave footer{align-items:stretch;flex-direction:column}.mfp-premium-wave footer button{width:100%}.mfp-premium-wave .pw-hero-copy h1{font-size:42px}}"
+}

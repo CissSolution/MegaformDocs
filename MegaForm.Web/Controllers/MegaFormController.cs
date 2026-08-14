@@ -196,6 +196,13 @@ namespace MegaForm.Web.Controllers
             }
             form.CreatedByUserId = _ctx.UserId;
             form.UpdatedByUserId = _ctx.UserId;
+            // [AfterSubmitScript v20260813-01] settings.afterSubmitScript never travels through an
+            // ordinary form save on any platform: the server's stored copy is put back over whatever
+            // was posted. MegaForm.Web ships no authoring endpoint, so here this always resolves to
+            // "strip it" — which is the point. A form imported onto this host cannot bring runnable
+            // server code with it.
+            MegaForm.Core.Services.AfterSubmitScriptStore.PreserveOnSave(
+                form, form.FormId > 0 ? _formRepo.GetForm(form.FormId) : null);
             int id = _formRepo.SaveForm(form);
             return Ok(new { formId = id });
         }

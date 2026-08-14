@@ -403,9 +403,34 @@ function normalize(raw, fileName) {
   };
 }
 
+// [KbPerTemplate v20260812] Folders that hold templates we actually ship. This used to read
+// SRC_DIR non-recursively, which quietly meant "the 12 loose files in Premium/" — the 68
+// templates published to the online gallery live in Premium/GALLERY-PUBLISHED and were never
+// seen, so 47 of them had NO design contract at all and the AI edited their premium shells with
+// nothing to constrain it. _archive stays out on purpose: retired designs must not resurface as
+// guides for templates nobody can install.
+const TEMPLATE_DIRS = [
+  path.join(SRC_DIR, 'GALLERY-PUBLISHED'),   // first: on a slug collision the PUBLISHED file wins
+  SRC_DIR,
+];
+
 function listTemplateFiles() {
-  if (!fs.existsSync(SRC_DIR)) return [];
-  return fs.readdirSync(SRC_DIR).filter(f => f.endsWith('.json')).map(f => path.join(SRC_DIR, f));
+  const files = [];
+  const claimed = new Set();
+  for (const dir of TEMPLATE_DIRS) {
+    if (!fs.existsSync(dir)) continue;
+    for (const f of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (!f.isFile() || !f.name.endsWith('.json')) continue;
+      // Same file name in both folders = the same design; the published copy is the truth.
+      if (claimed.has(f.name)) {
+        console.log('[gen-facts] skip duplicate (published copy wins): ' + path.join(dir, f.name));
+        continue;
+      }
+      claimed.add(f.name);
+      files.push(path.join(dir, f.name));
+    }
+  }
+  return files;
 }
 
 function main() {

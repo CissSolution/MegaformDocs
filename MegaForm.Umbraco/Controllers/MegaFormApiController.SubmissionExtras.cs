@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using MegaForm.Core.Models;
 using MegaForm.Core.Interfaces;
 using MegaForm.Core.Services;
@@ -68,6 +69,63 @@ namespace MegaForm.Umbraco.Controllers
                 return Forbid();
             _subRepo.UpdateData(submissionId, body != null ? body.ToString() : "{}");
             return Ok(new { success = true });
+        }
+
+        // [MySubmissions] Portal endpoint ("My Tickets"), mirrors Oqtane
+        // MegaFormController.ListMySubmissions: an authenticated user lists ONLY their own
+        // submissions. The owner predicate is forced server-side (the client cannot override
+        // it) and runs in SQL via SubmissionQueryService + ISubmissionOwnerFilterableRepository,
+        // so TotalCount and paging are exact. No admin gate and no explicit-view-rule
+        // requirement: ownership alone grants read, mirroring the OwnerGrant in
+        // CanViewSubmissionRow — a submitter must be able to follow their own ticket even on
+        // forms with no permission rules.
+        [HttpGet]
+        [Authorize]
+        [Route("/umbraco/MegaForm/MegaFormApi/Submissions/Mine")]
+        public async Task<IActionResult> ListMySubmissions(
+            [FromServices] SubmissionQueryService submissionQueries,
+            int formId, string status = null, string search = null,
+            DateTime? dateFrom = null, DateTime? dateTo = null, int pageIndex = 0, int pageSize = 25)
+        {
+            if (formId <= 0) return BadRequest(new { error = "formId is required" });
+            var actor = await BuildUserContextAsync();
+            if (actor == null || !actor.IsAuthenticated || actor.UserId <= 0)
+                return StatusCode(403, new { error = "You must be signed in to view your submissions." });
+            var form = _formRepo.GetForm(formId);
+            if (form == null) return NotFound();
+            if (pageSize <= 0 || pageSize > 100) pageSize = 100;
+
+            var query = new SubmissionListQuery
+            {
+                FormId = formId,
+                Status = status,
+                Search = search,
+                DateFrom = dateFrom,
+                DateTo = dateTo,
+                PageIndex = pageIndex,
+                PageSize = pageSize,
+                // Server-forced owner filter — the whole point of this endpoint.
+                UserId = actor.UserId
+            };
+            var result = submissionQueries.List(query);
+            return Ok(new
+            {
+                items = (result.Items ?? new List<SubmissionListItem>())
+                    .Select(x => new
+                    {
+                        x.SubmissionId,
+                        x.FormId,
+                        data = x.Data ?? new Dictionary<string, object>(),
+                        x.Status,
+                        x.IsSpam,
+                        x.SubmittedOnUtc,
+                        x.IpAddress
+                    })
+                    .ToList(),
+                result.TotalCount,
+                result.PageIndex,
+                result.PageSize
+            });
         }
 
         // [ExportFailClosed v20260728-01] This action dumps every row of a form, so it is NOT

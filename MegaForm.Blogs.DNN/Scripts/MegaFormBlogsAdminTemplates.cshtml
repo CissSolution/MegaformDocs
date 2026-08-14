@@ -33,20 +33,52 @@
         new KeyValuePair<string, string>("blog-archive", "Blog Archive"),
         new KeyValuePair<string, string>("blog-post", "Blog Post"),
         new KeyValuePair<string, string>("news-home", "News Home"),
-        new KeyValuePair<string, string>("news-article", "News Article")
+        new KeyValuePair<string, string>("news-article", "News Article"),
+        // 🔵 1.17.0. The one target a TREE channel asks for: nav on the left, the open article on
+        // the right, one page. A channel becomes a tree by pointing its module at a source form.
+        new KeyValuePair<string, string>("article-list", "Article List (tree + article)")
     };
 
     const string TemplatesFormTitle = "Blog Templates";
 
-    /// Minimal schema: six typed fields, no layout, no validation beyond what the console does.
+    /// Minimal schema: seven typed fields, no layout, no validation beyond what the console does.
     /// Written as JSON because that is what IFormApi.CreateFormAsync takes.
+    ///
+    /// 🔵 template_channel added in 1.17.0. One instance of the Blogs module is one CHANNEL
+    /// (MegaForm Docs, News, Thoi su, Kinh te...), and each channel must be able to carry its own
+    /// design for the same render target. An EMPTY value means "site-wide default", which is what
+    /// every template written before this field existed reports - so they keep applying everywhere.
     const string TemplatesSchemaJson = "{\"version\":1,\"fields\":[" +
         "{\"key\":\"template_uid\",\"type\":\"Text\",\"label\":\"Template UID\"}," +
         "{\"key\":\"template_name\",\"type\":\"Text\",\"label\":\"Name\",\"required\":true}," +
         "{\"key\":\"template_group\",\"type\":\"Text\",\"label\":\"Render target\"}," +
+        "{\"key\":\"template_channel\",\"type\":\"Text\",\"label\":\"Channel\"}," +
         "{\"key\":\"template_body\",\"type\":\"Textarea\",\"label\":\"Template body\"}," +
         "{\"key\":\"is_active\",\"type\":\"Text\",\"label\":\"Active\"}," +
         "{\"key\":\"notes\",\"type\":\"Textarea\",\"label\":\"Notes\"}]}";
+
+    /// The channel field is a LATE addition, so a site that created its templates form before
+    /// 1.17.0 has a schema without it - and a value written against a field the schema does not
+    /// declare is dropped on the floor, silently. This upgrades such a form ONCE, in place, using
+    /// the same public API the console already uses to create it. Returns true when it patched.
+    static bool EnsureChannelField(int formId, MegaFormScope scope)
+    {
+        if (formId <= 0) return false;
+        var form = Run(c => c.Forms.GetFormAsync(formId, scope));
+        if (form == null || string.IsNullOrWhiteSpace(form.SchemaJson)) return false;
+        if (form.SchemaJson.IndexOf("\"template_channel\"", StringComparison.OrdinalIgnoreCase) >= 0) return false;
+
+        // Insert next to template_group so the console and the renderer read the same neighbourhood.
+        var anchor = "{\"key\":\"template_body\"";
+        var at = form.SchemaJson.IndexOf(anchor, StringComparison.Ordinal);
+        if (at < 0) return false;
+        var patched = form.SchemaJson.Substring(0, at)
+                    + "{\"key\":\"template_channel\",\"type\":\"Text\",\"label\":\"Channel\"},"
+                    + form.SchemaJson.Substring(at);
+
+        Run(c => c.Forms.UpdateFormAsync(formId, new UpdateFormRequest { SchemaJson = patched }, scope));
+        return true;
+    }
 
     static T Run<T>(System.Func<IMegaFormClient, System.Threading.Tasks.Task<T>> action)
     {
@@ -539,6 +571,9 @@
                 int.TryParse(Request.Form["tpl_id"], out targetId);
                 var name = (Request.Form["template_name"] ?? "").Trim();
                 var group = (Request.Form["template_group"] ?? "").Trim().ToLowerInvariant();
+                // Blank = the site-wide default for this render target. Lowercased so a channel
+                // typed as "News" here and "news" in the module settings still meet.
+                var channel = (Request.Form["template_channel"] ?? "").Trim().ToLowerInvariant();
                 var bodyText = Request.Form["template_body"] ?? "";
                 var notes = (Request.Form["notes"] ?? "").Trim();
 
@@ -555,11 +590,20 @@
                     throw new InvalidOperationException("That template body is too large (60,000 characters maximum).");
                 }
                 if (notes.Length > 500) { notes = notes.Substring(0, 500); }
+                if (channel.Length > 60)
+                {
+                    throw new InvalidOperationException("That channel name is too long (60 characters maximum).");
+                }
+
+                // A value written against a field the schema does not declare is dropped SILENTLY,
+                // so make sure the field exists before the first save that carries a channel.
+                EnsureChannelField(templatesFormId, scope);
 
                 var values = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
                 {
                     ["template_name"] = name,
                     ["template_group"] = group,
+                    ["template_channel"] = channel,
                     ["template_body"] = bodyText,
                     ["notes"] = notes
                 };
@@ -779,6 +823,7 @@
         {
             var currentName = editing == null ? "" : Text(editing, "template_name", "");
             var currentGroup = editing == null ? newGroup : Text(editing, "template_group", "blog-home");
+            var currentChannel = editing == null ? "" : Text(editing, "template_channel", "");
             var currentBody = editing == null ? StarterBody(newGroup) : Text(editing, "template_body", "");
             var currentNotes = editing == null ? "" : Text(editing, "notes", "");
             <section class="mfba-panel">
@@ -803,6 +848,15 @@
                                     }
                                 }
                             </select>
+                        </label>
+                        @* One instance of the Blogs module is one channel, so the same render
+                           target can carry a different design per channel. Blank is deliberate and
+                           is the common case: it means "use this everywhere unless a channel has
+                           its own", which is exactly how every template written before 1.17.0
+                           keeps behaving. *@
+                        <label>Channel
+                            <input name="template_channel" maxlength="60" value="@currentChannel"
+                                   placeholder="blank = every channel" />
                         </label>
                         <label class="wide">Notes<input name="notes" maxlength="500" value="@currentNotes" /></label>
                     </div>
@@ -1042,26 +1096,36 @@
         // the context builder). This mock exists so the preview is truthful; if the server gains a
         // key, it belongs here the same day, and catalog.json documents the contract in one line.
         var POSTS = [
-            { title: "The Future of Design Systems", excerpt: "Why tokens outlive components.", category: "Design",
+            { title: "The Future of Design Systems", subtitle: "Why tokens outlive components.",
+              excerpt: "Why tokens outlive components.", category: "Design",
               author: "Sarah Chen", authorAvatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop",
-              authorRole: "Design lead", authorBio: "Writes about systems that survive their authors.",
-              date: "Jul 29, 2026", readingTime: 6, reads: 1420, comments: 12, format: "Blog Post",
-              readsLabel: "1420 reads", commentsLabel: "12 comments",
+              authorRole: "Design lead", authorBio: "Writes about systems that survive their authors.", authorFollowers: 1280,
+              date: "Jul 29, 2026", readingTime: 6, reads: 1420, comments: 12, shares: 87, format: "Blog Post",
+              readsLabel: "1,420 reads", commentsLabel: "12 comments", sharesLabel: "87 shares",
               url: "/Blogs?slug=future-of-design-systems", slug: "future-of-design-systems",
-              image: "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=900&h=600&fit=crop" },
-            { title: "DNN and Oqtane", excerpt: "A practical comparison of the two platforms.", category: "Development",
+              image: "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=900&h=600&fit=crop",
+              imageAlt: "A wall of design tokens", mediaCaption: "Tokens on the studio wall." },
+            { title: "DNN and Oqtane", subtitle: "", excerpt: "A practical comparison of the two platforms.", category: "Development",
               author: "DNN Defender Team", authorAvatar: "", authorRole: "Editorial", authorBio: "The team behind the module.",
-              date: "Jul 29, 2026", readingTime: 5, reads: 980, comments: 3, format: "Blog Post",
-              readsLabel: "980 reads", commentsLabel: "3 comments",
+              authorFollowers: 0,
+              date: "Jul 29, 2026", readingTime: 5, reads: 980, comments: 3, shares: 0, format: "Blog Post",
+              readsLabel: "980 reads", commentsLabel: "3 comments", sharesLabel: "no shares",
               url: "/Blogs?slug=dnn-and-oqtane", slug: "dnn-and-oqtane",
-              image: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=900&h=600&fit=crop" },
-            { title: "Why Bots Target Forms", excerpt: "What a form endpoint looks like to a crawler.", category: "Security",
+              image: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=900&h=600&fit=crop",
+              imageAlt: "DNN and Oqtane side by side", mediaCaption: "" },
+            { title: "Why Bots Target Forms", subtitle: "", excerpt: "What a form endpoint looks like to a crawler.", category: "Security",
               author: "SuperUser Account", authorAvatar: "", authorRole: "Contributor", authorBio: "Security notes.",
-              date: "Feb 12, 2026", readingTime: 4, reads: 640, comments: 0, format: "Blog Post",
-              readsLabel: "640 reads", commentsLabel: "no comments",
+              authorFollowers: 0,
+              date: "Feb 12, 2026", readingTime: 4, reads: 640, comments: 0, shares: 5, format: "Blog Post",
+              readsLabel: "640 reads", commentsLabel: "no comments", sharesLabel: "5 shares",
               url: "/Blogs?slug=why-bots-target-forms", slug: "why-bots-target-forms",
-              image: "https://images.unsplash.com/photo-1510511459019-5dda7724fd87?w=900&h=600&fit=crop" }
+              image: "https://images.unsplash.com/photo-1510511459019-5dda7724fd87?w=900&h=600&fit=crop",
+              imageAlt: "A crawler log", mediaCaption: "" }
         ];
+        // ⚠️ The *Label values are pre-pluralised BY THE SERVER, and the server formats the number
+        // with the SITE's culture (Plural in MegaFormBlogs.cshtml uses "N0"). "1,420 reads" here is
+        // an invariant-culture host; a vi-VN host renders "1.420 reads". Do not design a layout that
+        // depends on the separator.
         var SITE = { title: "Insights and Ideas", tagline: "Design, development and product thinking.", url: "/Blogs" };
         var CATEGORIES = [
             { name: "Design", url: "/Blogs?category=Design" },
@@ -1081,15 +1145,54 @@
                       "<h2 id=\"s1\">Where DNN still wins</h2><p>Modules, skins and fifteen years of content.</p>" +
                       "<h2 id=\"s2\">Where Oqtane wins</h2><p>A modern runtime and a much smaller install.</p>"
             }),
-            toc: [ { id: "s1", text: "Where DNN still wins" }, { id: "s2", text: "Where Oqtane wins" } ],
+            // `sub` is precomputed by the server because the interpreter has no comparison —
+            // a template cannot ask "is level 3?", so it asks {{#if sub}}.
+            toc: [ { id: "s1", text: "Where DNN still wins", level: 2, sub: false },
+                   { id: "s2", text: "Where Oqtane wins", level: 2, sub: false },
+                   { id: "s3", text: "Theming notes", level: 3, sub: true } ],
             related: [ POSTS[0], POSTS[2] ],
             tags: [ { name: "DNN", url: "/Blogs?tag=DNN" }, { name: "Oqtane", url: "/Blogs?tag=Oqtane" } ],
             comments: [
                 { name: "Priya Nair", date: "2 hours ago", body: "The migration section matches what we saw." },
                 { name: "Amy Zhang", date: "yesterday", body: "Would like a follow-up on theming." }
-            ]
+            ],
+            // A template takes over the whole <main>, so it has to rebuild the comment box itself.
+            // The token is real at runtime; here it is a placeholder so the preview shows the box.
+            commentForm: { open: true, csrf: "PREVIEW-TOKEN-NOT-VALID", slug: "dnn-and-oqtane",
+                           requireEmail: false, autoClosed: false, posted: false, error: "" }
+        };
+        // A tree arrives FLAT and in reading order: the interpreter has no recursion into a shape
+        // it does not hold, no index token and no comparison, so depth and the three booleans are
+        // decided on the server. `article` is ABSENT when nothing is open - never present-but-empty,
+        // because an empty map reads as TRUE to {{#if}}.
+        // (Written without the at-sign index token on purpose. This file is Razor: an at-sign
+        //  followed by a word is compiled as a C# expression, and an at-sign followed by a SPACE
+        //  is a parse error - even inside a JavaScript comment. Both mistakes were made here in
+        //  one sitting: first CS0103 "the name 'index' does not exist", then "a space or line
+        //  break was encountered after the at character". Do not type a bare at-sign in this file.)
+        var TREE = {
+            site: SITE, heading: "Documentation", total: 3,
+            tree: [
+                { key: "guides", title: "Using MegaForm on DNN", excerpt: "", url: "/Docs?doc=guides", depth: 0, isOpen: false, isSection: true,  isChild: false },
+                { key: "add-to-page", title: "From a Blank Page to a Working Form", excerpt: "Drop the module on a page and publish a form.", url: "/Docs?doc=add-to-page", depth: 1, isOpen: true,  isSection: false, isChild: true },
+                { key: "creating-forms", title: "Creating Forms", excerpt: "The wizard, the builder and the AI designer.", url: "/Docs?doc=creating-forms", depth: 1, isOpen: false, isSection: false, isChild: true },
+                { key: "programming", title: "Programming", excerpt: "", url: "/Docs?doc=programming", depth: 0, isOpen: false, isSection: true,  isChild: false },
+                { key: "sdk-reference", title: "SDK Reference", excerpt: "Every public type on IMegaFormClient.", url: "/Docs?doc=sdk-reference", depth: 1, isOpen: false, isSection: false, isChild: true }
+            ],
+            article: {
+                key: "add-to-page", title: "From a Blank Page to a Working Form",
+                excerpt: "Drop the module on a page and publish a form.",
+                url: "/Docs?doc=add-to-page",
+                body: "<p>Add the module, pick a form, publish the page.</p>" +
+                      "<h2 id=\"s1\">Add the module</h2><p>One module, one channel.</p>" +
+                      "<h3 id=\"s2\">Pick the form</h3><p>The channel reads its own source form.</p>"
+            },
+            toc: [ { id: "s1", text: "Add the module", sub: false }, { id: "s2", text: "Pick the form", sub: true } ],
+            prev: { title: "Overview", url: "/Docs?doc=overview" },
+            next: { title: "Creating Forms", url: "/Docs?doc=creating-forms" }
         };
         var MOCK = {
+            "article-list": TREE,
             "blog-home": HOME,
             "blog-archive": { site: SITE, heading: "Archive", total: 24, posts: POSTS, categories: CATEGORIES,
                               pager: HOME.pager },

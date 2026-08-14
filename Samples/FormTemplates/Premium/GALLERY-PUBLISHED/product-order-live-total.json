@@ -1,0 +1,337 @@
+{
+  "version": "1.0",
+  "slug": "product-order-live-total",
+  "title": "Create Order",
+  "description": "Two-column order form: a white card with personal, shipping and line-item sections beside a sticky Order Summary that totals subtotal, 10% tax and grand total live. Every control is placeholder-only, as in the product-order mock it is transcribed from.",
+  "category": "commerce",
+  "categories": [
+    "commerce",
+    "premium",
+    "order"
+  ],
+  "icon": "shopping-cart",
+  "submitButtonText": "Place Order",
+  "successMessage": "Order received. A confirmation is on its way.",
+  "settings": {
+    "theme": "custom",
+    "multiPage": false,
+    "showProgressBar": false,
+    "customContent": {
+      "create_order": "Create Order",
+      "fill_in_your_details_and_select_products_to_order": "Fill in your details and select products to order",
+      "personal_information": "Personal Information",
+      "shipping_address": "Shipping Address",
+      "order_items": "Order Items",
+      "add_item": "Add Item",
+      "place_order": "Place Order",
+      "order_summary": "Order Summary",
+      "product_x1": "Product x1",
+      "text_0_00": "$0.00",
+      "subtotal": "Subtotal",
+      "tax_10": "Tax (10%)",
+      "total": "Total"
+    },
+    "customScripts": {
+      "order_total": "(function(){\n  var root = (typeof __mfCurrentScriptRoot !== 'undefined' && __mfCurrentScriptRoot) || document;\n  var scope = (root && root.closest) ? (root.closest('.mfp') || document) : document;\n  var PRICE = { Starter: 29, Pro: 99, Enterprise: 0 };\n  var NAME  = { Starter: 'Starter Plan', Pro: 'Pro Plan', Enterprise: 'Enterprise' };\n  function el(k){ return scope.querySelector('[name=\"' + k + '\"]'); }\n  function echo(k, v){ var n = scope.querySelector('[data-mf-echo=\"' + k + '\"]'); if (n) n.textContent = v; }\n  function money(n){ return '$' + (Math.round((n || 0) * 100) / 100).toFixed(2); }\n  function paint(){\n    var sel = el('item_product');\n    var key = sel ? String(sel.value || '') : '';\n    // Nothing chosen yet is the mock's own initial state: Pro Plan at 99.\n    var name  = key ? (NAME[key] || key) : 'Pro Plan';\n    var price = key ? (PRICE[key] || 0)  : 99;\n    var q = el('item_qty');\n    var qty = Math.max(1, parseInt((q && q.value) || '1', 10) || 1);\n    var sub = price * qty;\n    var tax = sub * 0.1;\n    echo('line_name', name + ' x' + qty);\n    echo('line_amt', money(sub));\n    echo('subtotal', money(sub));\n    echo('tax', money(tax));\n    echo('total', money(sub + tax));\n  }\n  scope.addEventListener('input', paint, true);\n  scope.addEventListener('change', paint, true);\n  paint();\n})();"
+    },
+    "customHtml": "<div class='mfp mfp-pdo mfp-native-generated' data-mf-flexgrid=\"locked\" style=\"background:transparent!important;border:0!important;border-radius:0!important;padding:0!important;box-shadow:none!important\"><div class='pdo-page'><div class='pdo-shell'><div class='pdo-grid'><div class='pdo-main'><div class='pdo-card'><h1 class='pdo-h1'>{{content:create_order}}</h1><p class='pdo-lede'>{{content:fill_in_your_details_and_select_products_to_order}}</p><div class='pdo-form'><div class='pdo-sec'><h3 class='pdo-h3'>{{content:personal_information}}</h3><div class='pdo-grid2'><div class='pdo-cell'>{{field:first_name}}</div><div class='pdo-cell'>{{field:last_name}}</div><div class='pdo-cell pdo-span2'>{{field:email}}</div><div class='pdo-cell pdo-span2'>{{field:phone}}</div></div></div><div class='pdo-sec pdo-sec-top'><h3 class='pdo-h3'>{{content:shipping_address}}</h3><div class='pdo-stack'><div class='pdo-cell'>{{field:company}}</div><div class='pdo-cell'>{{field:address}}</div><div class='pdo-grid2b'><div class='pdo-cell'>{{field:city}}</div><div class='pdo-cell'>{{field:state}}</div><div class='pdo-cell'>{{field:zip}}</div><div class='pdo-cell'>{{field:country}}</div></div></div></div><div class='pdo-sec pdo-sec-top'><div class='pdo-items-h'><h3 class='pdo-h3 pdo-h3-flush'>{{content:order_items}}</h3><span class='pdo-add'><i class='fa fa-plus'></i>{{content:add_item}}</span></div><div class='pdo-row'><div class='pdo-row-prod'>{{field:item_product}}</div><div class='pdo-row-qty'>{{field:item_qty}}</div><span class='pdo-del'><i class='fa fa-trash-o'></i></span></div></div>{{script:order_total}}<button class='pdo-submit' type='submit'>{{content:place_order}}</button></div></div></div><div class='pdo-side'><div class='pdo-sum'><h3 class='pdo-h3'>{{content:order_summary}}</h3><div class='pdo-sum-lines'><div class='pdo-sum-line'><span class='pdo-sum-l' data-mf-echo='line_name'>{{content:product_x1}}</span><span class='pdo-sum-n' data-mf-echo='line_amt'>{{content:text_0_00}}</span></div></div><div class='pdo-sum-tot'><div class='pdo-sum-r'><span class='pdo-sum-l'>{{content:subtotal}}</span><span class='pdo-sum-v' data-mf-echo='subtotal'>{{content:text_0_00}}</span></div><div class='pdo-sum-r'><span class='pdo-sum-l'>{{content:tax_10}}</span><span class='pdo-sum-v' data-mf-echo='tax'>{{content:text_0_00}}</span></div><div class='pdo-sum-g'><span class='pdo-sum-gl'>{{content:total}}</span><span class='pdo-sum-gv' data-mf-echo='total'>{{content:text_0_00}}</span></div></div></div></div></div></div></div></div>",
+    "customCss": "@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700;800&display=swap');\n.mfp.mfp-pdo.mfp-native-generated {--pdo-primary:#EC003F;--pdo-accent:#EC003F;--pdo-surface:var(--mf-page-surface,var(--mf-preset-surface,#FFFFFF));--pdo-text:var(--mf-page-text,var(--mf-preset-text,#0F172B));--pdo-muted:var(--mf-page-muted,var(--mf-preset-muted,#45556C));--pdo-border:var(--mf-page-border,var(--mf-preset-border,#E2E8F0));--pdo-on-primary:var(--mf-preset-on-primary,#FFFFFF);--pdo-deco:#EC003F;--pdo-page:#F8FAFC;--pdo-fill:#F8FAFC;--pdo-fill-strong:color-mix(in srgb, var(--pdo-text) 9%, var(--pdo-surface));--pdo-soft:color-mix(in srgb, var(--pdo-primary) 12%, var(--pdo-surface));--pdo-hairline:color-mix(in srgb, var(--pdo-text) 12%, var(--pdo-surface));}.mfp.mfp-pdo.mfp-native-generated {background:transparent!important;border:0!important;padding:0!important;font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif}.mfp.mfp-pdo.mfp-native-generated {--pdo-primary:var(--mf-page-primary,var(--mf-preset-primary,#EC003F));--pdo-accent:var(--mf-page-accent,var(--mf-preset-accent,#EC003F));--pdo-surface:var(--mf-page-surface,var(--mf-preset-surface,#FFFFFF));--pdo-text:var(--mf-page-text,var(--mf-preset-text,#0F172B));--pdo-border:var(--mf-page-border,var(--mf-preset-border,#E2E8F0));--pdo-on-primary:var(--mf-page-on-primary,var(--mf-preset-on-primary,#FFFFFF));--pdo-page:var(--mf-preset-bg,#F8FAFC);}@container (max-width:520px){.mfp.mfp-pdo.mfp-native-generated [class*=\"-grid\"],.mfp.mfp-pdo.mfp-native-generated [class*=\"-meta\"],.mfp.mfp-pdo.mfp-native-generated [class*=\"-scores\"],.mfp.mfp-pdo.mfp-native-generated [class*=\"-charts\"],.mfp.mfp-pdo.mfp-native-generated [class*=\"-cols\"]{grid-template-columns:1fr!important}.mfp.mfp-pdo.mfp-native-generated [class*=\"-body\"],.mfp.mfp-pdo.mfp-native-generated [class*=\"-split\"],.mfp.mfp-pdo.mfp-native-generated [class*=\"-foot\"],.mfp.mfp-pdo.mfp-native-generated [class*=\"-head\"],.mfp.mfp-pdo.mfp-native-generated [class*=\"-row\"]{flex-wrap:wrap!important}.mfp.mfp-pdo.mfp-native-generated [class*=\"-aside\"],.mfp.mfp-pdo.mfp-native-generated [class*=\"-side\"]{flex:1 1 100%!important;width:100%!important;max-width:none!important}}.mfp.mfp-pdo.mfp-native-generated  img{max-width:100%!important;height:auto}.mfp.mfp-pdo.mfp-native-generated {overflow-wrap:break-word}\n.mfp.mfp-pdo.mfp-native-generated {font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif!important;color:var(--pdo-text)}\n.mfp.mfp-pdo.mfp-native-generated .pdo-page{padding:48px 16px;\n  background:linear-gradient(to bottom right,var(--pdo-page) 0%,#F1F5F9 100%)}\n.mfp.mfp-pdo.mfp-native-generated .pdo-shell{max-width:1152px;margin:0 auto}\n.mfp.mfp-pdo.mfp-native-generated .pdo-back{line-height:0}\n/* mb-8 sits on the LINK in the mock, not on a wrapper row. */\n.mfp.mfp-pdo.mfp-native-generated .pdo-back-link{display:inline-flex;align-items:center;gap:8px;margin-bottom:32px;font-size:16px;\n  line-height:24px;font-weight:400;color:#45556C}\n.mfp.mfp-pdo.mfp-native-generated .pdo-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;align-items:start}\n.mfp.mfp-pdo.mfp-native-generated .pdo-main{grid-column:span 2}\n.mfp.mfp-pdo.mfp-native-generated .pdo-card{padding:32px;border:1px solid var(--pdo-border);border-radius:16px;background:#fff;\n  box-shadow:0 10px 15px -3px rgba(0,0,0,.1),0 4px 6px -4px rgba(0,0,0,.1)}\n.mfp.mfp-pdo.mfp-native-generated h1.pdo-h1{margin:0 0 8px!important;font-size:30px!important;line-height:36px!important;\n  font-weight:700!important;color:var(--pdo-text)!important}\n.mfp.mfp-pdo.mfp-native-generated p.pdo-lede{margin:0 0 32px!important;font-size:16px!important;line-height:24px!important;\n  font-weight:400!important;color:#45556C!important}\n.mfp.mfp-pdo.mfp-native-generated .pdo-form{display:flex;flex-direction:column;gap:32px}\n.mfp.mfp-pdo.mfp-native-generated .pdo-sec-top{padding-top:24px;border-top:1px solid var(--pdo-border)}\n.mfp.mfp-pdo.mfp-native-generated h3.pdo-h3{margin:0 0 16px!important;font-size:18px!important;line-height:28px!important;\n  font-weight:600!important;color:var(--pdo-text)!important}\n.mfp.mfp-pdo.mfp-native-generated h3.pdo-h3-flush{margin:0!important}\n.mfp.mfp-pdo.mfp-native-generated .pdo-grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}\n.mfp.mfp-pdo.mfp-native-generated .pdo-span2{grid-column:1/-1}\n.mfp.mfp-pdo.mfp-native-generated .pdo-stack{display:block}\n/* measured on the mock: the 12px sits on the INPUT, not on a wrapper. */\n.mfp.mfp-pdo.mfp-native-generated .pdo-stack>.pdo-cell .mf-input[class]{margin-bottom:12px!important}\n.mfp.mfp-pdo.mfp-native-generated .pdo-grid2b{display:grid;grid-template-columns:1fr 1fr;gap:12px}\n.mfp.mfp-pdo.mfp-native-generated .pdo-cell{display:block}\n\n/* megaform sets font-family on label/input/select/textarea with !important, so an authored\n   <span> inside a <label> inherits the HOST typeface no matter what the shell root declares.\n   Element selectors are (0,3,1) here - above megaform, below every authored class rule - and\n   <i> is left alone so Font Awesome keeps its own family. */\n.mfp.mfp-pdo.mfp-native-generated label,.mfp.mfp-pdo.mfp-native-generated span,.mfp.mfp-pdo.mfp-native-generated p,.mfp.mfp-pdo.mfp-native-generated div,.mfp.mfp-pdo.mfp-native-generated ul,.mfp.mfp-pdo.mfp-native-generated li,.mfp.mfp-pdo.mfp-native-generated h1,.mfp.mfp-pdo.mfp-native-generated h2,.mfp.mfp-pdo.mfp-native-generated h3,.mfp.mfp-pdo.mfp-native-generated button{font-family:inherit!important}\n.mfp.mfp-pdo.mfp-native-generated .mf-field-label{display:none!important}\n/* A wizard's page-break Section renders a visible heading the mock has no room for - it exists to\n   split the pages, not to be seen. */\n.mfp.mfp-pdo.mfp-native-generated .mf-section-break,.mfp.mfp-pdo.mfp-native-generated .mf-section-title{display:none!important}\n.mfp.mfp-pdo.mfp-native-generated .mf-field-group{margin:0!important;width:100%}\n.mfp.mfp-pdo.mfp-native-generated .mf-form-title,.mfp.mfp-pdo.mfp-native-generated .mf-form-description,.mfp.mfp-pdo.mfp-native-generated .mf-form-actions{display:none!important}\n.mfp.mfp-pdo.mfp-native-generated .mf-option-item{margin:0!important}\n/* megaform gives every option chip a 36px floor and paints .mf-option-icon as a rounded tile. */\n.mfp.mfp-pdo.mfp-native-generated .mf-option-group--chips .mf-option-check,\n.mfp.mfp-pdo.mfp-native-generated .mf-option-group--cards .mf-option-check{display:none!important}\n.mfp.mfp-pdo.mfp-native-generated .mf-option-group--chips .mf-option-ui{min-height:0!important;height:auto!important}\n.mfp.mfp-pdo.mfp-native-generated .mf-option-group--cards .mf-option-copy{display:block;width:100%}\n\n/* No labels anywhere in this mock - the renderer's own label must go. */\n\n.mfp.mfp-pdo.mfp-native-generated .mf-input[class],.mfp.mfp-pdo.mfp-native-generated .mf-select[class]{width:100%!important;box-sizing:border-box!important;\n  border:1px solid #CAD5E2!important;border-radius:8px!important;background:var(--pdo-surface)!important;\n  padding:12px 16px!important;min-height:0!important;height:auto!important;\n  color:var(--pdo-text)!important;font-family:inherit!important;font-size:16px!important;\n  line-height:24px!important;font-weight:400!important;box-shadow:none!important}\n.mfp.mfp-pdo.mfp-native-generated .mf-input[class]:focus,.mfp.mfp-pdo.mfp-native-generated .mf-select[class]:focus{border-color:var(--pdo-primary)!important;\n  box-shadow:none!important;outline:none!important}\n.mfp.mfp-pdo.mfp-native-generated .mf-input[class]::placeholder,.mfp.mfp-pdo.mfp-native-generated .mf-textarea[class]::placeholder{color:#45556C!important;opacity:1}\n\n\n\n/* order-items row -------------------------------------------------------- */\n.mfp.mfp-pdo.mfp-native-generated .pdo-items-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}\n.mfp.mfp-pdo.mfp-native-generated .pdo-add{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:32px;\n  padding:0 12px;border:1px solid #D2D8DD;border-radius:6px;background:#fff;font-size:14px;\n  line-height:20px;font-weight:500;text-align:center;color:rgb(8,12,15);cursor:pointer}\n.mfp.mfp-pdo.mfp-native-generated .pdo-row{display:flex;gap:12px;align-items:flex-start}\n.mfp.mfp-pdo.mfp-native-generated .pdo-row-prod{flex:1 1 auto;min-width:0}\n.mfp.mfp-pdo.mfp-native-generated .pdo-row-qty{flex:0 0 80px;width:80px}\n.mfp.mfp-pdo.mfp-native-generated .pdo-row .mf-input[class],.mfp.mfp-pdo.mfp-native-generated .pdo-row .mf-select[class]{border-radius:4px!important;\n  padding:8px 12px!important;font-size:14px!important;line-height:20px!important}\n.mfp.mfp-pdo.mfp-native-generated .pdo-del{display:flex;align-items:center;justify-content:center;flex:0 0 32px;width:32px;\n  height:32px;box-sizing:border-box;padding:8px;border-radius:6px;color:#E7000B;font-size:16px;\n  line-height:16px;cursor:pointer}\n\n/* CTA -------------------------------------------------------------------- */\n.mfp.mfp-pdo.mfp-native-generated button.pdo-submit[type=\"submit\"]{display:flex;align-items:center;justify-content:center;\n  gap:8px;width:100%!important;height:44px!important;margin-top:24px!important;\n  padding:8px 16px!important;\n  border:0!important;border-radius:8px!important;background:var(--pdo-primary)!important;color:#fff!important;\n  font-family:inherit!important;font-size:14px!important;line-height:20px!important;\n  font-weight:500!important;letter-spacing:normal!important;text-transform:none!important;\n  cursor:pointer!important;box-shadow:none!important}\n/* the mock never gates this button */\n.mfp.mfp-pdo.mfp-native-generated button.pdo-submit.mf-nav-blocked,.mfp.mfp-pdo.mfp-native-generated button.pdo-submit[disabled]{opacity:1!important;\n  background:var(--pdo-primary)!important;cursor:not-allowed!important;filter:none!important}\n\n/* sticky order summary --------------------------------------------------- */\n.mfp.mfp-pdo.mfp-native-generated .pdo-side{position:relative}\n.mfp.mfp-pdo.mfp-native-generated .pdo-sum{position:sticky;top:16px;padding:24px;border:1px solid var(--pdo-border);border-radius:12px;\n  background:#fff}\n.mfp.mfp-pdo.mfp-native-generated .pdo-sum-lines{display:flex;flex-direction:column;gap:12px;margin-bottom:16px}\n.mfp.mfp-pdo.mfp-native-generated .pdo-sum-line{display:flex;justify-content:space-between;font-size:14px;line-height:20px}\n.mfp.mfp-pdo.mfp-native-generated .pdo-sum-l{font-size:14px;line-height:20px;font-weight:400;color:#45556C}\n.mfp.mfp-pdo.mfp-native-generated .pdo-sum-n{font-size:14px;line-height:20px;font-weight:500;color:var(--pdo-text)}\n.mfp.mfp-pdo.mfp-native-generated .pdo-sum-tot{display:flex;flex-direction:column;gap:8px;padding-top:16px;\n  border-top:1px solid var(--pdo-border)}\n.mfp.mfp-pdo.mfp-native-generated .pdo-sum-r{display:flex;justify-content:space-between}\n.mfp.mfp-pdo.mfp-native-generated .pdo-sum-v{font-size:14px;line-height:20px;font-weight:400;color:var(--pdo-text)}\n.mfp.mfp-pdo.mfp-native-generated .pdo-sum-g{display:flex;justify-content:space-between;padding-top:8px;\n  border-top:1px solid var(--pdo-border)}\n.mfp.mfp-pdo.mfp-native-generated .pdo-sum-gl{font-size:18px;line-height:28px;font-weight:700;color:var(--pdo-text)}\n.mfp.mfp-pdo.mfp-native-generated .pdo-sum-gv{font-size:18px;line-height:28px;font-weight:700;color:var(--pdo-primary)}\n.mfp.mfp-pdo.mfp-native-generated .pdo-page{padding:0!important;background:transparent!important;min-height:0!important}.mfp.mfp-pdo.mfp-native-generated .pdo-shell,.mfp.mfp-pdo.mfp-native-generated .pdo-wrap{max-width:none!important;margin:0!important}.mfp.mfp-pdo.mfp-native-generated .pdo-grid,.mfp.mfp-pdo.mfp-native-generated .pdo-main,.mfp.mfp-pdo.mfp-native-generated .pdo-hero-in,.mfp.mfp-pdo.mfp-native-generated .pdo-card{max-width:none!important;margin-left:0!important;margin-right:0!important}.mfp.mfp-pdo.mfp-native-generated .pdo-page{border:1px solid var(--pdo-border)!important;border-radius:12px!important;overflow:hidden;background:var(--pdo-page)!important}.mf-form-wrapper.mf-has-date-popover .mfp.mfp-pdo.mfp-native-generated .pdo-page{overflow:visible!important}",
+    "themeSelector": false,
+    "premiumGeneratedShell": true,
+    "gateNavigationUntilValid": true,
+    "postSubmitExperience": {
+      "enabled": true,
+      "mode": "rich",
+      "title": "Order placed",
+      "message": "Thank you, {{field:first_name}}. We sent the confirmation to {{field:email}}.",
+      "showSubmissionId": true,
+      "submissionIdLabel": "Reference:",
+      "showAnswerSummary": false,
+      "allowFillAgain": true,
+      "fillAgainLabel": "Submit another",
+      "doneLabel": "Done"
+    },
+    "themeCompatibility": {
+      "policy": "hybrid",
+      "supportsPageColors": false,
+      "supportsPageTypography": true,
+      "supportsDarkHost": true,
+      "prefixes": [
+        "pdo"
+      ],
+      "immutable": [
+        "primary",
+        "accent",
+        "deco"
+      ]
+    }
+  },
+  "fields": [
+    {
+      "placeholder": "First Name",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "first_name",
+      "type": "Text",
+      "label": "First Name",
+      "required": true
+    },
+    {
+      "placeholder": "Last Name",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "last_name",
+      "type": "Text",
+      "label": "Last Name",
+      "required": true
+    },
+    {
+      "placeholder": "Email",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "email",
+      "type": "Email",
+      "label": "Email",
+      "required": true
+    },
+    {
+      "placeholder": "Phone",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "phone",
+      "type": "Text",
+      "label": "Phone",
+      "required": false
+    },
+    {
+      "placeholder": "Company (optional)",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "company",
+      "type": "Text",
+      "label": "Company",
+      "required": false
+    },
+    {
+      "placeholder": "Street Address",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "address",
+      "type": "Text",
+      "label": "Street Address",
+      "required": true
+    },
+    {
+      "placeholder": "City",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "city",
+      "type": "Text",
+      "label": "City",
+      "required": true
+    },
+    {
+      "placeholder": "State",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "state",
+      "type": "Text",
+      "label": "State",
+      "required": false
+    },
+    {
+      "placeholder": "ZIP Code",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "zip",
+      "type": "Text",
+      "label": "ZIP Code",
+      "required": true
+    },
+    {
+      "placeholder": "Select Country",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "United States",
+          "value": "us"
+        },
+        {
+          "label": "Canada",
+          "value": "ca"
+        },
+        {
+          "label": "United Kingdom",
+          "value": "uk"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "dropdown"
+      },
+      "key": "country",
+      "type": "Select",
+      "label": "Country",
+      "required": true,
+      "optionDisplay": "dropdown",
+      "choiceDisplay": "dropdown",
+      "optionVariant": "dropdown",
+      "widgetProps": {
+        "optionDisplay": "dropdown"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "Select product",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Starter Plan - $29",
+          "value": "Starter"
+        },
+        {
+          "label": "Pro Plan - $99",
+          "value": "Pro"
+        },
+        {
+          "label": "Enterprise - Custom",
+          "value": "Enterprise"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "dropdown"
+      },
+      "key": "item_product",
+      "type": "Select",
+      "label": "Product",
+      "required": false,
+      "optionDisplay": "dropdown",
+      "choiceDisplay": "dropdown",
+      "optionVariant": "dropdown",
+      "widgetProps": {
+        "optionDisplay": "dropdown"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "1",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "item_qty",
+      "type": "Number",
+      "label": "Quantity",
+      "required": false
+    }
+  ],
+  "rules": [],
+  "workflow": {
+    "notifications": []
+  }
+}

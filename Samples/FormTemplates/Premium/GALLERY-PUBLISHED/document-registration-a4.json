@@ -1,0 +1,1169 @@
+{
+  "version": "1.0",
+  "slug": "document-registration-a4",
+  "title": "EuroYouth Document Registration",
+  "description": "A formal A4-style registration document with identity, contact, programme, passport photo, declaration and signature fields.",
+  "category": "registration",
+  "categories": [
+    "registration",
+    "premium",
+    "education",
+    "documents"
+  ],
+  "icon": "file-text",
+  "submitButtonText": "Submit Registration",
+  "successMessage": "Registration submitted.",
+  "settings": {
+    "theme": "custom",
+    "multiPage": false,
+    "showProgressBar": false,
+    "customContent": {
+      "euroyouth": "EuroYouth",
+      "exchange_programme_2026": "exchange programme 2026",
+      "date": "Date",
+      "photo": "Photo",
+      "registration_form": "Registration Form",
+      "personal_information": "Personal Information",
+      "first_name": "First Name",
+      "last_name": "Last Name",
+      "gender": "Gender",
+      "date_of_birth": "Date of Birth",
+      "place_of_birth": "Place of Birth",
+      "fathers_name": "Father's Name",
+      "mothers_name": "Mother's Name",
+      "nationality": "Nationality",
+      "religion": "Religion",
+      "residence_status": "Residence Status",
+      "marital_status": "Marital Status",
+      "national_id_no": "National ID No.",
+      "passport_no": "Passport No.",
+      "tin": "TIN",
+      "driving_license_no": "Driving License No.",
+      "contact_information": "Contact Information",
+      "address": "Address",
+      "city": "City",
+      "state_province": "State / Province",
+      "zip_code": "Zip Code",
+      "country": "Country",
+      "phone": "Phone",
+      "email": "Email",
+      "membership_type": "Membership Type",
+      "programme_details": "Programme Details",
+      "programme": "Programme",
+      "duration_months": "Duration (months)",
+      "start_month": "Start Month",
+      "accommodation": "Accommodation",
+      "language_level": "Language Level",
+      "scholarship_required": "Scholarship Required",
+      "declaration": "Declaration",
+      "terms_and_conditions": "Terms & Conditions",
+      "by_signing_this_registration_form_i_confirm_that_all": "By signing this registration form, I confirm that all the\n          information provided is accurate and complete to the best of my knowledge. I understand\n          that any false or misleading information may result in the rejection of my application\n          or termination of my participation in the EuroYouth Exchange Programme 2026.",
+      "signature": "Signature",
+      "applicant_signature": "Applicant Signature",
+      "back_to_forms": "Back to forms",
+      "submit_registration": "Submit Registration",
+      "euroyouth_exchange_programme_registered_ngo_euroyout": "EuroYouth Exchange Programme — Registered NGO — euroyouth.eu"
+    },
+    "customScripts": {
+      "drc_runtime": "(function(){\n  var root=(typeof __mfCurrentScriptRoot!=='undefined'&&__mfCurrentScriptRoot)||document;\n  var scope=(root&&root.closest)?(root.closest('.mfp')||document):document;\n  var date=scope.querySelector('[name=\"application_date\"]');\n  if(date&&!date.value){date.value=new Date().toISOString().slice(0,10);try{date.dispatchEvent(new Event('input',{bubbles:true}));}catch(e){}}\n  var photo=scope.querySelector('.drc-photo');\n  var input=photo&&photo.querySelector('input[type=\"file\"]');\n  var hidden=photo&&photo.querySelector('input[type=\"hidden\"]');\n  var preview=photo&&photo.querySelector('.drc-photo-preview');\n  function paint(file){if(!file||!preview)return;var r=new FileReader();r.onload=function(){preview.src=String(r.result||'');photo.classList.add('has-photo');};r.readAsDataURL(file);}\n  if(photo&&input){\n    photo.setAttribute('role','button');photo.setAttribute('tabindex','0');photo.setAttribute('aria-label','Upload passport photo');\n    input.addEventListener('click',function(e){e.stopPropagation();});\n    input.addEventListener('change',function(){photo.classList.remove('is-uploaded');photo.classList.add('is-uploading');paint(input.files&&input.files[0]);});\n    photo.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();input.click();}});\n    if(hidden)hidden.addEventListener('change',function(){photo.classList.remove('is-uploading');photo.classList.toggle('is-uploaded',!!hidden.value);photo.title=hidden.value?'Photo uploaded':'Upload passport photo';});\n  }\n  var back=scope.querySelector('.drc-back');if(back)back.addEventListener('click',function(){if(history.length>1)history.back();});\n})();"
+    },
+    "customHtml": "<div class='mfp mfp-drc mfp-native-generated' data-mf-flexgrid='locked'\n  style='background:transparent!important;border:0!important;border-radius:0!important;padding:0!important;box-shadow:none!important'>\n  <div class='drc-page'><div class='drc-paper'>\n    <div class='drc-head'>\n      <div class='drc-brand'><span class='drc-mark' aria-hidden='true'></span><span class='drc-brand-copy'>\n        <strong>{{content:euroyouth}}</strong><small>{{content:exchange_programme_2026}}</small></span></div>\n      <div class='drc-head-tools'>\n        <div class='drc-date'><label class='drc-field'><span class='drc-label'>{{content:date}}</span>{{field:application_date}}</label></div>\n        <div class='drc-photo'>{{field:passport_photo}}<span class='drc-photo-empty' aria-hidden='true'>\n          <i></i><small>{{content:photo}}</small></span><img class='drc-photo-preview' alt='Passport photo'></div>\n      </div>\n    </div>\n    <div class='drc-hgroup'><h1 class='drc-h1'>{{content:registration_form}}</h1></div>\n    <div class='drc-body'>\n      <div class='drc-section'><span>{{content:personal_information}}</span><i></i></div>\n      <div class='drc-grid'><label class='drc-field'><span class='drc-label'>{{content:first_name}}<b>*</b></span>{{field:first_name}}</label><label class='drc-field'><span class='drc-label'>{{content:last_name}}<b>*</b></span>{{field:last_name}}</label></div>\n      <div class='drc-gap16'><label class='drc-field'><span class='drc-label'>{{content:gender}}</span>{{field:gender}}</label></div>\n      <div class='drc-gap16'><div class='drc-grid'><label class='drc-field'><span class='drc-label'>{{content:date_of_birth}}</span>{{field:date_of_birth}}</label><label class='drc-field'><span class='drc-label'>{{content:place_of_birth}}</span>{{field:place_of_birth}}</label><label class='drc-field'><span class='drc-label'>{{content:fathers_name}}</span>{{field:father_name}}</label><label class='drc-field'><span class='drc-label'>{{content:mothers_name}}</span>{{field:mother_name}}</label><label class='drc-field'><span class='drc-label'>{{content:nationality}}</span>{{field:nationality}}</label><label class='drc-field'><span class='drc-label'>{{content:religion}}</span>{{field:religion}}</label></div></div>\n      <div class='drc-gap16'><div class='drc-grid'><label class='drc-field'><span class='drc-label'>{{content:residence_status}}</span>{{field:residence_status}}</label><label class='drc-field'><span class='drc-label'>{{content:marital_status}}</span>{{field:marital_status}}</label></div></div>\n      <div class='drc-gap16'><div class='drc-grid'><label class='drc-field'><span class='drc-label'>{{content:national_id_no}}</span>{{field:national_id}}</label><label class='drc-field'><span class='drc-label'>{{content:passport_no}}</span>{{field:passport_no}}</label><label class='drc-field'><span class='drc-label'>{{content:tin}}</span>{{field:tin}}</label><label class='drc-field'><span class='drc-label'>{{content:driving_license_no}}</span>{{field:driving_license}}</label></div></div>\n      <div class='drc-section'><span>{{content:contact_information}}</span><i></i></div>\n      <label class='drc-field'><span class='drc-label'>{{content:address}}<b>*</b></span>{{field:address}}</label>\n      <div class='drc-gap16'><div class='drc-grid'><label class='drc-field'><span class='drc-label'>{{content:city}}<b>*</b></span>{{field:city}}</label><label class='drc-field'><span class='drc-label'>{{content:state_province}}</span>{{field:state}}</label><label class='drc-field'><span class='drc-label'>{{content:zip_code}}</span>{{field:zip}}</label><label class='drc-field'><span class='drc-label'>{{content:country}}<b>*</b></span>{{field:country}}</label><label class='drc-field'><span class='drc-label'>{{content:phone}}<b>*</b></span>{{field:phone}}</label><label class='drc-field'><span class='drc-label'>{{content:email}}<b>*</b></span>{{field:email}}</label></div></div>\n      <div class='drc-gap16'><label class='drc-field'><span class='drc-label'>{{content:membership_type}}</span>{{field:membership_type}}</label></div>\n      <div class='drc-section'><span>{{content:programme_details}}</span><i></i></div>\n      <div class='drc-grid'><label class='drc-field'><span class='drc-label'>{{content:programme}}<b>*</b></span>{{field:programme}}</label><label class='drc-field'><span class='drc-label'>{{content:duration_months}}</span>{{field:duration}}</label><label class='drc-field'><span class='drc-label'>{{content:start_month}}<b>*</b></span>{{field:start_month}}</label><label class='drc-field'><span class='drc-label'>{{content:accommodation}}</span>{{field:accommodation}}</label><label class='drc-field'><span class='drc-label'>{{content:language_level}}</span>{{field:language_level}}</label><label class='drc-field'><span class='drc-label'>{{content:scholarship_required}}</span>{{field:scholarship}}</label></div>\n      <div class='drc-section'><span>{{content:declaration}}</span><i></i></div>\n      <div class='drc-declare'>\n        <div><span class='drc-label'>{{content:terms_and_conditions}}</span>\n          <div class='drc-terms-copy'>{{content:by_signing_this_registration_form_i_confirm_that_all}}</div>\n          <div class='drc-checks'>{{field:terms}}{{field:newsletter}}</div>\n        </div>\n        <div><span class='drc-label'>{{content:signature}}</span><div class='drc-sign'>{{field:signature}}</div>\n          <div class='drc-sign-rule'></div><p class='drc-sign-cap'>{{content:applicant_signature}}</p></div>\n      </div>\n      <div class='drc-actions'><button class='drc-back' type='button'><i aria-hidden='true'></i>\n        {{content:back_to_forms}}</button><button class='drc-submit' type='submit'>{{content:submit_registration}}</button></div>\n      <div class='drc-official'>{{content:euroyouth_exchange_programme_registered_ngo_euroyout}}</div>\n    </div>\n    {{script:drc_runtime}}\n  </div></div>\n</div>",
+    "customCss": "@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');\n.mfp.mfp-drc.mfp-native-generated {--drc-primary:#111111;--drc-accent:#111111;--drc-surface:var(--mf-page-surface,var(--mf-preset-surface,#ffffff));--drc-text:var(--mf-page-text,var(--mf-preset-text,#111111));--drc-muted:var(--mf-page-muted,var(--mf-preset-muted,#555555));--drc-border:var(--mf-page-border,var(--mf-preset-border,#cccccc));--drc-on-primary:var(--mf-preset-on-primary,#ffffff);--drc-deco:#111111;--drc-page:#f0f0f0;--drc-fill:#f0f0f0;--drc-fill-strong:color-mix(in srgb, var(--drc-text) 9%, var(--drc-surface));--drc-soft:color-mix(in srgb, var(--drc-primary) 12%, var(--drc-surface));--drc-hairline:color-mix(in srgb, var(--drc-text) 12%, var(--drc-surface));}.mfp.mfp-drc.mfp-native-generated {background:transparent!important;border:0!important;padding:0!important;font-family:'DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif}.mfp.mfp-drc.mfp-native-generated {--drc-primary:var(--mf-page-primary,var(--mf-preset-primary,#111111));--drc-accent:var(--mf-page-accent,var(--mf-preset-accent,#111111));--drc-surface:var(--mf-page-surface,var(--mf-preset-surface,#ffffff));--drc-text:var(--mf-page-text,var(--mf-preset-text,#111111));--drc-border:var(--mf-page-border,var(--mf-preset-border,#cccccc));--drc-on-primary:var(--mf-page-on-primary,var(--mf-preset-on-primary,#ffffff));--drc-page:var(--mf-preset-bg,#f0f0f0);}@container (max-width:520px){.mfp.mfp-drc.mfp-native-generated [class*=\"-grid\"],.mfp.mfp-drc.mfp-native-generated [class*=\"-meta\"],.mfp.mfp-drc.mfp-native-generated [class*=\"-scores\"],.mfp.mfp-drc.mfp-native-generated [class*=\"-charts\"],.mfp.mfp-drc.mfp-native-generated [class*=\"-cols\"]{grid-template-columns:1fr!important}.mfp.mfp-drc.mfp-native-generated [class*=\"-body\"],.mfp.mfp-drc.mfp-native-generated [class*=\"-split\"],.mfp.mfp-drc.mfp-native-generated [class*=\"-foot\"],.mfp.mfp-drc.mfp-native-generated [class*=\"-head\"],.mfp.mfp-drc.mfp-native-generated [class*=\"-row\"]{flex-wrap:wrap!important}.mfp.mfp-drc.mfp-native-generated [class*=\"-aside\"],.mfp.mfp-drc.mfp-native-generated [class*=\"-side\"]{flex:1 1 100%!important;width:100%!important;max-width:none!important}}.mfp.mfp-drc.mfp-native-generated  img{max-width:100%!important;height:auto}.mfp.mfp-drc.mfp-native-generated {overflow-wrap:break-word}\n\n/* The wrapper itself: strip the host's card, but NOT its width. Layout > Max width in the module\n   settings (480/640/768/960/Full) is a max-width on THIS element, and the previous version of this\n   rule overrode it with max-width:none!important - so picking 960 did nothing at all. */\n.mf-form-wrapper:has(.mfp-drc){background:transparent!important;border:0!important;\n  border-radius:0!important;box-shadow:none!important;padding:0!important}\n/* The boxes INSIDE it have their own measures, and those are what squeezed the design. */\n.mf-form-wrapper:has(.mfp-drc) > .mf-form-inner,\n.mf-form-wrapper:has(.mfp-drc) .mf-form,\n.mf-form-wrapper:has(.mfp-drc) .mf-fields-container{background:transparent!important;\n  border:0!important;border-radius:0!important;box-shadow:none!important;padding:0!important;\n  margin:0!important;max-width:none!important;width:100%!important}\n\n.mfp.mfp-drc.mfp-native-generated {container-type:inline-size;font-family:'DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif!important;color:#111;background:transparent!important}\n.mfp.mfp-drc.mfp-native-generated .drc-page{padding:32px 16px;background:#f0f0f0}\n.mfp.mfp-drc.mfp-native-generated .drc-paper{box-sizing:border-box;width:100%;max-width:768px;margin:0 auto;background:#fff;\n  border-top:3px solid #111;box-shadow:0 2px 24px rgba(0,0,0,.10)}\n.mfp.mfp-drc.mfp-native-generated .drc-head{display:flex;align-items:flex-start;justify-content:space-between;padding:28px 32px 20px;\n  border-bottom:1px solid #ccc}\n.mfp.mfp-drc.mfp-native-generated .drc-brand{display:flex;align-items:center;gap:10px}\n.mfp.mfp-drc.mfp-native-generated .drc-mark{display:block;flex:0 0 36px;width:36px;height:36px;border-radius:4px;background:#111 url(\"data:image/svg+xml,%3Csvg xmlns='http:%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E %3Cpath d='M20 13c0 5-3.5 7.5-8 9-4.5-1.5-8-4-8-9V5l8-3 8 3z'%2F%3E%3C%2Fsvg%3E\") center/20px 20px no-repeat}\n.mfp.mfp-drc.mfp-native-generated .drc-brand-copy{display:flex;flex-direction:column}\n.mfp.mfp-drc.mfp-native-generated .drc-brand-copy strong{font-size:15px;line-height:20px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#111}\n.mfp.mfp-drc.mfp-native-generated .drc-brand-copy small{font-size:10px;line-height:12px;font-weight:400;color:#555}\n.mfp.mfp-drc.mfp-native-generated .drc-head-tools{display:flex;align-items:flex-start;gap:20px}\n.mfp.mfp-drc.mfp-native-generated .drc-date{width:126px;text-align:right}\n.mfp.mfp-drc.mfp-native-generated .drc-date .drc-label{text-align:right}\n.mfp.mfp-drc.mfp-native-generated .drc-photo{position:relative;flex:0 0 64px;width:64px;height:80px;overflow:hidden;border:1px solid #ccc;background:#f7f7f7}\n.mfp.mfp-drc.mfp-native-generated .drc-photo:hover,.mfp.mfp-drc.mfp-native-generated .drc-photo:focus-visible{border-color:#777;outline:1px solid #777;outline-offset:2px}\n.mfp.mfp-drc.mfp-native-generated .drc-photo .mf-field-group{height:100%!important}\n.mfp.mfp-drc.mfp-native-generated .drc-photo .mf-file-dropzone{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;min-height:0!important;\n  margin:0!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;z-index:3;cursor:pointer!important}\n.mfp.mfp-drc.mfp-native-generated .drc-photo .mf-file-dropzone-inner,.mfp.mfp-drc.mfp-native-generated .drc-photo .mf-file-list{display:none!important}\n.mfp.mfp-drc.mfp-native-generated .drc-photo-empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;pointer-events:none}\n.mfp.mfp-drc.mfp-native-generated .drc-photo-empty i{display:block;width:16px;height:16px;background:url(\"data:image/svg+xml,%3Csvg xmlns='http:%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox='0 0 24 24' fill='none' stroke='%23555' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E %3Cpath d='M12 3v12'%2F%3E%3Cpath d='m17 8-5-5-5 5'%2F%3E%3Cpath d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'%2F%3E%3C%2Fsvg%3E\") center/16px 16px no-repeat}\n.mfp.mfp-drc.mfp-native-generated .drc-photo-empty small{font-size:9px;line-height:12px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;color:#555}\n.mfp.mfp-drc.mfp-native-generated img.drc-photo-preview{position:absolute!important;inset:0!important;display:none!important;width:100%!important;height:100%!important;max-width:none!important;object-fit:cover!important}\n.mfp.mfp-drc.mfp-native-generated .drc-photo.has-photo img.drc-photo-preview{display:block!important}\n.mfp.mfp-drc.mfp-native-generated .drc-photo.has-photo .drc-photo-empty{display:none}\n.mfp.mfp-drc.mfp-native-generated .drc-photo.is-uploaded:after{content:'\\2713';position:absolute;right:3px;bottom:3px;z-index:4;display:grid;width:16px;height:16px;place-items:center;\n  border-radius:50%;background:#111;color:#fff;font-size:10px;line-height:1;pointer-events:none}\n.mfp.mfp-drc.mfp-native-generated .drc-hgroup{padding:20px 32px 4px}\n.mfp.mfp-drc.mfp-native-generated h1.drc-h1{margin:0!important;font-size:24px!important;line-height:32px!important;font-weight:700!important;letter-spacing:0!important;color:#111!important}\n.mfp.mfp-drc.mfp-native-generated .drc-body{padding:0 32px 32px}\n.mfp.mfp-drc.mfp-native-generated .drc-section{display:flex;align-items:center;gap:12px;margin:28px 0 16px}\n.mfp.mfp-drc.mfp-native-generated .drc-section span{flex:0 0 auto;font-size:11px;line-height:17px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#111}\n.mfp.mfp-drc.mfp-native-generated .drc-section i{display:block;flex:1 1 auto;height:1px;background:#ccc}\n.mfp.mfp-drc.mfp-native-generated .drc-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 24px}\n.mfp.mfp-drc.mfp-native-generated .drc-gap16{margin-top:16px}\n.mfp.mfp-drc.mfp-native-generated .drc-field{display:block;margin:0}\n.mfp.mfp-drc.mfp-native-generated .drc-label{display:block;margin:0 0 2px;font-size:10px;line-height:15px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#555}\n.mfp.mfp-drc.mfp-native-generated .drc-label b{margin-left:2px;font-weight:600;color:#111}\n\n/* megaform sets font-family on label/input/select/textarea with !important, so an authored\n   <span> inside a <label> inherits the HOST typeface no matter what the shell root declares.\n   Element selectors are (0,3,1) here - above megaform, below every authored class rule - and\n   <i> is left alone so Font Awesome keeps its own family. */\n.mfp.mfp-drc.mfp-native-generated label,.mfp.mfp-drc.mfp-native-generated span,.mfp.mfp-drc.mfp-native-generated p,.mfp.mfp-drc.mfp-native-generated div,.mfp.mfp-drc.mfp-native-generated ul,.mfp.mfp-drc.mfp-native-generated li,.mfp.mfp-drc.mfp-native-generated h1,.mfp.mfp-drc.mfp-native-generated h2,.mfp.mfp-drc.mfp-native-generated h3,.mfp.mfp-drc.mfp-native-generated button{font-family:inherit!important}\n.mfp.mfp-drc.mfp-native-generated .mf-field-label{display:none!important}\n/* A wizard's page-break Section renders a visible heading the mock has no room for - it exists to\n   split the pages, not to be seen. */\n.mfp.mfp-drc.mfp-native-generated .mf-section-break,.mfp.mfp-drc.mfp-native-generated .mf-section-title{display:none!important}\n.mfp.mfp-drc.mfp-native-generated .mf-field-group{margin:0!important;width:100%}\n.mfp.mfp-drc.mfp-native-generated .mf-form-title,.mfp.mfp-drc.mfp-native-generated .mf-form-description,.mfp.mfp-drc.mfp-native-generated .mf-form-actions{display:none!important}\n.mfp.mfp-drc.mfp-native-generated .mf-option-item{margin:0!important}\n/* megaform gives every option chip a 36px floor and paints .mf-option-icon as a rounded tile. */\n.mfp.mfp-drc.mfp-native-generated .mf-option-group--chips .mf-option-check,\n.mfp.mfp-drc.mfp-native-generated .mf-option-group--cards .mf-option-check{display:none!important}\n.mfp.mfp-drc.mfp-native-generated .mf-option-group--chips .mf-option-ui{min-height:0!important;height:auto!important}\n.mfp.mfp-drc.mfp-native-generated .mf-option-group--cards .mf-option-copy{display:block;width:100%}\n\n.mfp.mfp-drc.mfp-native-generated .mf-input[class],.mfp.mfp-drc.mfp-native-generated .mf-select[class]{box-sizing:border-box;width:100%!important;height:36.67px!important;min-height:0!important;margin:0!important;padding:8px 0!important;\n  border:0!important;border-bottom:1px solid #c8c8c8!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;\n  color:#111!important;font-family:inherit!important;font-size:13px!important;line-height:20px!important;font-weight:400!important;letter-spacing:0!important;outline:none!important}\n.mfp.mfp-drc.mfp-native-generated .mf-input[class]:focus,.mfp.mfp-drc.mfp-native-generated .mf-select[class]:focus{border-bottom:1.5px solid #111!important;box-shadow:none!important}\n.mfp.mfp-drc.mfp-native-generated .mf-input[class]::placeholder{color:#aaa!important;opacity:1}\n.mfp.mfp-drc.mfp-native-generated .mf-select[class]{appearance:none!important;-webkit-appearance:none!important;cursor:pointer!important;\n  padding-left:8px!important;padding-right:34px!important;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http:%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox='0 0 24 24' fill='none' stroke='%23555' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E %3Cpath d='m7 10 5 5 5-5'%2F%3E%3C%2Fsvg%3E\")!important;background-repeat:no-repeat!important;\n  background-position:right 10px center!important;background-size:16px 16px!important}\n.mfp.mfp-drc.mfp-native-generated .mf-select option{padding:6px 10px!important}\n.mfp.mfp-drc.mfp-native-generated .mf-select-wrap>.mf-select-chevron{display:none!important}\n.mfp.mfp-drc.mfp-native-generated .mf-option-group{display:flex!important;flex-direction:row!important;flex-wrap:wrap!important;gap:4px 20px!important;padding-top:6px!important}\n.mfp.mfp-drc.mfp-native-generated label.mf-option-item[class]{display:inline-flex!important;align-items:center!important;width:max-content!important;max-width:none!important;flex:0 0 auto!important;margin:0!important;min-height:0!important}\n.mfp.mfp-drc.mfp-native-generated .mf-option-control{position:absolute!important;width:1px!important;height:1px!important;margin:-1px!important;padding:0!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;white-space:nowrap!important;border:0!important}\n.mfp.mfp-drc.mfp-native-generated .mf-option-ui{display:flex!important;align-items:center!important;gap:6px!important;min-height:0!important;padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important;color:#111!important}\n.mfp.mfp-drc.mfp-native-generated .mf-option-ui:before{content:'';display:block;box-sizing:border-box;flex:0 0 14px;width:14px;height:14px;border:1px solid #c8c8c8;background:transparent}\n.mfp.mfp-drc.mfp-native-generated input[type='radio'] + .mf-option-ui:before{border-radius:50%}\n.mfp.mfp-drc.mfp-native-generated input[type='radio']:checked + .mf-option-ui:before{border:4px solid #111}\n.mfp.mfp-drc.mfp-native-generated input[type='checkbox']:checked + .mf-option-ui:before{border-color:#111;background:#111}\n.mfp.mfp-drc.mfp-native-generated .mf-option-label{font-size:13px!important;line-height:20px!important;font-weight:400!important;color:#111!important}\n.mfp.mfp-drc.mfp-native-generated .mf-option-check,.mfp.mfp-drc.mfp-native-generated .mf-option-icon{display:none!important}\n.mfp.mfp-drc.mfp-native-generated .drc-declare{display:grid;grid-template-columns:minmax(0,1fr) 180px;gap:20px;align-items:start}\n.mfp.mfp-drc.mfp-native-generated .drc-terms-copy{box-sizing:border-box;width:100%;height:90px;overflow:auto;padding:8px 12px;border:1px solid #ccc;background:#f9f9f9;\n  font-size:11px;line-height:18px;font-weight:400;color:#555}\n.mfp.mfp-drc.mfp-native-generated .drc-checks{display:flex;flex-direction:column;gap:8px;margin-top:12px}\n.mfp.mfp-drc.mfp-native-generated .drc-checks .mf-option-group{padding:0!important}\n.mfp.mfp-drc.mfp-native-generated .drc-checks .mf-option-label{font-size:12px!important;line-height:18px!important;color:#555!important}\n.mfp.mfp-drc.mfp-native-generated .drc-checks input[type='checkbox'] + .mf-option-ui:before{border-radius:0}\n.mfp.mfp-drc.mfp-native-generated .drc-sign{box-sizing:border-box;height:96px;overflow:hidden;border:1px solid #ccc;background:#fff}\n.mfp.mfp-drc.mfp-native-generated .drc-sign .mf-signature-field{box-sizing:border-box;display:flex!important;flex-direction:column!important;width:100%!important;height:100%!important;\n  margin:0!important;padding:0!important;border:0!important;border-radius:0!important;background:#fff!important;box-shadow:none!important}\n.mfp.mfp-drc.mfp-native-generated .drc-sign .mf-signature-canvas-wrap{position:relative!important;display:block!important;box-sizing:border-box!important;flex:1 1 auto!important;min-height:0!important;\n  margin:0!important;padding:0!important;overflow:hidden!important;border:0!important;border-radius:0!important;background:#fff!important;box-shadow:none!important}\n.mfp.mfp-drc.mfp-native-generated .drc-sign canvas.mf-signature-canvas{display:block!important;box-sizing:border-box!important;width:100%!important;height:70px!important;\n  margin:0!important;border:0!important;border-radius:0!important;background:#fff!important;cursor:crosshair!important;touch-action:none!important}\n.mfp.mfp-drc.mfp-native-generated .drc-sign .mf-signature-placeholder{position:absolute!important;inset:0!important;display:flex!important;align-items:center!important;justify-content:center!important;\n  gap:5px!important;pointer-events:none!important;color:#bbb!important;font-size:10px!important;line-height:14px!important;letter-spacing:.1em!important;text-transform:uppercase!important}\n.mfp.mfp-drc.mfp-native-generated .drc-sign .mf-signature-placeholder svg{width:14px!important;height:14px!important}\n.mfp.mfp-drc.mfp-native-generated .drc-sign .mf-signature-actions{box-sizing:border-box!important;display:flex!important;flex:0 0 24px!important;align-items:center!important;justify-content:flex-end!important;\n  gap:4px!important;height:24px!important;margin:0!important;padding:2px 4px!important;border-top:1px solid #eee!important;background:#fafafa!important}\n.mfp.mfp-drc.mfp-native-generated .drc-sign .mf-signature-actions button{box-sizing:border-box!important;min-width:0!important;min-height:0!important;height:19px!important;margin:0!important;\n  padding:1px 6px!important;border:0!important;border-radius:2px!important;background:transparent!important;box-shadow:none!important;color:#666!important;\n  font-family:inherit!important;font-size:9px!important;line-height:15px!important;font-weight:500!important;text-transform:none!important}\n.mfp.mfp-drc.mfp-native-generated .drc-sign .mf-signature-actions button:hover{background:#eee!important;color:#111!important}\n.mfp.mfp-drc.mfp-native-generated .drc-sign .mf-signature-actions button:disabled{opacity:.35!important}\n.mfp.mfp-drc.mfp-native-generated .drc-sign-rule{height:1px;margin-top:4px;background:#ccc}\n.mfp.mfp-drc.mfp-native-generated p.drc-sign-cap{margin:2px 0 0!important;text-align:center;font-size:9px!important;line-height:14px!important;font-weight:400!important;letter-spacing:.1em;text-transform:uppercase;color:#555!important}\n.mfp.mfp-drc.mfp-native-generated .drc-actions{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:32px;padding-top:20px;border-top:1px solid #ccc}\n.mfp.mfp-drc.mfp-native-generated button.drc-back{display:inline-flex;align-items:center;gap:6px;padding:0!important;border:0!important;background:transparent!important;color:#555!important;\n  font-family:inherit!important;font-size:13px!important;line-height:20px!important;font-weight:500!important;text-align:left!important;text-transform:none!important;box-shadow:none!important}\n.mfp.mfp-drc.mfp-native-generated button.drc-back i{display:block;width:14px;height:14px;background:url(\"data:image/svg+xml,%3Csvg xmlns='http:%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox='0 0 24 24' fill='none' stroke='%23555555' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M19 12H5'%2F%3E%3Cpath d='m12 19-7-7 7-7'%2F%3E%3C%2Fsvg%3E\") center/14px 14px no-repeat}\n.mfp.mfp-drc.mfp-native-generated button.drc-submit[type='submit']{width:auto!important;min-height:0!important;padding:10px 28px!important;border:0!important;border-radius:4px!important;background:#111!important;\n  color:#fff!important;font-family:inherit!important;font-size:13px!important;line-height:20px!important;font-weight:600!important;letter-spacing:.05em!important;text-transform:uppercase!important;box-shadow:none!important}\n.mfp.mfp-drc.mfp-native-generated button.drc-submit.mf-nav-blocked,.mfp.mfp-drc.mfp-native-generated button.drc-submit[disabled]{opacity:.4!important;background:#111!important}\n.mfp.mfp-drc.mfp-native-generated .drc-official{margin-top:24px;padding-top:16px;border-top:1px solid #ccc;text-align:center;font-size:10px;line-height:15px;font-weight:400;letter-spacing:.1em;text-transform:uppercase;color:#bbb}\n@container (max-width:520px){\n  .mfp.mfp-drc.mfp-native-generated .drc-page{padding:0!important}\n  .mfp.mfp-drc.mfp-native-generated .drc-paper{box-shadow:none}\n  .mfp.mfp-drc.mfp-native-generated .drc-head{padding:20px 18px 16px;gap:14px}\n  .mfp.mfp-drc.mfp-native-generated .drc-head-tools{gap:10px}\n  .mfp.mfp-drc.mfp-native-generated .drc-date{display:none}\n  .mfp.mfp-drc.mfp-native-generated .drc-hgroup{padding:18px 18px 2px}\n  .mfp.mfp-drc.mfp-native-generated .drc-body{padding:0 18px 24px}\n  .mfp.mfp-drc.mfp-native-generated .drc-grid{grid-template-columns:1fr!important}\n  .mfp.mfp-drc.mfp-native-generated .drc-declare{grid-template-columns:minmax(0,1fr)!important}\n  .mfp.mfp-drc.mfp-native-generated .drc-declare>div{min-width:0!important}\n  .mfp.mfp-drc.mfp-native-generated .drc-checks label.mf-option-item[class]{width:100%!important;max-width:100%!important;white-space:normal!important}\n  .mfp.mfp-drc.mfp-native-generated .drc-checks .mf-option-ui,.mfp.mfp-drc.mfp-native-generated .drc-checks .mf-option-copy,.mfp.mfp-drc.mfp-native-generated .drc-checks .mf-option-label{min-width:0!important;white-space:normal!important}\n  .mfp.mfp-drc.mfp-native-generated .drc-actions{align-items:stretch;flex-direction:column-reverse}\n  .mfp.mfp-drc.mfp-native-generated button.drc-submit[type='submit']{width:100%!important}\n  .mfp.mfp-drc.mfp-native-generated button.drc-back{justify-content:center}\n}\n.mfp.mfp-drc.mfp-native-generated .drc-page{padding:0!important;background:transparent!important;min-height:0!important}.mfp.mfp-drc.mfp-native-generated .drc-shell,.mfp.mfp-drc.mfp-native-generated .drc-wrap{max-width:none!important;margin:0!important}.mfp.mfp-drc.mfp-native-generated .drc-grid,.mfp.mfp-drc.mfp-native-generated .drc-main,.mfp.mfp-drc.mfp-native-generated .drc-hero-in,.mfp.mfp-drc.mfp-native-generated .drc-card{max-width:none!important;margin-left:0!important;margin-right:0!important}",
+    "themeSelector": false,
+    "premiumGeneratedShell": true,
+    "gateNavigationUntilValid": true,
+    "postSubmitExperience": {
+      "enabled": true,
+      "mode": "rich",
+      "title": "Registration submitted",
+      "message": "Thank you, {{field:first_name}} {{field:last_name}}. Your registration has been received and will be processed within 5 business days.",
+      "showSubmissionId": true,
+      "submissionIdLabel": "Reference:",
+      "showAnswerSummary": false,
+      "allowFillAgain": true,
+      "fillAgainLabel": "Submit another",
+      "doneLabel": "Done"
+    },
+    "themeCompatibility": {
+      "policy": "hybrid",
+      "supportsPageColors": false,
+      "supportsPageTypography": true,
+      "supportsDarkHost": true,
+      "prefixes": [
+        "drc"
+      ],
+      "immutable": [
+        "primary",
+        "accent",
+        "deco"
+      ]
+    }
+  },
+  "fields": [
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "application_date",
+      "type": "Date",
+      "label": "Date",
+      "required": false
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": {
+        "maxFiles": 1,
+        "maxSizeMB": 5,
+        "allowedExtensions": [
+          ".jpg",
+          ".jpeg",
+          ".png",
+          ".webp"
+        ]
+      },
+      "properties": {},
+      "key": "passport_photo",
+      "type": "File",
+      "label": "Passport photo",
+      "required": false
+    },
+    {
+      "placeholder": "Eleanor",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "first_name",
+      "type": "Text",
+      "label": "First Name",
+      "required": true
+    },
+    {
+      "placeholder": "Hayes",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "last_name",
+      "type": "Text",
+      "label": "Last Name",
+      "required": true
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Male",
+          "value": "male"
+        },
+        {
+          "label": "Female",
+          "value": "female"
+        },
+        {
+          "label": "Other",
+          "value": "other"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "list"
+      },
+      "key": "gender",
+      "type": "Radio",
+      "label": "Gender",
+      "required": false,
+      "optionDisplay": "list",
+      "choiceDisplay": "list",
+      "optionVariant": "list",
+      "widgetProps": {
+        "optionDisplay": "list"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "date_of_birth",
+      "type": "Date",
+      "label": "Date of Birth",
+      "required": false
+    },
+    {
+      "placeholder": "City, Country",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "place_of_birth",
+      "type": "Text",
+      "label": "Place of Birth",
+      "required": false
+    },
+    {
+      "placeholder": "Full name",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "father_name",
+      "type": "Text",
+      "label": "Father's Name",
+      "required": false
+    },
+    {
+      "placeholder": "Full name",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "mother_name",
+      "type": "Text",
+      "label": "Mother's Name",
+      "required": false
+    },
+    {
+      "placeholder": "— Select —",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Germany",
+          "value": "Germany"
+        },
+        {
+          "label": "France",
+          "value": "France"
+        },
+        {
+          "label": "Spain",
+          "value": "Spain"
+        },
+        {
+          "label": "Italy",
+          "value": "Italy"
+        },
+        {
+          "label": "Portugal",
+          "value": "Portugal"
+        },
+        {
+          "label": "Netherlands",
+          "value": "Netherlands"
+        },
+        {
+          "label": "Austria",
+          "value": "Austria"
+        },
+        {
+          "label": "Belgium",
+          "value": "Belgium"
+        },
+        {
+          "label": "Greece",
+          "value": "Greece"
+        },
+        {
+          "label": "Poland",
+          "value": "Poland"
+        },
+        {
+          "label": "Sweden",
+          "value": "Sweden"
+        },
+        {
+          "label": "Ireland",
+          "value": "Ireland"
+        },
+        {
+          "label": "Other",
+          "value": "Other"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "dropdown"
+      },
+      "key": "nationality",
+      "type": "Select",
+      "label": "Nationality",
+      "required": false,
+      "optionDisplay": "dropdown",
+      "choiceDisplay": "dropdown",
+      "optionVariant": "dropdown",
+      "widgetProps": {
+        "optionDisplay": "dropdown"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "Optional",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "religion",
+      "type": "Text",
+      "label": "Religion",
+      "required": false
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Residence",
+          "value": "resident"
+        },
+        {
+          "label": "No-Residence",
+          "value": "non-resident"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "list"
+      },
+      "key": "residence_status",
+      "type": "Radio",
+      "label": "Residence Status",
+      "required": false,
+      "optionDisplay": "list",
+      "choiceDisplay": "list",
+      "optionVariant": "list",
+      "widgetProps": {
+        "optionDisplay": "list"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Single",
+          "value": "single"
+        },
+        {
+          "label": "Married",
+          "value": "married"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "list"
+      },
+      "key": "marital_status",
+      "type": "Radio",
+      "label": "Marital Status",
+      "required": false,
+      "optionDisplay": "list",
+      "choiceDisplay": "list",
+      "optionVariant": "list",
+      "widgetProps": {
+        "optionDisplay": "list"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "ID number",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "national_id",
+      "type": "Text",
+      "label": "National ID No.",
+      "required": false
+    },
+    {
+      "placeholder": "Passport number",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "passport_no",
+      "type": "Text",
+      "label": "Passport No.",
+      "required": false
+    },
+    {
+      "placeholder": "Tax ID number",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "tin",
+      "type": "Text",
+      "label": "TIN",
+      "required": false
+    },
+    {
+      "placeholder": "License number",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "driving_license",
+      "type": "Text",
+      "label": "Driving License No.",
+      "required": false
+    },
+    {
+      "placeholder": "Street address",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "address",
+      "type": "Text",
+      "label": "Address",
+      "required": true
+    },
+    {
+      "placeholder": "City",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "city",
+      "type": "Text",
+      "label": "City",
+      "required": true
+    },
+    {
+      "placeholder": "State",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "state",
+      "type": "Text",
+      "label": "State / Province",
+      "required": false
+    },
+    {
+      "placeholder": "00000",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "zip",
+      "type": "Text",
+      "label": "Zip Code",
+      "required": false
+    },
+    {
+      "placeholder": "— Select —",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Germany",
+          "value": "Germany"
+        },
+        {
+          "label": "France",
+          "value": "France"
+        },
+        {
+          "label": "Spain",
+          "value": "Spain"
+        },
+        {
+          "label": "Italy",
+          "value": "Italy"
+        },
+        {
+          "label": "Portugal",
+          "value": "Portugal"
+        },
+        {
+          "label": "Netherlands",
+          "value": "Netherlands"
+        },
+        {
+          "label": "Austria",
+          "value": "Austria"
+        },
+        {
+          "label": "Belgium",
+          "value": "Belgium"
+        },
+        {
+          "label": "Greece",
+          "value": "Greece"
+        },
+        {
+          "label": "Poland",
+          "value": "Poland"
+        },
+        {
+          "label": "Sweden",
+          "value": "Sweden"
+        },
+        {
+          "label": "Ireland",
+          "value": "Ireland"
+        },
+        {
+          "label": "Other",
+          "value": "Other"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "dropdown"
+      },
+      "key": "country",
+      "type": "Select",
+      "label": "Country",
+      "required": true,
+      "optionDisplay": "dropdown",
+      "choiceDisplay": "dropdown",
+      "optionVariant": "dropdown",
+      "widgetProps": {
+        "optionDisplay": "dropdown"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "+1 (555) 000-0000",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "phone",
+      "type": "Phone",
+      "label": "Phone",
+      "required": true
+    },
+    {
+      "placeholder": "email@example.com",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "email",
+      "type": "Email",
+      "label": "Email",
+      "required": true
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Regular",
+          "value": "regular"
+        },
+        {
+          "label": "Premium",
+          "value": "premium"
+        },
+        {
+          "label": "VIP",
+          "value": "vip"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "list"
+      },
+      "key": "membership_type",
+      "type": "Radio",
+      "label": "Membership Type",
+      "required": false,
+      "optionDisplay": "list",
+      "choiceDisplay": "list",
+      "optionVariant": "list",
+      "widgetProps": {
+        "optionDisplay": "list"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "— Select —",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Erasmus Exchange",
+          "value": "erasmus"
+        },
+        {
+          "label": "Language Immersion",
+          "value": "language"
+        },
+        {
+          "label": "Solidarity Corps",
+          "value": "volunteer"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "dropdown"
+      },
+      "key": "programme",
+      "type": "Select",
+      "label": "Programme",
+      "required": true,
+      "optionDisplay": "dropdown",
+      "choiceDisplay": "dropdown",
+      "optionVariant": "dropdown",
+      "widgetProps": {
+        "optionDisplay": "dropdown"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "3",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "1 month",
+          "value": "1"
+        },
+        {
+          "label": "2 months",
+          "value": "2"
+        },
+        {
+          "label": "3 months",
+          "value": "3"
+        },
+        {
+          "label": "6 months",
+          "value": "6"
+        },
+        {
+          "label": "12 months",
+          "value": "12"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "dropdown"
+      },
+      "key": "duration",
+      "type": "Select",
+      "label": "Duration (months)",
+      "required": false,
+      "optionDisplay": "dropdown",
+      "choiceDisplay": "dropdown",
+      "optionVariant": "dropdown",
+      "widgetProps": {
+        "optionDisplay": "dropdown"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "— Select —",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "January",
+          "value": "January"
+        },
+        {
+          "label": "February",
+          "value": "February"
+        },
+        {
+          "label": "March",
+          "value": "March"
+        },
+        {
+          "label": "April",
+          "value": "April"
+        },
+        {
+          "label": "May",
+          "value": "May"
+        },
+        {
+          "label": "June",
+          "value": "June"
+        },
+        {
+          "label": "July",
+          "value": "July"
+        },
+        {
+          "label": "August",
+          "value": "August"
+        },
+        {
+          "label": "September",
+          "value": "September"
+        },
+        {
+          "label": "October",
+          "value": "October"
+        },
+        {
+          "label": "November",
+          "value": "November"
+        },
+        {
+          "label": "December",
+          "value": "December"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "dropdown"
+      },
+      "key": "start_month",
+      "type": "Select",
+      "label": "Start Month",
+      "required": true,
+      "optionDisplay": "dropdown",
+      "choiceDisplay": "dropdown",
+      "optionVariant": "dropdown",
+      "widgetProps": {
+        "optionDisplay": "dropdown"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "— Select —",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Host Family",
+          "value": "Host Family"
+        },
+        {
+          "label": "Student Dormitory",
+          "value": "Student Dormitory"
+        },
+        {
+          "label": "Private Apartment",
+          "value": "Private Apartment"
+        },
+        {
+          "label": "Not Required",
+          "value": "Not Required"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "dropdown"
+      },
+      "key": "accommodation",
+      "type": "Select",
+      "label": "Accommodation",
+      "required": false,
+      "optionDisplay": "dropdown",
+      "choiceDisplay": "dropdown",
+      "optionVariant": "dropdown",
+      "widgetProps": {
+        "optionDisplay": "dropdown"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "— Select —",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "A1",
+          "value": "A1"
+        },
+        {
+          "label": "A2",
+          "value": "A2"
+        },
+        {
+          "label": "B1",
+          "value": "B1"
+        },
+        {
+          "label": "B2",
+          "value": "B2"
+        },
+        {
+          "label": "C1",
+          "value": "C1"
+        },
+        {
+          "label": "C2",
+          "value": "C2"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "dropdown"
+      },
+      "key": "language_level",
+      "type": "Select",
+      "label": "Language Level",
+      "required": false,
+      "optionDisplay": "dropdown",
+      "choiceDisplay": "dropdown",
+      "optionVariant": "dropdown",
+      "widgetProps": {
+        "optionDisplay": "dropdown"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Yes",
+          "value": "yes"
+        },
+        {
+          "label": "No",
+          "value": "no"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "list"
+      },
+      "key": "scholarship",
+      "type": "Radio",
+      "label": "Scholarship Required",
+      "required": false,
+      "optionDisplay": "list",
+      "choiceDisplay": "list",
+      "optionVariant": "list",
+      "widgetProps": {
+        "optionDisplay": "list"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "I agree to the Terms and Conditions",
+          "value": "yes"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "list"
+      },
+      "key": "terms",
+      "type": "Checkbox",
+      "label": "Terms",
+      "required": true,
+      "optionDisplay": "list",
+      "choiceDisplay": "list",
+      "optionVariant": "list",
+      "widgetProps": {
+        "optionDisplay": "list"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "I would like to receive programme updates and news",
+          "value": "yes"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "list"
+      },
+      "key": "newsletter",
+      "type": "Checkbox",
+      "label": "Newsletter",
+      "required": false,
+      "optionDisplay": "list",
+      "choiceDisplay": "list",
+      "optionVariant": "list",
+      "widgetProps": {
+        "optionDisplay": "list"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "signature",
+      "type": "Signature",
+      "label": "Signature",
+      "required": true,
+      "widgetProps": {
+        "height": 80,
+        "placeholderText": "Sign here",
+        "clearText": "Clear",
+        "undoText": "Undo"
+      }
+    }
+  ],
+  "rules": [],
+  "workflow": {
+    "notifications": []
+  }
+}

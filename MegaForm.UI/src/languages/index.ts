@@ -6,7 +6,9 @@ type LocaleEntries = Record<string, string>;
 type TabDef = { id: string; label: string; matcher: (key: string) => boolean };
 
 const BADGE = 'LanguageDash v20260612-03';
-const COMMON_LANGS = ['en-US','es-ES','fr-FR','de-DE','pt-BR','it-IT','nl-NL','pl-PL','ru-RU','tr-TR','ar-SA','vi-VN','th-TH','id-ID','hi-IN','ja-JP','ko-KR','zh-CN','zh-TW'];
+// [LocaleSwap 2026-08-13] ru-RU + vi-VN removed from the shipped pack; ur-PK (Urdu) and
+// en-GB (an owner-required language that was missing its picker metadata) added.
+const COMMON_LANGS = ['en-US','en-GB','es-ES','fr-FR','de-DE','pt-BR','it-IT','nl-NL','pl-PL','tr-TR','ar-SA','ur-PK','th-TH','id-ID','hi-IN','ja-JP','ko-KR','zh-CN','zh-TW'];
 
 // [LangPicker 2026-06-12] Metadata for the compact all-language Display-language
 // picker. native = endonym (PRIMARY label; Windows-safe — flag emojis render as
@@ -15,6 +17,7 @@ const COMMON_LANGS = ['en-US','es-ES','fr-FR','de-DE','pt-BR','it-IT','nl-NL','p
 type LangMeta = { native: string; english: string; rtl?: boolean; region: 'eu' | 'as' | 'me' };
 const LANG_META: Record<string, LangMeta> = {
   'en-US': { native: 'English',           english: 'English',                region: 'eu' },
+  'en-GB': { native: 'English (UK)',      english: 'English (British)',      region: 'eu' },
   'es-ES': { native: 'Español',           english: 'Spanish',                region: 'eu' },
   'fr-FR': { native: 'Français',          english: 'French',                 region: 'eu' },
   'de-DE': { native: 'Deutsch',           english: 'German',                 region: 'eu' },
@@ -22,10 +25,9 @@ const LANG_META: Record<string, LangMeta> = {
   'it-IT': { native: 'Italiano',          english: 'Italian',                region: 'eu' },
   'nl-NL': { native: 'Nederlands',        english: 'Dutch',                  region: 'eu' },
   'pl-PL': { native: 'Polski',            english: 'Polish',                 region: 'eu' },
-  'ru-RU': { native: 'Русский',           english: 'Russian',                region: 'eu' },
   'tr-TR': { native: 'Türkçe',            english: 'Turkish',                region: 'eu' },
   'ar-SA': { native: 'العربية',           english: 'Arabic',      rtl: true, region: 'me' },
-  'vi-VN': { native: 'Tiếng Việt',        english: 'Vietnamese',             region: 'as' },
+  'ur-PK': { native: 'اردو',              english: 'Urdu',        rtl: true, region: 'me' },
   'th-TH': { native: 'ไทย',               english: 'Thai',                   region: 'as' },
   'id-ID': { native: 'Bahasa Indonesia',  english: 'Indonesian',             region: 'as' },
   'hi-IN': { native: 'हिन्दी',              english: 'Hindi',                  region: 'as' },
@@ -1039,8 +1041,8 @@ class LanguageDashboard {
   private async onTranslateAI(): Promise<void> {
     const suggested = (this.currentLocale && this.currentLocale !== 'en-US') ? this.currentLocale : '';
     const target = (window.prompt(
-      'Dịch sang ngôn ngữ nào? / Translate into which language?\n' +
-      'Nhập tên hoặc mã ngôn ngữ — ví dụ: Tiếng Việt, Vietnamese, vi-VN, Français, fr-FR.',
+      'Translate into which language?\n' +
+      'Enter a language name or code — e.g. Urdu, اردو, ur-PK, Français, fr-FR.',
       suggested
     ) || '').trim();
     if (!target) return;
@@ -1054,13 +1056,13 @@ class LanguageDashboard {
       if (!v || v === en) todo[key] = this.english[key] || '';
     });
     const keys = Object.keys(todo);
-    if (!keys.length) { toast('Mọi chuỗi đã được dịch — không có gì để dịch.', 'info'); return; }
+    if (!keys.length) { toast('Everything is already translated — nothing to do.', 'info'); return; }
 
     let api: any;
     try {
       api = await ensureMfAi();
     } catch (e: any) {
-      toast('AI chưa sẵn sàng. Mở Dashboard → AI Settings để cấu hình. (' + (e && e.message ? e.message : e) + ')', 'error');
+      toast('AI is not ready. Open Dashboard → AI Settings to configure it. (' + (e && e.message ? e.message : e) + ')', 'error');
       return;
     }
 
@@ -1097,9 +1099,9 @@ class LanguageDashboard {
     }
 
     this.render();
-    if (done && !failed) toast(`Đã dịch ${done} chuỗi sang ${target}. Kiểm tra rồi bấm Save.`, 'success');
-    else if (done) toast(`Đã dịch ${done} chuỗi (bỏ qua ${failed}). Kiểm tra rồi bấm Save.`, 'success');
-    else toast('AI không trả về bản dịch hợp lệ. Thử lại hoặc kiểm tra AI Settings.', 'error');
+    if (done && !failed) toast(`Translated ${done} string(s) into ${target}. Review, then click Save.`, 'success');
+    else if (done) toast(`Translated ${done} string(s) (${failed} skipped). Review, then click Save.`, 'success');
+    else toast('The AI returned no usable translation. Try again or check AI Settings.', 'error');
   }
 
   /** One AI call: translate {key:english} → {key:translated}. Returns the parsed

@@ -1,0 +1,47 @@
+@{
+    Layout = null;
+    string apiBase = ViewBag.ApiBaseUrl ?? "/api/MegaForm/";
+    bool hasDevLock = ViewBag.HasDevLock ?? false;
+    bool hasDemoLock = ViewBag.HasDemoLock ?? false;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>MegaForm — My Inbox</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/megaform/css/megaform-admin-shell.css?v=20260404-10" />
+<link rel="stylesheet" href="/megaform/css/megaform-my-inbox-ts.css?v=9030" />
+<style>html,body{height:100%;margin:0;padding:0;}#mf-myinbox-root{min-height:100vh;}</style>
+</head>
+<body class="mf-body">
+<div id="mf-myinbox-root"
+     data-platform="aspcore"
+     data-instance-id="0"
+     data-api-base="@apiBase"
+     data-dev-lock="@hasDevLock.ToString().ToLower()"
+     data-demo-lock="@hasDemoLock.ToString().ToLower()"
+     data-shell-mode="page">
+  <div class="mf-admin-loading">Loading inbox…</div>
+</div>
+<script src="/megaform/js/megaform-my-inbox.js?v=20260402-17"></script>
+<script>
+(function(){
+  var root = document.getElementById('mf-myinbox-root');
+  if(!root) return;
+  function fail(msg){ root.innerHTML = '<div style="margin:2rem;padding:1rem;background:#fef2f2;border:1px solid #fecaca;border-radius:0.625rem;color:#dc2626;">'+msg+'</div>'; }
+  function boot(){
+    try {
+      if(window.MegaForm && window.MegaForm.initMyInbox){
+        window.MegaForm.initMyInbox(root);
+      } else { setTimeout(boot, 60); }
+    } catch(err){ fail('My Inbox error: ' + (err && err.message ? err.message : err)); }
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
+})();
+</script>
+</body>
+</html>

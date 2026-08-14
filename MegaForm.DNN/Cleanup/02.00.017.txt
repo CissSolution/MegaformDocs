@@ -1,0 +1,8 @@
+DesktopModules\MegaForm\Assets\js\i18n\vi-VN.json
+DesktopModules\MegaForm\Assets\js\i18n\ru-RU.json
+DesktopModules\MegaForm\Assets\js\builder\i18n\vi-VN.json
+DesktopModules\MegaForm\Assets\js\builder\i18n\ru-RU.json
+DesktopModules\MegaForm\Assets\js\bundles\i18n\vi-VN.json
+DesktopModules\MegaForm\Assets\js\bundles\i18n\ru-RU.json
+DesktopModules\MegaForm\Assets\js\plugins\i18n\vi-VN.json
+DesktopModules\MegaForm\Assets\js\plugins\i18n\ru-RU.json

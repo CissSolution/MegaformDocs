@@ -1,5 +1,6 @@
 // ─────────────────────────────────────────────────────────────
-//  FormDatabaseInsertService — v20260516-03 (token normalize :name -> @name for SqlClient)
+//  FormDatabaseInsertService — v20260726-01 (token normalize :name -> @name for SqlClient;
+//  dotted composite tokens :name.first -> @name_first; multi-value -> CSV)
 //  After a form submission saves to MegaForm DB, optionally also INSERT
 //  a row into a CUSTOM database (configured in form settings).
 //
@@ -49,7 +50,7 @@ namespace MegaForm.Core.Services
 
     public sealed class FormDatabaseInsertService
     {
-        public const string Badge = "FormDatabaseInsert v20260516-03";
+        public const string Badge = "FormDatabaseInsert v20260726-01";
 
         private readonly IConnectionRegistry _registry;
         public FormDatabaseInsertService(IConnectionRegistry registry) { _registry = registry; }
@@ -78,27 +79,18 @@ namespace MegaForm.Core.Services
                     {
                         // Normalize :name → @name for SqlClient (SQLite/Postgres accept both).
                         // Mirrors DataRepeaterService / FieldOptionsService token handling.
-                        cmd.CommandText = _paramRx.Replace(cfg.InsertSql, "@$1");
+                        cmd.CommandText = NormalizeSql(cfg.InsertSql);
                         cmd.CommandTimeout = 15;
                         var paramNames = ExtractParamNames(cfg.InsertSql);
                         var mapping = cfg.ParameterMapping ?? new Dictionary<string, string>();
                         foreach (var pname in paramNames)
                         {
-                            // map: try explicit mapping first, else use param name (without ":") as field key
-                            var fieldKey = mapping.TryGetValue(":" + pname, out var k) && !string.IsNullOrWhiteSpace(k)
-                                           ? k
-                                           : (mapping.TryGetValue(pname, out var k2) && !string.IsNullOrWhiteSpace(k2) ? k2 : pname);
-                            object val = DBNull.Value;
-                            if (formData != null && formData.TryGetValue(fieldKey, out var v) && v != null)
-                            {
-                                val = v;
-                            }
                             var p = cmd.CreateParameter();
-                            p.ParameterName = "@" + pname;
-                            p.Value = val;
+                            p.ParameterName = "@" + SafeParam(pname);
+                            p.Value = ResolveValue(formData, MapToFieldKey(mapping, pname));
                             cmd.Parameters.Add(p);
                         }
-                        result.RowsAffected = cmd.ExecuteNonQuery();
+                        result.RowsAffected = ExecuteRescuingBlanks(cmd);
                         result.Success = true;
                     }
                 }
@@ -109,6 +101,30 @@ namespace MegaForm.Core.Services
                 result.Error = ex.Message;
             }
             return result;
+        }
+
+        /// <summary>
+        /// [BlankNumericRescue v20260726] An optional Number/Date field left blank posts an EMPTY
+        /// STRING, and "" does not convert to decimal/int ("Error converting data type nvarchar to
+        /// numeric") — so one untouched optional field threw and, this path being fail-soft, the
+        /// WHOLE custom-table row vanished. Run the statement exactly as before first (no behaviour
+        /// change for anything that already works); only if it throws AND a blank string was bound,
+        /// re-bind the blanks as NULL and try once more. A second failure propagates unchanged.
+        /// </summary>
+        private static int ExecuteRescuingBlanks(IDbCommand cmd)
+        {
+            try { return cmd.ExecuteNonQuery(); }
+            catch
+            {
+                var rebound = false;
+                foreach (IDataParameter p in cmd.Parameters)
+                {
+                    var s = p.Value as string;
+                    if (s != null && s.Trim().Length == 0) { p.Value = DBNull.Value; rebound = true; }
+                }
+                if (!rebound) throw;
+                return cmd.ExecuteNonQuery();
+            }
         }
 
         /// <summary>
@@ -135,9 +151,7 @@ namespace MegaForm.Core.Services
             var unbound = new List<string>();
             foreach (var pname in paramNames)
             {
-                var fieldKey = mapping.TryGetValue(":" + pname, out var k) && !string.IsNullOrWhiteSpace(k) ? k
-                              : (mapping.TryGetValue(pname, out var k2) && !string.IsNullOrWhiteSpace(k2) ? k2 : pname);
-                if (sampleData == null || !sampleData.ContainsKey(fieldKey)) unbound.Add(pname);
+                if (ResolveValue(sampleData, MapToFieldKey(mapping, pname)) == DBNull.Value) unbound.Add(pname);
             }
             result.UnboundParameters = unbound;
 
@@ -146,34 +160,15 @@ namespace MegaForm.Core.Services
                 using (var conn = _registry.GetConnection(cfg.ConnectionKey, cfg.DatabaseType, null))
                 {
                     conn.Open();
-                    using (var tx = conn.BeginTransaction())
+                    // Mirror Execute's blank rescue — but each attempt gets its OWN transaction.
+                    // A failed statement can leave SQL Server with no active transaction, and a
+                    // retry on that connection would then run in AUTOCOMMIT: the dry-run row would
+                    // be PERSISTED while the result still claimed "rolled back" (observed 07-26).
+                    bool hadBlank;
+                    if (!TestAttempt(conn, cfg, paramNames, mapping, sampleData, false, result, out hadBlank) && hadBlank)
                     {
-                        try
-                        {
-                            using (var cmd = conn.CreateCommand())
-                            {
-                                cmd.Transaction = tx;
-                                cmd.CommandText = _paramRx.Replace(cfg.InsertSql, "@$1");
-                                cmd.CommandTimeout = 10;
-                                foreach (var pname in paramNames)
-                                {
-                                    var fieldKey = mapping.TryGetValue(":" + pname, out var k3) && !string.IsNullOrWhiteSpace(k3) ? k3
-                                                  : (mapping.TryGetValue(pname, out var k4) && !string.IsNullOrWhiteSpace(k4) ? k4 : pname);
-                                    object val = DBNull.Value;
-                                    if (sampleData != null && sampleData.TryGetValue(fieldKey, out var v) && v != null) val = v;
-                                    var p = cmd.CreateParameter();
-                                    p.ParameterName = "@" + pname; p.Value = val;
-                                    cmd.Parameters.Add(p);
-                                }
-                                result.RowsAffected = cmd.ExecuteNonQuery();
-                                result.Success = true;
-                                result.Message = $"OK — INSERT executed inside transaction ({result.RowsAffected} row), then ROLLED BACK. Nothing was persisted.";
-                            }
-                        }
-                        finally
-                        {
-                            try { tx.Rollback(); } catch { }
-                        }
+                        result.Error = null;
+                        TestAttempt(conn, cfg, paramNames, mapping, sampleData, true, result, out hadBlank);
                     }
                 }
             }
@@ -185,8 +180,155 @@ namespace MegaForm.Core.Services
             return result;
         }
 
+        /// <summary>One dry-run attempt in its own always-rolled-back transaction.</summary>
+        private static bool TestAttempt(IDbConnection conn, FormDatabaseInsertSettings cfg, List<string> paramNames,
+                                        Dictionary<string, string> mapping, Dictionary<string, object> sampleData,
+                                        bool blanksAsNull, FormDatabaseInsertTestResult result, out bool hadBlank)
+        {
+            hadBlank = false;
+            using (var tx = conn.BeginTransaction())
+            {
+                try
+                {
+                    using (var cmd = conn.CreateCommand())
+                    {
+                        cmd.Transaction = tx;
+                        cmd.CommandText = NormalizeSql(cfg.InsertSql);
+                        cmd.CommandTimeout = 10;
+                        foreach (var pname in paramNames)
+                        {
+                            var p = cmd.CreateParameter();
+                            p.ParameterName = "@" + SafeParam(pname);
+                            var v = ResolveValue(sampleData, MapToFieldKey(mapping, pname));
+                            var s = v as string;
+                            if (s != null && s.Trim().Length == 0)
+                            {
+                                hadBlank = true;
+                                if (blanksAsNull) v = DBNull.Value;
+                            }
+                            p.Value = v;
+                            cmd.Parameters.Add(p);
+                        }
+                        result.RowsAffected = cmd.ExecuteNonQuery();
+                        result.Success = true;
+                        result.Error = null;
+                        result.Message = $"OK — INSERT executed inside transaction ({result.RowsAffected} row), then ROLLED BACK. Nothing was persisted.";
+                        return true;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    result.Success = false;
+                    result.Error = ex.Message;
+                    return false;
+                }
+                finally
+                {
+                    try { tx.Rollback(); } catch { }
+                }
+            }
+        }
+
         // Extract :paramName tokens from SQL (Oracle-style named params, also used by Dapper).
-        private static readonly Regex _paramRx = new Regex(@":([a-zA-Z_][a-zA-Z0-9_]*)", RegexOptions.Compiled);
+        // [DottedParamFlatten v20260726] The token may address a Composite field's SUB-PART
+        // (`:name.first` / `:name.last`) so one "Full Name" field can fill FirstName + LastName —
+        // the AI emits that shape naturally. The old regex stopped at the dot and produced
+        // `@name.first`, which SQL Server parses as a METHOD CALL on the @name variable
+        // ("Cannot call methods on nvarchar", Msg 258). Since this whole path is fail-soft the
+        // exception silently dropped the ENTIRE custom-table row. A SQL parameter name can never
+        // contain a dot → flatten to `@name_first` and resolve the value from the composite parts.
+        private static readonly Regex _paramRx = new Regex(
+            @":([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*)", RegexOptions.Compiled);
+
+        /// <summary>Renderer posts raw Composite sub-part values under this key (see collectFormData).</summary>
+        private const string CompositePartsKey = "__mf_parts";
+
+        /// <summary>`name.first` → `name_first`. Dots are illegal in a SQL parameter name.</summary>
+        private static string SafeParam(string token)
+        {
+            return string.IsNullOrEmpty(token) ? token : token.Replace('.', '_');
+        }
+
+        /// <summary>Rewrite every `:token` in the SQL to its dot-free `@token` parameter.</summary>
+        private static string NormalizeSql(string sql)
+        {
+            return _paramRx.Replace(sql ?? string.Empty, m => "@" + SafeParam(m.Groups[1].Value));
+        }
+
+        /// <summary>Explicit ParameterMapping wins (`:key` or bare `key`); else the token IS the field key.</summary>
+        private static string MapToFieldKey(Dictionary<string, string> mapping, string pname)
+        {
+            string k;
+            if (mapping != null && mapping.TryGetValue(":" + pname, out k) && !string.IsNullOrWhiteSpace(k)) return k;
+            if (mapping != null && mapping.TryGetValue(pname, out k) && !string.IsNullOrWhiteSpace(k)) return k;
+            return pname;
+        }
+
+        /// <summary>
+        /// Resolve one token's value. Order: exact data key → Composite sub-part for a dotted
+        /// token (`__mf_parts[field][part]`, else a nested `data[field][part]`) → flattened
+        /// `field_part` key. DBNull when nothing matches.
+        /// </summary>
+        private static object ResolveValue(Dictionary<string, object> data, string fieldKey)
+        {
+            if (data == null || string.IsNullOrWhiteSpace(fieldKey)) return DBNull.Value;
+            object v;
+            if (data.TryGetValue(fieldKey, out v) && v != null) return Coerce(v);
+            var dot = fieldKey.IndexOf('.');
+            if (dot > 0)
+            {
+                var parent = fieldKey.Substring(0, dot);
+                var part = fieldKey.Substring(dot + 1);
+                object partVal;
+                if (TryGetSubValue(data, CompositePartsKey, parent, part, out partVal)) return Coerce(partVal);
+                if (TryGetSubValue(data, null, parent, part, out partVal)) return Coerce(partVal);
+                if (data.TryGetValue(SafeParam(fieldKey), out v) && v != null) return Coerce(v);
+            }
+            return DBNull.Value;
+        }
+
+        /// <summary>Read data[container?][field][part] out of whatever JSON shape the platform handed us.</summary>
+        private static bool TryGetSubValue(Dictionary<string, object> data, string container, string field, string part, out object value)
+        {
+            value = null;
+            try
+            {
+                object raw;
+                if (!data.TryGetValue(container ?? field, out raw) || raw == null) return false;
+                var root = raw as Newtonsoft.Json.Linq.JObject
+                           ?? Newtonsoft.Json.Linq.JObject.Parse(
+                                  raw is string ? (string)raw : Newtonsoft.Json.JsonConvert.SerializeObject(raw));
+                if (container != null)
+                {
+                    var groupProp = root.Property(field, StringComparison.OrdinalIgnoreCase);
+                    root = groupProp?.Value as Newtonsoft.Json.Linq.JObject;
+                    if (root == null) return false;
+                }
+                var prop = root.Property(part, StringComparison.OrdinalIgnoreCase);
+                if (prop == null || prop.Value == null || prop.Value.Type == Newtonsoft.Json.Linq.JTokenType.Null) return false;
+                var jv = prop.Value as Newtonsoft.Json.Linq.JValue;
+                value = jv != null ? jv.Value : prop.Value.ToString();
+                return value != null;
+            }
+            catch { return false; }
+        }
+
+        /// <summary>
+        /// [MultiValueCoerce v20260725] Checkbox / Chips multi-selects (and any JArray/array field
+        /// value) reach us as a collection. SqlClient cannot bind a collection to a scalar column, so
+        /// ExecuteNonQuery throws and — because this path is fail-soft — the ENTIRE custom-table row
+        /// is silently dropped whenever such a field is filled. Flatten to CSV so the row survives.
+        /// </summary>
+        private static object Coerce(object val)
+        {
+            if (val == null) return DBNull.Value;
+            if (val is string) return val;
+            var seq = val as System.Collections.IEnumerable;
+            if (seq == null) return val;
+            var parts = new List<string>();
+            foreach (var item in seq) parts.Add(item == null ? string.Empty : item.ToString());
+            return string.Join(", ", parts);
+        }
 
         private static List<string> ExtractParamNames(string sql)
         {
@@ -194,8 +336,10 @@ namespace MegaForm.Core.Services
             var list = new List<string>();
             foreach (Match m in _paramRx.Matches(sql ?? string.Empty))
             {
+                // Dedupe on the FLATTENED name — `:name.first` and `:name_first` would otherwise
+                // add the same @name_first parameter twice ("parameter already added").
                 var name = m.Groups[1].Value;
-                if (seen.Add(name)) list.Add(name);
+                if (seen.Add(SafeParam(name))) list.Add(name);
             }
             return list;
         }

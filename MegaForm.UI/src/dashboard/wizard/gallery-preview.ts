@@ -12,6 +12,7 @@
 import { getPlatformHostConfig } from '@shared/platform-host';
 import { rewriteModuleAssetUrls } from '@shared/module-asset-url';
 import { buildRealFieldMarkup, MF_PREVIEW_BASE_CSS } from '@shared/token-field-markup';
+import { activateFirstPreviewPage } from '@shared/preview-active-page';
 import { WizardTemplate } from './templates';
 
 type AnyObj = any;
@@ -228,6 +229,9 @@ function buildResolvedCustomTemplateHtml(tpl: AnyObj, compact?: boolean): string
   // not implement ({{script:theme_selector}} is the common one). The real renderer consumes them
   // and emits nothing visible, so leaving them printed made the card look broken. Drop them.
   html = html.replace(/\{\{[a-zA-Z0-9_:.\-]+\}\}/g, '');
+  // [GalleryPreviewBlank 2026-07-27] No step engine runs here, so nothing would carry
+  // `.is-active` and the template's own CSS would hide every page — see @shared/preview-active-page.
+  html = activateFirstPreviewPage(html);
   return html;
 }
 

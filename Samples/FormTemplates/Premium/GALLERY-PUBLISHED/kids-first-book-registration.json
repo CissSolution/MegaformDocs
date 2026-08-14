@@ -1,0 +1,629 @@
+{
+  "version": "1.0",
+  "slug": "kids-first-book-registration",
+  "title": "Baby's First Book — Registration",
+  "description": "Pastel scrapbook registration: a dashed-mint card with a gingham banner, one field per line behind a fixed uppercase label on a dotted rule, five full-bleed section bands, pill interests, a dashed notes panel and a solid blue CTA. Transcribed from the hotel-concierge mock, whose design is a children's first-book registration.",
+  "category": "registration",
+  "categories": [
+    "registration",
+    "premium",
+    "family"
+  ],
+  "icon": "book",
+  "submitButtonText": "Use Template",
+  "successMessage": "Registration received.",
+  "settings": {
+    "theme": "custom",
+    "multiPage": false,
+    "showProgressBar": false,
+    "customContent": {
+      "babys_first_book": "BABY'S FIRST BOOK",
+      "euroyouth_exchange_registration": "EuroYouth Exchange — Registration",
+      "personal_details": "Personal Details",
+      "first_name": "FIRST NAME:",
+      "last_name": "LAST NAME:",
+      "school": "SCHOOL:",
+      "email": "EMAIL:",
+      "phone": "PHONE:",
+      "birth_year": "BIRTH YEAR:",
+      "author": "AUTHOR:",
+      "address": "ADDRESS:",
+      "programme_details": "Programme Details",
+      "programme": "PROGRAMME:",
+      "country": "COUNTRY:",
+      "duration": "DURATION:",
+      "start_month": "START MONTH:",
+      "my_interests": "My Interests",
+      "notes_and_wishes": "Notes & Wishes",
+      "declaration": "Declaration",
+      "use_template": "Use Template"
+    },
+    "customScripts": {},
+    "customHtml": "<div class='mfp mfp-kfb mfp-native-generated' data-mf-flexgrid=\"locked\" style=\"background:transparent!important;border:0!important;border-radius:0!important;padding:0!important;box-shadow:none!important\"><div class='kfb-page'><div class='kfb-shell'><div class='kfb-card'><div class='kfb-banner'><i class='fa fa-star kfb-star kfb-star-a'></i><i class='fa fa-star kfb-star kfb-star-b'></i><i class='fa fa-star kfb-star kfb-star-c'></i><div class='kfb-unicorn' role='presentation'></div><h1 class='kfb-h1'>{{content:babys_first_book}}</h1><p class='kfb-sub'>{{content:euroyouth_exchange_registration}}</p></div><div class='kfb-body'><div class='kfb-band kfb-band-mint'><span class='kfb-band-t'>{{content:personal_details}}</span></div><label class='kfb-row'><span class='kfb-row-l'>{{content:first_name}}</span><span class='kfb-row-c'>{{field:first_name}}</span></label><label class='kfb-row'><span class='kfb-row-l'>{{content:last_name}}</span><span class='kfb-row-c'>{{field:last_name}}</span></label><label class='kfb-row'><span class='kfb-row-l'>{{content:school}}</span><span class='kfb-row-c'>{{field:school}}</span></label><label class='kfb-row'><span class='kfb-row-l'>{{content:email}}</span><span class='kfb-row-c'>{{field:email}}</span></label><label class='kfb-row'><span class='kfb-row-l'>{{content:phone}}</span><span class='kfb-row-c'>{{field:phone}}</span></label><label class='kfb-row'><span class='kfb-row-l'>{{content:birth_year}}</span><span class='kfb-row-c'>{{field:birth_year}}</span></label><label class='kfb-row'><span class='kfb-row-l'>{{content:author}}</span><span class='kfb-row-c'>{{field:author}}</span></label><label class='kfb-row'><span class='kfb-row-l'>{{content:address}}</span><span class='kfb-row-c'>{{field:address}}</span></label><div class='kfb-band kfb-band-sky'><span class='kfb-band-t'>{{content:programme_details}}</span></div><label class='kfb-row'><span class='kfb-row-l'>{{content:programme}}</span><span class='kfb-row-c'>{{field:programme}}</span></label><label class='kfb-row'><span class='kfb-row-l'>{{content:country}}</span><span class='kfb-row-c'>{{field:country}}</span></label><label class='kfb-row'><span class='kfb-row-l'>{{content:duration}}</span><span class='kfb-row-c'>{{field:duration}}</span></label><label class='kfb-row'><span class='kfb-row-l'>{{content:start_month}}</span><span class='kfb-row-c'>{{field:start_month}}</span></label><div class='kfb-band kfb-band-yellow'><span class='kfb-band-t'>{{content:my_interests}}</span></div><div class='kfb-chips'>{{field:interests}}</div><div class='kfb-band kfb-band-pink'><span class='kfb-band-t'>{{content:notes_and_wishes}}</span></div><div class='kfb-ta'>{{field:motivation}}</div><div class='kfb-band kfb-band-mint'><span class='kfb-band-t'>{{content:declaration}}</span></div><div class='kfb-consent'>{{field:newsletter}}{{field:terms}}</div><div class='kfb-cta'><button class='kfb-submit' type='submit'>{{content:use_template}}</button></div></div></div><div class='kfb-stars'><i class='fa fa-star kfb-s0'></i><i class='fa fa-star kfb-s1'></i><i class='fa fa-star kfb-s2'></i><i class='fa fa-star kfb-s3'></i><i class='fa fa-star kfb-s4'></i></div></div></div></div>",
+    "customCss": "@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');\n.mfp.mfp-kfb.mfp-native-generated {--kfb-primary:#E8607A;--kfb-accent:#4A90D9;--kfb-surface:var(--mf-page-surface,var(--mf-preset-surface,#FFFFFF));--kfb-text:var(--mf-page-text,var(--mf-preset-text,#5A3A4A));--kfb-muted:var(--mf-page-muted,var(--mf-preset-muted,#B09AA8));--kfb-border:var(--mf-page-border,var(--mf-preset-border,#F0C8D8));--kfb-on-primary:var(--mf-preset-on-primary,#FFFFFF);--kfb-deco:#FDEEA0;--kfb-page:#FDF0F4;--kfb-fill:#FDF0F4;--kfb-fill-strong:color-mix(in srgb, var(--kfb-text) 9%, var(--kfb-surface));--kfb-soft:color-mix(in srgb, var(--kfb-primary) 12%, var(--kfb-surface));--kfb-hairline:color-mix(in srgb, var(--kfb-text) 12%, var(--kfb-surface));}.mfp.mfp-kfb.mfp-native-generated {background:transparent!important;border:0!important;padding:0!important;font-family:'Nunito',system-ui,-apple-system,'Segoe UI',sans-serif}.mfp.mfp-kfb.mfp-native-generated {--kfb-primary:var(--mf-page-primary,var(--mf-preset-primary,#E8607A));--kfb-accent:var(--mf-page-accent,var(--mf-preset-accent,#4A90D9));--kfb-surface:var(--mf-page-surface,var(--mf-preset-surface,#FFFFFF));--kfb-text:var(--mf-page-text,var(--mf-preset-text,#5A3A4A));--kfb-border:var(--mf-page-border,var(--mf-preset-border,#F0C8D8));--kfb-on-primary:var(--mf-page-on-primary,var(--mf-preset-on-primary,#FFFFFF));--kfb-page:var(--mf-preset-bg,#FDF0F4);}@container (max-width:520px){.mfp.mfp-kfb.mfp-native-generated [class*=\"-grid\"],.mfp.mfp-kfb.mfp-native-generated [class*=\"-meta\"],.mfp.mfp-kfb.mfp-native-generated [class*=\"-scores\"],.mfp.mfp-kfb.mfp-native-generated [class*=\"-charts\"],.mfp.mfp-kfb.mfp-native-generated [class*=\"-cols\"]{grid-template-columns:1fr!important}.mfp.mfp-kfb.mfp-native-generated [class*=\"-body\"],.mfp.mfp-kfb.mfp-native-generated [class*=\"-split\"],.mfp.mfp-kfb.mfp-native-generated [class*=\"-foot\"],.mfp.mfp-kfb.mfp-native-generated [class*=\"-head\"],.mfp.mfp-kfb.mfp-native-generated [class*=\"-row\"]{flex-wrap:wrap!important}.mfp.mfp-kfb.mfp-native-generated [class*=\"-aside\"],.mfp.mfp-kfb.mfp-native-generated [class*=\"-side\"]{flex:1 1 100%!important;width:100%!important;max-width:none!important}}.mfp.mfp-kfb.mfp-native-generated  img{max-width:100%!important;height:auto}.mfp.mfp-kfb.mfp-native-generated {overflow-wrap:break-word}\n.mfp.mfp-kfb.mfp-native-generated {font-family:'Nunito',system-ui,-apple-system,'Segoe UI',sans-serif!important;color:var(--kfb-text)}\n.mfp.mfp-kfb.mfp-native-generated .kfb-page{padding:40px 16px;background:var(--kfb-page)}\n.mfp.mfp-kfb.mfp-native-generated .kfb-shell{max-width:672px;margin:0 auto}\n.mfp.mfp-kfb.mfp-native-generated .kfb-card{position:relative;overflow:hidden;border:4px dashed #B5EAD7;border-radius:24px;\n  background:#fff;box-shadow:0 25px 50px -12px rgba(0,0,0,.25)}\n\n/* gingham banner: a 20px pattern of two 10px squares at 18% white ------- */\n.mfp.mfp-kfb.mfp-native-generated .kfb-banner{position:relative;overflow:hidden;padding:32px 32px 24px;background:#F9C8D4;\n  background-image:linear-gradient(45deg,rgba(255,255,255,.18) 25%,transparent 25%,transparent 75%,rgba(255,255,255,.18) 75%),\n    linear-gradient(45deg,rgba(255,255,255,.18) 25%,transparent 25%,transparent 75%,rgba(255,255,255,.18) 75%);\n  background-size:20px 20px;background-position:0 0,10px 10px}\n.mfp.mfp-kfb.mfp-native-generated .kfb-star{position:absolute;color:#FDEEA0}\n.mfp.mfp-kfb.mfp-native-generated .kfb-star-a{top:16px;right:40px;font-size:20px}\n.mfp.mfp-kfb.mfp-native-generated .kfb-star-b{top:32px;right:24px;font-size:12px;opacity:.7}\n.mfp.mfp-kfb.mfp-native-generated .kfb-star-c{top:12px;left:24px;font-size:16px;opacity:.5}\n.mfp.mfp-kfb.mfp-native-generated .kfb-unicorn{position:absolute;right:24px;bottom:-24px;width:112px;height:112px;\n  background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http:%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox='0 0 120 120'%3E %3Cellipse cx='60' cy='78' rx='30' ry='22' fill='%23FDEAF0'%2F%3E %3Ccircle cx='85' cy='58' r='18' fill='%23FDEAF0'%2F%3E %3Cpolygon points='90,44 86,24 94,40' fill='%23F4C542'%2F%3E %3Cpolygon points='78,44 74,34 84,42' fill='%23F9A8C4'%2F%3E %3Ccircle cx='89' cy='57' r='3' fill='%235A3A4A'%2F%3E%3Ccircle cx='90' cy='56' r='1' fill='white'%2F%3E %3Ccircle cx='98' cy='62' r='1.5' fill='%23F4829E'%2F%3E %3Cpath d='M78 46 Q70 55 72 65 Q65 58 70 48 Q65 54 68 63 Q60 56 65 44' fill='none' stroke='%23C8A0F0' stroke-width='3' stroke-linecap='round'%2F%3E %3Cpath d='M80 45 Q74 52 76 60' fill='none' stroke='%23F9A8C4' stroke-width='2.5' stroke-linecap='round'%2F%3E %3Crect x='40' y='96' width='8' height='16' rx='4' fill='%23FDEAF0'%2F%3E %3Crect x='54' y='96' width='8' height='16' rx='4' fill='%23FDEAF0'%2F%3E %3Crect x='68' y='96' width='8' height='14' rx='4' fill='%23FDEAF0'%2F%3E %3Crect x='82' y='94' width='8' height='14' rx='4' fill='%23FDEAF0'%2F%3E %3Cpath d='M32 72 Q18 80 20 95 Q28 85 30 92' fill='none' stroke='%23C8A0F0' stroke-width='3.5' stroke-linecap='round'%2F%3E %3Cpath d='M33 74 Q16 86 22 100' fill='none' stroke='%23F9A8C4' stroke-width='2.5' stroke-linecap='round'%2F%3E %3Cpath d='M34 76 Q20 90 25 104' fill='none' stroke='%23FDEEA0' stroke-width='2' stroke-linecap='round'%2F%3E %3C%2Fsvg%3E\");background-size:contain;background-repeat:no-repeat}\n.mfp.mfp-kfb.mfp-native-generated .kfb-stars{display:flex;justify-content:center;gap:12px;margin-top:24px}\n.mfp.mfp-kfb.mfp-native-generated .kfb-stars i{font-size:20px;line-height:20px}\n.mfp.mfp-kfb.mfp-native-generated .kfb-s0{color:#F4829E}\n.mfp.mfp-kfb.mfp-native-generated .kfb-s1{color:#7DD4B8}\n.mfp.mfp-kfb.mfp-native-generated .kfb-s2{color:#FDEEA0}\n.mfp.mfp-kfb.mfp-native-generated .kfb-s3{color:var(--kfb-accent)}\n.mfp.mfp-kfb.mfp-native-generated .kfb-s4{color:var(--kfb-primary)}\n.mfp.mfp-kfb.mfp-native-generated h1.kfb-h1{position:relative;margin:0!important;text-align:center!important;font-size:36px!important;\n  line-height:1.25!important;font-weight:900!important;letter-spacing:.025em!important;\n  color:var(--kfb-primary)!important}\n.mfp.mfp-kfb.mfp-native-generated p.kfb-sub{position:relative;margin:4px 0 0!important;text-align:center!important;\n  font-size:14px!important;line-height:20px!important;font-weight:600!important;color:#C0607A!important}\n\n/* body, full-bleed section bands ---------------------------------------- */\n.mfp.mfp-kfb.mfp-native-generated .kfb-body{padding:24px 32px 32px}\n.mfp.mfp-kfb.mfp-native-generated .kfb-band{margin:16px -32px;padding:8px 32px}\n.mfp.mfp-kfb.mfp-native-generated .kfb-band-t{font-size:12px;line-height:16px;font-weight:900;letter-spacing:.18em;\n  text-transform:uppercase;color:var(--kfb-text)}\n.mfp.mfp-kfb.mfp-native-generated .kfb-band-mint{background:#B5EAD7}\n.mfp.mfp-kfb.mfp-native-generated .kfb-band-sky{background:#A8D8EA}\n.mfp.mfp-kfb.mfp-native-generated .kfb-band-yellow{background:#FDEEA0}\n.mfp.mfp-kfb.mfp-native-generated .kfb-band-pink{background:#F9C8D4}\n\n/* one field per line, fixed label column -------------------------------- */\n.mfp.mfp-kfb.mfp-native-generated .kfb-row{display:flex;align-items:center;gap:12px;margin:0;padding:6px 0;\n  border-bottom:1px solid #F5E0E8}\n.mfp.mfp-kfb.mfp-native-generated .kfb-row-l{flex:0 0 150px;width:150px;font-size:11px;line-height:16px;font-weight:900;\n  letter-spacing:.12em;text-transform:uppercase;color:#C0708A}\n.mfp.mfp-kfb.mfp-native-generated .kfb-row-c{flex:1 1 auto;min-width:0;display:block}\n.mfp.mfp-kfb.mfp-native-generated .kfb-chips{padding:12px 0}\n.mfp.mfp-kfb.mfp-native-generated .kfb-ta{padding:12px 0}\n.mfp.mfp-kfb.mfp-native-generated .kfb-cta{padding-top:16px}\n.mfp.mfp-kfb.mfp-native-generated .kfb-back{padding-top:16px;text-align:center}\n.mfp.mfp-kfb.mfp-native-generated .kfb-back-link{display:inline-flex;align-items:center;gap:6px;font-size:14px;line-height:20px;\n  font-weight:600;color:#B09AA8}\n\n/* megaform sets font-family on label/input/select/textarea with !important, so an authored\n   <span> inside a <label> inherits the HOST typeface no matter what the shell root declares.\n   Element selectors are (0,3,1) here - above megaform, below every authored class rule - and\n   <i> is left alone so Font Awesome keeps its own family. */\n.mfp.mfp-kfb.mfp-native-generated label,.mfp.mfp-kfb.mfp-native-generated span,.mfp.mfp-kfb.mfp-native-generated p,.mfp.mfp-kfb.mfp-native-generated div,.mfp.mfp-kfb.mfp-native-generated ul,.mfp.mfp-kfb.mfp-native-generated li,.mfp.mfp-kfb.mfp-native-generated h1,.mfp.mfp-kfb.mfp-native-generated h2,.mfp.mfp-kfb.mfp-native-generated h3,.mfp.mfp-kfb.mfp-native-generated button{font-family:inherit!important}\n.mfp.mfp-kfb.mfp-native-generated .mf-field-label{display:none!important}\n/* A wizard's page-break Section renders a visible heading the mock has no room for - it exists to\n   split the pages, not to be seen. */\n.mfp.mfp-kfb.mfp-native-generated .mf-section-break,.mfp.mfp-kfb.mfp-native-generated .mf-section-title{display:none!important}\n.mfp.mfp-kfb.mfp-native-generated .mf-field-group{margin:0!important;width:100%}\n.mfp.mfp-kfb.mfp-native-generated .mf-form-title,.mfp.mfp-kfb.mfp-native-generated .mf-form-description,.mfp.mfp-kfb.mfp-native-generated .mf-form-actions{display:none!important}\n.mfp.mfp-kfb.mfp-native-generated .mf-option-item{margin:0!important}\n/* megaform gives every option chip a 36px floor and paints .mf-option-icon as a rounded tile. */\n.mfp.mfp-kfb.mfp-native-generated .mf-option-group--chips .mf-option-check,\n.mfp.mfp-kfb.mfp-native-generated .mf-option-group--cards .mf-option-check{display:none!important}\n.mfp.mfp-kfb.mfp-native-generated .mf-option-group--chips .mf-option-ui{min-height:0!important;height:auto!important}\n.mfp.mfp-kfb.mfp-native-generated .mf-option-group--cards .mf-option-copy{display:block;width:100%}\n\n\n.mfp.mfp-kfb.mfp-native-generated .mf-input[class],.mfp.mfp-kfb.mfp-native-generated .mf-select[class]{width:100%!important;box-sizing:border-box!important;\n  border:0!important;border-bottom:2px solid #F4B8C8!important;border-radius:0!important;\n  background:transparent!important;padding:6px 0!important;min-height:0!important;\n  height:auto!important;color:var(--kfb-text)!important;font-family:inherit!important;\n  font-size:14px!important;line-height:20px!important;font-weight:400!important;\n  box-shadow:none!important;appearance:none!important;-webkit-appearance:none!important}\n.mfp.mfp-kfb.mfp-native-generated .mf-input[class]:focus,.mfp.mfp-kfb.mfp-native-generated .mf-select[class]:focus{border-bottom-color:#F4829E!important;\n  box-shadow:none!important;outline:none!important}\n.mfp.mfp-kfb.mfp-native-generated .mf-input[class]::placeholder,.mfp.mfp-kfb.mfp-native-generated .mf-textarea[class]::placeholder{color:#B09AA8!important;opacity:1}\n/* :invalid only fires on a REQUIRED select; :has() covers the optional ones too. */\n.mfp.mfp-kfb.mfp-native-generated .mf-select[class]:invalid,\n.mfp.mfp-kfb.mfp-native-generated .mf-select[class]:has(option[value=\"\"]:checked){color:#B09AA8!important}\n\n/* the rule under a control is DOTTED here, not solid */\n.mfp.mfp-kfb.mfp-native-generated .mf-input[class],.mfp.mfp-kfb.mfp-native-generated .mf-select[class]{border-bottom-style:dotted!important;font-weight:600!important}\n.mfp.mfp-kfb.mfp-native-generated .mf-textarea[class]{width:100%!important;box-sizing:border-box!important;\n  border:2px dashed var(--kfb-border)!important;border-radius:16px!important;background:#FFFBFC!important;\n  padding:16px!important;min-height:96px!important;height:96px!important;resize:none!important;\n  color:var(--kfb-text)!important;font-family:inherit!important;font-size:14px!important;\n  line-height:20px!important;font-weight:600!important;box-shadow:none!important}\n\n/* interest pills --------------------------------------------------------- */\n.mfp.mfp-kfb.mfp-native-generated .mf-option-group--chips{display:flex;flex-wrap:wrap;gap:8px}\n.mfp.mfp-kfb.mfp-native-generated .mf-option-group--chips .mf-option-ui{display:block;gap:0;padding:6px 16px;\n  border:2px solid var(--kfb-border);border-radius:9999px;background:#fff;color:var(--kfb-text);font-size:14px;\n  line-height:20px;font-weight:700;text-align:center;cursor:pointer;transition:all .15s ease}\n.mfp.mfp-kfb.mfp-native-generated .mf-option-group--chips .mf-option-label{font-size:14px;line-height:20px;font-weight:700;\n  color:inherit}\n.mfp.mfp-kfb.mfp-native-generated .mf-option-group--chips .mf-option-item.is-selected .mf-option-ui,\n.mfp.mfp-kfb.mfp-native-generated .mf-option-group--chips input:checked+.mf-option-ui{background:#F4829E;border-color:var(--kfb-primary);\n  color:#fff}\n\n/* declaration, CTA ------------------------------------------------------- */\n.mfp.mfp-kfb.mfp-native-generated .kfb-consent{display:flex;flex-direction:column;gap:12px;padding:12px 0}\n.mfp.mfp-kfb.mfp-native-generated .kfb-consent .mf-option-group--list{display:flex;flex-direction:column;gap:12px}\n.mfp.mfp-kfb.mfp-native-generated .kfb-consent .mf-option-item{display:flex;align-items:flex-start;gap:12px}\n.mfp.mfp-kfb.mfp-native-generated .kfb-consent .mf-option-ui{display:block;padding:0;border:0;background:transparent}\n.mfp.mfp-kfb.mfp-native-generated .kfb-consent .mf-option-label{font-size:14px;line-height:20px;font-weight:600;color:var(--kfb-text)}\n.mfp.mfp-kfb.mfp-native-generated .kfb-consent input[type=\"checkbox\"]{width:20px!important;height:20px!important;\n  flex:0 0 20px!important;margin:1px 0 0!important;border:2px solid #F4B8C8!important;\n  border-radius:6px!important}\n.mfp.mfp-kfb.mfp-native-generated .kfb-link{text-decoration:underline;font-weight:700;color:var(--kfb-primary)}\n.mfp.mfp-kfb.mfp-native-generated button.kfb-submit[type=\"submit\"]{display:block;width:100%!important;padding:16px 0!important;\n  border:0!important;border-radius:16px!important;background:var(--kfb-accent)!important;color:#fff!important;\n  font-family:inherit!important;font-size:16px!important;line-height:24px!important;\n  font-weight:900!important;letter-spacing:.1em!important;text-transform:uppercase!important;\n  cursor:pointer!important;box-shadow:none!important}\n/* the mock's CTA is never greyed - it validates on click */\n.mfp.mfp-kfb.mfp-native-generated button.kfb-submit.mf-nav-blocked,.mfp.mfp-kfb.mfp-native-generated button.kfb-submit[disabled]{opacity:1!important;\n  background:var(--kfb-accent)!important;cursor:not-allowed!important;filter:none!important}\n.mfp.mfp-kfb.mfp-native-generated .kfb-page{padding:0!important;background:transparent!important;min-height:0!important}.mfp.mfp-kfb.mfp-native-generated .kfb-shell,.mfp.mfp-kfb.mfp-native-generated .kfb-wrap{max-width:none!important;margin:0!important}.mfp.mfp-kfb.mfp-native-generated .kfb-grid,.mfp.mfp-kfb.mfp-native-generated .kfb-main,.mfp.mfp-kfb.mfp-native-generated .kfb-hero-in,.mfp.mfp-kfb.mfp-native-generated .kfb-card{max-width:none!important;margin-left:0!important;margin-right:0!important}",
+    "themeSelector": false,
+    "premiumGeneratedShell": true,
+    "gateNavigationUntilValid": true,
+    "postSubmitExperience": {
+      "enabled": true,
+      "mode": "rich",
+      "title": "All done!",
+      "message": "Thank you, {{field:first_name}}. We saved this to your first book.",
+      "showSubmissionId": true,
+      "submissionIdLabel": "Reference:",
+      "showAnswerSummary": false,
+      "allowFillAgain": true,
+      "fillAgainLabel": "Submit another",
+      "doneLabel": "Done"
+    },
+    "themeCompatibility": {
+      "policy": "hybrid",
+      "supportsPageColors": false,
+      "supportsPageTypography": true,
+      "supportsDarkHost": true,
+      "prefixes": [
+        "kfb"
+      ],
+      "immutable": [
+        "primary",
+        "accent",
+        "deco"
+      ]
+    }
+  },
+  "fields": [
+    {
+      "placeholder": "Mia",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "first_name",
+      "type": "Text",
+      "label": "First name",
+      "required": true
+    },
+    {
+      "placeholder": "Robinson",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "last_name",
+      "type": "Text",
+      "label": "Last name",
+      "required": true
+    },
+    {
+      "placeholder": "Meadowlark School",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "school",
+      "type": "Text",
+      "label": "School",
+      "required": false
+    },
+    {
+      "placeholder": "mia@email.com",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "email",
+      "type": "Email",
+      "label": "Email",
+      "required": true
+    },
+    {
+      "placeholder": "(555) 010-2233",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "phone",
+      "type": "Text",
+      "label": "Phone",
+      "required": false
+    },
+    {
+      "placeholder": "2006",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "birth_year",
+      "type": "Text",
+      "label": "Birth year",
+      "required": false
+    },
+    {
+      "placeholder": "Your name",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "author",
+      "type": "Text",
+      "label": "Author",
+      "required": false
+    },
+    {
+      "placeholder": "123 Main Street",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "address",
+      "type": "Text",
+      "label": "Address",
+      "required": false
+    },
+    {
+      "placeholder": "Select…",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Erasmus Exchange",
+          "value": "Erasmus Exchange"
+        },
+        {
+          "label": "Language Immersion",
+          "value": "Language Immersion"
+        },
+        {
+          "label": "Solidarity Corps",
+          "value": "Solidarity Corps"
+        },
+        {
+          "label": "Youth Leadership",
+          "value": "Youth Leadership"
+        },
+        {
+          "label": "Cultural Heritage",
+          "value": "Cultural Heritage"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "dropdown"
+      },
+      "key": "programme",
+      "type": "Select",
+      "label": "Programme",
+      "required": false,
+      "optionDisplay": "dropdown",
+      "choiceDisplay": "dropdown",
+      "optionVariant": "dropdown",
+      "widgetProps": {
+        "optionDisplay": "dropdown"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "Select…",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Germany",
+          "value": "Germany"
+        },
+        {
+          "label": "France",
+          "value": "France"
+        },
+        {
+          "label": "Spain",
+          "value": "Spain"
+        },
+        {
+          "label": "Italy",
+          "value": "Italy"
+        },
+        {
+          "label": "Portugal",
+          "value": "Portugal"
+        },
+        {
+          "label": "Netherlands",
+          "value": "Netherlands"
+        },
+        {
+          "label": "Austria",
+          "value": "Austria"
+        },
+        {
+          "label": "Belgium",
+          "value": "Belgium"
+        },
+        {
+          "label": "Greece",
+          "value": "Greece"
+        },
+        {
+          "label": "Poland",
+          "value": "Poland"
+        },
+        {
+          "label": "Sweden",
+          "value": "Sweden"
+        },
+        {
+          "label": "Ireland",
+          "value": "Ireland"
+        },
+        {
+          "label": "Other",
+          "value": "Other"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "dropdown"
+      },
+      "key": "country",
+      "type": "Select",
+      "label": "Country",
+      "required": false,
+      "optionDisplay": "dropdown",
+      "choiceDisplay": "dropdown",
+      "optionVariant": "dropdown",
+      "widgetProps": {
+        "optionDisplay": "dropdown"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "Select…",
+      "helpText": "",
+      "defaultValue": "3 months",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "1 month",
+          "value": "1 month"
+        },
+        {
+          "label": "2 months",
+          "value": "2 months"
+        },
+        {
+          "label": "3 months",
+          "value": "3 months"
+        },
+        {
+          "label": "6 months",
+          "value": "6 months"
+        },
+        {
+          "label": "9 months",
+          "value": "9 months"
+        },
+        {
+          "label": "12 months",
+          "value": "12 months"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "dropdown"
+      },
+      "key": "duration",
+      "type": "Select",
+      "label": "Duration",
+      "required": false,
+      "optionDisplay": "dropdown",
+      "choiceDisplay": "dropdown",
+      "optionVariant": "dropdown",
+      "widgetProps": {
+        "optionDisplay": "dropdown"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "Select…",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "January",
+          "value": "January"
+        },
+        {
+          "label": "February",
+          "value": "February"
+        },
+        {
+          "label": "March",
+          "value": "March"
+        },
+        {
+          "label": "April",
+          "value": "April"
+        },
+        {
+          "label": "May",
+          "value": "May"
+        },
+        {
+          "label": "June",
+          "value": "June"
+        },
+        {
+          "label": "July",
+          "value": "July"
+        },
+        {
+          "label": "August",
+          "value": "August"
+        },
+        {
+          "label": "September",
+          "value": "September"
+        },
+        {
+          "label": "October",
+          "value": "October"
+        },
+        {
+          "label": "November",
+          "value": "November"
+        },
+        {
+          "label": "December",
+          "value": "December"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "dropdown"
+      },
+      "key": "start_month",
+      "type": "Select",
+      "label": "Start month",
+      "required": false,
+      "optionDisplay": "dropdown",
+      "choiceDisplay": "dropdown",
+      "optionVariant": "dropdown",
+      "widgetProps": {
+        "optionDisplay": "dropdown"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Art",
+          "value": "Art"
+        },
+        {
+          "label": "Music",
+          "value": "Music"
+        },
+        {
+          "label": "Dance",
+          "value": "Dance"
+        },
+        {
+          "label": "Sports",
+          "value": "Sports"
+        },
+        {
+          "label": "Reading",
+          "value": "Reading"
+        },
+        {
+          "label": "Cooking",
+          "value": "Cooking"
+        },
+        {
+          "label": "Travel",
+          "value": "Travel"
+        },
+        {
+          "label": "Science",
+          "value": "Science"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "chips"
+      },
+      "key": "interests",
+      "type": "Checkbox",
+      "label": "My Interests",
+      "required": false,
+      "optionDisplay": "chips",
+      "choiceDisplay": "chips",
+      "optionVariant": "chips",
+      "widgetProps": {
+        "optionDisplay": "chips"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "Write your dreams and wishes here…",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "motivation",
+      "type": "Textarea",
+      "label": "Notes",
+      "required": false
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Send me updates about programmes and events.",
+          "value": "yes"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "list"
+      },
+      "key": "newsletter",
+      "type": "Checkbox",
+      "label": "Newsletter",
+      "required": false,
+      "optionDisplay": "list",
+      "choiceDisplay": "list",
+      "optionVariant": "list",
+      "widgetProps": {
+        "optionDisplay": "list"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "I accept the <span class=\"kfb-link\">terms &amp; privacy policy</span>. *",
+          "value": "yes"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "list"
+      },
+      "key": "terms",
+      "type": "Checkbox",
+      "label": "Terms",
+      "required": true,
+      "optionDisplay": "list",
+      "choiceDisplay": "list",
+      "optionVariant": "list",
+      "widgetProps": {
+        "optionDisplay": "list"
+      },
+      "allowOptionHtml": true
+    }
+  ],
+  "rules": [],
+  "workflow": {
+    "notifications": []
+  }
+}

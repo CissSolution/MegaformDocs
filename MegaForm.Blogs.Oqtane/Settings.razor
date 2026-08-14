@@ -2,6 +2,7 @@
 @inherits ModuleBase
 @implements ISettingsControl
 @inject ISettingService SettingService
+@inject IPageService PageService
 
 @* MegaForm Blogs - per-instance settings.
 
@@ -165,9 +166,24 @@
             <div class="col-sm-9">
                 <select id="mfb-showhero" class="form-select" value="@B(_config.ShowHero)"
                         @onchange="e => _config.ShowHero = ParseBool(e)">
-                    <option value="true">Yes</option>
+                    <option value="true">Yes — lead with a featured story</option>
                     <option value="false">No</option>
                 </select>
+            </div>
+        </div>
+
+        <div class="row mb-2 align-items-center">
+            <label class="col-sm-3 col-form-label" for="mfb-showherotext">Hero heading</label>
+            <div class="col-sm-9">
+                <select id="mfb-showherotext" class="form-select" value="@B(_config.ShowHeroText)"
+                        @onchange="e => _config.ShowHeroText = ParseBool(e)">
+                    <option value="false">Hide — the page already has a title</option>
+                    <option value="true">Show — big eyebrow, title and strapline</option>
+                </select>
+                <div class="form-text">
+                    Off by default: the module container already prints this module's title, so the
+                    hero heading repeated it directly underneath.
+                </div>
             </div>
         </div>
 
@@ -229,6 +245,24 @@
         </div>
 
         <div class="row mb-2 align-items-center">
+            <label class="col-sm-3 col-form-label" for="mfb-publicpage">Public blog page</label>
+            <div class="col-sm-9">
+                <select id="mfb-publicpage" class="form-select" value="@_config.PublicPageId.ToString()"
+                        @onchange="e => _config.PublicPageId = ParseInt(e)">
+                    <option value="0">(this page)</option>
+                    @foreach (var sitePage in SitePages())
+                    {
+                        <option value="@sitePage.PageId">@sitePage.Name</option>
+                    }
+                </select>
+                <div class="form-text">
+                    Only the <strong>admin console</strong> needs this: it lives on its own page, so
+                    without it a "view the post" link has nowhere to point but back at the console.
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-2 align-items-center">
             <label class="col-sm-3 col-form-label" for="mfb-slugsource">Slug source</label>
             <div class="col-sm-9">
                 <select id="mfb-slugsource" class="form-select" @bind="_config.SlugSource">
@@ -243,6 +277,29 @@
             <div class="col-sm-9">
                 <input id="mfb-slugparam" class="form-control" @bind="_config.SlugParam" maxlength="32" />
                 <div class="form-text">Lower-case letters, digits, <code>-</code> and <code>_</code>.</div>
+            </div>
+        </div>
+    </fieldset>
+
+    <fieldset class="mb-3">
+        <legend class="h6">Analytics</legend>
+
+        <div class="row mb-2 align-items-center">
+            <label class="col-sm-3 col-form-label" for="mfb-trackreads">Count reads</label>
+            <div class="col-sm-9">
+                <select id="mfb-trackreads" class="form-select" value="@B(_config.TrackReads)"
+                        @onchange="e => _config.TrackReads = ParseBool(e)">
+                    <option value="true">Yes — record a read when a post is opened</option>
+                    <option value="false">No</option>
+                </select>
+                <div class="form-text">
+                    Writes a row to the blog app's <code>reader-events</code> form. MegaForm's own
+                    rollup service turns those rows into each post's <strong>view count</strong>
+                    within about five minutes — this module never edits the counter itself.
+                    Bots, crawlers and console previews are not counted, and one reader refreshing
+                    counts once per half hour. Turn this off on a staging instance pointed at live
+                    data.
+                </div>
             </div>
         </div>
     </fieldset>
@@ -278,12 +335,13 @@
 @code {
     private BlogInstanceConfig _config = new BlogInstanceConfig();
     private string _view = "blog:listing";
+    private List<Page> _pages = new List<Page>();
 
     // Constant on purpose: the framework reads Title off a bare instance, so touching
     // ModuleState or PageState here throws during module-settings discovery.
     public override string Title => "Blog Settings";
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         try
         {
@@ -297,6 +355,42 @@
                 MessageType.Warning);
         }
         _view = _config.Profile + ":" + _config.Mode;
+        await LoadPagesAsync();
+    }
+
+    /// <summary>
+    /// Load the site's pages for the two page pickers.
+    ///
+    /// ⚠️ This deliberately does NOT read PageState.Pages first. Measured on :5131: inside a
+    /// module settings control PageState.Pages yields nothing, so both pickers rendered with
+    /// "This page" as their only option — which means the Detail page setting has never been
+    /// selectable through this pane, on any install. Oqtane's own page picker on the very same
+    /// screen listed 33 pages, which is what proved the data was there and our source was wrong.
+    /// IPageService is where Oqtane itself gets them. PageState stays as a fallback.
+    /// </summary>
+    private async Task LoadPagesAsync()
+    {
+        var siteId = PageState?.Site?.SiteId ?? 0;
+        try
+        {
+            if (siteId > 0)
+            {
+                var pages = await PageService.GetPagesAsync(siteId);
+                if (pages != null && pages.Count > 0)
+                {
+                    _pages = pages.Where(p => p != null && !p.IsDeleted).ToList();
+                    return;
+                }
+            }
+        }
+        catch (Exception)
+        {
+            // Fall through to PageState below; a picker with fewer options is better than a
+            // settings pane that will not render.
+        }
+
+        _pages = (PageState?.Pages ?? new List<Page>())
+            .Where(p => p != null && !p.IsDeleted).ToList();
     }
 
     private void OnViewChanged(ChangeEventArgs e)
@@ -335,6 +429,8 @@
             // BlogInstanceConfig cannot see PageState, so this is the one check that belongs here.
             if (_config.DetailPageId != 0 && !SitePages().Any(p => p.PageId == _config.DetailPageId))
                 _config.DetailPageId = 0;
+            if (_config.PublicPageId != 0 && !SitePages().Any(p => p.PageId == _config.PublicPageId))
+                _config.PublicPageId = 0;
 
             var settings = await SettingService.GetModuleSettingsAsync(ModuleState.ModuleId);
             foreach (var row in _config.ToSettings())
@@ -348,15 +444,8 @@
         }
     }
 
-    private List<Page> SitePages()
-    {
-        var pages = PageState?.Pages;
-        if (pages == null) return new List<Page>();
-        var siteId = PageState.Site?.SiteId ?? 0;
-        return pages
-            .Where(p => p != null && !p.IsDeleted && (siteId == 0 || p.SiteId == siteId))
-            .ToList();
-    }
+    /// <summary>The pages a blog surface may be pointed at. Loaded by <see cref="LoadPagesAsync"/>.</summary>
+    private List<Page> SitePages() => _pages;
 
     private static string B(bool value) => value ? "true" : "false";
 

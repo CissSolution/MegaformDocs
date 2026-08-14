@@ -873,6 +873,7 @@ import dbStrings from './db-tables-strings.json';
         createTabField() +
         // createTabWidget() — removed in session 219c (merged into Field tab)
         createTabSettings() +
+        createTabSteps() +
         createTabHtml() +
         createTabTheme() +
         createTabAi() +
@@ -975,6 +976,17 @@ import dbStrings from './db-tables-strings.json';
               '<i class="fas fa-chevron-down mf-design-card-arrow"></i>' +
             '</button>' +
             '<div class="mf-design-acc-body" data-mf-acc-body="settings"></div>' +
+          '</div>' +
+          '<div class="mf-design-acc-item" data-mf-acc-id="steps">' +
+            '<button type="button" class="mf-design-card mf-design-acc-head" data-mf-design-toggle="steps" aria-expanded="false">' +
+              '<i class="fas fa-list-ol"></i>' +
+              '<div class="mf-design-card-body">' +
+                '<div class="mf-design-card-title">' + bt('steps.title','Steps') + '</div>' +
+                '<div class="mf-design-card-desc">' + bt('steps.panel_desc','Add, rename, remove, or reorder form steps.') + '</div>' +
+              '</div>' +
+              '<i class="fas fa-chevron-down mf-design-card-arrow"></i>' +
+            '</button>' +
+            '<div class="mf-design-acc-body" data-mf-acc-body="steps"></div>' +
           '</div>' +
           '<div class="mf-design-acc-item" data-mf-acc-id="html">' +
             '<button type="button" class="mf-design-card mf-design-acc-head" data-mf-design-toggle="html" aria-expanded="false">' +
@@ -1533,6 +1545,47 @@ import dbStrings from './db-tables-strings.json';
             '<div id="mf-cloud-storage-mappings"></div>' +
             '<button type="button" id="mf-cloud-storage-add-mapping" class="mf-builder-btn" style="width:100%;margin-top:4px"><i class="fas fa-plus"></i> ' + bt('builder.cloudStorage.add_mapping','Add mapping') + '</button>' +
           '</div>' +
+          // [AfterSubmitScript v20260813-01] Host-only C# hook. Static shell only — the panel
+          // is driven by after-submit-script.ts, which loads its state from FormScript/Get
+          // rather than from schema.settings: the block is stripped out of every schema payload
+          // the client receives, on purpose, because it is server code plus its approval hash.
+          // Anyone who is not a host sees the server's own refusal in the status line and a set
+          // of disabled controls; the panel does no permission logic itself.
+          '<div class="mf-prop-group" id="mf-script-panel"><h6><i class="fas fa-code"></i> ' + bt('builder.script.title','Server Script (host only)') + '</h6>' +
+            '<p style="font-size:11px;color:#64748b;margin:0 0 10px">' + bt('builder.script.desc','C# that runs on the server after a submission is saved. Saving a script means running code on this server, so only a host account can change it.') + '</p>' +
+            '<div class="form-check mb-2" style="display:flex;align-items:center;gap:6px;padding:4px 0">' +
+              '<input type="checkbox" id="mf-script-enabled" class="form-check-input" style="margin:0;flex-shrink:0"/>' +
+              '<label class="form-check-label" for="mf-script-enabled" style="margin:0;white-space:nowrap">' + bt('builder.script.enable','Run this script after every submission') + '</label>' +
+            '</div>' +
+            '<div id="mf-script-fieldkeys" style="font-size:11px;color:#64748b;margin:0 0 6px"></div>' +
+            '<textarea id="mf-script-source" class="form-control form-control-sm" rows="12" spellcheck="false" ' +
+              'style="font-family:ui-monospace,Consolas,monospace;font-size:11.5px;line-height:1.5;white-space:pre;overflow-x:auto"></textarea>' +
+            // The settings rail is ~257px wide. Laying these out side by side clipped the
+            // third button to "Save scrip" and squeezed the select to a few characters —
+            // measured in the builder, not guessed. Full-width rows fit at any rail width.
+            '<div class="form-group" style="margin-top:8px">' +
+              '<label for="mf-script-onfailure" style="font-size:11px;color:#475569;font-weight:600">' + bt('builder.script.on_failure','If the script fails') + '</label>' +
+              '<select id="mf-script-onfailure" class="form-control form-control-sm">' +
+                '<option value="continue">' + bt('builder.script.on_failure_continue','Log it — visitor still sees the thank-you') + '</option>' +
+                '<option value="report">' + bt('builder.script.on_failure_report','Also report the message to the caller') + '</option>' +
+              '</select>' +
+            '</div>' +
+            '<div class="form-group" style="margin-top:6px">' +
+              '<label for="mf-script-timeout" style="font-size:11px;color:#475569;font-weight:600">' + bt('builder.script.timeout','Timeout (seconds)') + '</label>' +
+              '<input type="number" id="mf-script-timeout" class="form-control form-control-sm" min="1" max="60" value="10"/>' +
+            '</div>' +
+            '<div style="display:flex;flex-direction:column;gap:6px;margin-top:10px">' +
+              '<button type="button" id="mf-script-save" class="mf-builder-btn mf-builder-btn-primary" style="width:100%"><i class="fas fa-save"></i> ' + bt('builder.script.save','Save script') + '</button>' +
+              '<div style="display:flex;gap:6px">' +
+                '<button type="button" id="mf-script-check" class="mf-builder-btn" style="flex:1"><i class="fas fa-check"></i> ' + bt('builder.script.check','Check syntax') + '</button>' +
+                '<button type="button" id="mf-script-test" class="mf-builder-btn" style="flex:1"><i class="fas fa-play"></i> ' + bt('builder.script.test','Test run') + '</button>' +
+              '</div>' +
+            '</div>' +
+            '<div id="mf-script-status" style="font-size:11px;margin-top:8px;min-height:15px"></div>' +
+            '<div id="mf-script-diagnostics" style="margin-top:6px;display:none"></div>' +
+            '<div id="mf-script-output" style="margin-top:6px;display:none;font-family:ui-monospace,Consolas,monospace;' +
+              'font-size:11px;background:#0f172a;color:#e2e8f0;padding:8px;border-radius:4px;max-height:180px;overflow:auto"></div>' +
+          '</div>' +
           // [B65o] Form Theme picker REMOVED from Form Settings tab —
           // user moved theme picking to the dedicated THEME right-rail tab.
           // Hidden mount points kept so properties.ts:populateSettingsTab()
@@ -1555,6 +1608,14 @@ import dbStrings from './db-tables-strings.json';
             '</div>' +
           '</div>' +
         '</div>' +
+      '</div>'
+    );
+  }
+
+  function createTabSteps(): string {
+    return (
+      '<div id="mf-tab-steps" class="mf-right-tab-content" style="display:none">' +
+        '<div id="mf-form-steps-panel"></div>' +
       '</div>'
     );
   }

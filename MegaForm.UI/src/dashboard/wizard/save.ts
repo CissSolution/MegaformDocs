@@ -1,7 +1,7 @@
 // [2026-06-27] POST the wizard DTO to SaveForm, then return the builder URL to open the
 // new form fully populated. Reuses @shared/platform-host. The Oqtane builder surface is
 // reached via `?mfpanel=builder&formId=N` (verified on :5000 — `/builder?formId=` 404s).
-import { getPlatformHostConfig } from '@shared/platform-host';
+import { getPlatformHostConfig, getPlatformRoute } from '@shared/platform-host';
 import { WizardSaveCtx } from './transform';
 
 export function wizardCtx(): WizardSaveCtx {
@@ -70,13 +70,5 @@ export async function postWizardForm(dto: any): Promise<{ ok: boolean; formId?: 
 }
 
 export function builderUrlFor(formId: number): string {
-  try {
-    const url = new URL(window.location.href);
-    url.search = ''; url.hash = '';
-    url.searchParams.set('mfpanel', 'builder');
-    url.searchParams.set('formId', String(formId));
-    return url.pathname + url.search;
-  } catch {
-    return (window.location.pathname || '/') + '?mfpanel=builder&formId=' + formId;
-  }
+  return getPlatformRoute('builder', formId);
 }

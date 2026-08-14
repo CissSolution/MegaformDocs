@@ -39,6 +39,7 @@ import './properties';
 
 // ── 5. Properties patch — activateTab fix ───────────────────────
 import './properties-patch';
+import './steps-panel';
 
 // ── 6. Templates — import/export + 6 built-in templates ─────────
 import './templates';
@@ -106,6 +107,11 @@ import './integration-settings';
 
 // ── 18a2. Cloud Storage Settings — per-form cloud upload mappings ──
 import './cloud-storage-settings';
+
+// ── 18a3. Server Script — host-only C# that runs after a submission.
+//         Talks to FormScript/* rather than schema.settings (the block is
+//         stripped from every client-bound schema payload on purpose).
+import './after-submit-script';
 
 // ── 18b. Token Designer — modal popup for HTML tokens + image gallery
 import './token-designer';

@@ -1,5 +1,5 @@
 // Convert the Christmas mock export into a shippable MegaForm premium template, replaying the
-// exact recipe that turned the Classic Car Show mock into DONEE/classic-registration.json:
+// exact recipe that turned the Classic Car Show mock into GALLERY-PUBLISHED/classic-registration.json:
 //   fields   : Input->Text, Section gets premium step properties, Checkbox label -> options[]
 //   customHtml: flexgrid lock + data-mf-native-step/page + literal step texts + hostshell <style>
 //   customCss : dual-channel tokens (--mf-page-X -> --mf-preset-X -> authored) + QA blocks
@@ -7,8 +7,8 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 
 const MOCK = 'E:/DNNDEFENDER AND AI DESIGNES/AI DESIGNES/4NewTemplateForms/megaform-template-christmas-americana.json';
-const SHIPPED_CLASSIC = 'e:/DNNDEFENDER AND AI DESIGNES/AI DESIGNES/MegaFormSolution_280_Oqtane_um/Samples/FormTemplates/Premium/DONEE/classic-registration.json';
-const OUT = 'e:/DNNDEFENDER AND AI DESIGNES/AI DESIGNES/MegaFormSolution_280_Oqtane_um/Samples/FormTemplates/Premium/DONEE/christmas-signup.json';
+const SHIPPED_CLASSIC = 'e:/DNNDEFENDER AND AI DESIGNES/AI DESIGNES/MegaFormSolution_280_Oqtane_um/Samples/FormTemplates/Premium/GALLERY-PUBLISHED/classic-registration.json';
+const OUT = 'e:/DNNDEFENDER AND AI DESIGNES/AI DESIGNES/MegaFormSolution_280_Oqtane_um/Samples/FormTemplates/Premium/GALLERY-PUBLISHED/christmas-signup.json';
 
 const mock = JSON.parse(readFileSync(MOCK, 'utf8'));
 const classic = JSON.parse(readFileSync(SHIPPED_CLASSIC, 'utf8'));

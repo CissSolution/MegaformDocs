@@ -13,7 +13,7 @@ import { fileURLToPath } from 'node:url';
 const here = path.dirname(fileURLToPath(import.meta.url));
 const repo = path.resolve(here, '..', '..');
 const wwwroot = path.join(repo, 'MegaForm.Oqtane.Server', 'wwwroot', 'Modules', 'MegaForm');
-const tplFolder = path.resolve(process.argv[2] || path.join(repo, 'Samples/FormTemplates/Premium/DONEE'));
+const tplFolder = path.resolve(process.argv[2] || path.join(repo, 'Samples/FormTemplates/Premium/GALLERY-PUBLISHED'));
 const port = Number(process.argv[3] || 5199);
 
 const MIME = { '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.html': 'text/html', '.png': 'image/png', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml', '.woff2': 'font/woff2', '.woff': 'font/woff' };

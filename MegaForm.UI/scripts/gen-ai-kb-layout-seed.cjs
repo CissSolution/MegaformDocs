@@ -1,4 +1,8 @@
 /**
+ * LEGACY [SqlMerge 2026-08-14] — writes a .sql file that NOTHING runs; see the note in
+ * gen-ai-kb-seed.cjs. The live path for AI knowledge is
+ * MegaForm.Core\Seed\ai-knowledge-seed.json (merged at runtime by DnnKbSeeder).
+ *
  * Generate MegaForm.DNN/SqlScripts/01.06.28b-layout-seed.sql
  *
  * Augments the 01.06.28 seed with form-structure / layout knowledge:

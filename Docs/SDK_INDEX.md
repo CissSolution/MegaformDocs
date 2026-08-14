@@ -6,6 +6,7 @@ Entry point for the `MegaForm.Sdk` developer docs. (The SDK is `IMegaFormClient`
 | Topic | Document | Notes |
 |-------|----------|-------|
 | **Writing data** (submit, create/update/delete, scopes, ambient accessor, composite `__mf_parts`, localized errors) | [SDK_WRITING_DATA.md](SDK_WRITING_DATA.md) | a.k.a. the audit's `writing-data.md` |
+| **Reading data by form id/name** (FindData + dashboard search, plain text + HTML grid) | [SDK_SAMPLE_READ_FORM_DATA.md](SDK_SAMPLE_READ_FORM_DATA.md) | new sample |
 | **Schema reference** (`FormSchemaInfo` / `FormFieldInfo` / `FieldValidationInfo` / `FieldOptionInfo`, field types, `IsInputField`) | [SDK_SCHEMA_REFERENCE.md](SDK_SCHEMA_REFERENCE.md) | a.k.a. the audit's `schema-reference.md` |
 | **Blazor schema-driven forms** (Strategy A pure-Blazor POC, Strategy B hybrid POC, `IFormRenderer` contract) | [SDK_BLAZOR_INTEGRATION.md](SDK_BLAZOR_INTEGRATION.md) | a.k.a. the audit's `blazor-schema-form.md` |
 | Roadmap / future plan | [FUTURE_PLAN_MEGAFORM_SDK_AND_DOCS.md](FUTURE_PLAN_MEGAFORM_SDK_AND_DOCS.md) | §E/F write-API + Blazor |
@@ -16,13 +17,24 @@ Entry point for the `MegaForm.Sdk` developer docs. (The SDK is `IMegaFormClient`
 > names some audits reference (`writing-data.md`, `schema-reference.md`, `blazor-schema-form.md`). The
 > content is present — this table is the mapping.
 
+## What the SDK covers (and what it does not)
+
+The SDK is a **stable data + workflow-inbox** facade. It exposes reading and writing form/submission
+records, file download, dashboard summaries, and workflow inbox tasks. It deliberately does **not**
+cover builder/designer APIs, AI, payments, reports, external-table administration, app builder,
+module configuration, file uploads, or user/permission management. For those features, call the
+platform-specific MegaForm HTTP endpoints directly. See [`AUDIT_API_SDK_VS_CODE_2026-07-19.md`](AUDIT_API_SDK_VS_CODE_2026-07-19.md)
+for the full runtime boundary audit.
+
 ## In-host wiring status (per platform)
 
-| Host | `AddMegaFormSdk()` | `IPlatformContext` | Files API (MF_Files populated?) | Notes |
-|------|--------------------|--------------------|----------------------------------|-------|
-| **Oqtane** (live) | ✅ `Startup.cs:172` | ❌ not registered (pass explicit `MegaFormScope`) | ❌ upload writes disk + `fileId:0`, not `MF_Files` → SDK Files API returns empty even if repo registered | forms/submissions/schema fully work |
-| Web (ASP.NET Core) | ❌ not called | ✅ `WebPlatformContext` | partial (`WebStorageService` exists) | not the live deployment |
-| Umbraco | ❌ not called | ✅ `PlatformServices` | `UmbracoFileRepository` is a stub (returns empty) | not the live deployment |
-| DNN | ❌ not called | n/a | `DnnRepositories` has a real file repo | net472 vs SDK net8.0 — needs a facade decision |
+| Host | `AddMegaFormSdk()` | `IPlatformContext` | Files API (`IFileRepository` + `IStorageService`) | Notes |
+|------|--------------------|--------------------|--------------------------------------------------|-------|
+| **Oqtane** (live) | ✅ `MegaFormServerStartup.ConfigureServices` | ✅ `OqtanePlatformContext` | ✅ `EfFileRepository` + `OqtaneStorageService` | Full pipeline; all SDK surfaces work |
+| **Umbraco** (live) | ✅ `MegaFormComposer.Compose` | ✅ `UmbracoPlatformContext` | ✅ `UmbracoFileRepository` + `UmbracoStorageService` | Full pipeline; all SDK surfaces work |
+| **Web / ASP.NET Core** | ✅ `MegaFormAspNetCoreExtensions.AddMegaForm` | ✅ `WebPlatformContext` | ✅ `EfFileRepository` + `WebStorageService` | Standalone host; full pipeline |
+| **DNN** | ✅ via `DnnServiceLocator` + `SingleClientServiceProvider` | ❌ not registered | ✅ `DnnFileRepository` + `DnnDiskStorageService` | Pass explicit `MegaFormScope`; all SDK surfaces work via 8-arg client ctor |
 
-See `HANDOFF_20260616_SERVER_I18N_CACHE_SDK_DOCS.md` for the verified gap analysis + fix plan.
+> Earlier audits noted that only Oqtane had wired the SDK. As of the current codebase all four hosts
+> register the facade and the services it needs; `IPlatformContext` is only missing on DNN, so
+> DNN callers must supply an explicit `MegaFormScope`.

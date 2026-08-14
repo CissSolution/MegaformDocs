@@ -50,10 +50,14 @@ namespace MegaForm.Core.Services
         // LifecycleRunner). The whole block — SQL, connection alias, parameter map — is server-only.
         // "cloudStorage" carries no secrets itself (credentials live in the server-side named
         // connection catalog) but reveals provider/bucket/folder layout an attacker could probe.
+        // "afterSubmitScript" is server code plus the host-approval record that authorises it.
+        // Both halves are strictly server-only: shipping the source to a public form would put
+        // C# the site runs into page HTML, and shipping the approval hash would tell an attacker
+        // exactly what value a forged block has to carry.
         private static readonly HashSet<string> ServerOnlySettingsKeys =
             new HashSet<string>(StringComparer.OrdinalIgnoreCase)
             {
-                "databaseInsert", "lifecycle", "cloudStorage"
+                "databaseInsert", "lifecycle", "cloudStorage", "afterSubmitScript", "automation"
             };
 
         // Cheap gate: if none of these substrings is present there is nothing to strip, so the caller
@@ -61,7 +65,8 @@ namespace MegaForm.Core.Services
         private static readonly string[] Markers =
         {
             "optionsSql", "optionsConnectionKey", "optionsType",
-            "optionsDatabaseType", "databaseInsert", "lifecycle", "cloudStorage"
+            "optionsDatabaseType", "databaseInsert", "lifecycle", "cloudStorage",
+            "afterSubmitScript", "automation"
         };
 
         public static string Strip(string schemaJson)

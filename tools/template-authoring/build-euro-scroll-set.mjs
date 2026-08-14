@@ -8,7 +8,7 @@ const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '.
 const premium = path.join(repo, 'Samples', 'FormTemplates', 'Premium');
 const templateDirs = [
   premium,
-  path.join(premium, 'DONEE'),
+  path.join(premium, 'GALLERY-PUBLISHED'),
   path.join(repo, 'MegaForm.Oqtane.Server', 'wwwroot', 'Modules', 'MegaForm', 'Templates'),
 ];
 const guideDirs = [

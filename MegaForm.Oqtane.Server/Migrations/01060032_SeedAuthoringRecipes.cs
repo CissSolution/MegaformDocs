@@ -9,7 +9,9 @@ namespace MegaForm.Oqtane.Server.Migrations
     /// <summary>
     /// MegaForm 01.06.32 — Oqtane parity for the three form-authoring
     /// prompt_recipe rows shipped to DNN via
-    /// `MegaForm.DNN\SqlScripts\01.06.32.SqlDataProvider`.
+    /// `MegaForm.DNN\SqlScripts\01.06.42.SqlDataProvider`, in the section marked
+    /// "BEGIN 01.06.32.SqlDataProvider" (the per-version scripts were
+    /// consolidated into two files on 2026-08-14).
     ///
     /// Seeds three rows into MF_AI_Knowledge:
     ///   author-premium-template    — guide for unique-themed Premium forms

@@ -36,7 +36,7 @@ const BLOCK = `
 }
 `;
 
-const TARGETS = ['Samples/FormTemplates/Premium/DONEE/cherry-blossom-festival-registration.json'];
+const TARGETS = ['Samples/FormTemplates/Premium/GALLERY-PUBLISHED/cherry-blossom-festival-registration.json'];
 const check = process.argv.includes('--check');
 
 for (const path of TARGETS) {

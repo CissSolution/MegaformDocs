@@ -1,0 +1,592 @@
+{
+  "version": "1.0",
+  "slug": "festa-italiana",
+  "title": "Festa Italiana — Iscrizione",
+  "description": "Three-step Italian festival registration: a tricolour bar over a photographic hero card, a Roman-numeral stepper, guest details, three priced pass cards with dietary chips, and a confirm step whose summary card fills in live. Transcribed from the festa-italiana mock.",
+  "category": "event",
+  "categories": [
+    "event",
+    "premium",
+    "registration"
+  ],
+  "icon": "glass-cheers",
+  "submitButtonText": "Conferma Iscrizione",
+  "successMessage": "Iscrizione confermata.",
+  "settings": {
+    "theme": "custom",
+    "multiPage": true,
+    "premiumNativePageBreak": true,
+    "showProgressBar": false,
+    "customContent": {
+      "benvenuti_alla": "Benvenuti alla",
+      "festa_italiana": "Festa Italiana",
+      "una_serata_di_vino_musica_e_tradizione_14_settembre": "Una serata di vino, musica e tradizione · 14 Settembre",
+      "i": "I",
+      "lospite": "L'Ospite",
+      "the_guest": "The Guest",
+      "ii": "II",
+      "lesperienza": "L'Esperienza",
+      "the_experience": "The Experience",
+      "iii": "III",
+      "la_conferma": "La Conferma",
+      "confirmation": "Confirmation",
+      "raccontaci_di_te": "Raccontaci di te",
+      "nome": "Nome",
+      "first_name": "First name",
+      "cognome": "Cognome",
+      "last_name": "Last name",
+      "email": "Email",
+      "indirizzo_email": "Indirizzo email",
+      "telefono": "Telefono",
+      "phone": "Phone",
+      "citta": "Città",
+      "city": "City",
+      "indietro": "← Indietro",
+      "continua": "Continua →",
+      "scegli_la_tua_esperienza": "Scegli la tua esperienza",
+      "numero_di_ospiti": "Numero di ospiti",
+      "number_of_guests": "Number of guests",
+      "abbinamento_vini": "Abbinamento vini",
+      "wine_pairing": "Wine pairing",
+      "preferenze_alimentari": "Preferenze alimentari",
+      "dietary_preferences": "Dietary preferences",
+      "ultimi_dettagli": "Ultimi dettagli",
+      "orario_di_arrivo": "Orario di arrivo",
+      "arrival_time": "Arrival time",
+      "note_speciali": "Note speciali",
+      "special_notes": "Special notes",
+      "riepilogo": "Riepilogo",
+      "ospite": "Ospite",
+      "pass": "Pass",
+      "ospiti": "Ospiti",
+      "dieta": "Dieta",
+      "conferma_iscrizione": "Conferma Iscrizione",
+      "festa_italiana_piazza_del_sole_info_festaitaliana_it": "Festa Italiana · Piazza del Sole · info@festaitaliana.it",
+      "hero_image": "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs="
+    },
+    "customScripts": {
+      "wizard_pages": "(function(){\n  var root = (typeof __mfCurrentScriptRoot !== 'undefined' && __mfCurrentScriptRoot) || document;\n  var scope = (root && root.closest) ? (root.closest('.mfp') || document) : document;\n  function pages() { return scope.querySelectorAll('[data-mf-native-page]'); }\n  function steps() { return scope.querySelectorAll('[data-mf-native-step]'); }\n  function activeStep() {\n    var s = steps();\n    for (var i = 0; i < s.length; i++) if (s[i].classList.contains('is-active')) return s[i].getAttribute('data-step') || String(i);\n    return '0';\n  }\n  function apply() {\n    var want = String(activeStep());\n    var p = pages();\n    for (var i = 0; i < p.length; i++) {\n      var mine = String(p[i].getAttribute('data-step') || i);\n      var on = mine === want;\n      p[i].style.display = on ? '' : 'none';\n      p[i].setAttribute('aria-hidden', on ? 'false' : 'true');\n    }\n  }\n  try {\n    var mo = new MutationObserver(function(){ apply(); });\n    var s = steps();\n    for (var i = 0; i < s.length; i++) mo.observe(s[i], { attributes: true, attributeFilter: ['class'] });\n  } catch (e) { /* no observer: the timers below still cover Back/Next */ }\n  scope.addEventListener('click', function(){ setTimeout(apply, 40); setTimeout(apply, 160); }, true);\n  setTimeout(apply, 60); setTimeout(apply, 400); apply();\n})();",
+      "fes_recap": "(function(){\n  var root = (typeof __mfCurrentScriptRoot !== 'undefined' && __mfCurrentScriptRoot) || document;\n  var scope = (root && root.closest) ? (root.closest('.mfp') || document) : document;\n  function val(k){\n    var els = scope.querySelectorAll('[name=\"' + k + '\"]');\n    if (!els.length) return '';\n    var f = els[0];\n    if (f.type === 'radio' || f.type === 'checkbox') {\n      var out = [];\n      for (var i = 0; i < els.length; i++) if (els[i].checked) {\n        var ui = els[i].nextElementSibling;\n        var lab = ui && ui.querySelector ? ui.querySelector('.mf-option-label') : null;\n        out.push(lab ? lab.textContent.trim() : els[i].value);\n      }\n      return out.join(', ');\n    }\n    if (f.tagName === 'SELECT') { var o = f.options[f.selectedIndex]; return o && o.value ? o.textContent.trim() : ''; }\n    return String(f.value || '').trim();\n  }\n  function put(k, v){ var n = scope.querySelector('[data-mf-echo=\"' + k + '\"]'); if (n) n.textContent = v; }\n  function paint(){\n    put('s_guest', (val('first_name') + ' ' + val('last_name')).replace(/^\\s+|\\s+$/g, ''));\n    put('s_pass', val('pass') || '\\u2014');\n    put('s_guests', val('guests') || '1');\n    var d = val('dietary');\n    put('s_diet', d);\n    var row = scope.querySelector('.fes-recap-diet');\n    if (row) row.style.display = d ? '' : 'none';\n  }\n  scope.addEventListener('input', paint, true);\n  scope.addEventListener('change', paint, true);\n  scope.addEventListener('click', function(){ setTimeout(paint, 60); }, true);\n  setTimeout(paint, 150); paint();\n})();"
+    },
+    "customHtml": "<div class='mfp mfp-fes mfp-native-generated' data-mf-flexgrid=\"locked\" style=\"background:transparent!important;border:0!important;border-radius:0!important;padding:0!important;box-shadow:none!important\"><div class='fes-wrap'><div class='fes-flag' role='presentation'><span class='fes-flag-g'></span><span class='fes-flag-w'></span><span class='fes-flag-r'></span></div><div class='fes-card'><div class='fes-hero'><div class='fes-hero-img' role='img' aria-label='Festa Italiana in a historic piazza at golden hour'><img class='fes-content-image' src='{{content:hero_image}}' alt='' aria-hidden='true'></div><div class='fes-hero-scrim' role='presentation'></div><div class='fes-hero-copy'><p class='fes-eyebrow'>{{content:benvenuti_alla}}</p><h1 class='fes-h1'>{{content:festa_italiana}}</h1><p class='fes-hero-sub'>{{content:una_serata_di_vino_musica_e_tradizione_14_settembre}}</p></div></div><div class='fes-body'><div class='fes-rail'><div class='fes-rail-item' data-mf-native-step='1' data-step='0'><span class='fes-rail-num'><span class='fes-rail-n'>{{content:i}}</span></span><span class='fes-rail-lbl'>{{content:lospite}}</span><span class='fes-rail-sub'>{{content:the_guest}}</span></div><span class='fes-rail-line' data-line='0'></span><div class='fes-rail-item' data-mf-native-step='1' data-step='1'><span class='fes-rail-num'><span class='fes-rail-n'>{{content:ii}}</span></span><span class='fes-rail-lbl'>{{content:lesperienza}}</span><span class='fes-rail-sub'>{{content:the_experience}}</span></div><span class='fes-rail-line' data-line='1'></span><div class='fes-rail-item' data-mf-native-step='1' data-step='2'><span class='fes-rail-num'><span class='fes-rail-n'>{{content:iii}}</span></span><span class='fes-rail-lbl'>{{content:la_conferma}}</span><span class='fes-rail-sub'>{{content:confirmation}}</span></div></div>{{script:wizard_pages}}<div class='fes-pg' data-mf-native-page='1' data-step='0'>{{field:step_1}}<div class='fes-head'><h2 class='fes-heading'>{{content:raccontaci_di_te}}</h2><span class='fes-rule'></span></div><div class='fes-stack'><div class='fes-grid2'><label class='fes-field'><span class='fes-lbl-row'><span class='fes-lbl'>{{content:nome}}<span class='fes-req'> *</span></span><span class='fes-sub-lbl'>{{content:first_name}}</span></span>{{field:first_name}}</label><label class='fes-field'><span class='fes-lbl-row'><span class='fes-lbl'>{{content:cognome}}<span class='fes-req'> *</span></span><span class='fes-sub-lbl'>{{content:last_name}}</span></span>{{field:last_name}}</label></div><label class='fes-field'><span class='fes-lbl-row'><span class='fes-lbl'>{{content:email}}<span class='fes-req'> *</span></span><span class='fes-sub-lbl'>{{content:indirizzo_email}}</span></span>{{field:email}}</label><div class='fes-grid2'><label class='fes-field'><span class='fes-lbl-row'><span class='fes-lbl'>{{content:telefono}}</span><span class='fes-sub-lbl'>{{content:phone}}</span></span>{{field:phone}}</label><label class='fes-field'><span class='fes-lbl-row'><span class='fes-lbl'>{{content:citta}}</span><span class='fes-sub-lbl'>{{content:city}}</span></span>{{field:city}}</label></div></div><div class='fes-nav'><button type='button' class='fes-back is-ghost' data-mf-native-back='1'>{{content:indietro}}</button><button type='button' class='fes-next' data-mf-native-next='1'>{{content:continua}}</button></div></div><div class='fes-pg' data-mf-native-page='1' data-step='1'>{{field:step_2}}<div class='fes-head'><h2 class='fes-heading'>{{content:scegli_la_tua_esperienza}}</h2><span class='fes-rule'></span></div><div class='fes-stack fes-stack-6'><div class='fes-passes'>{{field:pass}}</div><div class='fes-grid2'><label class='fes-field'><span class='fes-lbl-row'><span class='fes-lbl'>{{content:numero_di_ospiti}}</span><span class='fes-sub-lbl'>{{content:number_of_guests}}</span></span>{{field:guests}}</label><label class='fes-field'><span class='fes-lbl-row'><span class='fes-lbl'>{{content:abbinamento_vini}}</span><span class='fes-sub-lbl'>{{content:wine_pairing}}</span></span>{{field:wine_pairing}}</label></div><label class='fes-field'><span class='fes-lbl-row'><span class='fes-lbl'>{{content:preferenze_alimentari}}</span><span class='fes-sub-lbl'>{{content:dietary_preferences}}</span></span>{{field:dietary}}</label></div><div class='fes-nav'><button type='button' class='fes-back' data-mf-native-back='1'>{{content:indietro}}</button><button type='button' class='fes-next' data-mf-native-next='1'>{{content:continua}}</button></div></div><div class='fes-pg' data-mf-native-page='1' data-step='2'>{{field:step_3}}<div class='fes-head'><h2 class='fes-heading'>{{content:ultimi_dettagli}}</h2><span class='fes-rule'></span></div><div class='fes-stack'><label class='fes-field'><span class='fes-lbl-row'><span class='fes-lbl'>{{content:orario_di_arrivo}}</span><span class='fes-sub-lbl'>{{content:arrival_time}}</span></span>{{field:arrival}}</label><label class='fes-field'><span class='fes-lbl-row'><span class='fes-lbl'>{{content:note_speciali}}</span><span class='fes-sub-lbl'>{{content:special_notes}}</span></span>{{field:notes}}</label><div class='fes-recap'><p class='fes-recap-h'>{{content:riepilogo}}</p><div class='fes-recap-list'><div class='fes-recap-row'><span class='fes-recap-k'>{{content:ospite}}</span><span class='fes-recap-v' data-mf-echo='s_guest'>—</span></div><div class='fes-recap-row'><span class='fes-recap-k'>{{content:pass}}</span><span class='fes-recap-v' data-mf-echo='s_pass'>—</span></div><div class='fes-recap-row'><span class='fes-recap-k'>{{content:ospiti}}</span><span class='fes-recap-v' data-mf-echo='s_guests'>—</span></div><div class='fes-recap-row fes-recap-diet'><span class='fes-recap-k'>{{content:dieta}}</span><span class='fes-recap-v' data-mf-echo='s_diet'>—</span></div></div></div>{{script:fes_recap}}{{field:terms}}{{field:newsletter}}</div><div class='fes-nav'><button type='button' class='fes-back' data-mf-native-back='1'>{{content:indietro}}</button><button type='submit' class='fes-submit' data-mf-native-submit='1'>{{content:conferma_iscrizione}}</button></div></div></div></div><p class='fes-foot'>{{content:festa_italiana_piazza_del_sole_info_festaitaliana_it}}</p></div></div>",
+    "customCss": "@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap');\n.mfp.mfp-fes.mfp-native-generated {--fes-primary:#b5322e;--fes-accent:#1a7a4c;--fes-surface:var(--mf-page-surface,var(--mf-preset-surface,#fbf8f1));--fes-text:var(--mf-page-text,var(--mf-preset-text,#3a2a1a));--fes-muted:var(--mf-page-muted,var(--mf-preset-muted,#7a6a55));--fes-border:var(--mf-page-border,var(--mf-preset-border,#e3d8c2));--fes-on-primary:var(--mf-preset-on-primary,#FFFFFF);--fes-deco:#d4af6a;--fes-page:#f6f1e7;--fes-fill:#f6f1e7;--fes-fill-strong:color-mix(in srgb, var(--fes-text) 9%, var(--fes-surface));--fes-soft:color-mix(in srgb, var(--fes-primary) 12%, var(--fes-surface));--fes-hairline:color-mix(in srgb, var(--fes-text) 12%, var(--fes-surface));}.mfp.mfp-fes.mfp-native-generated {background:transparent!important;border:0!important;padding:0!important;font-family:'Cormorant Garamond',Georgia,'Times New Roman',serif}.mfp.mfp-fes.mfp-native-generated {--fes-primary:var(--mf-page-primary,var(--mf-preset-primary,#b5322e));--fes-accent:var(--mf-page-accent,var(--mf-preset-accent,#1a7a4c));--fes-surface:var(--mf-page-surface,var(--mf-preset-surface,#fbf8f1));--fes-text:var(--mf-page-text,var(--mf-preset-text,#3a2a1a));--fes-border:var(--mf-page-border,var(--mf-preset-border,#e3d8c2));--fes-on-primary:var(--mf-page-on-primary,var(--mf-preset-on-primary,#FFFFFF));--fes-page:var(--mf-preset-bg,#f6f1e7);}@container (max-width:520px){.mfp.mfp-fes.mfp-native-generated [class*=\"-grid\"],.mfp.mfp-fes.mfp-native-generated [class*=\"-meta\"],.mfp.mfp-fes.mfp-native-generated [class*=\"-scores\"],.mfp.mfp-fes.mfp-native-generated [class*=\"-charts\"],.mfp.mfp-fes.mfp-native-generated [class*=\"-cols\"]{grid-template-columns:1fr!important}.mfp.mfp-fes.mfp-native-generated [class*=\"-body\"],.mfp.mfp-fes.mfp-native-generated [class*=\"-split\"],.mfp.mfp-fes.mfp-native-generated [class*=\"-foot\"],.mfp.mfp-fes.mfp-native-generated [class*=\"-head\"],.mfp.mfp-fes.mfp-native-generated [class*=\"-row\"]{flex-wrap:wrap!important}.mfp.mfp-fes.mfp-native-generated [class*=\"-aside\"],.mfp.mfp-fes.mfp-native-generated [class*=\"-side\"]{flex:1 1 100%!important;width:100%!important;max-width:none!important}}.mfp.mfp-fes.mfp-native-generated  img{max-width:100%!important;height:auto}.mfp.mfp-fes.mfp-native-generated {overflow-wrap:break-word}\n\n/* The wrapper itself: strip the host's card, but NOT its width. Layout > Max width in the module\n   settings (480/640/768/960/Full) is a max-width on THIS element, and the previous version of this\n   rule overrode it with max-width:none!important - so picking 960 did nothing at all. */\n.mf-form-wrapper:has(.mfp-fes){background:transparent!important;border:0!important;\n  border-radius:0!important;box-shadow:none!important;padding:0!important}\n/* The boxes INSIDE it have their own measures, and those are what squeezed the design. */\n.mf-form-wrapper:has(.mfp-fes) > .mf-form-inner,\n.mf-form-wrapper:has(.mfp-fes) .mf-form,\n.mf-form-wrapper:has(.mfp-fes) .mf-fields-container{background:transparent!important;\n  border:0!important;border-radius:0!important;box-shadow:none!important;padding:0!important;\n  margin:0!important;max-width:none!important;width:100%!important}\n\n\n/* megaform sets font-family on label/input/select/textarea with !important, so an authored\n   <span> inside a <label> inherits the HOST typeface no matter what the shell root declares.\n   Element selectors are (0,3,1) here - above megaform, below every authored class rule - and\n   <i> is left alone so Font Awesome keeps its own family. */\n.mfp.mfp-fes.mfp-native-generated label,.mfp.mfp-fes.mfp-native-generated span,.mfp.mfp-fes.mfp-native-generated p,.mfp.mfp-fes.mfp-native-generated div,.mfp.mfp-fes.mfp-native-generated ul,.mfp.mfp-fes.mfp-native-generated li,.mfp.mfp-fes.mfp-native-generated h1,.mfp.mfp-fes.mfp-native-generated h2,.mfp.mfp-fes.mfp-native-generated h3,.mfp.mfp-fes.mfp-native-generated button{font-family:inherit!important}\n.mfp.mfp-fes.mfp-native-generated .mf-field-label{display:none!important}\n/* A wizard's page-break Section renders a visible heading the mock has no room for - it exists to\n   split the pages, not to be seen. */\n.mfp.mfp-fes.mfp-native-generated .mf-section-break,.mfp.mfp-fes.mfp-native-generated .mf-section-title{display:none!important}\n.mfp.mfp-fes.mfp-native-generated .mf-field-group{margin:0!important;width:100%}\n.mfp.mfp-fes.mfp-native-generated .mf-form-title,.mfp.mfp-fes.mfp-native-generated .mf-form-description,.mfp.mfp-fes.mfp-native-generated .mf-form-actions{display:none!important}\n.mfp.mfp-fes.mfp-native-generated .mf-option-item{margin:0!important}\n/* megaform gives every option chip a 36px floor and paints .mf-option-icon as a rounded tile. */\n.mfp.mfp-fes.mfp-native-generated .mf-option-group--chips .mf-option-check,\n.mfp.mfp-fes.mfp-native-generated .mf-option-group--cards .mf-option-check{display:none!important}\n.mfp.mfp-fes.mfp-native-generated .mf-option-group--chips .mf-option-ui{min-height:0!important;height:auto!important}\n.mfp.mfp-fes.mfp-native-generated .mf-option-group--cards .mf-option-copy{display:block;width:100%}\n\n\n/* root ------------------------------------------------------------------- */\n.mfp.mfp-fes.mfp-native-generated {container-type:inline-size;font-family:'Cormorant Garamond',Georgia,'Times New Roman',serif!important;font-size:16px;line-height:1.5;\n  font-weight:400;color:var(--fes-text)}\n\n/* page band + tricolour --------------------------------------------------- */\n.mfp.mfp-fes.mfp-native-generated .fes-wrap{background-color:var(--fes-page);\n  background-image:url('/DesktopModules/MegaForm/Assets/img/festa-italiana/festa-italiana-texture.png'),url('/Modules/MegaForm/img/festa-italiana/festa-italiana-texture.png');\n  background-size:600px;background-repeat:repeat;background-blend-mode:multiply}\n.mfp.mfp-fes.mfp-native-generated .fes-flag{display:flex;width:100%;height:8px}\n.mfp.mfp-fes.mfp-native-generated .fes-flag>span{flex:1 1 0;height:8px}\n.mfp.mfp-fes.mfp-native-generated .fes-flag-g{background:var(--fes-accent)}\n.mfp.mfp-fes.mfp-native-generated .fes-flag-w{background:#f4f1ea}\n.mfp.mfp-fes.mfp-native-generated .fes-flag-r{background:var(--fes-primary)}\n\n/* card + hero ------------------------------------------------------------- */\n.mfp.mfp-fes.mfp-native-generated .fes-card{overflow:hidden;border:1px solid var(--fes-border);border-radius:24px;background:transparent;\n  box-shadow:0 25px 50px -12px rgba(0,0,0,.25)}\n.mfp.mfp-fes.mfp-native-generated .fes-hero{position:relative;height:224px}\n/* The mock's md: breakpoint is the VIEWPORT (768px), at which its card is 736px wide - 704px of\n   content plus its border. A container query is on the PANE, so 768 would keep the small variant\n   at the design's own width and the card rendered 120px too tall with a 36px masthead. */\n@container (min-width:704px){.mfp.mfp-fes.mfp-native-generated .fes-hero{height:288px}}\n.mfp.mfp-fes.mfp-native-generated .fes-hero-img{position:absolute;inset:0;display:block;width:100%;height:100%;\n  background-image:url('/DesktopModules/MegaForm/Assets/img/festa-italiana/festa-italiana-hero.png'),url('/Modules/MegaForm/img/festa-italiana/festa-italiana-hero.png');\n  background-size:cover;background-position:50% 50%;background-repeat:no-repeat}\n.mfp.mfp-fes.mfp-native-generated img.fes-content-image{position:absolute!important;inset:0!important;display:block!important;\n  width:100%!important;height:100%!important;object-fit:cover!important;object-position:50% 50%!important;\n  border:0!important;border-radius:0!important;pointer-events:none!important}\n.mfp.mfp-fes.mfp-native-generated .fes-hero-scrim{position:absolute;inset:0;\n  background:linear-gradient(to top,rgba(40,24,16,.85),rgba(40,24,16,.15))}\n.mfp.mfp-fes.mfp-native-generated .fes-hero-copy{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;\n  justify-content:flex-end;padding-bottom:28px;text-align:center}\n/* tracking .4em = 5.6px at 14px; the trailing letter-space on the last glyph shifts the optical\n   centre ~2.8px left of geometric centre. The mock has that. Do not \"correct\" it. */\n.mfp.mfp-fes.mfp-native-generated p.fes-eyebrow{margin:0 0 4px!important;font-family:'Cormorant Garamond',Georgia,'Times New Roman',serif!important;font-size:14px!important;\n  line-height:20px!important;font-weight:400!important;text-transform:uppercase!important;\n  letter-spacing:.4em!important;color:#f2d9a0!important}\n/* leading-none beats text-4xl's 40px AND text-6xl's own line-height: it is 1 at both widths */\n.mfp.mfp-fes.mfp-native-generated h1.fes-h1{margin:0!important;font-family:'Playfair Display',Georgia,'Times New Roman',serif!important;font-size:36px!important;\n  line-height:1!important;font-weight:700!important;color:#fff!important;\n  text-shadow:0 2px 20px rgba(0,0,0,.4)}\n@container (min-width:704px){.mfp.mfp-fes.mfp-native-generated h1.fes-h1{font-size:60px!important}}\n/* MEASURED: the mock renders this line upright - the italic class is on the h1 above it, not here */\n.mfp.mfp-fes.mfp-native-generated p.fes-hero-sub{margin:8px 0 0!important;font-family:'Cormorant Garamond',Georgia,'Times New Roman',serif!important;font-size:18px!important;\n  line-height:28px!important;font-weight:400!important;font-style:normal!important;\n  width:fit-content;max-width:calc(100% - 24px);color:var(--fes-page)!important}\n\n/* body panel -------------------------------------------------------------- */\n.mfp.mfp-fes.mfp-native-generated .fes-body{padding:32px 24px;background:var(--fes-surface)}\n@container (min-width:704px){.mfp.mfp-fes.mfp-native-generated .fes-body{padding:40px 48px}}\n\n/* stepper ----------------------------------------------------------------- */\n.mfp.mfp-fes.mfp-native-generated .fes-rail{display:flex;align-items:center;justify-content:center;margin-bottom:40px}\n.mfp.mfp-fes.mfp-native-generated .fes-rail-item{display:flex;flex-direction:column;align-items:center}\n.mfp.mfp-fes.mfp-native-generated .fes-rail-num{display:flex;align-items:center;justify-content:center;width:48px;height:48px;\n  box-sizing:border-box;border:2px solid #d8cab0;border-radius:9999px;background:transparent;\n  font-family:'Playfair Display',Georgia,'Times New Roman',serif!important;font-size:18px;line-height:28px;font-weight:700;color:#b3a387;\n  transition:all .18s ease}\n.mfp.mfp-fes.mfp-native-generated .fes-rail-lbl{margin-top:8px;font-family:'Playfair Display',Georgia,'Times New Roman',serif!important;font-size:14px;line-height:20px;\n  font-weight:600;color:#b3a387}\n/* sublabel colour is CONSTANT — it never follows the step state */\n.mfp.mfp-fes.mfp-native-generated .fes-rail-sub{font-family:'Cormorant Garamond',Georgia,'Times New Roman',serif!important;font-size:12px;line-height:16px;font-weight:400;\n  text-transform:uppercase;letter-spacing:.05em;color:#b3a387}\n/* the column is 92px tall (48+8+20+16); this 33px margin box centres to y=29.5px, i.e. 5.5px\n   BELOW the circle's centreline (y=24). Deliberate in the mock. */\n.mfp.mfp-fes.mfp-native-generated .fes-rail-line{display:block;flex:0 0 48px;width:48px;height:1px;margin:0 8px 32px;\n  background:#d8cab0}\n@container (min-width:704px){.mfp.mfp-fes.mfp-native-generated .fes-rail-line{flex-basis:80px;width:80px}}\n.mfp.mfp-fes.mfp-native-generated .fes-rail-item.is-active .fes-rail-num{border-color:var(--fes-primary);background:var(--fes-surface);color:var(--fes-primary)}\n.mfp.mfp-fes.mfp-native-generated .fes-rail-item.is-active .fes-rail-lbl{color:var(--fes-text)}\n.mfp.mfp-fes.mfp-native-generated .fes-rail-item.is-done .fes-rail-num{border-color:var(--fes-primary);background:var(--fes-primary);color:#fff}\n.mfp.mfp-fes.mfp-native-generated .fes-rail-item.is-done .fes-rail-lbl{color:var(--fes-text)}\n.mfp.mfp-fes.mfp-native-generated .fes-rail-item.is-done .fes-rail-n{display:none}\n/* the tick is the TEXT glyph U+2713, not an SVG — the mock has exactly one <svg> and it is on\n   the success screen */\n.mfp.mfp-fes.mfp-native-generated .fes-rail-item.is-done .fes-rail-num::after{content:'\\2713';font-family:'Playfair Display',Georgia,'Times New Roman',serif!important;\n  font-size:18px;line-height:28px;font-weight:700}\n.mfp.mfp-fes.mfp-native-generated .fes-rail-item.is-done+.fes-rail-line{background:var(--fes-primary)}\n@container (max-width:520px){\n  .mfp.mfp-fes.mfp-native-generated .fes-rail{width:auto;margin-left:8px;margin-right:8px}\n  .mfp.mfp-fes.mfp-native-generated .fes-rail-item{flex:1 1 0;min-width:0}\n  .mfp.mfp-fes.mfp-native-generated .fes-rail-num{width:40px;height:40px}\n  .mfp.mfp-fes.mfp-native-generated .fes-rail-line{flex:0 1 12px;width:12px;margin:0 4px 32px}\n  .mfp.mfp-fes.mfp-native-generated .fes-rail-lbl{display:block;width:100%;max-width:100%;font-size:11px;line-height:16px;\n    overflow-wrap:anywhere;text-align:center}\n  .mfp.mfp-fes.mfp-native-generated .fes-rail-sub{display:block;width:100%;max-width:100%;font-size:10px;line-height:14px;\n    overflow-wrap:anywhere;text-align:center}\n}\n\n/* section heading + gold rule + stacks ------------------------------------ */\n.mfp.mfp-fes.mfp-native-generated .fes-head{margin-bottom:8px;text-align:center}\n.mfp.mfp-fes.mfp-native-generated h2.fes-heading{margin:0!important;font-family:'Playfair Display',Georgia,'Times New Roman',serif!important;font-size:24px!important;\n  line-height:32px!important;font-weight:700!important;color:var(--fes-text)!important}\n@container (min-width:704px){.mfp.mfp-fes.mfp-native-generated h2.fes-heading{font-size:30px!important;line-height:36px!important}}\n.mfp.mfp-fes.mfp-native-generated .fes-rule{display:block;width:64px;height:1px;margin:8px auto 0;background:#d4af6a}\n/* space-y-5 / space-y-6. Flex gap does NOT collapse with .fes-head's 8px, so heading to first\n   control is 8+20=28px (steps I and III) and 8+24=32px (step II) — which is what the mock\n   measures. */\n.mfp.mfp-fes.mfp-native-generated .fes-stack{display:flex;flex-direction:column;gap:20px}\n.mfp.mfp-fes.mfp-native-generated .fes-stack-6{gap:24px}\n.mfp.mfp-fes.mfp-native-generated .fes-grid2{display:grid;grid-template-columns:1fr;gap:20px}\n@container (min-width:704px){.mfp.mfp-fes.mfp-native-generated .fes-grid2{grid-template-columns:1fr 1fr}}\n\n/* field label row --------------------------------------------------------- */\n.mfp.mfp-fes.mfp-native-generated .fes-field{display:block;margin:0}\n.mfp.mfp-fes.mfp-native-generated .fes-lbl-row{display:flex;align-items:baseline;gap:8px;margin-bottom:6px}\n.mfp.mfp-fes.mfp-native-generated .fes-lbl{font-family:'Cormorant Garamond',Georgia,'Times New Roman',serif!important;font-size:16px;line-height:24px;font-weight:600;\n  letter-spacing:.025em;color:var(--fes-text)}\n.mfp.mfp-fes.mfp-native-generated .fes-req{font-family:'Cormorant Garamond',Georgia,'Times New Roman',serif!important;font-size:16px;line-height:24px;font-weight:600;\n  color:var(--fes-primary)}\n.mfp.mfp-fes.mfp-native-generated .fes-sub-lbl{font-family:'Cormorant Garamond',Georgia,'Times New Roman',serif!important;font-size:12px;line-height:16px;font-weight:400;\n  text-transform:uppercase;letter-spacing:.05em;color:#b3a387}\n\n/* controls — .festa-input, transcribed ------------------------------------ */\n/* 0.6rem=9.6px, 0.7rem=11.2px, 0.95rem=15.2px, 1.15rem=18.4px, lh inherit 1.5 gives 27.6px\n   => single-line height 52.0px, textarea rows=3 => 107.2px */\n.mfp.mfp-fes.mfp-native-generated .mf-select-wrap{display:block;position:static;width:100%}\n/* the mock does NOT reset select appearance: native OS arrow, native option list */\n.mfp.mfp-fes.mfp-native-generated .mf-select-chevron{display:none!important}\n.mfp.mfp-fes.mfp-native-generated .mf-input[class],.mfp.mfp-fes.mfp-native-generated .mf-select[class],.mfp.mfp-fes.mfp-native-generated .mf-textarea[class]{display:block!important;\n  width:100%!important;box-sizing:border-box!important;border:1px solid #d8cab0!important;\n  border-radius:9.6px!important;background:#fff!important;padding:11.2px 15.2px!important;\n  min-height:0!important;height:auto!important;font-family:'Cormorant Garamond',Georgia,'Times New Roman',serif!important;\n  font-size:18.4px!important;line-height:27.6px!important;font-weight:400!important;\n  color:var(--fes-text)!important;box-shadow:none!important;transition:all .18s ease!important}\n.mfp.mfp-fes.mfp-native-generated .mf-select[class]{appearance:auto!important;-webkit-appearance:auto!important;\n  padding-right:15.2px!important}\n.mfp.mfp-fes.mfp-native-generated .mf-textarea[class]{height:107.2px!important;resize:none!important}\n.mfp.mfp-fes.mfp-native-generated .mf-input[class]::placeholder,.mfp.mfp-fes.mfp-native-generated .mf-textarea[class]::placeholder{color:#bcab90!important;\n  opacity:1}\n.mfp.mfp-fes.mfp-native-generated .mf-input[class]:focus,.mfp.mfp-fes.mfp-native-generated .mf-select[class]:focus,.mfp.mfp-fes.mfp-native-generated .mf-textarea[class]:focus{\n  outline:none!important;border-color:var(--fes-primary)!important;\n  box-shadow:0 0 0 3px rgba(181,50,46,.12)!important}\n/* the two selects that carry \"Seleziona…\" grey out until chosen; guests has no empty option in\n   the mock, so the renderer-injected one is hidden rather than styled */\n.mfp.mfp-fes.mfp-native-generated .mf-select[class]:has(option[value=\"\"]:checked){color:#bcab90!important}\n.mfp.mfp-fes.mfp-native-generated .mf-field-group[data-key=\"guests\"] .mf-select option[value=\"\"]{display:none}\n\n/* pass cards -------------------------------------------------------------- */\n.mfp.mfp-fes.mfp-native-generated .fes-passes .mf-option-group--cards{display:flex!important;flex-direction:column!important;\n  gap:12px!important}\n.mfp.mfp-fes.mfp-native-generated .mf-option-group--cards .mf-option-ui{display:flex;align-items:center;gap:16px;width:100%;\n  box-sizing:border-box;padding:20px;border:2px solid var(--fes-border);border-radius:12px;background:#fff;\n  text-align:left;cursor:pointer;transition:all .18s ease}\n/* the radio ring is a ::before, never an <i>: a font icon as the first flex item drops the whole\n   card 3px onto the glyph baseline (measured on the 08-08 batch) */\n.mfp.mfp-fes.mfp-native-generated .mf-option-group--cards .mf-option-ui::before{content:'';flex:0 0 20px;width:20px;height:20px;\n  box-sizing:border-box;border:2px solid #cabba0;border-radius:9999px;background:transparent}\n.mfp.mfp-fes.mfp-native-generated .mf-option-group--cards .mf-option-item.is-selected .mf-option-ui::before,\n.mfp.mfp-fes.mfp-native-generated .mf-option-group--cards input:checked+.mf-option-ui::before{border-color:var(--fes-primary);\n  background:radial-gradient(circle,var(--fes-primary) 0 5px,transparent 5px)}\n.mfp.mfp-fes.mfp-native-generated .mf-option-group--cards .mf-option-copy{display:block;width:auto;gap:0}\n.mfp.mfp-fes.mfp-native-generated .mf-option-group--cards .mf-option-label{display:block;font-family:'Playfair Display',Georgia,'Times New Roman',serif!important;\n  font-size:20px;line-height:28px;font-weight:700;color:var(--fes-text)}\n.mfp.mfp-fes.mfp-native-generated .mf-option-group--cards .mf-option-desc{display:block;font-family:'Cormorant Garamond',Georgia,'Times New Roman',serif!important;\n  font-size:16px;line-height:24px;font-weight:400;color:#7a6a55}\n.mfp.mfp-fes.mfp-native-generated .mf-option-group--cards .mf-option-badge{margin-left:auto;font-family:'Playfair Display',Georgia,'Times New Roman',serif!important;\n  font-size:24px;line-height:32px;font-weight:700;color:var(--fes-primary)}\n.mfp.mfp-fes.mfp-native-generated .mf-option-group--cards .mf-option-item.is-selected .mf-option-ui,\n.mfp.mfp-fes.mfp-native-generated .mf-option-group--cards input:checked+.mf-option-ui{border-color:var(--fes-primary);background:#fcf2ec}\n/* derived card height: 20+20 pad + 2+2 border + (28 name + 24 desc) = 96px */\n\n/* dietary chips ----------------------------------------------------------- */\n.mfp.mfp-fes.mfp-native-generated .mf-option-group--chips{display:flex;flex-wrap:wrap;gap:8px}\n.mfp.mfp-fes.mfp-native-generated .mf-option-group--chips .mf-option-ui{display:block;box-sizing:border-box;padding:6px 16px;\n  border:2px solid var(--fes-border);border-radius:9999px;background:#fff;color:#7a6a55;\n  font-family:'Cormorant Garamond',Georgia,'Times New Roman',serif!important;font-size:16px;line-height:24px;font-weight:600;text-align:center;\n  cursor:pointer;transition:all .18s ease}\n.mfp.mfp-fes.mfp-native-generated .mf-option-group--chips .mf-option-label{font-size:16px;line-height:24px;font-weight:600;\n  color:inherit}\n.mfp.mfp-fes.mfp-native-generated .mf-option-group--chips .mf-option-item.is-selected .mf-option-ui,\n.mfp.mfp-fes.mfp-native-generated .mf-option-group--chips input:checked+.mf-option-ui{border-color:var(--fes-accent);background:var(--fes-accent);\n  color:#fff}\n/* derived chip height: 24 + 6+6 + 2+2 = 40px */\n\n/* summary card ------------------------------------------------------------ */\n.mfp.mfp-fes.mfp-native-generated .fes-recap{padding:20px;border:1px solid var(--fes-border);border-radius:12px;background:#fcf9f2}\n.mfp.mfp-fes.mfp-native-generated p.fes-recap-h{margin:0 0 12px!important;font-family:'Playfair Display',Georgia,'Times New Roman',serif!important;font-size:18px!important;\n  line-height:28px!important;font-weight:700!important;color:var(--fes-text)!important}\n.mfp.mfp-fes.mfp-native-generated .fes-recap-list{display:flex;flex-direction:column;gap:6px;font-family:'Cormorant Garamond',Georgia,'Times New Roman',serif!important;\n  font-size:16px;line-height:24px;font-weight:400;color:#7a6a55}\n.mfp.mfp-fes.mfp-native-generated .fes-recap-row{display:flex;justify-content:space-between}\n.mfp.mfp-fes.mfp-native-generated .fes-recap-k{font-size:16px;line-height:24px;font-weight:400;color:#7a6a55}\n.mfp.mfp-fes.mfp-native-generated .fes-recap-v{font-size:16px;line-height:24px;font-weight:600;color:var(--fes-text);text-align:right}\n\n/* consent checkboxes ------------------------------------------------------ */\n.mfp.mfp-fes.mfp-native-generated .mf-option-group--list{display:flex;flex-direction:column;gap:20px}\n.mfp.mfp-fes.mfp-native-generated .mf-option-group--list .mf-option-item{display:flex;align-items:flex-start;gap:12px;\n  cursor:pointer}\n.mfp.mfp-fes.mfp-native-generated .mf-option-group--list .mf-option-ui{display:block;padding:0;border:0;background:transparent}\n.mfp.mfp-fes.mfp-native-generated .mf-option-group--list .mf-option-label{font-family:'Cormorant Garamond',Georgia,'Times New Roman',serif!important;font-size:16px;\n  line-height:24px;font-weight:400;color:#5a4a35}\n/* native box + accent-color: the mock draws no custom tick */\n.mfp.mfp-fes.mfp-native-generated .mf-option-group--list input[type=\"checkbox\"]{appearance:auto!important;\n  -webkit-appearance:auto!important;flex:0 0 20px!important;width:20px!important;\n  height:20px!important;margin:4px 0 0!important;border:0!important;border-radius:0!important;\n  background:none!important;box-shadow:none!important}\n.mfp.mfp-fes.mfp-native-generated .mf-field-group[data-key=\"terms\"] input[type=\"checkbox\"]{accent-color:var(--fes-primary)!important}\n.mfp.mfp-fes.mfp-native-generated .mf-field-group[data-key=\"newsletter\"] input[type=\"checkbox\"]{accent-color:var(--fes-accent)!important}\n\n/* nav row ----------------------------------------------------------------- */\n.mfp.mfp-fes.mfp-native-generated .fes-nav{display:flex;align-items:center;justify-content:space-between;margin-top:40px;\n  padding-top:24px;border-top:1px solid #ece2cf}\n.mfp.mfp-fes.mfp-native-generated button.fes-back[type=\"button\"]{padding:10px 24px!important;border:0!important;\n  border-radius:9999px!important;background:transparent!important;color:#7a6a55!important;\n  font-family:'Cormorant Garamond',Georgia,'Times New Roman',serif!important;font-size:18px!important;line-height:28px!important;\n  font-weight:600!important;letter-spacing:normal!important;text-transform:none!important;\n  cursor:pointer!important;box-shadow:none!important;transition:all .18s ease}\n/* disabled:opacity-0 — invisible but STILL occupies its box; the row must not shift */\n/* megaform hides its own Back on step 1 with display:none; the mock keeps the BOX (opacity-0) so\n   Next stays right-aligned. Without this the nav row collapses and Next jumps to the left. */\n.mfp.mfp-fes.mfp-native-generated button.fes-back.is-ghost{display:inline-flex!important;opacity:0;pointer-events:none}\n.mfp.mfp-fes.mfp-native-generated button.fes-next[type=\"button\"],.mfp.mfp-fes.mfp-native-generated button.fes-submit[type=\"submit\"]{padding:12px 32px!important;\n  border:0!important;border-radius:9999px!important;color:#fff!important;\n  font-family:'Cormorant Garamond',Georgia,'Times New Roman',serif!important;font-size:18px!important;line-height:28px!important;\n  font-weight:600!important;letter-spacing:.025em!important;text-transform:none!important;\n  cursor:pointer!important;box-shadow:none!important;transition:all .18s ease}\n.mfp.mfp-fes.mfp-native-generated button.fes-next[type=\"button\"]{background:var(--fes-primary)!important}\n.mfp.mfp-fes.mfp-native-generated button.fes-submit[type=\"submit\"]{background:var(--fes-accent)!important}\n.mfp.mfp-fes.mfp-native-generated button.fes-next[type=\"button\"]:hover,.mfp.mfp-fes.mfp-native-generated button.fes-submit[type=\"submit\"]:hover{\n  transform:scale(1.05)}\n.mfp.mfp-fes.mfp-native-generated button.fes-next.mf-nav-blocked,.mfp.mfp-fes.mfp-native-generated button.fes-next[disabled],\n.mfp.mfp-fes.mfp-native-generated button.fes-submit.mf-nav-blocked,.mfp.mfp-fes.mfp-native-generated button.fes-submit[disabled]{opacity:.4!important;\n  cursor:not-allowed!important;transform:none!important;filter:none!important}\n\n/* page footer line -------------------------------------------------------- */\n.mfp.mfp-fes.mfp-native-generated p.fes-foot{width:calc(100% - 24px)!important;margin:24px auto 0!important;text-align:center!important;font-family:'Cormorant Garamond',Georgia,'Times New Roman',serif!important;\n  font-size:16px!important;line-height:24px!important;font-weight:400!important;\n  font-style:italic!important;color:#9a8a72!important}\n\n/* success screen — OUTSIDE .mfp.mfp-fes.mfp-native-generated  ------------------------------------------- */\n/* .mf-postsubmit-pane is appended to the <form>, a SIBLING of the shell, so no .mfp.mfp-fes.mfp-native-generated  rule reaches\n   it. :has() is the same escape wrapperReset() already uses. Every declaration the renderer\n   writes there is an INLINE style, so each override needs !important. */\n.mf-form-wrapper:has(.mfp-fes) .mf-postsubmit-pane{border:1px solid var(--fes-border)!important;\n  border-radius:24px!important;background:var(--fes-surface)!important;\n  box-shadow:0 25px 50px -12px rgba(0,0,0,.25)!important;padding:0 48px!important}\n.mf-form-wrapper:has(.mfp-fes) .mf-postsubmit-body{padding:48px 0!important;\n  text-align:center!important;font-family:'Cormorant Garamond',Georgia,'Times New Roman',serif!important;color:var(--fes-text)!important}\n.mf-form-wrapper:has(.mfp-fes) .mf-postsubmit-check{width:80px!important;height:80px!important;\n  margin:0 auto 24px!important;border-radius:9999px!important;\n  background:var(--fes-accent) url(\"data:image/svg+xml,%3Csvg xmlns='http:%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E %3Cpolyline points='20 6 9 17 4 12'%2F%3E%3C%2Fsvg%3E\") no-repeat center/40px 40px!important}\n.mf-form-wrapper:has(.mfp-fes) .mf-postsubmit-check i{display:none!important}\n.mf-form-wrapper:has(.mfp-fes) h3.mf-postsubmit-title{margin:0!important;\n  font-family:'Playfair Display',Georgia,'Times New Roman',serif!important;font-size:30px!important;line-height:36px!important;\n  font-weight:700!important;color:var(--fes-text)!important}\n.mf-form-wrapper:has(.mfp-fes) .mf-postsubmit-msg{max-width:448px!important;\n  margin:12px auto 0!important;font-family:'Cormorant Garamond',Georgia,'Times New Roman',serif!important;font-size:20px!important;\n  line-height:28px!important;font-weight:400!important;color:#7a6a55!important;opacity:1!important}\n.mf-form-wrapper:has(.mfp-fes) .mf-ref-number{display:none!important}\n.mf-form-wrapper:has(.mfp-fes) .mf-postsubmit-actions{margin-top:32px!important;\n  justify-content:center!important}\n.mf-form-wrapper:has(.mfp-fes) .mf-postsubmit-actions .mf-btn-submit{padding:12px 32px!important;\n  border:0!important;border-radius:9999px!important;background:var(--fes-primary)!important;\n  color:#fff!important;font-family:'Cormorant Garamond',Georgia,'Times New Roman',serif!important;font-size:18px!important;\n  line-height:28px!important;font-weight:600!important;letter-spacing:.025em!important}\n.mf-form-wrapper:has(.mfp-fes) .mf-postsubmit-actions .mf-btn-submit i{display:none!important}\n.mf-form-wrapper:has(.mfp-fes) .mf-postsubmit-actions .mf-btn-prev{display:none!important}\n.mfp.mfp-fes.mfp-native-generated .fes-page{padding:0!important;background:transparent!important;min-height:0!important}.mfp.mfp-fes.mfp-native-generated .fes-shell,.mfp.mfp-fes.mfp-native-generated .fes-wrap{max-width:none!important;margin:0!important}.mfp.mfp-fes.mfp-native-generated .fes-grid,.mfp.mfp-fes.mfp-native-generated .fes-main,.mfp.mfp-fes.mfp-native-generated .fes-hero-in,.mfp.mfp-fes.mfp-native-generated .fes-card{max-width:none!important;margin-left:0!important;margin-right:0!important}.mfp.mfp-fes.mfp-native-generated .fes-card{border:1px solid #e3d8c2!important;border-radius:24px!important;overflow:hidden}.mf-form-wrapper.mf-has-date-popover .mfp.mfp-fes.mfp-native-generated .fes-card{overflow:visible!important}",
+    "themeSelector": false,
+    "premiumGeneratedShell": true,
+    "gateNavigationUntilValid": true,
+    "postSubmitExperience": {
+      "enabled": true,
+      "mode": "rich",
+      "title": "Grazie, {{field:first_name}}!",
+      "message": "La tua iscrizione è confermata. Ti abbiamo inviato i dettagli a {{field:email}}. Ci vediamo alla festa!",
+      "showSubmissionId": true,
+      "submissionIdLabel": "Reference:",
+      "showAnswerSummary": false,
+      "allowFillAgain": true,
+      "fillAgainLabel": "Submit another",
+      "doneLabel": "Done"
+    },
+    "themeCompatibility": {
+      "policy": "hybrid",
+      "supportsPageColors": false,
+      "supportsPageTypography": true,
+      "supportsDarkHost": true,
+      "prefixes": [
+        "fes"
+      ],
+      "immutable": [
+        "primary",
+        "accent",
+        "deco"
+      ]
+    }
+  },
+  "fields": [
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "pageBreak": false,
+        "premiumNativeStep": true,
+        "generatedPremiumStep": true,
+        "premiumStepIndex": 1
+      },
+      "key": "step_1",
+      "type": "Section",
+      "label": "L'Ospite",
+      "required": false
+    },
+    {
+      "placeholder": "Giulia",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "first_name",
+      "type": "Text",
+      "label": "Nome",
+      "required": true
+    },
+    {
+      "placeholder": "Rossi",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "last_name",
+      "type": "Text",
+      "label": "Cognome",
+      "required": true
+    },
+    {
+      "placeholder": "giulia@email.it",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "email",
+      "type": "Email",
+      "label": "Email",
+      "required": true
+    },
+    {
+      "placeholder": "+39 333 123 4567",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "phone",
+      "type": "Text",
+      "label": "Telefono",
+      "required": false
+    },
+    {
+      "placeholder": "Firenze",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "city",
+      "type": "Text",
+      "label": "Città",
+      "required": false
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "pageBreak": true,
+        "premiumNativeStep": true,
+        "generatedPremiumStep": true,
+        "premiumStepIndex": 2
+      },
+      "key": "step_2",
+      "type": "Section",
+      "label": "L'Esperienza",
+      "required": false
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Piazza",
+          "value": "piazza",
+          "badge": "€45",
+          "description": "Accesso generale, degustazioni e musica dal vivo"
+        },
+        {
+          "label": "Terrazza",
+          "value": "terrazza",
+          "badge": "€95",
+          "description": "Posto riservato, cena a 4 portate e vini selezionati"
+        },
+        {
+          "label": "Villa",
+          "value": "villa",
+          "badge": "€180",
+          "description": "Esperienza completa, tavolo privato e chef incontro"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "cards",
+        "optionColumns": 1
+      },
+      "key": "pass",
+      "type": "Radio",
+      "label": "Pass",
+      "required": true,
+      "optionDisplay": "cards",
+      "choiceDisplay": "cards",
+      "optionVariant": "cards",
+      "widgetProps": {
+        "optionDisplay": "cards",
+        "optionColumns": 1
+      },
+      "allowOptionHtml": true,
+      "optionColumns": 1
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "1",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "1",
+          "value": "1"
+        },
+        {
+          "label": "2",
+          "value": "2"
+        },
+        {
+          "label": "3",
+          "value": "3"
+        },
+        {
+          "label": "4",
+          "value": "4"
+        },
+        {
+          "label": "5",
+          "value": "5"
+        },
+        {
+          "label": "6+",
+          "value": "6+"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "dropdown"
+      },
+      "key": "guests",
+      "type": "Select",
+      "label": "Numero di ospiti",
+      "required": false,
+      "optionDisplay": "dropdown",
+      "choiceDisplay": "dropdown",
+      "optionVariant": "dropdown",
+      "widgetProps": {
+        "optionDisplay": "dropdown"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "Seleziona…",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Rosso Toscano",
+          "value": "rosso"
+        },
+        {
+          "label": "Bianco Friulano",
+          "value": "bianco"
+        },
+        {
+          "label": "Bollicine Franciacorta",
+          "value": "bollicine"
+        },
+        {
+          "label": "Nessuno, grazie",
+          "value": "nessuno"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "dropdown"
+      },
+      "key": "wine_pairing",
+      "type": "Select",
+      "label": "Abbinamento vini",
+      "required": false,
+      "optionDisplay": "dropdown",
+      "choiceDisplay": "dropdown",
+      "optionVariant": "dropdown",
+      "widgetProps": {
+        "optionDisplay": "dropdown"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Vegetariano",
+          "value": "Vegetariano"
+        },
+        {
+          "label": "Vegano",
+          "value": "Vegano"
+        },
+        {
+          "label": "Senza glutine",
+          "value": "Senza glutine"
+        },
+        {
+          "label": "Senza lattosio",
+          "value": "Senza lattosio"
+        },
+        {
+          "label": "Pescetariano",
+          "value": "Pescetariano"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "chips"
+      },
+      "key": "dietary",
+      "type": "Checkbox",
+      "label": "Preferenze alimentari",
+      "required": false,
+      "optionDisplay": "chips",
+      "choiceDisplay": "chips",
+      "optionVariant": "chips",
+      "widgetProps": {
+        "optionDisplay": "chips"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "pageBreak": true,
+        "premiumNativeStep": true,
+        "generatedPremiumStep": true,
+        "premiumStepIndex": 3
+      },
+      "key": "step_3",
+      "type": "Section",
+      "label": "La Conferma",
+      "required": false
+    },
+    {
+      "placeholder": "Seleziona…",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "18:00 — Aperitivo",
+          "value": "18"
+        },
+        {
+          "label": "19:00 — Cena",
+          "value": "19"
+        },
+        {
+          "label": "21:00 — Musica e danze",
+          "value": "21"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "dropdown"
+      },
+      "key": "arrival",
+      "type": "Select",
+      "label": "Orario di arrivo",
+      "required": false,
+      "optionDisplay": "dropdown",
+      "choiceDisplay": "dropdown",
+      "optionVariant": "dropdown",
+      "widgetProps": {
+        "optionDisplay": "dropdown"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "Allergie, richieste particolari, anniversari…",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "rows": 3
+      },
+      "key": "notes",
+      "type": "Textarea",
+      "label": "Note speciali",
+      "required": false
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "value": "yes",
+          "label": "Accetto i termini e le condizioni della Festa Italiana e autorizzo il trattamento dei dati. *"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "list"
+      },
+      "key": "terms",
+      "type": "Checkbox",
+      "label": "Termini",
+      "required": true,
+      "optionDisplay": "list",
+      "choiceDisplay": "list",
+      "optionVariant": "list",
+      "widgetProps": {
+        "optionDisplay": "list"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "value": "yes",
+          "label": "Desidero ricevere aggiornamenti sui prossimi eventi."
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "list"
+      },
+      "key": "newsletter",
+      "type": "Checkbox",
+      "label": "Newsletter",
+      "required": false,
+      "optionDisplay": "list",
+      "choiceDisplay": "list",
+      "optionVariant": "list",
+      "widgetProps": {
+        "optionDisplay": "list"
+      },
+      "allowOptionHtml": true
+    }
+  ],
+  "rules": [],
+  "workflow": {
+    "notifications": []
+  }
+}

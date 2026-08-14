@@ -225,8 +225,8 @@ export function byDial(dial: string): PickerCountry | null {
 /**
  * [LocaleDefaultCountry 2026-07-28] Which country a picker starts on when the field carries
  * no stored value and the designer set no default. Reads the REGION of the active MegaForm
- * locale — 'vi-VN' → VN, 'en-US' → US — so a form running in Vietnamese opens on the
- * Vietnamese flag instead of a hard-coded US one.
+ * locale — 'ur-PK' → PK, 'en-US' → US — so a form running in Urdu opens on the
+ * Pakistani flag instead of a hard-coded US one.
  *
  * Locale comes from window.MegaFormI18n (the i18n bundle owns it and it can change at
  * runtime via the language picker), never from an import: this file ships in the renderer

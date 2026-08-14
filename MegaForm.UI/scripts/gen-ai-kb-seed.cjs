@@ -1,4 +1,12 @@
 /**
+ * LEGACY [SqlMerge 2026-08-14] — this script writes a .sql file that NOTHING runs.
+ * Plain .sql was never declared in MegaForm.dnn (only *.SqlDataProvider is), and the
+ * DNN build stopped packaging .sql on 2026-07-29. The 14 .sql files this and its
+ * sibling generators had left in SqlScripts\ were deleted; the folder now holds only
+ * the scripts DNN actually executes. The live path for AI knowledge is
+ * MegaForm.Core\Seed\ai-knowledge-seed.json, merged at runtime by DnnKbSeeder.
+ * Running this again just recreates a file that misleads the next reader.
+ *
  * Generate MegaForm.DNN/SqlScripts/01.06.28-seed.sql
  *
  * Seeds the new strict-schema entries for MF_AI_Knowledge (override the

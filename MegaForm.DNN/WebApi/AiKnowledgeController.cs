@@ -32,9 +32,75 @@ namespace MegaForm.WebApi
 
         private HttpResponseMessage RejectIfDisabled()
         {
-            var enabled = AiFeatureGate.IsEnabled(PortalSettings?.HomeDirectoryMapPath);
+            var enabled = AiFeatureGate.IsAvailable(PortalSettings?.HomeDirectoryMapPath);
             if (enabled) return null;
-            return Request.CreateResponse(HttpStatusCode.NotFound, new { error = "AI knowledge disabled (no dev.lock)" });
+            return Request.CreateResponse(HttpStatusCode.NotFound, new { error = "AI knowledge is not available on this install (a production licence is required)." });
+        }
+
+        // ── Seed status ───────────────────────────────────────────────────
+
+        /// <summary>
+        /// [KbSeedVisibility v20260812] Why the knowledge base looks the way it does.
+        ///
+        /// Until now there was no way to answer that question from inside the product: the DNN
+        /// seeder swallowed every failure, the Oqtane one wrote its exception to a file in
+        /// %TEMP%, and an admin whose AI had no knowledge saw only an empty panel. Worse, the
+        /// three causes are indistinguishable from the outside — a closed licence gate returns
+        /// 404 from every other endpoint here, which reads exactly like "the KB is empty".
+        ///
+        /// So this endpoint deliberately does NOT use RejectIfDisabled: it reports the gate as
+        /// data. Admin-only (class-level DnnAuthorize), read-only, and it leaks no exception
+        /// detail — the seeder records its own message (SECURITY_CODING_RULES §10).
+        ///
+        /// Constructing the service also TRIGGERS the seeder, so opening this page is itself the
+        /// retry: the answer describes the attempt that just ran, not a stale one.
+        /// </summary>
+        [HttpGet]
+        [ActionName("SeedStatus")]
+        public HttpResponseMessage SeedStatus()
+        {
+            var aiAvailable = AiFeatureGate.IsAvailable(PortalSettings?.HomeDirectoryMapPath);
+
+            // Runs the seeder if it has not run (or if earlier attempts failed).
+            new MegaForm.DNN.Services.DnnAiKnowledgeService();
+            var seed = MegaForm.DNN.Services.DnnKbSeeder.LastRun;
+
+            int total = 0, formTemplates = 0, guides = 0;
+            string readError = null;
+            try
+            {
+                // Bounded read: counts, never the bodies (CLAUDE.md §11).
+                var all = AiKnowledgeRepository.List(null, null, CurrentPortalId, 5000).ToList();
+                total = all.Count;
+                formTemplates = all.Count(e => string.Equals(e.Kind, "form_template", StringComparison.OrdinalIgnoreCase));
+                guides = all.Count(e => string.Equals(e.Kind, "template_guide", StringComparison.OrdinalIgnoreCase));
+            }
+            catch
+            {
+                readError = "The knowledge table could not be read.";
+            }
+
+            return Request.CreateResponse(HttpStatusCode.OK, new
+            {
+                // false here explains an empty KB that is not a failure at all.
+                aiAvailable,
+                entries = total,
+                formTemplates,
+                templateGuides = guides,
+                readError,
+                seed = new
+                {
+                    ran = seed.Ran,
+                    succeeded = seed.Succeeded,
+                    merged = seed.Merged,
+                    missingBefore = seed.MissingBefore,
+                    seedTotal = seed.SeedTotal,
+                    message = seed.Message,
+                },
+                // Template knowledge is not seeded any more — it arrives with each template from
+                // the gallery, so "0 form templates" on a fresh install is expected, not broken.
+                templateKnowledgeSource = "gallery",
+            });
         }
 
         // ── List ──────────────────────────────────────────────────────────

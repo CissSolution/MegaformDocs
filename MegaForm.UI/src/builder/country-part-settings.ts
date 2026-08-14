@@ -6,7 +6,7 @@
 // for a composite part of type "country":
 //
 //   • Default country — which flag the picker opens on. Defaults to "Auto", which
-//     follows the form's language (vi-VN → VN) via resolveCountry/localeDefaultIso2.
+//     follows the form's language (ur-PK → PK) via resolveCountry/localeDefaultIso2.
 //     Stored in part.def as the dial code or ISO2, matching part.valueMode, so the
 //     runtime and the SSR renderer read it with no extra plumbing.
 //

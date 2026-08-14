@@ -1,0 +1,521 @@
+{
+  "version": "1.0",
+  "fields": [
+    {
+      "key": "room_code",
+      "type": "Text",
+      "label": "Room code (Mã phòng)",
+      "order": 1,
+      "required": true,
+      "pageIndex": 0,
+      "placeholder": "TB01-0203",
+      "helpText": "Unique business key for this room. Monthly readings and tenants point back here with this exact value.",
+      "validation": {
+        "minLength": 2,
+        "maxLength": 40,
+        "pattern": "^[A-Z0-9][A-Z0-9_.-]{1,39}$",
+        "patternMessage": "Upper-case letters, digits, - . _ (2-40 chars), e.g. TB01-0203."
+      }
+    },
+    {
+      "key": "building_code",
+      "type": "Text",
+      "label": "Building code (Mã toà nhà)",
+      "order": 2,
+      "required": true,
+      "pageIndex": 0,
+      "placeholder": "TB01",
+      "helpText": "FOREIGN KEY. Must repeat the parent building record's Building code exactly (matched case-insensitively by the auto-link).",
+      "validation": {
+        "minLength": 2,
+        "maxLength": 20,
+        "pattern": "^[A-Z0-9][A-Z0-9_-]{1,19}$",
+        "patternMessage": "Must match an existing building code, e.g. TB01."
+      }
+    },
+    {
+      "key": "room_name",
+      "type": "Text",
+      "label": "Room name / number (Tên hoặc số phòng)",
+      "order": 3,
+      "required": false,
+      "pageIndex": 0,
+      "validation": {
+        "maxLength": 100
+      }
+    },
+    {
+      "key": "floor_level",
+      "type": "Number",
+      "label": "Floor level (Tầng)",
+      "order": 4,
+      "required": false,
+      "pageIndex": 0,
+      "validation": {
+        "min": 0,
+        "max": 50
+      }
+    },
+    {
+      "key": "area_m2",
+      "type": "Number",
+      "label": "Area in m2 (Diện tích, m²)",
+      "order": 5,
+      "required": true,
+      "pageIndex": 0,
+      "validation": {
+        "min": 5,
+        "max": 500
+      }
+    },
+    {
+      "key": "base_rent",
+      "type": "Number",
+      "label": "Base rent, VND per month (Giá thuê gốc, VNĐ/tháng)",
+      "order": 6,
+      "required": true,
+      "pageIndex": 0,
+      "helpText": "Plain number, no thousands separators and no currency symbol. There is no Currency field type in this engine — the unit lives in the label.",
+      "validation": {
+        "min": 0,
+        "max": 500000000
+      }
+    },
+    {
+      "key": "discount_percent",
+      "type": "Number",
+      "label": "Discount percent (Giảm giá, %)",
+      "order": 7,
+      "required": false,
+      "pageIndex": 0,
+      "defaultValue": "0",
+      "validation": {
+        "min": 0,
+        "max": 100
+      }
+    },
+    {
+      "key": "final_price",
+      "type": "Number",
+      "label": "Final price, VND per month (Giá cuối, VNĐ/tháng)",
+      "order": 8,
+      "required": true,
+      "pageIndex": 0,
+      "helpText": "Deliberately denormalised = base rent x (100 - discount) / 100. Stored so a price-range filter can hit one numeric column instead of computing at query time.",
+      "validation": {
+        "min": 0,
+        "max": 500000000
+      }
+    },
+    {
+      "key": "deposit",
+      "type": "Number",
+      "label": "Deposit, VND (Tiền cọc, VNĐ)",
+      "order": 9,
+      "required": false,
+      "pageIndex": 0,
+      "validation": {
+        "min": 0,
+        "max": 500000000
+      }
+    },
+    {
+      "key": "max_occupants",
+      "type": "Number",
+      "label": "Maximum occupants (Số người tối đa)",
+      "order": 10,
+      "required": false,
+      "pageIndex": 0,
+      "validation": {
+        "min": 1,
+        "max": 20
+      }
+    },
+    {
+      "key": "status",
+      "type": "Select",
+      "label": "Status (Tình trạng)",
+      "order": 11,
+      "required": true,
+      "pageIndex": 0,
+      "options": [
+        {
+          "label": "Vacant (Trống)",
+          "value": "trong"
+        },
+        {
+          "label": "Rented (Đã thuê)",
+          "value": "da_thue"
+        },
+        {
+          "label": "Under repair (Đang sửa)",
+          "value": "dang_sua"
+        }
+      ],
+      "defaultValue": "trong"
+    },
+    {
+      "key": "room_view",
+      "type": "Select",
+      "label": "View (Hướng nhìn)",
+      "order": 12,
+      "required": false,
+      "pageIndex": 0,
+      "options": [
+        {
+          "label": "City view (Nhìn thành phố)",
+          "value": "thanh_pho"
+        },
+        {
+          "label": "Garden view (Nhìn sân vườn)",
+          "value": "san_vuon"
+        },
+        {
+          "label": "Pool view (Nhìn hồ bơi)",
+          "value": "ho_boi"
+        },
+        {
+          "label": "Street view (Nhìn ra đường)",
+          "value": "duong_pho"
+        },
+        {
+          "label": "Light-well view (Nhìn giếng trời)",
+          "value": "gieng_troi"
+        },
+        {
+          "label": "No view (Không có view)",
+          "value": "khong_co"
+        }
+      ]
+    },
+    {
+      "key": "orientation",
+      "type": "Select",
+      "label": "Orientation (Hướng phòng)",
+      "order": 13,
+      "required": false,
+      "pageIndex": 0,
+      "options": [
+        {
+          "label": "East (Đông)",
+          "value": "dong"
+        },
+        {
+          "label": "West (Tây)",
+          "value": "tay"
+        },
+        {
+          "label": "South (Nam)",
+          "value": "nam"
+        },
+        {
+          "label": "North (Bắc)",
+          "value": "bac"
+        },
+        {
+          "label": "South-East (Đông Nam)",
+          "value": "dong_nam"
+        },
+        {
+          "label": "North-East (Đông Bắc)",
+          "value": "dong_bac"
+        },
+        {
+          "label": "South-West (Tây Nam)",
+          "value": "tay_nam"
+        },
+        {
+          "label": "North-West (Tây Bắc)",
+          "value": "tay_bac"
+        }
+      ]
+    },
+    {
+      "key": "amenity_wifi",
+      "type": "Select",
+      "label": "Wifi (Wifi)",
+      "order": 14,
+      "required": false,
+      "pageIndex": 0,
+      "options": [
+        {
+          "label": "Yes (Có)",
+          "value": "yes"
+        },
+        {
+          "label": "No (Không)",
+          "value": "no"
+        }
+      ],
+      "defaultValue": "no"
+    },
+    {
+      "key": "amenity_parking",
+      "type": "Select",
+      "label": "Motorbike parking (Chỗ để xe)",
+      "order": 15,
+      "required": false,
+      "pageIndex": 0,
+      "options": [
+        {
+          "label": "Yes (Có)",
+          "value": "yes"
+        },
+        {
+          "label": "No (Không)",
+          "value": "no"
+        }
+      ],
+      "defaultValue": "no"
+    },
+    {
+      "key": "amenity_drying_area",
+      "type": "Select",
+      "label": "Laundry drying area (Sân phơi)",
+      "order": 16,
+      "required": false,
+      "pageIndex": 0,
+      "options": [
+        {
+          "label": "Yes (Có)",
+          "value": "yes"
+        },
+        {
+          "label": "No (Không)",
+          "value": "no"
+        }
+      ],
+      "defaultValue": "no"
+    },
+    {
+      "key": "amenity_kitchen",
+      "type": "Select",
+      "label": "Cooking allowed / kitchen (Được nấu ăn - bếp)",
+      "order": 17,
+      "required": false,
+      "pageIndex": 0,
+      "options": [
+        {
+          "label": "Yes (Có)",
+          "value": "yes"
+        },
+        {
+          "label": "No (Không)",
+          "value": "no"
+        }
+      ],
+      "defaultValue": "no"
+    },
+    {
+      "key": "amenity_air_conditioner",
+      "type": "Select",
+      "label": "Air conditioning (Máy lạnh)",
+      "order": 18,
+      "required": false,
+      "pageIndex": 0,
+      "options": [
+        {
+          "label": "Yes (Có)",
+          "value": "yes"
+        },
+        {
+          "label": "No (Không)",
+          "value": "no"
+        }
+      ],
+      "defaultValue": "no"
+    },
+    {
+      "key": "amenity_reception_area",
+      "type": "Select",
+      "label": "Private reception area (Khu tiếp khách riêng)",
+      "order": 19,
+      "required": false,
+      "pageIndex": 0,
+      "options": [
+        {
+          "label": "Yes (Có)",
+          "value": "yes"
+        },
+        {
+          "label": "No (Không)",
+          "value": "no"
+        }
+      ],
+      "defaultValue": "no"
+    },
+    {
+      "key": "amenity_water_heater",
+      "type": "Select",
+      "label": "Water heater (Máy nước nóng)",
+      "order": 20,
+      "required": false,
+      "pageIndex": 0,
+      "options": [
+        {
+          "label": "Yes (Có)",
+          "value": "yes"
+        },
+        {
+          "label": "No (Không)",
+          "value": "no"
+        }
+      ],
+      "defaultValue": "no"
+    },
+    {
+      "key": "amenity_private_bathroom",
+      "type": "Select",
+      "label": "Private bathroom (Vệ sinh khép kín)",
+      "order": 21,
+      "required": false,
+      "pageIndex": 0,
+      "options": [
+        {
+          "label": "Yes (Có)",
+          "value": "yes"
+        },
+        {
+          "label": "No (Không)",
+          "value": "no"
+        }
+      ],
+      "defaultValue": "no"
+    },
+    {
+      "key": "amenity_balcony",
+      "type": "Select",
+      "label": "Balcony (Ban công)",
+      "order": 22,
+      "required": false,
+      "pageIndex": 0,
+      "options": [
+        {
+          "label": "Yes (Có)",
+          "value": "yes"
+        },
+        {
+          "label": "No (Không)",
+          "value": "no"
+        }
+      ],
+      "defaultValue": "no"
+    },
+    {
+      "key": "amenity_window",
+      "type": "Select",
+      "label": "Window (Cửa sổ)",
+      "order": 23,
+      "required": false,
+      "pageIndex": 0,
+      "options": [
+        {
+          "label": "Yes (Có)",
+          "value": "yes"
+        },
+        {
+          "label": "No (Không)",
+          "value": "no"
+        }
+      ],
+      "defaultValue": "no"
+    },
+    {
+      "key": "photo_urls",
+      "type": "Textarea",
+      "label": "Room photo URLs (Ảnh phòng - mỗi dòng một URL)",
+      "order": 24,
+      "required": false,
+      "pageIndex": 0,
+      "rows": 5,
+      "placeholder": "https://example.com/phong-0203-01.jpg",
+      "helpText": "One absolute image URL per line. File uploads are not usable for public photos (every file endpoint requires authentication).",
+      "validation": {
+        "maxLength": 4000
+      }
+    },
+    {
+      "key": "description",
+      "type": "Textarea",
+      "label": "Description (Mô tả phòng)",
+      "order": 25,
+      "required": false,
+      "pageIndex": 0,
+      "rows": 4,
+      "validation": {
+        "maxLength": 4000
+      }
+    },
+    {
+      "key": "latitude",
+      "type": "Number",
+      "label": "Latitude (Vĩ độ)",
+      "order": 26,
+      "required": false,
+      "pageIndex": 0,
+      "helpText": "Per-room pin for the map. Copy the building value when the room has no distinct entrance.",
+      "validation": {
+        "min": 8,
+        "max": 12
+      }
+    },
+    {
+      "key": "longitude",
+      "type": "Number",
+      "label": "Longitude (Kinh độ)",
+      "order": 27,
+      "required": false,
+      "pageIndex": 0,
+      "validation": {
+        "min": 105,
+        "max": 108
+      }
+    },
+    {
+      "key": "demo_marker",
+      "type": "Hidden",
+      "label": "Demo marker (Dấu dữ liệu demo)",
+      "order": 28,
+      "required": false,
+      "pageIndex": 0,
+      "defaultValue": "DEMO-RENTAL-2026",
+      "helpText": "Seed marker. All rows carrying DEMO-RENTAL-2026 are fictional demo data and can be bulk-deleted."
+    }
+  ],
+  "pages": null,
+  "settings": {
+    "multiPage": false,
+    "layoutMode": "flow",
+    "displayOnly": false,
+    "hideHeader": false,
+    "showProgressBar": false,
+    "showPageTitles": false,
+    "honeypotFieldName": "__mf_hp",
+    "rateLimitWindowMinutes": 1,
+    "rateLimitMaxPerWindow": 2000,
+    "enableAnalytics": false,
+    "labelPosition": "top",
+    "formWidth": "100%",
+    "submitButtonText": "Save room (Lưu phòng)",
+    "theme": "default",
+    "defaultLanguage": "en",
+    "supportedLanguages": [
+      "en",
+      "vi-VN"
+    ],
+    "postSubmitExperience": {
+      "enabled": true,
+      "mode": "rich",
+      "title": "Saved",
+      "message": "The record has been saved.",
+      "showSubmissionId": true,
+      "submissionIdLabel": "Record ID",
+      "showAnswerSummary": false,
+      "allowFillAgain": true,
+      "fillAgainLabel": "Add another record",
+      "reviewBeforeSubmit": false,
+      "buttons": []
+    }
+  },
+  "customScripts": {}
+}

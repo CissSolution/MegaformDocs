@@ -303,6 +303,17 @@ function injectStyles(): void {
 .mf-vd-prop-block label { display:block;font-size:11px;font-weight:600;color:#64748b;margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em }
 .mf-vd-input { width:100%;padding:7px 10px;border:1px solid #cbd5e1;border-radius:7px;font-size:13px;background:#fff;color:#1f2a44 }
 .mf-vd-input:focus { outline:none;border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,.15) }
+/* [SelectFix 2026-07-18] A native <select> here inherits the host Oqtane/Bootswatch theme's
+   control styling, which on this site tiled a chevron background into a black sawtooth. Force
+   MegaForm's own controlled appearance: one no-repeat chevron on a white field. !important on
+   the appearance + background props defeats a higher-specificity/!important host theme rule. */
+select.mf-vd-input {
+  -webkit-appearance:none !important; -moz-appearance:none !important; appearance:none !important;
+  background-color:#fff !important;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2371717a' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") !important;
+  background-repeat:no-repeat !important; background-position:right 10px center !important; background-size:10px 6px !important;
+  padding-right:28px;
+}
 .mf-vd-textarea { width:100%;padding:8px 10px;border:1px solid #cbd5e1;border-radius:7px;font-size:12px;background:#fff;color:#1f2a44;font-family:'Cascadia Code','Consolas',monospace;line-height:1.5;resize:vertical }
 .mf-vd-textarea:focus { outline:none;border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,.15) }
 .mf-vd-settings-wrap { padding:10px 12px;overflow:auto;flex:1;display:grid;gap:6px;align-content:start }

@@ -49,9 +49,9 @@ namespace MegaForm.WebApi
 
         private HttpResponseMessage RejectIfDisabled()
         {
-            var enabled = AiFeatureGate.IsEnabled(PortalSettings?.HomeDirectoryMapPath);
+            var enabled = AiFeatureGate.IsAvailable(PortalSettings?.HomeDirectoryMapPath);
             if (enabled) return null;
-            return Request.CreateResponse(HttpStatusCode.NotFound, new { error = "AI tools disabled (no dev.lock)" });
+            return Request.CreateResponse(HttpStatusCode.NotFound, new { error = "AI tools are not available on this install (a production licence is required)." });
         }
 
         // Mirrors SubformController.GetPortalSetting — DnnConnectionRegistry
@@ -516,6 +516,22 @@ namespace MegaForm.WebApi
                 }
             }
             catch { /* no allow-list configured — the site DB alone is a valid answer */ }
+            // [NamedConnections v20260717-01] Admin-saved connections (Database Settings popup →
+            // Saved connections, portal setting MegaForm_NamedConnections) join the allow-list —
+            // saving one is admin-gated, so it carries host-setting-level trust. This is what makes
+            // a UI-added connection show up in the builder's databaseInsert picker on DNN.
+            try
+            {
+                var json = DotNetNuke.Entities.Portals.PortalController.GetPortalSetting(
+                    MegaForm.Core.Services.NamedConnectionCatalog.SettingKey, PortalSettings.PortalId, string.Empty);
+                foreach (var name in MegaForm.Core.Services.NamedConnectionCatalog.Names(json))
+                {
+                    if (string.Equals(name, "DashboardDatabase", StringComparison.OrdinalIgnoreCase)) continue;
+                    if (!connections.Any(k => string.Equals(k, name, StringComparison.OrdinalIgnoreCase)))
+                        connections.Add(name);
+                }
+            }
+            catch { /* fail-soft: host allow-list alone still applies */ }
             return connections;
         }
 

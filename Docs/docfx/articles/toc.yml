@@ -30,6 +30,12 @@
       href: workflow-library.md
     - name: "End-to-End Demo: ERP Flow"
       href: erp-end-to-end.md
+    - name: "Integration: CRM/ERP over HTTP"
+      href: integration-webhook.md
+    - name: "Integration: Write to an existing SQL table"
+      href: integration-sql-insert.md
+    - name: "Integration: BPMN API service task"
+      href: integration-bpmn-api-task.md
     - name: Storage & Integrations
       href: storage-options.md
     - name: Multi-language

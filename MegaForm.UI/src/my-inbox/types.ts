@@ -8,11 +8,22 @@ export type ReplyMode = 'none' | 'approve' | 'reject' | 'return' | 'forward' | '
 export type InboxSort = 'newest' | 'oldest' | 'priority' | 'due' | 'form' | 'submitter' | 'status';
 export type InboxDensity = 'comfortable' | 'compact';
 export type InboxPriority = 'urgent' | 'high' | 'normal' | 'low';
-export type InboxTaskStatus = 'pending' | 'approved' | 'rejected' | 'forwarded' | 'done' | 'overdue';
+export type InboxTaskStatus = 'pending' | 'claimed' | 'approved' | 'rejected' | 'forwarded' | 'done' | 'overdue';
 // [Inbox redesign 2026-06-12] Sort rank for the new "Status" sort option.
 export const STATUS_RANK: Record<InboxTaskStatus, number> = {
-  overdue: 0, pending: 1, forwarded: 2, approved: 3, rejected: 4, done: 5,
+  overdue: 0, pending: 1, claimed: 2, forwarded: 3, approved: 4, rejected: 5, done: 6,
 };
+
+// [TzFix 2026-07-13] The API serializes UTC DateTimes with no offset suffix
+// ("2026-07-13T08:15:00" — DateTimeKind is lost in the DB round-trip), and
+// new Date() reads offset-less ISO strings as LOCAL time. On a UTC+7 browser
+// every fresh task therefore aged 7 hours at birth ("7h ago"). Treat an ISO
+// datetime without an explicit offset as UTC; leave anything else untouched.
+export function parseServerDate(iso: string): Date {
+  const s = String(iso || '').trim();
+  if (/T\d{2}:\d{2}/.test(s) && !/(?:Z|z|[+-]\d{2}:?\d{2})$/.test(s)) return new Date(s + 'Z');
+  return new Date(s);
+}
 
 export interface InboxField {
   label: string;
@@ -84,13 +95,19 @@ export const VIEW_META: Record<InboxView, ViewMeta> = {
 };
 
 // Status badge config
+// [BadgeCls fix 2026-07-13] These cls values said "mf-mi-badge-*" but the CSS only
+// defines "mf-mi3-badge-*" — every status badge rendered with the base gray chip
+// style, no per-status color. Also adds 'claimed' (In Review): a claimed/ad-hoc
+// assigned task used to fall through to 'pending', so a task sitting in someone's
+// Assigned-to-Me read "Pending" as if nobody had picked it up.
 export const STATUS_CONFIG: Record<InboxTaskStatus, { label: string; cls: string; icon: string }> = {
-  pending:   { label: 'Pending',   cls: 'mf-mi-badge-pending',   icon: 'clock' },
-  approved:  { label: 'Approved',  cls: 'mf-mi-badge-approved',  icon: 'checkCircle' },
-  rejected:  { label: 'Rejected',  cls: 'mf-mi-badge-rejected',  icon: 'thumbsDown' },
-  forwarded: { label: 'Forwarded', cls: 'mf-mi-badge-forwarded', icon: 'forward' },
-  done:      { label: 'Done',      cls: 'mf-mi-badge-done',      icon: 'checkCheck' },
-  overdue:   { label: 'Overdue',   cls: 'mf-mi-badge-overdue',   icon: 'alertTriangle' },
+  pending:   { label: 'Pending',   cls: 'mf-mi3-badge-pending',   icon: 'clock' },
+  claimed:   { label: 'In Review', cls: 'mf-mi3-badge-claimed',   icon: 'eye' },
+  approved:  { label: 'Approved',  cls: 'mf-mi3-badge-approved',  icon: 'checkCircle' },
+  rejected:  { label: 'Rejected',  cls: 'mf-mi3-badge-rejected',  icon: 'thumbsDown' },
+  forwarded: { label: 'Forwarded', cls: 'mf-mi3-badge-forwarded', icon: 'forward' },
+  done:      { label: 'Done',      cls: 'mf-mi3-badge-done',      icon: 'checkCheck' },
+  overdue:   { label: 'Overdue',   cls: 'mf-mi3-badge-overdue',   icon: 'alertTriangle' },
 };
 
 // Priority config
@@ -122,22 +139,26 @@ export function actionTypeToHistoryType(actionType: number): InboxHistoryItem['t
 // Derive priority from due date
 export function derivePriority(dueAt?: string | null): InboxPriority {
   if (!dueAt) return 'normal';
-  const diff = new Date(dueAt).getTime() - Date.now();
+  const diff = parseServerDate(dueAt).getTime() - Date.now();
   if (diff < 0) return 'urgent';
   if (diff < 86400000 * 2) return 'high'; // < 2 days
   if (diff < 86400000 * 7) return 'normal'; // < 1 week
   return 'low';
 }
 
-// Derive status from workflow task
+// Derive status from workflow task (server enum: 1=Pending, 2=Claimed, 3=Completed, 4=Cancelled)
 export function deriveStatus(task: WorkflowInboxTask): InboxTaskStatus {
   const now = Date.now();
-  const due = task.dueAt ? new Date(task.dueAt).getTime() : 0;
+  const due = task.dueAt ? parseServerDate(task.dueAt).getTime() : 0;
   if (task.status === 3) return task.outcome?.toLowerCase().includes('reject') ? 'rejected' : 'approved';
-  if (task.status === 3) return 'done';
+  if (task.status === 4) return 'done';
   if (due && due < now) return 'overdue';
-  if (task.allowClaim && !task.assignedUserId) return 'pending';
   if (task.outcome?.toLowerCase().includes('forward')) return 'forwarded';
+  // [BadgeCls fix 2026-07-13] Trust the server's Claimed state over the
+  // assignedUserId guess — ad-hoc Send-to-Inbox tasks are Claimed with a
+  // NULL AssignedUserId and used to masquerade as "Pending".
+  if (task.status === 2) return 'claimed';
+  if (task.allowClaim && !task.assignedUserId) return 'pending';
   return 'pending';
 }
 
@@ -183,7 +204,7 @@ export function adaptTask(
     assignedTo: task.assignedDisplayName || task.assignedUserName || '',
     priority,
     status,
-    dueDate: task.dueAt ? new Date(task.dueAt).toLocaleDateString() : '—',
+    dueDate: task.dueAt ? parseServerDate(task.dueAt).toLocaleDateString() : '—',
     receivedAt: task.createdAt ? relativeDate(task.createdAt) : '—',
     isRead: status !== 'pending' || !!task.claimedAt,
     isStarred: false,
@@ -198,7 +219,7 @@ export function adaptTask(
       id: h.actionId || `h-${i}`,
       action: h.outcome || h.comment || 'Action taken',
       actor: h.actorDisplayName || h.actorUserName || 'System',
-      timestamp: h.createdAt ? new Date(h.createdAt).toLocaleDateString() : '—',
+      timestamp: h.createdAt ? parseServerDate(h.createdAt).toLocaleDateString() : '—',
       note: h.comment || undefined,
       type: actionTypeToHistoryType(h.actionType),
     })),
@@ -207,7 +228,7 @@ export function adaptTask(
 }
 
 function relativeDate(iso: string): string {
-  const d = new Date(iso);
+  const d = parseServerDate(iso);
   const t = d.getTime();
   if (Number.isNaN(t)) return '—';
   const diff = Date.now() - t;

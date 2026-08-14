@@ -113,7 +113,93 @@
     };
     var allowed = CanManage(user);
     var message = "";
+    var messageError = false;
     var items = new List<GalleryItemDto>();
+
+    // A file input has to ride the DNN page form — a <form> of our own would be a nested form and
+    // the browser deletes the inner tag, exactly as it did to the comment box on the public page.
+    // The page form is not multipart by default, so the file would post as a name with no bytes.
+    if (allowed) { try { Page.Form.Enctype = "multipart/form-data"; } catch { } }
+
+    // ---- upload -------------------------------------------------------------------------
+    // 🔵 1.17.1. This screen used to be a browser only, on the reasoning that MegaForm.Sdk exposes
+    // no upload endpoint. True — and irrelevant: this script runs SERVER-SIDE inside DNN, so it can
+    // use DNN's own file system directly. An article channel whose pictures have to be placed by
+    // hand over FTP is not a finished module, and MegaForm's own upload path cannot stand in for
+    // this one — it requires a published form with a File field, refuses .gif outright and caps at
+    // 8 MB, which rules out every screen recording in a documentation channel.
+    if (allowed && string.Equals(Request.HttpMethod, "POST", StringComparison.OrdinalIgnoreCase)
+        && string.Equals(Request.Form["mfb_media_upload"], "1", StringComparison.Ordinal))
+    {
+        var saved = 0;
+        var failed = new List<string>();
+        try
+        {
+            // Folder is chosen by the operator but never trusted: only these characters, no
+            // traversal, and always underneath the module's own root.
+            // ⚠️ First segment only. ASP.NET joins two inputs of the same name with a comma, so a
+            // caller that posts `folder` twice arrives as "docs,docs" — and stripping the comma
+            // blindly produced a folder literally named "docsdocs" on the first run.
+            var postedFolder = (Request.Form["folder"] ?? "").Split(',')[0];
+            var subFolder = System.Text.RegularExpressions.Regex.Replace(
+                postedFolder.Trim(), @"[^A-Za-z0-9/_\-]", "");
+            subFolder = subFolder.Trim('/');
+            var folderPath = "MegaFormBlogs" + (subFolder.Length > 0 ? "/" + subFolder : "");
+
+            var folderManager = DotNetNuke.Services.FileSystem.FolderManager.Instance;
+            var fileManager = DotNetNuke.Services.FileSystem.FileManager.Instance;
+
+            // Create the chain a segment at a time: AddFolder does not make parents.
+            DotNetNuke.Services.FileSystem.IFolderInfo folder = null;
+            var walked = "";
+            foreach (var segment in folderPath.Split('/'))
+            {
+                walked = walked.Length == 0 ? segment : walked + "/" + segment;
+                folder = folderManager.GetFolder(portalId, walked);
+                if (folder == null) { folder = folderManager.AddFolder(portalId, walked); }
+            }
+
+            for (var i = 0; i < Request.Files.Count; i++)
+            {
+                var posted = Request.Files[i];
+                if (posted == null || posted.ContentLength <= 0) { continue; }
+                var name = System.IO.Path.GetFileName(posted.FileName ?? "");
+                if (name.Length == 0) { continue; }
+
+                // Extension whitelist. This screen writes into the portal file system, so what it
+                // accepts is a security boundary, not a convenience.
+                var ext = (System.IO.Path.GetExtension(name) ?? "").ToLowerInvariant();
+                if (Array.IndexOf(new[] { ".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg", ".avif" }, ext) < 0)
+                {
+                    failed.Add(name + " (phần mở rộng không được phép)");
+                    continue;
+                }
+
+                try
+                {
+                    fileManager.AddFile(folder, name, posted.InputStream, true);
+                    saved++;
+                }
+                catch (Exception fileEx)
+                {
+                    failed.Add(name + " (" + fileEx.Message + ")");
+                }
+            }
+
+            message = "Đã tải lên " + saved + " tệp vào /" + folderPath + ".";
+            if (failed.Count > 0)
+            {
+                message += " Không nhận: " + string.Join(", ", failed.Take(5));
+                messageError = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            DotNetNuke.Services.Exceptions.Exceptions.LogException(ex);
+            message = "Tải lên thất bại. Nhật ký site có chi tiết.";
+            messageError = true;
+        }
+    }
 
     if (allowed)
     {
@@ -241,10 +327,44 @@
             </div>
         </section>
 
+        @* Upload lives here now. It writes straight into the portal file system through DNN's own
+           FolderManager/FileManager, which is something this script can do because it runs on the
+           server — no SDK endpoint required, and none of MegaForm's upload restrictions apply. *@
+        <section class="mfba-panel">
+            <div class="mfba-panel-head">
+                <h2>@Icon("upload", "mfba-icon mfba-icon-lg") Upload images</h2>
+                <span class="mfba-stat-sub">Straight into the portal file system</span>
+            </div>
+            <div class="mfba-panel-body">
+                @if (!string.IsNullOrWhiteSpace(message))
+                {
+                    <p class="@(messageError ? "mfba-msg mfba-msg-bad" : "mfba-msg")">@message</p>
+                }
+                <div class="mfba-form-grid">
+                    <label>Folder
+                        <input name="folder" maxlength="80" value="@(Request.Form["folder"] ?? "docs")"
+                               placeholder="docs" />
+                    </label>
+                    <label>Files
+                        <input type="file" name="mfb_media_files" multiple
+                               accept=".png,.jpg,.jpeg,.gif,.webp,.svg,.avif" />
+                    </label>
+                </div>
+                <p class="mfba-hint">
+                    Files land in <code>/Portals/@portalId/MegaFormBlogs/&lt;folder&gt;/</code> and are served
+                    from there — that path is what an article's <code>&lt;img src&gt;</code> points at.
+                    Accepted: png, jpg, gif, webp, svg, avif. A name that already exists is overwritten.
+                </p>
+                <button class="mfba-btn" type="submit" name="mfb_media_upload" value="1">
+                    @Icon("upload", "mfba-icon mfba-icon-md") Upload
+                </button>
+            </div>
+        </section>
+
         <section class="mfba-panel">
             <div class="mfba-panel-head">
                 <h2>@filtered.Count of @items.Count</h2>
-                <span class="mfba-stat-sub">Read-only: uploading happens on the post form, not here</span>
+                <span class="mfba-stat-sub">Images MegaForm knows about, from the gallery API</span>
             </div>
             <div class="mfba-panel-body">
                 @if (filtered.Count == 0)

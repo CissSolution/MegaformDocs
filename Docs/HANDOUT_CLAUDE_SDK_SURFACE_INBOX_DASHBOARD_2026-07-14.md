@@ -17,6 +17,60 @@ User muon bo sung SDK/API facade o muc same-host, chua can remote API, de khach 
 
 Yeu cau quan trong: **minimal change**, khong viet remote controller moi luc nay, khong refactor lon.
 
+## Audit Codex 2026-07-14 - muc tieu API dashboard/card/grid/inbox
+
+Pham vi audit nay: **khong sua code**, chi doc handout + doi chieu source SDK hien tai de tra loi cau hoi "Claude da sua OK chua?" theo muc tieu: developer co the dung API de tu viet card view, grid view, submission dashboard, dashboard va inbox rieng cho data submission cua bat ky form nao.
+
+### Ket luan ngan
+
+**Chua the ket luan la OK hoan toan.** Claude/SDK da lam dung phan buildability va public facade surface:
+
+- `dotnet build MegaForm.Sdk\MegaForm.Sdk.csproj -f net8.0 -v:minimal -clp:ErrorsOnly` pass ngay 2026-07-14, 0 error.
+- `dotnet build MegaForm.Sdk\MegaForm.Sdk.csproj -v:minimal -clp:ErrorsOnly` pass ngay 2026-07-14, 0 error.
+- `dotnet test MegaForm.Sdk.Tests\MegaForm.Sdk.Tests.csproj -v:minimal -clp:ErrorsOnly` pass ngay 2026-07-14: 49 passed, 0 failed.
+- Public API baseline hien tai du de build pass.
+- API surface da co: `Dashboard`, `SubmissionDashboard`, `Inbox`.
+
+Nhung theo muc tieu **"submission cua bat ky form nao" + "custom inbox rieng qua API"**, con it nhat 3 gap phai xu ly truoc khi giao cho khach/developer dung that:
+
+1. **Critical - `SubmissionDashboard.SearchAsync` voi `FormId = 0` van sai paging/total tren multi-portal.**
+   Source hien tai van goi `SubmissionQueryService.List(...)` truoc, sau do moi `.Where(item => query.FormId > 0 || IsFormInPortal(item.FormId, portalId))`. Nghia la filter portal sau khi da paging. `TotalCount` trong all-forms mode lai la `items.Count`, khong phai tong dung. Ket qua: custom grid/card "tat ca form" co the mat data hoac bao het trang qua som.
+
+2. **High - Inbox facade chua loc portal theo `MegaFormScope.PortalId` o board/action surface.**
+   `GetMyInboxAsync`, `GetTaskAsync`, `ClaimAsync`, `ApproveAsync`, `RejectAsync`, `ForwardAsync`, `CommentAsync` dang dua vao workflow actor visibility, nhung chua filter task theo form/submission portal. Neu same host co nhieu portal/site va cung username/role, custom inbox co rui ro hien/action task ngoai portal. `AttachFileAsync` co check submission portal, nhung cac action khac chua co guard tuong duong.
+
+3. **High - `SendSubmissionAsync` chua guard form/submission/portal pair trong SDK layer.**
+   Method hien goi thang `WorkflowTaskService.CreateAdHocReviewTask(request.FormId, request.SubmissionId, ...)`. Can check `IsFormInPortal` + `IsSubmissionInPortal` + submission dung form truoc khi tao task, neu khong custom code co the tao inbox task sai portal/sai form.
+
+### Nhung gi da du dung cho card/grid theo tung form
+
+Phan nay co the coi la dat muc tieu **toi thieu** cho developer viet UI same-host:
+
+- Card/list theo tung form: `SubmissionDashboard.SearchAsync(new SubmissionSearchQuery { FormId = <id> })` tra `SubmissionListItemDto` co `SubmissionId`, `FormId`, `FormTitle`, `Status`, `SubmittedOnUtc`, `SummaryText`, `DataJson`.
+- Detail view: `SubmissionDashboard.GetDetailAsync(submissionId)` tra `SubmissionDetailDto` co `Submission`, `Form`, `Schema`, `Values`, `FieldSnapshots`, `Files`, `Workflow`.
+- Dashboard overview: `Dashboard.GetOverviewAsync(...)` tra count theo form va recent count, du de lam KPI cards co ban.
+- Inbox custom UI: API co du nut hanh dong chinh: get board/task, claim, approve, reject, forward, comment, attach file, send submission.
+
+### Viec can lam tiep, van theo minimal change
+
+1. Sua `SubmissionDashboard.SearchAsync(FormId = 0)` de query theo tap form thuoc portal truoc khi paging. Cach it rui ro: lay danh sach formId trong portal, query submissions cho tung form, merge/filter/search/date/status o memory hoac them core helper noi bo; paging/TotalCount phai tinh sau khi da loc portal va truoc khi cat page.
+2. Them tests bat buoc:
+   - all-forms search voi 2 portal, page size nho, verify `TotalCount` dung va khong mat item page sau.
+   - all-forms card/grid data voi submissions thuoc nhieu form trong cung portal.
+   - inbox board/action khong tra/action task cua portal khac cung actor.
+   - `SendSubmissionAsync` reject submission/form ngoai portal va form/submission mismatch.
+3. Loc portal cho inbox surface bang cach map `task.FormId`/`task.SubmissionId` ve form/submission va goi guard portal truoc khi return/action.
+4. Giu remote API out-of-scope. Day van la same-host SDK facade.
+
+### Danh gia sau audit
+
+- **Build/test/PublicAPI:** OK.
+- **Facade API shape:** OK cho ban preview/minimal.
+- **Card/grid theo mot form:** OK.
+- **Card/grid tat ca form trong portal:** **Chua OK** den khi fix all-forms paging.
+- **Custom inbox rieng tren multi-portal host:** **Chua OK** den khi loc portal cho inbox tasks/actions.
+- **Attach file trong inbox:** gan OK; da co portal check cho submission, nhung upload policy moi dung default security, chua doc portal upload settings.
+
 ## Trang thai hien tai khi dung
 
 Da dung theo yeu cau user. Chua commit.

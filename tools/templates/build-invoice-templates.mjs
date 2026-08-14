@@ -2,7 +2,7 @@
 // Re-runnable: tweak PALETTES / markup here, re-run, redeploy, re-QA.
 import fs from 'fs';
 
-const OUT_DIR = 'e:/DNNDEFENDER AND AI DESIGNES/AI DESIGNES/MegaFormSolution_280_Oqtane_um/Samples/FormTemplates/Premium/DONEE';
+const OUT_DIR = 'e:/DNNDEFENDER AND AI DESIGNES/AI DESIGNES/MegaFormSolution_280_Oqtane_um/Samples/FormTemplates/Premium/GALLERY-PUBLISHED';
 
 const COUNTRIES = ['Germany', 'France', 'Spain', 'Italy', 'Portugal', 'Netherlands', 'Austria', 'Belgium', 'Greece', 'Poland', 'Sweden', 'Ireland', 'Other'];
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];

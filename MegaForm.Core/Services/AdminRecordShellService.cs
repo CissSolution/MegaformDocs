@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using MegaForm.Core.Interfaces;
 using MegaForm.Core.Models;
+using MegaForm.Core.Services.TypedSubmission;
 using MegaForm.Core.Workflow;
 using Newtonsoft.Json;
 
@@ -23,6 +24,7 @@ namespace MegaForm.Core.Services
         private readonly IDocumentRepository _documents;
         private readonly AppProfileService _profiles;
         private readonly WorkflowTransparencyService _workflowTransparency;
+        private readonly SubmissionDataResolver _dataResolver;
 
         public AdminRecordShellService(
             SubmissionQueryService submissionQueries,
@@ -32,7 +34,8 @@ namespace MegaForm.Core.Services
             ISubmissionRepository submissions,
             IDocumentRepository documents,
             AppProfileService profiles,
-            WorkflowTransparencyService workflowTransparency)
+            WorkflowTransparencyService workflowTransparency,
+            SubmissionDataResolver dataResolver = null)
         {
             _submissionQueries = submissionQueries;
             _workflowTasks = workflowTasks;
@@ -42,6 +45,7 @@ namespace MegaForm.Core.Services
             _documents = documents;
             _profiles = profiles;
             _workflowTransparency = workflowTransparency;
+            _dataResolver = dataResolver;
         }
 
         public AdminRecordShellInfo GetRecordDetail(int submissionId)
@@ -50,7 +54,7 @@ namespace MegaForm.Core.Services
             if (detail == null || detail.Submission == null)
                 return null;
 
-            var data = ParseData(detail.Submission.DataJson);
+            var data = ResolveData(detail.Submission.SubmissionId, detail.Submission.DataJson);
             var projection = _profiles.Project(detail.Form, detail.Schema, detail.Submission, data);
             var tasks = (_workflowRepository.ListTasks(new WorkflowTaskQuery
             {
@@ -156,7 +160,7 @@ namespace MegaForm.Core.Services
             var submission = task != null && task.SubmissionId > 0 ? _submissions.Get(task.SubmissionId) : null;
             var form = task != null && task.FormId > 0 ? _forms.GetForm(task.FormId) : null;
             var schema = TryParseSchema(form != null ? form.SchemaJson : null);
-            var data = ParseData(submission != null ? submission.DataJson : null);
+            var data = submission != null ? ResolveData(submission.SubmissionId, submission.DataJson) : new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
             var projection = _profiles.Project(form, schema, submission, data);
             var workflowCase = ResolveCase(task);
             var currentRevision = task != null && task.SubmissionId > 0 ? _documents.GetRevisionBySubmission(task.SubmissionId) : null;
@@ -251,6 +255,13 @@ namespace MegaForm.Core.Services
                 return null;
 
             return _workflowRepository.GetExecution(executionId);
+        }
+
+        private Dictionary<string, object> ResolveData(int submissionId, string dataJson)
+        {
+            if (_dataResolver != null)
+                return _dataResolver.GetData(submissionId, dataJson);
+            return ParseData(dataJson);
         }
 
         private static Dictionary<string, object> ParseData(string dataJson)

@@ -1,6 +1,7 @@
 {
   "note": "The prebuilt template gallery. Each entry is a file in this folder; the console reads THIS list and never a path from the browser. Add a design by adding its file and one entry here.",
-  "contract": "blog-home: site.title site.tagline heading total breaking.text breaking.url featured.* posts[].* categories[].name/url pager.page/pages/hasPrev/hasNext/prevUrl/nextUrl | blog-post: post.* toc[].id/text related[].* tags[].name/url comments[].name/date/body | {{{triple}}} emits raw HTML (post.body)",
+  "contract": "blog-home: site.title site.tagline site.url heading search total breaking.text breaking.url featured.* posts[].* categories[].name/url pager.page/pages/hasPrev/hasNext/prevUrl/nextUrl | blog-post: post.* toc[].id/text/level/sub related[].* tags[].name/url comments[].name/date/body commentForm.open/csrf/slug/requireEmail/autoClosed/posted/error | post.* and posts[].* = title subtitle excerpt category author authorAvatar authorRole authorBio authorFollowers date readingTime reads comments shares readsLabel commentsLabel sharesLabel image imageAlt mediaCaption format url slug (+ body on post) | {{{triple}}} emits raw HTML (post.body) | NO comparison and NO {{@index}}: use the precomputed toc[].sub, and CSS :first-child for 'the first card is bigger' | {{#if featured}} is ALWAYS true (the key is an empty map when nothing is featured) — test {{#if featured.title}}",
+  "gotchas": "A template takes over the WHOLE <main>: whatever it does not draw is gone, including the comment box, the breadcrumb and the pager. Rebuild the comment box from commentForm.* and keep it a <div> — a nested <form> is dropped by the browser. No <script>: templates are authored by the Blog Publishers role and served to anonymous readers.",
   "templates": [
     {
       "key": "newsroom-home",
@@ -33,6 +34,22 @@
       "group": "blog-post",
       "theme": "Journal",
       "description": "Matching article page: centred measure, drop-cap opening, footnote-style byline, and the comment thread rendered as a conversation rather than a form."
+    },
+    {
+      "key": "acme-home",
+      "file": "acme-home.html",
+      "name": "ACME — blog home",
+      "group": "blog-home",
+      "theme": "ACME",
+      "description": "Converted from the ACME product mock: centred hero, a wide featured card with author and metrics, rounded cards two-up with the first spanning the row, and a side rail with the topic list. Indigo accent, soft shadows."
+    },
+    {
+      "key": "acme-post",
+      "file": "acme-post.html",
+      "name": "ACME — article",
+      "group": "blog-post",
+      "theme": "ACME",
+      "description": "Matching article page: breadcrumb, oversized headline with subtitle, author row with reads/comments/shares, rounded hero with caption, sticky contents rail, full editorial typography (code, tables, quotes), related strip and a working comment box."
     }
   ]
 }

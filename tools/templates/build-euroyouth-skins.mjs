@@ -6,7 +6,7 @@
  * the same EuroYouth application (name / email / phone / birth year / country / programme /
  * start / duration / language level / accommodation / interests / motivation / newsletter /
  * terms) wearing five different skins. That body had already been hand-written four times in
- * Samples/FormTemplates/Premium/DONEE before anyone noticed. So: the body is written ONCE here,
+ * Samples/FormTemplates/Premium/GALLERY-PUBLISHED before anyone noticed. So: the body is written ONCE here,
  * and each skin is a data spec.
  *
  * Contract the emitted templates must satisfy (lifted from the shipped
@@ -33,7 +33,12 @@ import { fileURLToPath } from 'url';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = resolve(HERE, '..', '..');
-export const OUT_DIR = join(REPO, 'Samples', 'FormTemplates', 'Premium', 'DONEE');
+// Two folders, deliberately: GALLERY-PUBLISHED holds the 48 templates that are LIVE on
+// https://CissSolution.github.io/megaform-gallery/ and is what build-gallery.mjs publishes from;
+// PENDING-REVIEW holds everything converted but not yet approved. A template is promoted by
+// MOVING its file, not by editing a list - so a publish can never sweep up work still in review.
+export const OUT_DIR = join(REPO, 'Samples', 'FormTemplates', 'Premium', 'PENDING-REVIEW');
+export const GALLERY_DIR = join(REPO, 'Samples', 'FormTemplates', 'Premium', 'GALLERY-PUBLISHED');
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Shared option sets. Every mock ships the same lists; a skin overrides only
@@ -54,7 +59,7 @@ const PROGRAMMES = [
   { label: 'Solidarity Corps', value: 'volunteer', description: 'Amsterdam · Prague · Athens' },
 ];
 
-const opts = (list) => list.map((v) => (typeof v === 'string' ? { label: v, value: v } : v));
+export const opts = (list) => list.map((v) => (typeof v === 'string' ? { label: v, value: v } : v));
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Field body — written once.
@@ -96,6 +101,11 @@ export function choiceField(key, type, label, options, display, columns, extra =
 }
 
 export function buildFields(spec) {
+  // [ExactConversion 2026-08-08] A mock that is its OWN form - not a variant of the EuroYouth
+  // application - declares its fields outright. The shared list below is seven fields wrong for
+  // such a design, and relabelling it produced conversions that shared nothing with their mock
+  // but a colour.
+  if (spec.exactFields) return spec.exactFields;
   const s = spec.body || {};
   const programmeOptions = s.programmes || PROGRAMMES;
   const interests = s.interests || INTERESTS;
@@ -296,6 +306,10 @@ export function renderSection(spec, s, cap) {
 }
 
 export function buildShell(spec) {
+  // [ExactConversion 2026-08-08] Several of these mocks are not a card at all - they are
+  // two-column pages with a photographic panel or a sidebar. Such a design supplies its own
+  // markup, mirroring the mock's DOM, instead of being bent into hero + strips + body.
+  if (spec.shellHtml) return spec.shellHtml(spec);
   const p = spec.prefix;
   const cap = (t) => caption(p, t, spec.sectionCaptionStyle);
   const sections = spec.sections ? spec.sections(spec) : defaultSections(spec);
@@ -394,7 +408,7 @@ export function confettiTexture(a, b) {
   return svgDataUri(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 240">${dots.join('')}</svg>`);
 }
 
-const TEXTURES = { snow: snowTexture, confetti: confettiTexture };
+export const TEXTURES = { snow: snowTexture, confetti: confettiTexture };
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CSS
@@ -417,7 +431,17 @@ export function buildCss(spec) {
   // `.mfp.mfp-<prefix>` is two class-level selectors, which puts every authored rule one notch
   // above the bridge. Targets the bridge qualifies with an element (h1, button[type=submit]) need
   // the element on our side too — see the two rules that spell that out below.
-  const S = `.mfp.mfp-${p} `;
+  //
+  // [2026-08-07] That was still not enough, and the reason was measured rather than reasoned:
+  // the bridge's selector LIST does not stop at `.mfp[class*="mfp-"] .mf-input`. It also carries
+  //   :where(#wrapper) .mfp[class*="mfp-"] input:not([type="checkbox"]):not([type="radio"])
+  // which matches the same element at (0,4,1) — one element token ABOVE `.mfp.mfp-<p> .mf-input
+  // [class]` at (0,4,0) — so the bridge kept the input background and colour. Dumped every rule
+  // matching .mf-input in cascade order on form 59 to establish it.
+  // A third class on the root lifts every authored rule to (0,5,0). The shell always carries
+  // `mfp-native-generated` (see the customHtml emitters above), and this is the same escape the
+  // premium templates already use.
+  const S = `.mfp.mfp-${p}.mfp-native-generated `;
 
   // Var block. Surface/text/muted/border chain page -> preset -> literal, which is what makes a
   // dark host readable and what themeCompatibility.policy 'hybrid' promises.
@@ -448,6 +472,130 @@ export function buildCss(spec) {
 
   parts.push(`${S}{background:transparent!important;border:0!important;padding:0!important;`
     + `font-family:${spec.fontStack}}`);
+
+  // [ExactConversion 2026-08-08] An exact conversion owns every rule below this point. It still
+  // gets the scoped variables and the de-carding flatten above, because those are contracts with
+  // the host rather than design decisions. `@S@` in the authored CSS expands to the scoped root,
+  // which is three class-level selectors deep so the compat bridge cannot outrank it.
+  if (spec.exactCss) {
+    // [ThemePresets 2026-08-08, owner: "cac template chua dap ung duoc theme compatible, va cac
+    // preset CSS chua co tac dung"] An exact conversion writes the mock's colours as literals, so
+    // the Theme & Layout preset picker had nothing to recolour. Two changes fix that without
+    // costing the fidelity the conversions exist for:
+    //
+    //   1. the palette vars are re-declared here on a PRESET-ONLY chain. The block above chains
+    //      surface/text/muted/border through --mf-page-* first, which is the HOST page's colour -
+    //      on Oqtane's dark theme that would turn every white card dark uninvited. --mf-preset-* is
+    //      emitted only when someone actually picks a preset, so absent = the mock's own colour.
+    //   2. every literal in the authored CSS that equals a palette entry is rewritten to that var.
+    //      Default rendering is unchanged (the var falls back to the same literal); with a preset
+    //      active the whole design follows it.
+    //
+    // Colours inside a data-URI SVG are percent-encoded (%23...) and are deliberately NOT swapped:
+    // those are drawings, and a half-recoloured drawing looks worse than an honest one.
+    // [ThemeSources 2026-08-08, owner: "Typography source / Color source: From page chua ap dung"]
+    // The chain has to carry BOTH channels, page first: "Color source: From page" injects
+    // --mf-page-*, the preset picker injects --mf-preset-*, and with neither the mock's own colour
+    // stands. A preset-only chain (the first version of this) made "From page" a no-op.
+    const presetVar = (name, literal) =>
+      `var(--mf-page-${name === 'bg' ? 'bg' : name},var(--mf-preset-${name},${literal}))`;
+    parts.push(`${S}{`
+      + `--${p}-primary:${presetVar('primary', c.primary)};`
+      + `--${p}-accent:${presetVar('accent', c.accent)};`
+      + `--${p}-surface:${presetVar('surface', c.surface)};`
+      + `--${p}-text:${presetVar('text', c.text)};`
+      + `--${p}-border:${presetVar('border', c.border)};`
+      + `--${p}-on-primary:${presetVar('on-primary', c.onPrimary || '#fff')};`
+      // NOT via --mf-page-bg: unlike --mf-page-primary/text/border (injected only when someone
+      // turns "Color source: From page" on), --mf-page-bg is emitted by the theme service for every
+      // form from the HOST page background. Chaining through it painted the frame with Oqtane's
+      // dark theme by default - measured, gold-suite went from 4.2% to 49.29% against its DNN twin.
+      + `--${p}-page:var(--mf-preset-bg,${c.page || '#fff'});`
+      + `}`);
+
+    let css = spec.exactCss;
+    if (spec.themeVars !== false) {
+      const swap = [
+        ['primary', c.primary], ['accent', c.accent], ['surface', c.surface], ['text', c.text],
+        ['border', c.border], ['page', c.page], ['on-primary', c.onPrimary],
+      ];
+      const seen = new Set();
+      for (const [name, hex] of swap) {
+        if (!hex || !/^#[0-9a-fA-F]{6}$/.test(hex) || seen.has(hex.toLowerCase())) continue;
+        seen.add(hex.toLowerCase());
+        css = css.split(new RegExp(hex.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'))
+          .join(`var(--${p}-${name})`);
+      }
+    }
+    // [Responsive 2026-08-08, owner: "rat nhieu form khong responsive duoc"] The mocks are desktop
+    // pages: their multi-column grids are unconditional, so in a narrow pane (a sidebar, a phone, a
+    // 600px module column) the form column collapsed to ~190px and every label wrapped three deep.
+    // These substring selectors are safe BECAUSE they are scoped under the design root - the
+    // col-/title hazard is megaform matching OUR class names, not the other way round.
+    // 680 was too eager: the narrowest mocks are 576px (xmas-sale) and 448px (newsletter) cards
+    // that still show their desktop layout at that width, so the fallback fired against the mock
+    // itself and xmas-sale went from 9 to 26 differing rows. 520 sits under every mock measure (576 is the narrowest).
+    parts.push(`@container (max-width:520px){`
+      + `${S}[class*="-grid"],${S}[class*="-meta"],${S}[class*="-scores"],${S}[class*="-charts"],`
+      + `${S}[class*="-cols"]{grid-template-columns:1fr!important}`
+      + `${S}[class*="-body"],${S}[class*="-split"],${S}[class*="-foot"],${S}[class*="-head"],`
+      + `${S}[class*="-row"]{flex-wrap:wrap!important}`
+      + `${S}[class*="-aside"],${S}[class*="-side"]{flex:1 1 100%!important;width:100%!important;`
+      + `max-width:none!important}`
+      + `}`);
+    // and nothing may push the pane wider than it is
+    parts.push(`${S} img{max-width:100%!important;height:auto}`);
+    parts.push(`${S}{overflow-wrap:break-word}`);
+    parts.push(css.replace(/@S@/g, S));
+    // [2026-08-08, owner] A template ships the DESIGN, not the demo page around it. The mock's
+    // outer band - its page background, its 32-48px page padding and its centring max-width - read
+    // as a SECOND card once the form sits in a CMS pane, and the pane already supplies that frame.
+    // Emitted after the spec's own rules and with !important so no spec has to remember it; the
+    // "All forms" link the same page chrome carried is deleted from the markup, not hidden.
+    parts.push(`${S}.${p}-page{padding:0!important;background:transparent!important;`
+      + `min-height:0!important}`);
+    // Width yes, GUTTER no: zeroing the shell padding as well is what pushed the content flat
+    // against the pane edge ("bi sat mep" - lagoon-booking's first name label started at x=0). The
+    // padding on this box is the mock's own page gutter, so it stays; only the centring measure goes.
+    parts.push(`${S}.${p}-shell,${S}.${p}-wrap{max-width:none!important;margin:0!important}`);
+    // ...and the design containers underneath it keep their padding but stop centring inside a
+    // fixed measure: the owner wants the CONTENT full width in the pane, not a 768px column
+    // floating in the middle of a 1192px page.
+    parts.push(`${S}.${p}-grid,${S}.${p}-main,${S}.${p}-hero-in,${S}.${p}-card{`
+      + `max-width:none!important;margin-left:0!important;margin-right:0!important}`);
+    // [2026-08-08, owner] "mot so form bi mat 1 phan hoac tat ca border" — several designs never
+    // drew a border of their own: the mock's page background was what separated the card from the
+    // page, and taking that background away left a white body on a white pane with no edge at all.
+    // MEASURED with tools/browser-qa/border-audit.mjs, which walks the first levels under .mfp:
+    // xnl/inv/spn painted white + shadow and nothing else; agf/gsu/jba/lgn/pdo/gpr/xms painted
+    // nothing at the top level. So the design's outer box states the border itself, in the design's
+    // OWN border colour (the palette token the mock declares), at the radius that box already has.
+    // A spec whose card already carries the border - and now spans the pane - sets
+    // `outerBorder: false` so the frame is not drawn twice.
+    if (spec.outerBorder !== false) {
+      const ob = spec.outerBorder || {};
+      const sel = ob.sel || `.${p}-page`;
+      const col = ob.colour || v('border');
+      const rad = ob.radius == null ? 12 : ob.radius;
+      // The box also needs the design's OWN page colour back. Measured on Oqtane: with the
+      // background transparent the host theme shows through, and stock Oqtane is a DARK theme - the
+      // gold-suite section headings rendered near-black on black. This is not the outer card the
+      // owner had removed (the design spans the pane now, so nothing is banded beside it); it is
+      // the colour the mock paints under this very design.
+      const bg = ob.bg === false ? null : (ob.bg || (ob.sel ? null : v('page')));
+      // overflow:hidden or the radius is decoration only - a hero image, a coloured edge bar or a
+      // masthead paints straight over the rounded corner and the frame reads as "mat goc".
+      parts.push(`${S}${sel}{border:1px solid ${col}!important;border-radius:${rad}px!important;`
+        + `overflow:hidden` + (bg ? `;background:${bg}!important` : '') + `}`);
+      // ...except while a date popover is open: megaform lifts overflow on ITS OWN containers for
+      // exactly this reason, and that list does not know about authored class names.
+      parts.push(`.mf-form-wrapper.mf-has-date-popover ${S}${sel}{overflow:visible!important}`);
+    }
+    // customCss is emitted FIRST inside <style id="mf-custom-css-N"> (theme vars and the compat
+    // bridge are appended after it), so an @import here really is the first thing in the sheet,
+    // which is the only place the browser accepts one.
+    return (spec.fontImport ? spec.fontImport + '\n' : '') + parts.join('');
+  }
   // The mocks are narrow centred flyers (Tailwind max-w-xl = 576px), not full-bleed forms. Left
   // unconstrained the shell stretched to the host pane — 1192px on the full-width QA page — which
   // spreads a 2-column grid so wide the design stops reading as the mock at all.
@@ -474,7 +622,10 @@ export function buildCss(spec) {
     + `text-transform:uppercase;letter-spacing:.4em;color:${h.onHeroMuted}}`);
   // The bridge qualifies headings with an element (`.mfp[class*="mfp-"] h1`), so this side needs
   // the element AND !important on the colour or the hero headline turns into host body text.
-  parts.push(`${S}.${p}-hero h1.${p}-hero-display{margin:0;font-family:${spec.displayFontStack};`
+  // font-family needs !important for the same reason the colour does: the bridge sets
+  // `h1{font-family:var(--mf-heading-font)!important}`, and without it the hero display measured
+  // as Inter against the mock's serif while every OTHER serif element in the skin was correct.
+  parts.push(`${S}.${p}-hero h1.${p}-hero-display{margin:0;font-family:${spec.displayFontStack}!important;`
     + `font-size:${h.displaySize || '48px'};line-height:1!important;font-weight:${h.displayWeight || 500};`
     + `${h.displayItalic ? 'font-style:italic;' : ''}color:${h.onHero}!important;`
     // The bridge forces a weight onto headings too, so the weight needs !important or a 500-weight
@@ -484,15 +635,20 @@ export function buildCss(spec) {
   parts.push(`${S}.${p}-hero-hairline{display:flex;align-items:center;justify-content:center;`
     + `gap:12px;margin:16px 0}`);
   parts.push(`${S}.${p}-hr{height:1px;width:40px;background:${v('deco')};opacity:.7}`);
+  // The hairline word is text-white/60 in the mock, one step fainter than the eyebrow's /70.
+  // Sharing onHeroMuted for both rendered it at .7 and the harness measured the .1 difference.
   parts.push(`${S}.${p}-hr-word{font-size:10px;font-weight:400;text-transform:uppercase;`
-    + `letter-spacing:.3em;color:${h.onHeroMuted}}`);
+    + `letter-spacing:.3em;color:${h.onHeroFaint || h.onHeroMuted}}`);
   parts.push(`${S}.${p}-hero-sub{font-family:${spec.displayFontStack};font-size:18px;font-weight:400;`
     + `${h.displayItalic ? 'font-style:italic;' : ''}color:${h.onHeroSoft || h.onHeroMuted}}`);
 
   // Strips
+  // Mock: `flex items-center justify-center gap-3 border-x py-3.5`. It is the card's SIDE walls
+  // that continue through the strip, not a pair of horizontal rules — measured 0/1/0/1 against our
+  // 1/0/1/0 — and there is no horizontal padding.
   parts.push(`${S}.${p}-tagline{display:flex;align-items:center;justify-content:center;gap:12px;`
-    + `padding:13px 16px;background:${v('surface')};border-top:1px solid ${v('border')};`
-    + `border-bottom:1px solid ${v('border')}}`);
+    + `padding:14px 0;background:${v('surface')};border-left:1px solid ${v('border')};`
+    + `border-right:1px solid ${v('border')}}`);
   parts.push(`${S}.${p}-dot{width:4px;height:4px;border-radius:999px;background:${v('deco')}}`);
   parts.push(`${S}.${p}-tagline-text{font-size:11px;font-weight:700;text-transform:uppercase;`
     + `letter-spacing:.32em;color:${v('primary')}}`);
@@ -506,9 +662,12 @@ export function buildCss(spec) {
   parts.push(`${S}.${p}-promo-body{margin:0;font-size:12px;line-height:1.6;color:${v('muted')}}`);
 
   // Body + captions
-  parts.push(`${S}.${p}-body{padding:24px 30px 30px;display:flex;flex-direction:column;gap:16px}`);
-  parts.push(`${S}.${p}-caption{margin:6px 0 0;font-size:11px;font-weight:900;`
-    + `text-transform:uppercase;letter-spacing:.16em;text-align:center;color:${v('primary')}}`);
+  // Mock body: `px-6 pt-6 pb-4` = 24/24/16. We had 30px sides, which pushed every field 5px in.
+  parts.push(`${S}.${p}-body{padding:24px 24px 16px;display:flex;flex-direction:column;gap:16px}`);
+  // Mock caption: `text-[11px] font-black uppercase tracking-widest mb-3 text-center`.
+  // tracking-widest is .1em, NOT .16em, and the space is BELOW the caption, not above it.
+  parts.push(`${S}.${p}-caption{margin:0 0 12px;font-size:11px;font-weight:900;`
+    + `text-transform:uppercase;letter-spacing:.1em;text-align:center;color:${v('primary')}}`);
   parts.push(`${S}.${p}-rule{display:flex;align-items:center;gap:12px;padding-top:6px}`);
   parts.push(`${S}.${p}-rule span{font-size:11px;font-weight:600;letter-spacing:.12em;`
     + `text-transform:uppercase;color:${v('muted')}}`);
@@ -520,8 +679,10 @@ export function buildCss(spec) {
   // Field chrome. The authored <span> replaces the renderer's own label, so that one is hidden
   // rather than removed - the renderer still needs it for error targeting.
   parts.push(`${S}.${p}-field{display:block;margin:0}`);
-  parts.push(`${S}.${p}-field>span{display:block;margin:0 0 6px!important;color:${v('muted')};`
-    + `font-size:10px;line-height:15px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}`);
+  // Mock label: `mb-1 block text-[10px] font-bold uppercase tracking-wider`.
+  // tracking-wider is .05em, NOT .08em; mb-1 is 4px, not 6px.
+  parts.push(`${S}.${p}-field>span{display:block;margin:0 0 4px!important;color:${v('muted')};`
+    + `font-size:10px;line-height:15px;font-weight:700;letter-spacing:.05em;text-transform:uppercase}`);
   parts.push(`${S}.${p}-field .mf-field-label{display:none!important}`);
   parts.push(`${S}.mf-field-group{margin:0!important;width:100%}`);
   parts.push(`${S}.mf-form-title,${S}.mf-form-description{display:none!important}`);
@@ -551,7 +712,9 @@ export function buildCss(spec) {
     parts.push(`${S}.mf-input${AT}:focus,${S}.mf-select${AT}:focus,${S}.mf-textarea${AT}:focus`
       + `{border-color:${v('primary')}!important;background:${v('surface')}!important}`);
   }
-  parts.push(`${S}.mf-textarea${AT}{min-height:92px!important;height:auto!important;resize:vertical}`);
+  // Mock textarea is `p-3` (12px all round) where the single-line inputs are `px-3 py-2`.
+  parts.push(`${S}.mf-textarea${AT}{min-height:92px!important;height:auto!important;`
+    + `padding:12px!important;resize:vertical}`);
   parts.push(`${S}.mf-input${AT}::placeholder,${S}.mf-textarea${AT}::placeholder`
     + `{color:color-mix(in srgb, ${v('text')} 40%, transparent)!important;opacity:1}`);
   parts.push(`${S}.mf-field-error{color:#dc2626;font-size:11px;margin-top:4px}`);
@@ -579,12 +742,16 @@ export function buildCss(spec) {
 
   // Chips
   parts.push(`${S}.mf-option-group--chips{display:flex;flex-wrap:wrap;gap:6px}`);
-  parts.push(`${S}.mf-option-group--chips .mf-option-ui{padding:6px 13px;border-radius:999px;`
+  // Mock chip: `rounded-full px-3 py-1 text-xs font-semibold border` on a <button>, so 4/12
+  // padding, 12px/16px type and the UA's centred button text. Ours inherited the option row's
+  // flex gap and a 20px line-height and measured 36px tall against the mock's 26px.
+  parts.push(`${S}.mf-option-group--chips .mf-option-ui{padding:4px 12px;border-radius:9999px;`
+    + `display:block;gap:0;text-align:center;line-height:16px;`
     + `border:1px solid ${v('border')};background:transparent;color:${v('muted')};font-size:12px;`
     + `font-weight:600;cursor:pointer;transition:all .15s ease}`);
   // A chip's text lives in .mf-option-label, which the CARD rule below sizes at 13px/700. Without
   // this the chips measured 13px/700/text-colour against the mock's 12px/600/muted.
-  parts.push(`${S}.mf-option-group--chips .mf-option-label{font-size:12px;font-weight:600;color:inherit}`);
+  parts.push(`${S}.mf-option-group--chips .mf-option-label{font-size:12px;font-weight:600;line-height:16px;color:inherit}`);
   parts.push(`${S}.mf-option-group--chips .mf-option-item.is-selected .mf-option-label,`
     + `${S}.mf-option-group--chips input:checked+.mf-option-ui .mf-option-label{color:inherit}`);
   parts.push(`${S}.mf-option-group--chips .mf-option-item.is-selected .mf-option-ui,`
@@ -642,9 +809,10 @@ export function buildCss(spec) {
   // element + the attribute to outrank it. Without them the skin's button renders host-primary blue.
   const SUB = `${S}button.${p}-submit[type="submit"]`;
   parts.push(`${SUB}{width:100%!important;border:0!important;`
-    + `border-radius:${spec.submitRadius || '12px'}!important;padding:14px 20px!important;`
+    // Mock CTA: `w-full rounded-xl py-3.5 … tracking-widest` — full-bleed, so no side padding.
+    + `border-radius:${spec.submitRadius || '12px'}!important;padding:14px 0!important;`
     + `background:${spec.submitBackground || v('primary')}!important;color:${v('on-primary')}!important;`
-    + `font-family:inherit!important;font-size:14px!important;font-weight:900!important;line-height:20px!important;text-transform:uppercase!important;letter-spacing:.14em!important;`
+    + `font-family:inherit!important;font-size:14px!important;font-weight:900!important;line-height:20px!important;text-transform:uppercase!important;letter-spacing:.1em!important;`
     + `cursor:pointer!important;box-shadow:none!important;transition:filter .15s ease,opacity .15s ease}`);
   parts.push(`${SUB}:hover{filter:brightness(1.06)}`);
   // GateUntilValid paints the blocked state on the button the renderer manages; the authored
@@ -729,9 +897,123 @@ export function buildCss(spec) {
 // ─────────────────────────────────────────────────────────────────────────────
 // Template assembly
 // ─────────────────────────────────────────────────────────────────────────────
+const TRANSPARENT_CONTENT_IMAGE =
+  'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
+
+const CONTENT_IMAGE_HINTS = new Set([
+  'avatar', 'background', 'banner', 'bg', 'cover', 'gallery', 'hero', 'icon', 'image', 'img',
+  'logo', 'mascot', 'photo', 'pic', 'picture', 'slide', 'slider', 'thumb', 'thumbnail',
+  'wallpaper',
+]);
+
+const CONTENT_ENTITIES = {
+  amp: '&', apos: "'", copy: '\u00a9', euro: '\u20ac', gt: '>', laquo: '\u00ab',
+  ldquo: '\u201c', lsaquo: '\u2039', lsquo: '\u2018', lt: '<', mdash: '\u2014',
+  middot: '\u00b7', nbsp: '\u00a0', ndash: '\u2013', quot: '"', raquo: '\u00bb',
+  rdquo: '\u201d', reg: '\u00ae', rsaquo: '\u203a', rsquo: '\u2019', trade: '\u2122',
+};
+
+function decodeContentText(value) {
+  return String(value || '').replace(/&(#x[0-9a-f]+|#\d+|[a-z][a-z0-9]+);/gi, (all, code) => {
+    if (code[0] === '#') {
+      const radix = code[1].toLowerCase() === 'x' ? 16 : 10;
+      const digits = radix === 16 ? code.slice(2) : code.slice(1);
+      const point = Number.parseInt(digits, radix);
+      return Number.isFinite(point) ? String.fromCodePoint(point) : all;
+    }
+    const decoded = CONTENT_ENTITIES[code.toLowerCase()];
+    if (decoded === undefined) {
+      throw new Error(`Unsupported HTML entity in editable template content: &${code};`);
+    }
+    return decoded;
+  });
+}
+
+function contentKeyBase(value) {
+  let key = String(value || '')
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/&/g, ' and ')
+    .replace(/[\u2018\u2019']/g, '')
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .slice(0, 52)
+    .replace(/_+$/g, '');
+  if (!key) key = 'text';
+  if (/^[0-9]/.test(key)) key = `text_${key}`;
+  return key;
+}
+
+function isContentImageKey(key) {
+  return String(key || '').toLowerCase().split(/[_\-\s]+/).some((part) => CONTENT_IMAGE_HINTS.has(part));
+}
+
+/**
+ * Turn every user-visible literal text node in an exact shell into an encoded {{content:key}}
+ * token. Keys are deterministic and copy-derived, so regenerating a template does not churn the
+ * schema and repeated labels such as "Back" intentionally share one setting.
+ *
+ * This is deliberately a text-node lexer, not an HTML rewrite: authored tags, whitespace,
+ * field/script/form tokens and all measured geometry remain byte-for-byte where they were. Image
+ * tokens authored in safe attributes are also seeded here; image-like keys get a transparent
+ * pixel so the mock's cross-platform CSS background remains the default until the owner chooses
+ * an uploaded replacement.
+ */
+export function tokenizeEditableContent(html, initialContent = {}) {
+  const content = {};
+  Object.keys(initialContent || {}).forEach((key) => {
+    content[key] = String(initialContent[key] ?? '');
+  });
+
+  const valueToKey = new Map();
+  Object.keys(content).forEach((key) => {
+    if (!valueToKey.has(content[key])) valueToKey.set(content[key], key);
+  });
+
+  const keyFor = (value) => {
+    if (valueToKey.has(value)) return valueToKey.get(value);
+    const base = contentKeyBase(value);
+    let key = base;
+    let suffix = 2;
+    while (Object.prototype.hasOwnProperty.call(content, key) && content[key] !== value) {
+      key = `${base}_${suffix++}`;
+    }
+    content[key] = value;
+    valueToKey.set(value, key);
+    return key;
+  };
+
+  const tokenPattern = /(\{\{(?:content|field|form|script):[a-zA-Z0-9_-]+\}\})/g;
+  const output = String(html || '').split(/(<[^>]+>)/g).map((part) => {
+    if (!part || part[0] === '<') return part;
+    return part.split(tokenPattern).map((piece) => {
+      if (!piece || /^\{\{(?:content|field|form|script):/.test(piece)) return piece;
+      const lead = (piece.match(/^\s*/) || [''])[0];
+      const tail = (piece.match(/\s*$/) || [''])[0];
+      const coreEnd = piece.length - tail.length;
+      const core = piece.slice(lead.length, coreEnd < lead.length ? lead.length : coreEnd);
+      if (!core || !/[\p{L}\p{N}]/u.test(decodeContentText(core))) return piece;
+      const value = decodeContentText(core);
+      return `${lead}{{content:${keyFor(value)}}}${tail}`;
+    }).join('');
+  }).join('');
+
+  const anchors = output.matchAll(/\{\{content:([a-zA-Z0-9_-]+)\}\}/g);
+  for (const match of anchors) {
+    const key = match[1];
+    if (!Object.prototype.hasOwnProperty.call(content, key)) {
+      content[key] = isContentImageKey(key) ? TRANSPARENT_CONTENT_IMAGE : '';
+    }
+  }
+
+  return { html: output, content };
+}
+
 export function buildTemplate(spec) {
   const fields = buildFields(spec);
-  const customHtml = buildShell(spec);
+  const editable = tokenizeEditableContent(buildShell(spec), spec.customContent || {});
+  const customHtml = editable.html;
   const customCss = buildCss(spec);
 
   return {
@@ -752,7 +1034,7 @@ export function buildTemplate(spec) {
       // page with the generic Next/Previous rail underneath.
       premiumNativePageBreak: spec.wizard ? true : undefined,
       showProgressBar: false,
-      customContent: spec.customContent || {},
+      customContent: editable.content,
       customScripts: spec.customScripts || {},
       customHtml,
       customCss,
@@ -787,6 +1069,8 @@ export function buildTemplate(spec) {
     fields,
     rules: [],
     workflow: { notifications: [] },
+    // Non-enumerable so it never reaches the shipped JSON; validate() reads it.
+    ...(spec.successNoInterpolation ? { __successNoInterpolation: true } : {}),
   };
 }
 
@@ -836,6 +1120,31 @@ export function validate(tpl) {
     .map((m) => m.slice(8, -2));
   slots.forEach((k) => { if (!placeable.includes(k)) errs.push(`customHtml references unknown field '${k}'`); });
 
+  // Exact shells expose their authored copy through customContent. The renderer HTML-encodes this
+  // channel, which is safe in text and ordinary attributes but not in a CSS string after entity
+  // decoding, so content tokens in style attributes are rejected outright.
+  const contentAnchors = new Set((html.match(/\{\{content:([A-Za-z0-9_-]+)\}\}/g) || [])
+    .map((m) => m.slice(10, -2)));
+  const contentValues = s.customContent || {};
+  contentAnchors.forEach((k) => {
+    if (!Object.prototype.hasOwnProperty.call(contentValues, k)) {
+      errs.push(`{{content:${k}}} has no customContent value`);
+    } else if (typeof contentValues[k] !== 'string') {
+      errs.push(`customContent['${k}'] must be a string`);
+    }
+  });
+  Object.keys(contentValues).forEach((k) => {
+    if (!contentAnchors.has(k)) errs.push(`customContent['${k}'] has no {{content:${k}}} anchor`);
+  });
+  if (/style\s*=\s*(['"])[^'"]*\{\{content:/i.test(html)) {
+    errs.push('customContent token is inside a style attribute — use an img/src token instead');
+  }
+  const literalText = html.split(/<[^>]+>/g).find((part) => {
+    const withoutTokens = part.replace(/\{\{(?:content|field|form|script):[A-Za-z0-9_-]+\}\}/g, '');
+    return /[\p{L}\p{N}]/u.test(decodeContentText(withoutTokens));
+  });
+  if (literalText) errs.push(`user-visible literal text was not tokenized: '${literalText.trim().slice(0, 80)}'`);
+
   // A data URI whose "</" survived would be a silently broken image.
   if (/data:image\/svg\+xml,[^"]*<\//.test(css)) {
     errs.push('data-URI SVG is not fully percent-encoded — NeutralizeStyleBreakout will corrupt it');
@@ -858,9 +1167,13 @@ export function validate(tpl) {
     errs.push(`customHtml has ${echoNodes.size} data-mf-echo node(s) but no customScripts to fill them`);
   }
 
-  // The success screen is the whole point of shipping feature 3 first.
+  // The success screen is the whole point of shipping feature 3 first — but only where the MOCK
+  // greets the applicant. The newsletter mock's success card is two lines with no name in them,
+  // and inventing one to satisfy this check would be exactly the habit these conversions are
+  // being corrected for. An exact conversion whose mock interpolates nothing sets
+  // successNoInterpolation and says so.
   const ps = s.postSubmitExperience || {};
-  if (!/\{\{field:/.test(String(ps.message || ''))) {
+  if (!tpl.__successNoInterpolation && !/\{\{field:/.test(String(ps.message || ''))) {
     errs.push('postSubmitExperience.message interpolates no field — the mock greets the applicant');
   }
 
@@ -875,227 +1188,26 @@ export const SERIF = `'Cormorant Garamond','Playfair Display',Georgia,'Times New
 export const SANS = `'Inter',system-ui,-apple-system,'Segoe UI',sans-serif`;
 
 const SKINS = [
-  {
-    slug: 'xmas-sale-euroyouth-application',
-    title: 'Christmas Offer — EuroYouth Application',
-    description: 'Emerald and gold Christmas application: snowflake hero, "Five days of OFFER" promo panel, programme cards, chip interests. Submit stays locked until the form is valid, and the thank-you greets the applicant by name.',
-    category: 'application',
-    categories: ['application', 'premium', 'seasonal'],
-    icon: 'snowflake',
-    prefix: 'xms',
-    fontStack: SANS,
-    displayFontStack: SERIF,
-    submitLabel: 'Apply Now',
-    successMessage: 'Application received. We will be in touch within 5 working days.',
-    successTitle: 'Application received!',
-    successBody: '{{field:first_name}}, your application is confirmed.\nCheck {{field:email}} in 5 working days.',
-    palette: {
-      primary: '#1B8C6E', accent: '#0E5C47', surface: '#FFFFFF', text: '#1A2E26',
-      muted: '#5A7A6F', border: '#B8D9CF', onPrimary: '#FFFFFF', deco: '#D9B45B', page: '#F4FAF8',
-    },
-    hero: {
-      background: 'linear-gradient(160deg,#1B8C6E 0%,#0E5C47 100%)',
-      texture: 'snow', textureArgs: ['white'],
-      emblemIcon: 'fa-snowflake',
-      eyebrow: 'Merry', display: 'Christmas', displayItalic: true, displaySize: '48px',
-      hairlineWord: 'and', subtitle: 'Happy New Year',
-      onHero: '#FFFFFF', onHeroMuted: 'rgba(255,255,255,.7)', onHeroSoft: 'rgba(255,255,255,.85)',
-    },
-    strips: [
-      { kind: 'tagline', text: 'Online & in Stores' },
-      {
-        kind: 'promo', kicker: 'Five days of', headline: 'OFFER',
-        body: 'Apply during the Christmas season and receive priority placement, a reduced application fee waiver, and early access to 2026 programme spots across Europe.',
-      },
-    ],
-    inputVariant: 'boxed',
-    sectionCaptionStyle: 'centered-caps',
-    captions: {
-      programme: 'Choose Your Programme', personal: 'Personal Information',
-      details: 'Programme Details', interests: 'Interests', motivation: 'Motivation',
-    },
-    optionColumns: { programme: 1, accommodation: 2 },
-  },
-  {
-    slug: 'xmas-newsletter-euroyouth-application',
-    title: 'Christmas Newsletter — EuroYouth Application',
-    description: 'Crimson and gold festive application on cream: underlined fields, gold rule work, programme cards and chip interests. Gated submit and a name-aware thank-you.',
-    category: 'application',
-    categories: ['application', 'premium', 'seasonal'],
-    icon: 'gift',
-    prefix: 'xnl',
-    fontStack: SANS,
-    displayFontStack: SERIF,
-    submitLabel: 'Subscribe & Apply',
-    successMessage: 'Application received. Watch your inbox for the Christmas edition.',
-    successTitle: 'You are on the list!',
-    successBody: 'Thank you {{field:first_name}}. The Christmas edition is on its way to {{field:email}}.',
-    palette: {
-      primary: '#C41E3A', accent: '#9B0E25', surface: '#FFF9F5', text: '#2D1F1F',
-      muted: '#7A5C5C', border: '#E8D5D0', onPrimary: '#FFFFFF', deco: '#D4A017', page: '#F5EDE8',
-    },
-    hero: {
-      background: 'linear-gradient(165deg,#C41E3A 0%,#9B0E25 100%)',
-      texture: 'snow', textureArgs: ['#FFF3CC'],
-      emblemIcon: 'fa-gift',
-      eyebrow: 'Season of', display: 'Giving', displayItalic: true, displaySize: '50px',
-      hairlineWord: 'est. 2026', subtitle: 'The EuroYouth Christmas Edition',
-      onHero: '#FFFFFF', onHeroMuted: 'rgba(255,243,204,.75)', onHeroSoft: 'rgba(255,255,255,.86)',
-    },
-    strips: [
-      { kind: 'tagline', text: 'Twelve Programmes · One Europe' },
-      {
-        kind: 'promo', kicker: 'Inside this issue', headline: 'Winter Intake',
-        body: 'Programme spots for the winter intake, host-family stories from Florence and Lisbon, and the 2026 mobility calendar — delivered before the new year.',
-      },
-    ],
-    inputVariant: 'underline',
-    sectionCaptionStyle: 'centered-caps',
-    captions: {
-      programme: 'Pick a Programme', personal: 'Your Details',
-      details: 'Timing & Stay', interests: 'What to Send You', motivation: 'Tell Us More',
-    },
-    optionColumns: { programme: 1, accommodation: 2 },
-    cardRadius: '4px',
-    submitRadius: '4px',
-  },
-  {
-    slug: 'agency-flyer-euroyouth-application',
-    title: 'Agency Flyer — EuroYouth Application',
-    description: 'Magenta-to-cyan agency flyer application: confetti hero, bold captions, programme cards and chip interests. Gated submit and a name-aware thank-you.',
-    category: 'application',
-    categories: ['application', 'premium', 'marketing'],
-    icon: 'megaphone',
-    prefix: 'agf',
-    fontStack: SANS,
-    displayFontStack: SANS,
-    submitLabel: 'Send Application',
-    successMessage: 'Application received. Our team will reply shortly.',
-    successTitle: 'Brief received!',
-    successBody: 'Thanks {{field:first_name}} — we have your brief and will reply to {{field:email}} within two working days.',
-    palette: {
-      primary: '#E91E8C', accent: '#29B6F6', surface: '#FFFFFF', text: '#1A1A2E',
-      muted: '#6B7280', border: '#E5E7EB', onPrimary: '#FFFFFF', deco: '#29B6F6', page: '#F8F9FE',
-    },
-    hero: {
-      background: 'linear-gradient(135deg,#E91E8C 0%,#AD1169 45%,#0288D1 100%)',
-      texture: 'confetti', textureArgs: ['#FCE4F3', '#E1F5FE'],
-      emblemIcon: 'fa-bullhorn',
-      eyebrow: 'Creative Agency', display: 'Let us build it', displaySize: '42px',
-      displayWeight: 900, displayTracking: '-.03em',
-      subtitle: 'Strategy · Branding · Development',
-      onHero: '#FFFFFF', onHeroMuted: 'rgba(255,255,255,.72)', onHeroSoft: 'rgba(255,255,255,.88)',
-    },
-    strips: [
-      { kind: 'tagline', text: 'Strategy · Branding · SEO · Hosting · Advertising' },
-      {
-        kind: 'promo', kicker: 'What you get', headline: '5 Services',
-        body: 'Strategy and branding, web hosting and development, design and advertising, digital marketing and management — highly experienced, 100% proven.',
-      },
-    ],
-    inputVariant: 'boxed',
-    sectionCaptionStyle: 'rule',
-    captions: {
-      programme: 'Choose a service track', personal: 'Contact details',
-      details: 'Timing', interests: 'Areas of interest', motivation: 'Project brief',
-    },
-    optionColumns: { programme: 1, accommodation: 2 },
-    submitBackground: 'linear-gradient(135deg,#E91E8C,#29B6F6)',
-    cardRadius: '20px',
-  },
+  // xmas-sale-euroyouth-application MOVED to build-exact-conversions.mjs on 2026-08-08. It was
+  // the closest of the originals and still measured 24 differing rows: the programme cards had
+  // no radio marker, the renderer's own labels duplicated the authored ones, and the body's
+  // 16px flex gap double-counted spacing the mock puts on each block's own margin.
+  // xmas-newsletter-euroyouth-application MOVED to build-exact-conversions.mjs on 2026-08-08:
+  // its mock is an EMAIL MOCKUP (client chrome + sender row above the body card) and carries no
+  // serif anywhere, while this skin gave it an italic Cormorant hero reading "Season of Giving"
+  // that the mock never contained.
+  // agency-flyer-euroyouth-application MOVED to build-exact-conversions.mjs on 2026-08-08: its
+  // mock is a full-bleed photo hero with a LEFT-anchored italic wordmark over four separate
+  // blocks on the page background, not a centred card with a hero band.
   // ───────────────────────────────────────────────────────────────────────────
   // From the mock filed as "hotel-concierge". It is NOT a hotel form: its copy says
   // "saved to your first book", its fields are SCHOOL / AUTHOR / ADDRESS, its placeholders are
   // "Mia" / "Meadowlark School", and its hero PNG is never referenced. The mock's slug is
   // misleading, so this ships as what the design actually is. Flagged for the owner.
   // ───────────────────────────────────────────────────────────────────────────
-  {
-    slug: 'kids-first-book-registration',
-    title: 'My First Book — Registration',
-    description: "Pastel children's registration: rounded Nunito fields, mint and sky accents, school and author details, interests as chips, wishes as free text. Submit stays locked until the form is valid, and the thank-you greets the child by name. Converted from the mock filed as hotel-concierge, whose slug does not match its design.",
-    category: 'registration',
-    categories: ['registration', 'premium', 'education'],
-    icon: 'book-open',
-    prefix: 'kfb',
-    fontStack: `'Nunito','Quicksand',system-ui,-apple-system,sans-serif`,
-    displayFontStack: `'Nunito','Quicksand',system-ui,sans-serif`,
-    submitLabel: 'Save to My Book',
-    successMessage: 'Yay! Your registration has been saved to your first book.',
-    successTitle: 'Yay!',
-    successBody: '{{field:first_name}}, your registration has been saved to your first book.\nWe sent a copy to {{field:email}}.',
-    palette: {
-      primary: '#E8607A', accent: '#4A90D9', surface: '#FFFFFF', text: '#5A3A4A',
-      muted: '#B09AA8', border: '#F0C8D8', onPrimary: '#FFFFFF', deco: '#7DD4B8', page: '#FDF0F4',
-    },
-    hero: {
-      background: 'linear-gradient(150deg,#F9C8D4 0%,#A8D8EA 55%,#B5EAD7 100%)',
-      texture: 'confetti', textureArgs: ['#FFFFFF', '#FDEEA0'],
-      padding: '34px 30px 28px',
-      emblemIcon: 'fa-star',
-      eyebrow: 'My very own', display: 'First Book', displaySize: '42px', displayWeight: 800,
-      hairlineWord: 'and me', subtitle: 'Let us fill the first page together',
-      onHero: '#5A3A4A', onHeroMuted: 'rgba(90,58,74,.62)', onHeroSoft: 'rgba(90,58,74,.8)',
-    },
-    strips: [{ kind: 'tagline', text: 'Stories · Drawings · Dreams' }],
-    inputVariant: 'boxed',
-    sectionCaptionStyle: 'centered-caps',
-    cardRadius: '24px',
-    submitRadius: '999px',
-    cardMaxWidth: '640px',
-    captions: {
-      programme: 'Programme Details', personal: 'Personal Details',
-      details: 'Programme Details', interests: 'My Interests', motivation: 'Notes & Wishes',
-    },
-    optionColumns: { programme: 1, accommodation: 2 },
-    body: {
-      interests: ['Art', 'Music', 'Dance', 'Sports', 'Reading', 'Cooking', 'Travel', 'Science'],
-      countries: ['Germany', 'France', 'Spain', 'Italy', 'United Kingdom', 'United States',
-        'Japan', 'Australia', 'Other'],
-      omit: ['language_level', 'accommodation'],
-      labels: { motivation: 'Notes & Wishes', interests: 'My Interests', programme: 'Choose a club' },
-      // Same content bug as gold-suite: the mock keeps EuroYouth's Erasmus / Language Immersion /
-      // Solidarity Corps cards inside a children's book form. Resolved on conversion instead of
-      // shipped.
-      options: {
-        programme: [
-          { label: 'Story Time Club', value: 'story', description: 'Wednesdays · read aloud together' },
-          { label: 'Drawing Workshop', value: 'drawing', description: 'Saturdays · crayons provided' },
-          { label: 'Reading Buddies', value: 'buddies', description: 'Weekly · paired with an older reader' },
-        ],
-      },
-      placeholders: {
-        first_name: 'Mia', last_name: 'Robinson', email: 'mia@email.com',
-        phone: '(555) 010-2233', birth_year: '2006',
-        motivation: 'Write your dreams and wishes here…',
-      },
-      termsText: 'I agree to the terms & privacy policy',
-      newsletterText: 'Send me story ideas and activity sheets',
-    },
-    extraFields: [
-      field('school', 'Text', 'School', { placeholder: 'Meadowlark School' }),
-      field('author', 'Text', 'Author', { placeholder: 'Your name' }),
-      field('address', 'Text', 'Address', { placeholder: '123 Main Street' }),
-    ],
-    fieldOrder: ['first_name', 'last_name', 'school', 'email', 'phone', 'birth_year', 'author',
-      'address', 'programme', 'country', 'duration', 'start_month', 'interests', 'motivation',
-      'newsletter', 'terms'],
-    sections: (spec) => [
-      {
-        caption: 'Personal Details',
-        grid: [['First name', 'first_name'], ['Last name', 'last_name'], ['School', 'school'],
-          ['Email', 'email'], ['Phone', 'phone'], ['Birth year', 'birth_year'],
-          ['Author', 'author'], ['Address', 'address']],
-      },
-      { caption: 'My Book Club', slots: [['Choose a club', 'programme']] },
-      {
-        caption: 'When & Where',
-        grid: [['Country', 'country'], ['Duration', 'duration'], ['Start month', 'start_month']],
-      },
-      { caption: 'My Interests', slots: [['My Interests', 'interests']] },
-      { caption: 'Notes & Wishes', slots: [['Notes & Wishes', 'motivation']] },
-      { consent: [['Newsletter', 'newsletter'], ['Declaration', 'terms']] },
-    ],
-  },
+  // kids-first-book-registration MOVED to build-exact-conversions.mjs on 2026-08-08: the mock is
+  // a dashed-border scrapbook card with ONE field per line behind a fixed 150px uppercase label
+  // on a dotted rule, and five full-bleed pastel section bands - none of which a skin can express.
 
   // ───────────────────────────────────────────────────────────────────────────
   // hotel-suite. Membership tiers with a popularity bar per tier.
@@ -1109,92 +1221,10 @@ const SKINS = [
   // rich content cannot carry an <svg> or an <img>. A baked class per value is what is left, and
   // it is why the tier list is fixed rather than editable.
   // ───────────────────────────────────────────────────────────────────────────
-  {
-    slug: 'gold-suite-membership-application',
-    title: 'Gold Suite — Membership Application',
-    description: 'Cream and gold luxury membership application: serif display hero, three tier cards with pre-baked popularity bars and perks, guest and occasion details, experience chips. Submit stays locked until the form is valid, and the thank-you greets the member by name.',
-    category: 'application',
-    categories: ['application', 'premium', 'hospitality'],
-    icon: 'crown',
-    prefix: 'gsu',
-    fontStack: `'DM Sans','Inter',system-ui,-apple-system,sans-serif`,
-    displayFontStack: SERIF,
-    submitLabel: 'Request Membership',
-    successMessage: 'Membership request received. Our concierge will be in touch.',
-    successTitle: 'Request received',
-    successBody: 'Thank you {{field:first_name}}. Our concierge will contact you at {{field:email}} within one working day to confirm your {{field:tier}} membership.',
-    palette: {
-      primary: '#B8860B', accent: '#8B5E0A', surface: '#FFFFFF', text: '#1A1A1A',
-      muted: '#8C7A5E', border: '#E8D9B0', onPrimary: '#FFFFFF', deco: '#D4A520', page: '#FFFBF2',
-    },
-    hero: {
-      background: 'linear-gradient(160deg,#1A1A1A 0%,#3a2f14 55%,#8B5E0A 100%)',
-      padding: '40px 30px 34px',
-      emblemIcon: 'fa-crown',
-      eyebrow: 'Exclusive Membership', display: 'Gold Suite', displayItalic: true, displaySize: '46px',
-      hairlineWord: 'since 1974', subtitle: 'A residence, not a room',
-      onHero: '#F5E6B8', onHeroMuted: 'rgba(245,230,184,.66)', onHeroSoft: 'rgba(245,230,184,.86)',
-    },
-    strips: [{ kind: 'tagline', text: 'Member Satisfaction 98% · 42 Destinations · Avg. Savings 24%' }],
-    inputVariant: 'boxed',
-    sectionCaptionStyle: 'rule',
-    cardRadius: '6px',
-    submitRadius: '4px',
-    cardMaxWidth: '660px',
-    captions: {
-      programme: 'Suite Preference', personal: 'Member Details',
-      details: 'Stay & Preferences', interests: 'Preferred Experiences', motivation: 'Why Gold Suite?',
-    },
-    optionColumns: { tier: 1, programme: 1 },
-    tierBars: { gold: 82, platinum: 75, diamond: 91 },
-    body: {
-      omit: ['language_level', 'accommodation'],
-      interests: ['Private Dining', 'Wine Cellar', 'Infinity Pool', 'Heli Transfers',
-        'Art Gallery', 'Yacht Charter', 'Golf Course', 'Spa & Wellness'],
-      countries: ['Germany', 'France', 'Spain', 'Italy', 'United Kingdom', 'United States',
-        'Japan', 'UAE', 'Switzerland', 'Other'],
-      labels: { programme: 'Suite preference', motivation: 'Why Gold Suite?' },
-      options: {
-        programme: [
-          { label: 'Signature Suite', value: 'signature', description: 'Sea view · 68 m² · king bed' },
-          { label: 'Garden Villa', value: 'villa', description: 'Private pool · 120 m² · two bedrooms' },
-          { label: 'Penthouse Residence', value: 'penthouse', description: 'Rooftop terrace · 210 m² · butler' },
-        ],
-      },
-      placeholders: { motivation: 'Tell us about your expectations and travel lifestyle…' },
-      termsText: 'I agree to the membership terms & privacy policy',
-      newsletterText: 'Send me member offers and seasonal openings',
-    },
-    extraFields: [
-      choiceField('tier', 'Radio', 'Membership tier', [
-        { label: 'Gold Membership', value: 'gold', description: '$480 per year · Priority check-in, daily breakfast, late checkout, 2 spa visits a month' },
-        { label: 'Platinum Membership', value: 'platinum', description: '$980 per year · Dedicated butler, airport transfer, unlimited dining, suite upgrades' },
-        { label: 'Diamond Membership', value: 'diamond', description: '$1,880 per year · Everything in Platinum, plus yacht days and private aviation credits' },
-      ], 'cards', 1, { required: true }),
-      choiceField('guests', 'Select', 'Number of guests', ['1', '2', '3', '4', '5', '6+'], 'dropdown', null, { defaultValue: '2' }),
-      field('occasion', 'Text', 'Special occasion', { placeholder: 'Anniversary, honeymoon, milestone celebration…' }),
-    ],
-    fieldOrder: ['tier', 'first_name', 'last_name', 'email', 'phone', 'birth_year', 'country',
-      'programme', 'guests', 'start_month', 'duration', 'occasion', 'interests', 'motivation',
-      'newsletter', 'terms'],
-    sections: () => [
-      { caption: 'Choose Your Tier', slots: [['Membership tier *', 'tier']] },
-      {
-        caption: 'Member Details',
-        grid: [['First name *', 'first_name'], ['Last name *', 'last_name'], ['Email *', 'email'],
-          ['Phone', 'phone'], ['Birth year', 'birth_year'], ['Country *', 'country']],
-      },
-      {
-        caption: 'Stay & Preferences',
-        slots: [['Suite preference *', 'programme']],
-        grid: [['Number of guests', 'guests'], ['Preferred start *', 'start_month'],
-          ['Duration (months)', 'duration'], ['Special occasion', 'occasion']],
-      },
-      { caption: 'Preferred Experiences', slots: [['Preferred Experiences', 'interests']] },
-      { caption: 'Why Gold Suite?', slots: [['Why Gold Suite? (optional)', 'motivation']] },
-      { consent: [['Newsletter', 'newsletter'], ['Declaration', 'terms']] },
-    ],
-  },
+  // gold-suite-membership-application MOVED to build-exact-conversions.mjs on 2026-08-08: the
+  // mock has no hero band and no card at all - a full-bleed 320px photograph with stat pills over
+  // it, then a bare 896px column whose three membership tiers sit SIDE BY SIDE with a price, a
+  // popularity meter and a perk list each. This skin stacked them inside an invented dark hero.
   // ───────────────────────────────────────────────────────────────────────────
   // rose-registration. The mock's hero is a photograph, `/images/rose-wellness-hero.png`, which
   // is NOT in this repository — the handoff listed it as a blocker needing someone to source the
@@ -1203,86 +1233,11 @@ const SKINS = [
   // the photo in later and add one background-image rule; nothing else has to change.
   // The mock also fetches Google Fonts remotely; this uses a local serif stack instead.
   // ───────────────────────────────────────────────────────────────────────────
-  {
-    slug: 'rose-wellness-registration',
-    title: 'Rose Wellness — Registration',
-    description: 'Deep rose and cream wellness registration: serif display hero with petal texture, underlined fields, programme cards and chip interests. Ships without the mock\'s hero photograph (not in the repo) — the hero is a gradient until that asset arrives. Submit stays locked until the form is valid, and the thank-you greets the guest by name.',
-    category: 'registration',
-    categories: ['registration', 'premium', 'wellness'],
-    icon: 'spa',
-    prefix: 'rws',
-    fontStack: `'Inter',system-ui,-apple-system,'Segoe UI',sans-serif`,
-    displayFontStack: SERIF,
-    submitLabel: 'Reserve My Place',
-    successMessage: 'Registration received. A confirmation is on its way.',
-    successTitle: 'You are booked',
-    successBody: 'Thank you {{field:first_name}}. We will send the confirmation to {{field:email}}, along with what to bring.',
-    palette: {
-      primary: '#C2185B', accent: '#880E4F', surface: '#FFFFFF', text: '#1C1C1E',
-      muted: '#6B6B6E', border: '#F0D9E2', onPrimary: '#FFFFFF', deco: '#F48FB1', page: '#FFF8F5',
-    },
-    hero: {
-      background: 'linear-gradient(155deg,#C2185B 0%,#880E4F 60%,#4a0726 100%)',
-      texture: 'confetti', textureArgs: ['#FCE4EC', '#F48FB1'],
-      padding: '40px 30px 32px',
-      emblemIcon: 'fa-leaf',
-      eyebrow: 'A quiet week for', display: 'Rose Wellness', displayItalic: true, displaySize: '46px',
-      hairlineWord: 'retreat', subtitle: 'Breathe, move, and begin again',
-      onHero: '#FFFFFF', onHeroMuted: 'rgba(252,228,236,.72)', onHeroSoft: 'rgba(255,255,255,.88)',
-    },
-    strips: [
-      { kind: 'tagline', text: 'Yoga · Nutrition · Stillness' },
-      {
-        kind: 'promo', kicker: 'Seven mornings of', headline: 'Retreat',
-        body: 'Sunrise movement, seasonal cooking, and long afternoons with nothing scheduled. Small groups only — twelve guests to a week.',
-      },
-    ],
-    inputVariant: 'underline',
-    sectionCaptionStyle: 'rule',
-    cardRadius: '10px',
-    submitRadius: '999px',
-    cardMaxWidth: '620px',
-    captions: {
-      programme: 'Choose Your Week', personal: 'Your Details',
-      details: 'Stay', interests: 'What You Would Like', motivation: 'Anything We Should Know',
-    },
-    optionColumns: { programme: 1, accommodation: 2 },
-    body: {
-      interests: ['Yoga', 'Breathwork', 'Nutrition', 'Hiking', 'Massage', 'Meditation',
-        'Cold Water', 'Journalling'],
-      // The third EuroYouth leftover in this batch: a CEFR language level has no business in a
-      // wellness retreat booking.
-      omit: ['language_level'],
-      labels: { programme: 'Retreat week', motivation: 'Anything we should know' },
-      options: {
-        programme: [
-          { label: 'Restorative Week', value: 'restorative', description: 'Slow mornings · gentle movement' },
-          { label: 'Active Week', value: 'active', description: 'Hiking · strength · cold water' },
-          { label: 'Silent Week', value: 'silent', description: 'No phones · guided stillness' },
-        ],
-        accommodation: ['Garden room', 'Shared cabin', 'Private suite', 'Arriving daily'],
-      },
-      placeholders: { motivation: 'Injuries, dietary needs, anything at all…' },
-      termsText: 'I agree to the terms and the Privacy Policy',
-      newsletterText: 'Send me seasonal retreat dates',
-    },
-    sections: () => [
-      { caption: 'Choose Your Week', slots: [['Retreat week *', 'programme']] },
-      {
-        caption: 'Your Details',
-        grid: [['First name *', 'first_name'], ['Last name *', 'last_name'], ['Email *', 'email'],
-          ['Phone', 'phone'], ['Birth year', 'birth_year'], ['Country *', 'country']],
-      },
-      {
-        caption: 'Stay',
-        grid: [['Start month *', 'start_month'], ['Duration (months)', 'duration']],
-        slots: [['Room', 'accommodation']],
-      },
-      { caption: 'What You Would Like', slots: [['What you would like', 'interests']] },
-      { caption: 'Anything We Should Know', slots: [['Anything we should know', 'motivation']] },
-      { consent: [['Newsletter', 'newsletter'], ['Terms', 'terms']] },
-    ],
-  },
+  // rose-wellness-registration MOVED to tools/templates/build-exact-conversions.mjs on
+  // 2026-08-08. Measured against its mock it matched TWO elements: the mock
+  // (/forms/rose-registration) is a two-column EuroYouth 2026 registration with a photographic
+  // panel, member statistics and a team list, and this file had converted it into a single-card
+  // wellness retreat whose copy the mock never contained. A skin variant could not express it.
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1304,6 +1259,8 @@ export function writeTemplates(specs, { only = null, checkOnly = false } = {}) {
     if (only && spec.slug !== only) continue;
     const tpl = buildTemplate(spec);
     const errs = validate(tpl);
+    // A validator-only flag; it must never reach the shipped template.
+    delete tpl.__successNoInterpolation;
     const dest = join(OUT_DIR, `${spec.slug}.json`);
     const json = JSON.stringify(tpl, null, 2) + '\n';
     if (errs.length) {
@@ -1334,6 +1291,8 @@ if (isMain) {
     if (only && spec.slug !== only) continue;
     const tpl = buildTemplate(spec);
     const errs = validate(tpl);
+    // A validator-only flag; it must never reach the shipped template.
+    delete tpl.__successNoInterpolation;
     const dest = join(OUT_DIR, `${spec.slug}.json`);
     const json = JSON.stringify(tpl, null, 2) + '\n';
 

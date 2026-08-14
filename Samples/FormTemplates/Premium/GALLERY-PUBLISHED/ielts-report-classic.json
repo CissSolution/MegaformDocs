@@ -1,0 +1,316 @@
+{
+  "version": "1.0",
+  "slug": "ielts-report-classic",
+  "title": "IELTS Test Report Form",
+  "description": "An IELTS test report record: bordered document card with the IELTS lockup and an ACADEMIC badge, the printed admissions note, a centre/date/candidate strip, candidate detail fields, a five-column band row whose overall band is chosen from a select, and an administrator comment box beside a validation stamp ring. Transcribed from the ielts-report mock.",
+  "category": "education",
+  "categories": [
+    "education",
+    "premium",
+    "assessment"
+  ],
+  "icon": "file-text",
+  "submitButtonText": "Submit Report",
+  "successMessage": "Report submitted.",
+  "settings": {
+    "theme": "custom",
+    "multiPage": false,
+    "showProgressBar": false,
+    "customContent": {
+      "ielts": "IELTS",
+      "test_report_form": "Test Report Form",
+      "academic": "Academic",
+      "note": "NOTE",
+      "admission_to_undergraduate_and_postgraduate_courses": "Admission to undergraduate and postgraduate courses should be based on the ACADEMIC Reading and Writing Modules. GENERAL TRAINING Reading and Writing Modules are designed to test the range of language skills required for social and workplace purposes.",
+      "centre_number": "Centre Number",
+      "uk047": "UK047",
+      "date": "Date",
+      "candidate_number": "Candidate Number",
+      "candidate_details": "Candidate Details",
+      "family_name": "Family Name *",
+      "first_name_s": "First Name(s) *",
+      "candidate_id": "Candidate ID *",
+      "date_of_birth": "Date of Birth *",
+      "country_of_nationality": "Country of Nationality",
+      "first_language": "First Language",
+      "test_results": "Test Results",
+      "text_9_0": "9.0",
+      "listening": "Listening",
+      "text_8_5": "8.5",
+      "reading": "Reading",
+      "text_7_0": "7.0",
+      "writing": "Writing",
+      "speaking": "Speaking",
+      "overall_band": "Overall Band *",
+      "administrator_comments": "Administrator Comments",
+      "reserved_for_administrator_use_only": "Reserved for administrator use only",
+      "validation": "Validation",
+      "stamp": "Stamp",
+      "submit_report": "Submit Report"
+    },
+    "customScripts": {
+      "iel_meta": "(function(){\n  var root = (typeof __mfCurrentScriptRoot !== 'undefined' && __mfCurrentScriptRoot) || document;\n  var scope = (root && root.closest) ? (root.closest('.mfp') || document) : document;\n  function put(k, v){ var n = scope.querySelector('[data-iel=\"' + k + '\"]'); if (n) n.textContent = v; }\n  put('today', new Date().toLocaleDateString('en-GB'));\n  function cand(){\n    var i = scope.querySelector('[name=\"candidate_id\"]');\n    put('cand', (i && i.value) ? i.value : '\\u2014');\n  }\n  scope.addEventListener('input', cand, true);\n  scope.addEventListener('change', cand, true);\n  cand();\n})();"
+    },
+    "customHtml": "<div class='mfp mfp-iel mfp-native-generated' data-mf-flexgrid=\"locked\" style=\"background:transparent!important;border:0!important;border-radius:0!important;padding:0!important;box-shadow:none!important\"><div class='iel-page'><div class='iel-shell'><div class='iel-card'><div class='iel-head'><div class='iel-head-l'><div class='iel-brand'>{{content:ielts}}</div><div class='iel-sub'>{{content:test_report_form}}</div></div><span class='iel-badge'>{{content:academic}}</span></div><div class='iel-note'><span class='iel-note-k'>{{content:note}}</span> {{content:admission_to_undergraduate_and_postgraduate_courses}}</div><div class='iel-body'><div class='iel-meta'><div class='iel-meta-c'><div class='iel-meta-k'>{{content:centre_number}}</div><div class='iel-meta-v'>{{content:uk047}}</div></div><div class='iel-meta-c'><div class='iel-meta-k'>{{content:date}}</div><div class='iel-meta-v' data-iel='today'></div></div><div class='iel-meta-c'><div class='iel-meta-k'>{{content:candidate_number}}</div><div class='iel-meta-v' data-iel='cand'>&mdash;</div></div></div><h2 class='iel-h2'>{{content:candidate_details}}</h2><div class='iel-grid2'><label class='iel-field'><span class='iel-label'>{{content:family_name}}</span>{{field:family_name}}</label><label class='iel-field'><span class='iel-label'>{{content:first_name_s}}</span>{{field:first_name}}</label><label class='iel-field'><span class='iel-label'>{{content:candidate_id}}</span>{{field:candidate_id}}</label><label class='iel-field'><span class='iel-label'>{{content:date_of_birth}}</span>{{field:dob}}</label><label class='iel-field'><span class='iel-label'>{{content:country_of_nationality}}</span>{{field:country}}</label><label class='iel-field'><span class='iel-label'>{{content:first_language}}</span>{{field:first_language}}</label></div><h2 class='iel-h2 iel-h2-b'>{{content:test_results}}</h2><div class='iel-scores'><div class='iel-score'><div class='iel-score-v'>{{content:text_9_0}}</div><div class='iel-score-k'>{{content:listening}}</div></div><div class='iel-score'><div class='iel-score-v'>{{content:text_8_5}}</div><div class='iel-score-k'>{{content:reading}}</div></div><div class='iel-score'><div class='iel-score-v'>{{content:text_7_0}}</div><div class='iel-score-k'>{{content:writing}}</div></div><div class='iel-score'><div class='iel-score-v'>{{content:text_7_0}}</div><div class='iel-score-k'>{{content:speaking}}</div></div><div class='iel-score iel-score-band'><div class='iel-band-w'>{{field:overall_band}}</div><div class='iel-band-k'>{{content:overall_band}}</div></div></div><div class='iel-foot'><div class='iel-admin'><div class='iel-admin-k'>{{content:administrator_comments}}</div><div class='iel-admin-v'>{{content:reserved_for_administrator_use_only}}</div></div><div class='iel-stamp'><span class='iel-stamp-t'>{{content:validation}}<br>{{content:stamp}}</span></div></div><div class='iel-cta'><button class='iel-submit' type='submit'>{{content:submit_report}}<span class='iel-chk' aria-hidden='true'></span></button></div>{{script:iel_meta}}</div></div></div></div></div>",
+    "customCss": "@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');\n.mfp.mfp-iel.mfp-native-generated {--iel-primary:#111318;--iel-accent:#B3242A;--iel-surface:var(--mf-page-surface,var(--mf-preset-surface,#FFFFFF));--iel-text:var(--mf-page-text,var(--mf-preset-text,#111318));--iel-muted:var(--mf-page-muted,var(--mf-preset-muted,#6B7280));--iel-border:var(--mf-page-border,var(--mf-preset-border,#D6D9DE));--iel-on-primary:var(--mf-preset-on-primary,#FFFFFF);--iel-deco:#F4F5F7;--iel-page:#EEF0F3;--iel-fill:#EEF0F3;--iel-fill-strong:color-mix(in srgb, var(--iel-text) 9%, var(--iel-surface));--iel-soft:color-mix(in srgb, var(--iel-primary) 12%, var(--iel-surface));--iel-hairline:color-mix(in srgb, var(--iel-text) 12%, var(--iel-surface));}.mfp.mfp-iel.mfp-native-generated {background:transparent!important;border:0!important;padding:0!important;font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif}.mfp.mfp-iel.mfp-native-generated {--iel-primary:var(--mf-page-primary,var(--mf-preset-primary,#111318));--iel-accent:var(--mf-page-accent,var(--mf-preset-accent,#B3242A));--iel-surface:var(--mf-page-surface,var(--mf-preset-surface,#FFFFFF));--iel-text:var(--mf-page-text,var(--mf-preset-text,#111318));--iel-border:var(--mf-page-border,var(--mf-preset-border,#D6D9DE));--iel-on-primary:var(--mf-page-on-primary,var(--mf-preset-on-primary,#FFFFFF));--iel-page:var(--mf-preset-bg,#EEF0F3);}@container (max-width:520px){.mfp.mfp-iel.mfp-native-generated [class*=\"-grid\"],.mfp.mfp-iel.mfp-native-generated [class*=\"-meta\"],.mfp.mfp-iel.mfp-native-generated [class*=\"-scores\"],.mfp.mfp-iel.mfp-native-generated [class*=\"-charts\"],.mfp.mfp-iel.mfp-native-generated [class*=\"-cols\"]{grid-template-columns:1fr!important}.mfp.mfp-iel.mfp-native-generated [class*=\"-body\"],.mfp.mfp-iel.mfp-native-generated [class*=\"-split\"],.mfp.mfp-iel.mfp-native-generated [class*=\"-foot\"],.mfp.mfp-iel.mfp-native-generated [class*=\"-head\"],.mfp.mfp-iel.mfp-native-generated [class*=\"-row\"]{flex-wrap:wrap!important}.mfp.mfp-iel.mfp-native-generated [class*=\"-aside\"],.mfp.mfp-iel.mfp-native-generated [class*=\"-side\"]{flex:1 1 100%!important;width:100%!important;max-width:none!important}}.mfp.mfp-iel.mfp-native-generated  img{max-width:100%!important;height:auto}.mfp.mfp-iel.mfp-native-generated {overflow-wrap:break-word}\n\n/* The wrapper itself: strip the host's card, but NOT its width. Layout > Max width in the module\n   settings (480/640/768/960/Full) is a max-width on THIS element, and the previous version of this\n   rule overrode it with max-width:none!important - so picking 960 did nothing at all. */\n.mf-form-wrapper:has(.mfp-iel){background:transparent!important;border:0!important;\n  border-radius:0!important;box-shadow:none!important;padding:0!important}\n/* The boxes INSIDE it have their own measures, and those are what squeezed the design. */\n.mf-form-wrapper:has(.mfp-iel) > .mf-form-inner,\n.mf-form-wrapper:has(.mfp-iel) .mf-form,\n.mf-form-wrapper:has(.mfp-iel) .mf-fields-container{background:transparent!important;\n  border:0!important;border-radius:0!important;box-shadow:none!important;padding:0!important;\n  margin:0!important;max-width:none!important;width:100%!important}\n\n.mfp.mfp-iel.mfp-native-generated {container-type:inline-size;font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif!important;color:var(--iel-primary)}\n.mfp.mfp-iel.mfp-native-generated .iel-page{padding:40px 0;background:var(--iel-page)}\n.mfp.mfp-iel.mfp-native-generated .iel-shell{max-width:768px;margin:0 auto;padding:0 16px}\n.mfp.mfp-iel.mfp-native-generated .iel-back{font-size:16px;line-height:24px}\n.mfp.mfp-iel.mfp-native-generated .iel-back-link{display:inline-flex;align-items:center;gap:6px;margin-bottom:24px;font-size:12px;\n  line-height:16px;font-weight:500;color:#6B7280}\n.mfp.mfp-iel.mfp-native-generated .iel-back-ico{display:block;flex:0 0 14px;width:14px;height:14px;\n  background:url(\"data:image/svg+xml,%3Csvg xmlns='http:%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M19 12H5'%2F%3E%3Cpath d='m12 19-7-7 7-7'%2F%3E%3C%2Fsvg%3E\") center/14px 14px no-repeat}\n.mfp.mfp-iel.mfp-native-generated .iel-card{border:1px solid var(--iel-border);border-radius:8px;background:#fff;\n  box-shadow:0 1px 2px 0 rgba(0,0,0,.05)}\n\n/* header ----------------------------------------------------------------- */\n.mfp.mfp-iel.mfp-native-generated .iel-head{display:flex;align-items:flex-start;justify-content:space-between;\n  padding:24px 32px;border-bottom:1px solid var(--iel-border)}\n.mfp.mfp-iel.mfp-native-generated .iel-brand{font-size:30px;line-height:36px;font-weight:800;letter-spacing:-.025em;color:var(--iel-primary)}\n.mfp.mfp-iel.mfp-native-generated .iel-sub{margin-top:4px;font-size:14px;line-height:20px;font-weight:600;color:var(--iel-primary)}\n.mfp.mfp-iel.mfp-native-generated .iel-badge{display:inline-block;padding:6px 12px;border:1.5px solid var(--iel-primary);border-radius:6px;\n  font-size:12px;line-height:16px;font-weight:700;letter-spacing:.025em;text-transform:uppercase;\n  color:var(--iel-primary)}\n.mfp.mfp-iel.mfp-native-generated .iel-note{padding:12px 32px;background:#F4F5F7;font-size:11px;line-height:1.625;color:#6B7280}\n.mfp.mfp-iel.mfp-native-generated .iel-note-k{font-weight:700;color:var(--iel-primary)}\n\n/* body ------------------------------------------------------------------- */\n.mfp.mfp-iel.mfp-native-generated .iel-body{padding:24px 32px}\n.mfp.mfp-iel.mfp-native-generated .iel-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px;\n  padding-bottom:24px;border-bottom:1px solid var(--iel-border)}\n.mfp.mfp-iel.mfp-native-generated .iel-meta-c{padding:8px;border-radius:6px;background:#F4F5F7}\n.mfp.mfp-iel.mfp-native-generated .iel-meta-k{font-size:10px;line-height:1.5;font-weight:600;text-transform:uppercase;\n  color:#6B7280}\n.mfp.mfp-iel.mfp-native-generated .iel-meta-v{margin-top:4px;font-size:14px;line-height:20px;font-weight:500;color:var(--iel-primary)}\n.mfp.mfp-iel.mfp-native-generated h2.iel-h2{margin:0 0 16px!important;font-size:14px!important;line-height:20px!important;\n  font-weight:700!important;letter-spacing:.025em!important;text-transform:uppercase!important;\n  color:var(--iel-primary)!important}\n.mfp.mfp-iel.mfp-native-generated h2.iel-h2-b{margin-top:32px!important}\n.mfp.mfp-iel.mfp-native-generated .iel-grid2{display:grid;grid-template-columns:1fr;gap:16px}\n@container (min-width:640px){.mfp.mfp-iel.mfp-native-generated .iel-grid2{grid-template-columns:1fr 1fr}}\n.mfp.mfp-iel.mfp-native-generated .iel-field{display:block;margin:0}\n.mfp.mfp-iel.mfp-native-generated .iel-label{display:block;margin:0 0 4px;font-size:11px;line-height:1.5;font-weight:600;\n  letter-spacing:.025em;text-transform:uppercase;color:#6B7280}\n\n/* megaform sets font-family on label/input/select/textarea with !important, so an authored\n   <span> inside a <label> inherits the HOST typeface no matter what the shell root declares.\n   Element selectors are (0,3,1) here - above megaform, below every authored class rule - and\n   <i> is left alone so Font Awesome keeps its own family. */\n.mfp.mfp-iel.mfp-native-generated label,.mfp.mfp-iel.mfp-native-generated span,.mfp.mfp-iel.mfp-native-generated p,.mfp.mfp-iel.mfp-native-generated div,.mfp.mfp-iel.mfp-native-generated ul,.mfp.mfp-iel.mfp-native-generated li,.mfp.mfp-iel.mfp-native-generated h1,.mfp.mfp-iel.mfp-native-generated h2,.mfp.mfp-iel.mfp-native-generated h3,.mfp.mfp-iel.mfp-native-generated button{font-family:inherit!important}\n.mfp.mfp-iel.mfp-native-generated .mf-field-label{display:none!important}\n/* A wizard's page-break Section renders a visible heading the mock has no room for - it exists to\n   split the pages, not to be seen. */\n.mfp.mfp-iel.mfp-native-generated .mf-section-break,.mfp.mfp-iel.mfp-native-generated .mf-section-title{display:none!important}\n.mfp.mfp-iel.mfp-native-generated .mf-field-group{margin:0!important;width:100%}\n.mfp.mfp-iel.mfp-native-generated .mf-form-title,.mfp.mfp-iel.mfp-native-generated .mf-form-description,.mfp.mfp-iel.mfp-native-generated .mf-form-actions{display:none!important}\n.mfp.mfp-iel.mfp-native-generated .mf-option-item{margin:0!important}\n/* megaform gives every option chip a 36px floor and paints .mf-option-icon as a rounded tile. */\n.mfp.mfp-iel.mfp-native-generated .mf-option-group--chips .mf-option-check,\n.mfp.mfp-iel.mfp-native-generated .mf-option-group--cards .mf-option-check{display:none!important}\n.mfp.mfp-iel.mfp-native-generated .mf-option-group--chips .mf-option-ui{min-height:0!important;height:auto!important}\n.mfp.mfp-iel.mfp-native-generated .mf-option-group--cards .mf-option-copy{display:block;width:100%}\n\n\n.mfp.mfp-iel.mfp-native-generated .mf-input[class],.mfp.mfp-iel.mfp-native-generated .mf-select[class]{width:100%!important;box-sizing:border-box!important;\n  border:1px solid var(--iel-border)!important;border-radius:6px!important;background:var(--iel-surface)!important;\n  padding:8px 12px!important;min-height:0!important;height:auto!important;\n  color:rgb(8,12,15)!important;font-family:inherit!important;font-size:14px!important;\n  line-height:20px!important;font-weight:400!important;box-shadow:none!important}\n.mfp.mfp-iel.mfp-native-generated .mf-input[class]:focus,.mfp.mfp-iel.mfp-native-generated .mf-select[class]:focus{border-color:var(--iel-primary)!important;\n  box-shadow:none!important;outline:none!important}\n.mfp.mfp-iel.mfp-native-generated .mf-input[class]::placeholder,.mfp.mfp-iel.mfp-native-generated .mf-textarea[class]::placeholder{color:rgba(8,12,15,.5)!important;opacity:1}\n\n\n/* The selects carry their empty colour inline in the mock; the inputs do not, so this cannot come\n   out of boxedControls' single ph value. */\n.mfp.mfp-iel.mfp-native-generated .mf-select[class]:invalid,.mfp.mfp-iel.mfp-native-generated .mf-select[class]:has(option[value=\"\"]:checked){\n  color:#94A3B8!important}\n\n/* Date control: the mock's is native, ours is a button + popover. Same treatment as every other\n   exact conversion - ink text inset 4px, 10x12 black indicator 20px off the right border. */\n.mfp.mfp-iel.mfp-native-generated .iel-field .mf-cal.is-empty .mf-cal-value,.mfp.mfp-iel.mfp-native-generated .iel-field .mf-cal-value{\n  color:rgb(8,12,15)!important;padding-left:4px;padding-right:24px}\n.mfp.mfp-iel.mfp-native-generated .iel-field .mf-cal .mf-date-icon{position:absolute!important;right:20px!important;\n  width:10px!important;height:12px!important;flex:0 0 10px!important;color:#000!important}\n.mfp.mfp-iel.mfp-native-generated .iel-field .mf-cal .mf-date-icon svg{width:10px!important;height:12px!important;\n  stroke-width:2!important}\n\n/* band row --------------------------------------------------------------- */\n.mfp.mfp-iel.mfp-native-generated .iel-scores{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}\n.mfp.mfp-iel.mfp-native-generated .iel-score{padding:12px;border:1px solid var(--iel-border);border-radius:6px;text-align:center}\n.mfp.mfp-iel.mfp-native-generated .iel-score-v{font-size:18px;line-height:28px;font-weight:700;color:var(--iel-primary)}\n.mfp.mfp-iel.mfp-native-generated .iel-score-k{margin-top:2px;font-size:10px;line-height:1.5;font-weight:400;\n  letter-spacing:.025em;text-transform:uppercase;color:#6B7280}\n.mfp.mfp-iel.mfp-native-generated .iel-score-band{border:2px solid var(--iel-accent)}\n.mfp.mfp-iel.mfp-native-generated .iel-band-k{margin-top:2px;font-size:10px;line-height:1.5;font-weight:600;letter-spacing:.025em;\n  text-transform:uppercase;color:var(--iel-accent)}\n/* the overall-band select is bare in the mock: no border, no fill, centred 18px/28 bold */\n.mfp.mfp-iel.mfp-native-generated .iel-band-w .mf-select[class]{border:0!important;border-radius:0!important;\n  background:transparent!important;padding:0!important;text-align:center!important;\n  text-align-last:center!important;font-size:18px!important;line-height:28px!important;\n  font-weight:700!important;color:var(--iel-accent)!important}\n.mfp.mfp-iel.mfp-native-generated .iel-band-w .mf-select[class]:invalid,\n.mfp.mfp-iel.mfp-native-generated .iel-band-w .mf-select[class]:has(option[value=\"\"]:checked){color:#94A3B8!important}\n/* megaform paints its own chevron beside a select (.mf-select-chevron, absolutely positioned in\n   .mf-select-wrap) and reserves 42px of padding for it; the mock's band select has neither. */\n.mfp.mfp-iel.mfp-native-generated .iel-band-w .mf-select-chevron{display:none!important}\n.mfp.mfp-iel.mfp-native-generated .iel-band-w .mf-select-wrap .mf-select[class]{padding-right:0!important}\n\n/* footer ----------------------------------------------------------------- */\n.mfp.mfp-iel.mfp-native-generated .iel-foot{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;\n  margin-top:32px;padding-top:24px;border-top:1px solid var(--iel-border)}\n.mfp.mfp-iel.mfp-native-generated .iel-admin{flex:1 1 0;padding:12px;border:1px solid var(--iel-border);border-radius:6px;background:#F4F5F7}\n.mfp.mfp-iel.mfp-native-generated .iel-admin-k{font-size:10px;line-height:1.5;font-weight:600;text-transform:uppercase;\n  color:#6B7280}\n.mfp.mfp-iel.mfp-native-generated .iel-admin-v{margin-top:8px;height:56px;font-size:14px;line-height:20px;font-weight:400;\n  font-style:italic;color:#B0B4BC}\n.mfp.mfp-iel.mfp-native-generated .iel-stamp{display:flex;align-items:center;justify-content:center;flex:0 0 96px;width:96px;\n  height:96px;border:2px solid var(--iel-accent);border-radius:9999px;text-align:center}\n.mfp.mfp-iel.mfp-native-generated .iel-stamp-t{font-size:9px;line-height:1.25;font-weight:700;text-transform:uppercase;\n  color:var(--iel-accent)}\n\n/* CTA -------------------------------------------------------------------- */\n.mfp.mfp-iel.mfp-native-generated .iel-cta{display:flex;justify-content:flex-end;margin-top:32px}\n.mfp.mfp-iel.mfp-native-generated button.iel-submit[type=\"submit\"]{display:inline-flex;align-items:center;gap:6px;\n  width:auto!important;padding:10px 24px!important;border:0!important;border-radius:6px!important;\n  background:var(--iel-primary)!important;color:#fff!important;font-family:inherit!important;\n  font-size:14px!important;line-height:20px!important;font-weight:600!important;\n  letter-spacing:normal!important;text-transform:none!important;cursor:pointer!important;\n  box-shadow:none!important}\n.mfp.mfp-iel.mfp-native-generated button.iel-submit .iel-chk{display:block;flex:0 0 16px;width:16px;height:16px;\n  background:url(\"data:image/svg+xml,%3Csvg xmlns='http:%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'%2F%3E%3C%2Fsvg%3E\") center/16px 16px no-repeat}\n.mfp.mfp-iel.mfp-native-generated button.iel-submit.mf-nav-blocked,.mfp.mfp-iel.mfp-native-generated button.iel-submit[disabled]{opacity:.4!important;\n  background:var(--iel-primary)!important;cursor:not-allowed!important}\n.mfp.mfp-iel.mfp-native-generated .iel-page{padding:0!important;background:transparent!important;min-height:0!important}.mfp.mfp-iel.mfp-native-generated .iel-shell,.mfp.mfp-iel.mfp-native-generated .iel-wrap{max-width:none!important;margin:0!important}.mfp.mfp-iel.mfp-native-generated .iel-grid,.mfp.mfp-iel.mfp-native-generated .iel-main,.mfp.mfp-iel.mfp-native-generated .iel-hero-in,.mfp.mfp-iel.mfp-native-generated .iel-card{max-width:none!important;margin-left:0!important;margin-right:0!important}",
+    "themeSelector": false,
+    "premiumGeneratedShell": true,
+    "gateNavigationUntilValid": true,
+    "postSubmitExperience": {
+      "enabled": true,
+      "mode": "rich",
+      "title": "Report Submitted",
+      "message": "Candidate record for {{field:first_name}} {{field:family_name}} (ID {{field:candidate_id}}) has been saved.",
+      "showSubmissionId": true,
+      "submissionIdLabel": "Reference:",
+      "showAnswerSummary": false,
+      "allowFillAgain": true,
+      "fillAgainLabel": "Submit another",
+      "doneLabel": "Done"
+    },
+    "themeCompatibility": {
+      "policy": "hybrid",
+      "supportsPageColors": false,
+      "supportsPageTypography": true,
+      "supportsDarkHost": true,
+      "prefixes": [
+        "iel"
+      ],
+      "immutable": [
+        "primary",
+        "accent",
+        "deco"
+      ]
+    }
+  },
+  "fields": [
+    {
+      "placeholder": "NGUYEN",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "family_name",
+      "type": "Text",
+      "label": "Family Name *",
+      "required": true
+    },
+    {
+      "placeholder": "Thi Anh",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "first_name",
+      "type": "Text",
+      "label": "First Name(s) *",
+      "required": true
+    },
+    {
+      "placeholder": "000123456",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "candidate_id",
+      "type": "Text",
+      "label": "Candidate ID *",
+      "required": true
+    },
+    {
+      "placeholder": "mm/dd/yyyy",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "dob",
+      "type": "Date",
+      "label": "Date of Birth *",
+      "required": true
+    },
+    {
+      "placeholder": "Select country",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Vietnam",
+          "value": "Vietnam"
+        },
+        {
+          "label": "India",
+          "value": "India"
+        },
+        {
+          "label": "China",
+          "value": "China"
+        },
+        {
+          "label": "Brazil",
+          "value": "Brazil"
+        },
+        {
+          "label": "Nigeria",
+          "value": "Nigeria"
+        },
+        {
+          "label": "Philippines",
+          "value": "Philippines"
+        },
+        {
+          "label": "South Korea",
+          "value": "South Korea"
+        },
+        {
+          "label": "Other",
+          "value": "Other"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "dropdown"
+      },
+      "key": "country",
+      "type": "Select",
+      "label": "Country of Nationality",
+      "required": false,
+      "optionDisplay": "dropdown",
+      "choiceDisplay": "dropdown",
+      "optionVariant": "dropdown",
+      "widgetProps": {
+        "optionDisplay": "dropdown"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "Vietnamese",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "first_language",
+      "type": "Text",
+      "label": "First Language",
+      "required": false
+    },
+    {
+      "placeholder": "–",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "4.0",
+          "value": "4.0"
+        },
+        {
+          "label": "4.5",
+          "value": "4.5"
+        },
+        {
+          "label": "5.0",
+          "value": "5.0"
+        },
+        {
+          "label": "5.5",
+          "value": "5.5"
+        },
+        {
+          "label": "6.0",
+          "value": "6.0"
+        },
+        {
+          "label": "6.5",
+          "value": "6.5"
+        },
+        {
+          "label": "7.0",
+          "value": "7.0"
+        },
+        {
+          "label": "7.5",
+          "value": "7.5"
+        },
+        {
+          "label": "8.0",
+          "value": "8.0"
+        },
+        {
+          "label": "8.5",
+          "value": "8.5"
+        },
+        {
+          "label": "9.0",
+          "value": "9.0"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "dropdown"
+      },
+      "key": "overall_band",
+      "type": "Select",
+      "label": "Overall Band *",
+      "required": true,
+      "optionDisplay": "dropdown",
+      "choiceDisplay": "dropdown",
+      "optionVariant": "dropdown",
+      "widgetProps": {
+        "optionDisplay": "dropdown"
+      },
+      "allowOptionHtml": true
+    }
+  ],
+  "rules": [],
+  "workflow": {
+    "notifications": []
+  }
+}

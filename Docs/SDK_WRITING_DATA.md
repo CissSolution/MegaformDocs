@@ -43,14 +43,33 @@ var result = await MegaFormSdk.RunAsync(c => c.Submissions.SubmitAsync(
 
 ## 2. Tenancy: `MegaFormScope`
 
-Every write/read takes an optional `MegaFormScope { PortalId, UserId }`.
+Every write/read takes an optional `MegaFormScope`. When omitted, the SDK uses the host's ambient
+`IPlatformContext` (current request portal/user).
+
+| Property | Type | Purpose |
+|----------|------|---------|
+| `PortalId` | `int` | **Required** when no ambient context. The site/portal tenant guard. |
+| `UserId` | `int` | Acting user id (`0` = anonymous/system). |
+| `UserName` | `string?` | Used by workflow inbox matching. |
+| `DisplayName` | `string?` | Shown in audit/inbox UIs. |
+| `UserEmail` | `string?` | Used by workflow email notifications. |
+| `IsAuthenticated` | `bool?` | Defaults from `UserId` when unset. |
+| `IsAdmin` | `bool?` | Treat the actor as a site administrator. |
+| `IsSuperUser` | `bool?` | Treat the actor as a host/super user. |
+| `Roles` | `List<string>` | Role names used by workflow role-queue matching. |
+| `IpAddress` | `string?` | Client IP for audit-oriented operations. |
+
+Rules:
 
 - **DI host with a registered `IPlatformContext`:** scope is inferred from the ambient request — you can
-  pass `null`. (Oqtane does **not** register one yet, so pass an explicit scope.)
-- **No platform context:** pass `new MegaFormScope { PortalId = <portal>, UserId = <user or 0> }`.
+  pass `null`. (DNN does **not** register one, so pass an explicit scope.)
+- **No platform context:** pass `new MegaFormScope { PortalId = <portal> }` at minimum.
 - The portal id is a **tenant guard**: a form/submission whose `PortalId` differs from the scope's is
   treated as "not found" (no cross-tenant writes). `PortalId == 0` on either side disables the guard
   (single-tenant / test hosts).
+
+For inbox operations, populate `UserName`, `DisplayName`, and `Roles` so tasks can be matched to the
+actor by user or role queue.
 
 ---
 

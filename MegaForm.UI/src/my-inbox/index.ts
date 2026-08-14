@@ -13,6 +13,7 @@ import { loadLocale, detectLocale, setDir, resolveI18nBase } from '@i18n';
 import type { InboxView, InboxTab, ReplyMode, InboxSort, InboxDensity, InboxTaskStatus } from './types';
 import { adaptTask } from './types';
 import { buildEnrichedDetail, type EnrichedDetail } from './enrich';
+import { setSubmissionPrintBase, openSubmissionPrint } from './print-link';
 
 const BADGE = 'MyInbox3Pane v20260614-B160';
 
@@ -27,6 +28,7 @@ export function initMyInbox(root: HTMLElement): void {
 
   const config = readConfig(root);
   const api = createWorkflowInboxApi(config);
+  setSubmissionPrintBase(config.submissionsApiBase);
 
   let data: MyInboxResult | null = null;
   let tab: 'incoming' | 'inProgress' | 'completed' = 'incoming';
@@ -167,6 +169,11 @@ export function initMyInbox(root: HTMLElement): void {
           t.submittedByDisplayName = s.displayName || s.userName || '';
         }
       }
+      // [AssignedBadge fix 2026-07-13] The server already decided which open tasks
+      // are mine (inProgress bucket, matched by UserId OR UserName). Stamp that
+      // fact so the "Assigned to Me" view/badge doesn't re-guess from
+      // assignedUserId — ad-hoc Send-to-Inbox tasks carry a NULL id.
+      for (const t of data?.inProgress || []) t.assignedToMe = true;
       // If the active tab is empty but another has items, surface the busiest one.
       if (!tasksFor(tab).length) {
         const order: Array<'incoming' | 'inProgress' | 'completed'> = ['inProgress', 'incoming', 'completed'];
@@ -329,10 +336,14 @@ export function initMyInbox(root: HTMLElement): void {
     } catch { toast('error', T('inbox.open_failed', 'Could not open Submissions.')); }
   }
 
-  // [§4-2] Header more-menu actions. PDF reuses the CSV export; the rest are
-  // surfaced as clear "not yet available" notices (no backend hook yet).
+  // [§4-2] Header more-menu actions. PDF opens the per-submission print document
+  // ([SubmissionPrint v20260713]; CSV fallback where the endpoint doesn't exist);
+  // the rest are surfaced as clear "not yet available" notices (no backend hook yet).
   function moreAction(action: 'snooze' | 'tag' | 'pdf' | 'archive' | 'delete', _item: { source: WorkflowInboxTask }): void {
-    if (action === 'pdf') { exportCsv(); return; }
+    if (action === 'pdf') {
+      if (!openSubmissionPrint(_item.source.submissionId)) exportCsv();
+      return;
+    }
     const labels: Record<string, string> = {
       snooze: T('inbox.snooze', 'Snooze'),
       tag: T('inbox.add_tag', 'Add tag'),
@@ -430,50 +441,9 @@ function readConfig(root: HTMLElement): import('../workflow-inbox/types').Workfl
   };
 }
 
-// ── Derive helpers (mirrored from types.ts to avoid circular import) ─────────
-function derivePriority(dueAt?: string | null): 'urgent' | 'high' | 'normal' | 'low' {
-  if (!dueAt) return 'normal';
-  const diff = new Date(dueAt).getTime() - Date.now();
-  if (diff < 0) return 'urgent';
-  if (diff < 86400000 * 2) return 'high';
-  if (diff < 86400000 * 7) return 'normal';
-  return 'low';
-}
-
-function deriveStatus(task: WorkflowInboxTask): import('./types').InboxTaskStatus {
-  const now = Date.now();
-  const due = task.dueAt ? new Date(task.dueAt).getTime() : 0;
-  if (task.status === 3) return task.outcome?.toLowerCase().includes('reject') ? 'rejected' : 'approved';
-  if (due && due < now) return 'overdue';
-  if (task.outcome?.toLowerCase().includes('forward')) return 'forwarded';
-  return 'pending';
-}
-
-function deriveTags(formTitle: string, step: string): string[] {
-  const tags: string[] = [];
-  const ft = (formTitle || '').toLowerCase();
-  if (ft.includes('leave')) tags.push('leave');
-  if (ft.includes('purchase') || ft.includes('expense')) tags.push('finance');
-  if (ft.includes('contract')) tags.push('legal');
-  if (ft.includes('it') || ft.includes('support')) tags.push('it');
-  if (ft.includes('onboard')) tags.push('hr');
-  return tags;
-}
-
-function relativeDate(iso: string): string {
-  const d = new Date(iso);
-  const t = d.getTime();
-  if (Number.isNaN(t)) return '—';
-  const diff = Date.now() - t;
-  const mins = Math.round(diff / 60000);
-  if (mins < 1) return 'just now';
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.round(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  const days = Math.round(hrs / 24);
-  if (days < 30) return `${days}d ago`;
-  return d.toLocaleDateString();
-}
+// [Cleanup 2026-07-13] The "mirrored derive helpers" that used to sit here were
+// never called (adaptTask from ./types is the real path) and had already drifted
+// from the canonical versions — deleted rather than left to mislead.
 
 // ── Self-mount ───────────────────────────────────────────────────────────────
 if (typeof window !== 'undefined') {

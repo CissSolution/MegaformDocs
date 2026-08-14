@@ -1,0 +1,310 @@
+{
+  "version": "1.0",
+  "slug": "classic-australiana-booking",
+  "templateGuideSlug": "classic-australiana-booking",
+  "title": "Outback Station Stay Booking",
+  "category": "Travel",
+  "description": "A premium vintage-Australiana multi-step booking form styled after classic 1960s outback travel posters. Editable in MegaForm Builder. Features a tall photographic side panel on the LEFT whose RIGHT edge is wavy and transparent (SVG mask), letting the warm parchment form flow through the curves. Ochre, terracotta and olive accents over cream, with a display-serif heading.",
+  "theme": "system",
+  "fields": [
+    {
+      "key": "step_guest",
+      "type": "Section",
+      "label": "Guest Details",
+      "pageBreak": true,
+      "stepLabel": "Guest",
+      "stepSubtitle": "Step 1 of 4",
+      "heading": "Book your outback escape",
+      "intro": "Start with your details so we can prepare your welcome swag and station map."
+    },
+    {
+      "key": "full_name",
+      "type": "Text",
+      "label": "Full Name",
+      "placeholder": "Matilda Waltzing",
+      "required": true
+    },
+    {
+      "key": "email_address",
+      "type": "Email",
+      "label": "Email Address",
+      "placeholder": "matilda@billabong.com.au",
+      "required": true
+    },
+    {
+      "key": "phone_number",
+      "type": "Phone",
+      "label": "Phone Number",
+      "placeholder": "+61 4XX XXX XXX",
+      "required": false
+    },
+    {
+      "key": "home_town",
+      "type": "Text",
+      "label": "Town & State",
+      "placeholder": "Alice Springs, NT",
+      "required": false
+    },
+    {
+      "key": "step_stay",
+      "type": "Section",
+      "label": "Your Stay",
+      "pageBreak": true,
+      "stepLabel": "The Stay",
+      "stepSubtitle": "Step 2 of 4",
+      "heading": "When are you heading bush?",
+      "intro": "Pick your dates and the swag you'll be bunking down in out on the station."
+    },
+    {
+      "key": "arrival_date",
+      "type": "Date",
+      "label": "Arrival Date",
+      "required": true
+    },
+    {
+      "key": "nights",
+      "type": "Number",
+      "label": "Number of Nights",
+      "placeholder": "3",
+      "required": true
+    },
+    {
+      "key": "party_size",
+      "type": "Number",
+      "label": "Number of Guests",
+      "placeholder": "2",
+      "required": true
+    },
+    {
+      "key": "accommodation",
+      "type": "Select",
+      "label": "Accommodation",
+      "required": true,
+      "options": [
+        {
+          "label": "Homestead Room",
+          "value": "homestead"
+        },
+        {
+          "label": "Shearers' Quarters",
+          "value": "shearers"
+        },
+        {
+          "label": "Glamping Tent",
+          "value": "glamping"
+        },
+        {
+          "label": "Bush Swag (BYO)",
+          "value": "swag"
+        },
+        {
+          "label": "Powered Caravan Site",
+          "value": "caravan"
+        }
+      ]
+    },
+    {
+      "key": "dietary",
+      "type": "Textarea",
+      "label": "Dietary Requirements",
+      "placeholder": "Vegetarian, gluten-free, allergies…",
+      "required": false,
+      "rows": 3
+    },
+    {
+      "key": "step_experiences",
+      "type": "Section",
+      "label": "Experiences",
+      "pageBreak": true,
+      "stepLabel": "Do",
+      "stepSubtitle": "Step 3 of 4",
+      "heading": "Pick your adventures",
+      "intro": "Add the experiences you fancy. All stays include a sunset campfire and damper night."
+    },
+    {
+      "key": "tour_package",
+      "type": "Radio",
+      "label": "Tour Package",
+      "required": true,
+      "options": [
+        {
+          "label": "Day Tripper — station tour only",
+          "value": "day_tripper"
+        },
+        {
+          "label": "Explorer — tours + guided bushwalk",
+          "value": "explorer"
+        },
+        {
+          "label": "Full Muster — all-inclusive experience",
+          "value": "full_muster"
+        }
+      ]
+    },
+    {
+      "key": "activities",
+      "type": "MultiSelect",
+      "label": "Add-On Activities",
+      "required": false,
+      "options": [
+        {
+          "label": "Horseback Muster Ride",
+          "value": "muster_ride"
+        },
+        {
+          "label": "Stargazing & Astronomy",
+          "value": "stargazing"
+        },
+        {
+          "label": "Indigenous Culture Walk",
+          "value": "culture_walk"
+        },
+        {
+          "label": "Helicopter Scenic Flight",
+          "value": "heli_flight"
+        },
+        {
+          "label": "Billabong Fishing",
+          "value": "fishing"
+        }
+      ]
+    },
+    {
+      "key": "hat_size",
+      "type": "Select",
+      "label": "Complimentary Akubra Size",
+      "required": false,
+      "options": [
+        {
+          "label": "Small (55cm)",
+          "value": "s"
+        },
+        {
+          "label": "Medium (57cm)",
+          "value": "m"
+        },
+        {
+          "label": "Large (59cm)",
+          "value": "l"
+        },
+        {
+          "label": "X-Large (61cm)",
+          "value": "xl"
+        }
+      ]
+    },
+    {
+      "key": "step_confirm",
+      "type": "Section",
+      "label": "Confirm",
+      "pageBreak": true,
+      "stepLabel": "Confirm",
+      "stepSubtitle": "Step 4 of 4",
+      "heading": "One last yarn before you go",
+      "intro": "A few final details, then send it through and we'll get the billy on."
+    },
+    {
+      "key": "transport",
+      "type": "Select",
+      "label": "How are you getting here?",
+      "required": false,
+      "options": [
+        {
+          "label": "Own 4WD",
+          "value": "own_4wd"
+        },
+        {
+          "label": "Hire Car",
+          "value": "hire_car"
+        },
+        {
+          "label": "Coach Transfer",
+          "value": "coach"
+        },
+        {
+          "label": "Fly-in (nearest airstrip)",
+          "value": "fly_in"
+        }
+      ]
+    },
+    {
+      "key": "how_heard",
+      "type": "Select",
+      "label": "How did you hear about the station?",
+      "required": false,
+      "options": [
+        {
+          "label": "Returning Guest",
+          "value": "returning"
+        },
+        {
+          "label": "Travel Agent",
+          "value": "agent"
+        },
+        {
+          "label": "Social Media",
+          "value": "social"
+        },
+        {
+          "label": "Travel Magazine",
+          "value": "magazine"
+        },
+        {
+          "label": "Word of Mouth",
+          "value": "word_of_mouth"
+        }
+      ]
+    },
+    {
+      "key": "excitement",
+      "type": "Rating",
+      "label": "How keen are you?",
+      "hint": "1 = she'll be right, 5 = flat out like a lizard drinking",
+      "required": false,
+      "max": 5
+    },
+    {
+      "key": "special_requests",
+      "type": "Textarea",
+      "label": "Special Requests",
+      "placeholder": "Anniversary, mobility access, early check-in…",
+      "required": false,
+      "rows": 3
+    },
+    {
+      "key": "consent_terms",
+      "type": "Checkbox",
+      "label": "I have read and agree to the booking terms and cancellation policy.",
+      "required": true
+    },
+    {
+      "key": "consent_news",
+      "type": "Checkbox",
+      "label": "Send me seasonal offers and outback travel tips.",
+      "required": false
+    },
+    {
+      "key": "utm_source",
+      "type": "Hidden",
+      "label": "UTM Source",
+      "value": ""
+    },
+    {
+      "key": "utm_campaign",
+      "type": "Hidden",
+      "label": "UTM Campaign",
+      "value": ""
+    }
+  ],
+  "settings": {
+    "theme": "system",
+    "multiPage": true,
+    "showProgressBar": true,
+    "customContent": {},
+    "customScripts": {},
+    "customHtml": "<div class=\"mfp mfp-classic-australiana-booking mfp-native-generated\">\n\n  <!-- ===== LEFT IMAGE PANEL (wavy transparent right edge) ===== -->\n  <aside class=\"mfp-aside\" aria-hidden=\"true\">\n    <div class=\"mfp-aside-image\" role=\"img\" aria-label=\"Vintage Australian outback scene with red desert road leading to a rock formation at sunset\"></div>\n    <div class=\"mfp-aside-scrim\"></div>\n    <div class=\"mfp-aside-content\">\n      <span class=\"mfp-aside-eyebrow\">Est. 1962 &middot; Red Centre</span>\n      <h1 class=\"mfp-aside-title\">Outback Station Stay</h1>\n      <p class=\"mfp-aside-tagline\">Booking &amp; Reservation</p>\n    </div>\n  </aside>\n\n  <!-- ===== FORM BODY ===== -->\n  <div class=\"mfp-body\">\n\n    <!-- Stepper -->\n    <nav class=\"mfp-stepper\" aria-label=\"Form progress\">\n      <ol class=\"mfp-stepper-list\">\n        <li class=\"mfp-stepper-item\" data-step=\"0\" data-mf-native-step=\"0\">\n          <span class=\"mfp-step-badge\" aria-hidden=\"true\">1</span>\n          <span class=\"mfp-step-label\">Guest</span>\n        </li>\n        <li class=\"mfp-stepper-item\" data-step=\"1\" data-mf-native-step=\"1\">\n          <span class=\"mfp-step-badge\" aria-hidden=\"true\">2</span>\n          <span class=\"mfp-step-label\">The Stay</span>\n        </li>\n        <li class=\"mfp-stepper-item\" data-step=\"2\" data-mf-native-step=\"2\">\n          <span class=\"mfp-step-badge\" aria-hidden=\"true\">3</span>\n          <span class=\"mfp-step-label\">Do</span>\n        </li>\n        <li class=\"mfp-stepper-item\" data-step=\"3\" data-mf-native-step=\"3\">\n          <span class=\"mfp-step-badge\" aria-hidden=\"true\">4</span>\n          <span class=\"mfp-step-label\">Confirm</span>\n        </li>\n      </ol>\n    </nav>\n\n    <!-- ===== PAGE 1 ===== -->\n    <section class=\"mfp-page is-active\" data-step=\"0\" data-mf-native-page=\"0\">\n      <div class=\"mfp-page-head\">\n        <span class=\"mfp-page-kicker\">Step 1 of 4</span>\n        <h2 class=\"mfp-page-title\">Book your outback escape</h2>\n        <p class=\"mfp-page-intro\">Start with your details so we can prepare your welcome swag and station map.</p>\n      </div>\n      <div class=\"mfp-grid\">\n        <div class=\"mfp-col-12\">{{field:full_name}}</div>\n        <div class=\"mfp-col-12\">{{field:email_address}}</div>\n        <div class=\"mfp-col-6\">{{field:phone_number}}</div>\n        <div class=\"mfp-col-6\">{{field:home_town}}</div>\n      </div>\n    </section>\n\n    <!-- ===== PAGE 2 ===== -->\n    <section class=\"mfp-page\" data-step=\"1\" data-mf-native-page=\"1\">\n      <div class=\"mfp-page-head\">\n        <span class=\"mfp-page-kicker\">Step 2 of 4</span>\n        <h2 class=\"mfp-page-title\">When are you heading bush?</h2>\n        <p class=\"mfp-page-intro\">Pick your dates and the swag you&#x27;ll be bunking down in out on the station.</p>\n      </div>\n      <div class=\"mfp-grid\">\n        <div class=\"mfp-col-6\">{{field:arrival_date}}</div>\n        <div class=\"mfp-col-3\">{{field:nights}}</div>\n        <div class=\"mfp-col-3\">{{field:party_size}}</div>\n        <div class=\"mfp-col-12\">{{field:accommodation}}</div>\n        <div class=\"mfp-col-12\">{{field:dietary}}</div>\n      </div>\n    </section>\n\n    <!-- ===== PAGE 3 ===== -->\n    <section class=\"mfp-page\" data-step=\"2\" data-mf-native-page=\"2\">\n      <div class=\"mfp-page-head\">\n        <span class=\"mfp-page-kicker\">Step 3 of 4</span>\n        <h2 class=\"mfp-page-title\">Pick your adventures</h2>\n        <p class=\"mfp-page-intro\">Add the experiences you fancy. All stays include a sunset campfire and damper night.</p>\n      </div>\n      <div class=\"mfp-grid\">\n        <div class=\"mfp-col-12\">{{field:tour_package}}</div>\n        <div class=\"mfp-col-12\">{{field:activities}}</div>\n        <div class=\"mfp-col-6\">{{field:hat_size}}</div>\n      </div>\n    </section>\n\n    <!-- ===== PAGE 4 ===== -->\n    <section class=\"mfp-page\" data-step=\"3\" data-mf-native-page=\"3\">\n      <div class=\"mfp-page-head\">\n        <span class=\"mfp-page-kicker\">Step 4 of 4</span>\n        <h2 class=\"mfp-page-title\">One last yarn before you go</h2>\n        <p class=\"mfp-page-intro\">A few final details, then send it through and we&#x27;ll get the billy on.</p>\n      </div>\n      <div class=\"mfp-grid\">\n        <div class=\"mfp-col-6\">{{field:transport}}</div>\n        <div class=\"mfp-col-6\">{{field:how_heard}}</div>\n        <div class=\"mfp-col-12\">{{field:excitement}}</div>\n        <div class=\"mfp-col-12\">{{field:special_requests}}</div>\n        <div class=\"mfp-col-12\">{{field:consent_terms}}</div>\n        <div class=\"mfp-col-12\">{{field:consent_news}}</div>\n      </div>\n    </section>\n\n    <!-- Hidden tracking fields -->\n    <div class=\"mfp-hidden-fields\" hidden>\n      {{field:utm_source}}\n      {{field:utm_campaign}}\n    </div>\n\n    <!-- Navigation actions -->\n    <div class=\"mfp-actions\">\n      <button type=\"button\" class=\"mfp-btn mfp-btn-ghost\" data-action=\"prev\" data-mf-native-back>Back</button>\n      <div class=\"mfp-actions-spacer\"></div>\n      <button type=\"button\" class=\"mfp-btn mfp-btn-primary\" data-action=\"next\" data-mf-native-next>Continue</button>\n      <button type=\"submit\" class=\"mfp-btn mfp-btn-primary\" data-action=\"submit\" data-mf-native-submit>Send Booking</button>\n    </div>\n\n  </div>\n</div>",
+    "customCss": "/* ============================================================\n   MegaForm Premium Template — Outback Station Stay Booking\n   Scope: .mfp.mfp-classic-australiana-booking\n   Design profile: Vintage Australiana. Tall photographic side\n   panel on the LEFT whose RIGHT edge is WAVY and TRANSPARENT\n   (SVG mask), so the warm parchment body flows through the\n   curves. Ochre + terracotta + olive accents, display serif.\n   All colours use --mf-* variables; hard-coded values are\n   fallbacks only. No !important.\n   ============================================================ */\n\n/* ---------- Reset ---------- */\n.mfp.mfp-classic-australiana-booking *,\n.mfp.mfp-classic-australiana-booking *::before,\n.mfp.mfp-classic-australiana-booking *::after {\n  box-sizing: border-box;\n  margin: 0;\n  padding: 0;\n}\n\n/* ---------- Root wrapper (two-column flex) ---------- */\n.mfp.mfp-classic-australiana-booking {\n  --mf-accent: var(--mf-preset-primary, #c05827);\n  --mf-accent-ink: var(--mf-preset-primary, #8f3d17);\n  --mf-olive: var(--mf-preset-accent, #6b6b3a);\n  --mf-ochre: var(--mf-preset-accent, #d99a3f);\n  --mf-text: var(--mf-preset-text, #3f342a);\n  --mf-heading: var(--mf-preset-text, #2f2318);\n  --mf-label: var(--mf-preset-text, #5a4a38);\n  --mf-bg: var(--mf-preset-surface, #f6eee0);\n  --mf-surface: var(--mf-preset-surface, #efe3cd);\n  --mf-border: var(--mf-preset-border, #e4d6bd);\n  --mf-on-accent: var(--mf-preset-on-primary, #fff);\n  font-family: inherit;\n  color: var(--mf-text, #3f342a);\n  background: var(--mf-bg, #f6eee0);\n  border-radius: var(--mf-radius, 14px);\n  max-width: 900px;\n  width: 100%;\n  margin: 0 auto;\n  overflow: hidden;\n  display: flex;\n  align-items: stretch;\n  box-shadow: var(--mf-shadow, 0 20px 60px rgba(63,52,42,0.28));\n  border: 1px solid var(--mf-border, #e4d6bd);\n}\n\n/* ============================================================\n   LEFT IMAGE PANEL with wavy transparent RIGHT edge\n   ============================================================ */\n.mfp.mfp-classic-australiana-booking .mfp-aside {\n  position: relative;\n  flex: 0 0 40%;\n  min-height: 640px;\n  align-self: stretch;\n  /* The vertical wavy mask: image is visible to the LEFT of the\n     wave, fully transparent to the RIGHT, so the parchment body\n     shows through the curves. */\n  -webkit-mask-image: url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='360' height='640' viewBox='0 0 360 640' preserveAspectRatio='none'%3E%3Cpath fill='%23fff' d='M0,0 L300,0 C280,80 320,160 300,240 C280,320 320,400 300,480 C280,560 320,600 300,640 L0,640 Z'/%3E%3C/svg%3E\");\n  mask-image: url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='360' height='640' viewBox='0 0 360 640' preserveAspectRatio='none'%3E%3Cpath fill='%23fff' d='M0,0 L300,0 C280,80 320,160 300,240 C280,320 320,400 300,480 C280,560 320,600 300,640 L0,640 Z'/%3E%3C/svg%3E\");\n  -webkit-mask-size: 100% 100%;\n  mask-size: 100% 100%;\n  -webkit-mask-repeat: no-repeat;\n  mask-repeat: no-repeat;\n}\n.mfp.mfp-classic-australiana-booking .mfp-aside-image {\n  position: absolute;\n  inset: 0;\n  background-image: var(--mf-hero-image, url(\"/Modules/MegaForm/img/mock/outback-station-side.png\"));\n  background-size: cover;\n  background-position: center;\n  filter: saturate(1.05) contrast(1.02);\n}\n.mfp.mfp-classic-australiana-booking .mfp-aside-scrim {\n  position: absolute;\n  inset: 0;\n  background: linear-gradient(180deg, rgba(63,42,26,0.15) 0%, rgba(63,42,26,0.55) 100%);\n}\n.mfp.mfp-classic-australiana-booking .mfp-aside-content {\n  position: absolute;\n  left: 0;\n  bottom: 0;\n  padding: 32px 48px 40px 32px;\n  color: var(--mf-on-hero, #fdf6e8);\n  text-shadow: 0 2px 12px rgba(0,0,0,0.45);\n}\n.mfp.mfp-classic-australiana-booking .mfp-aside-eyebrow {\n  display: inline-block;\n  font-size: 11px;\n  letter-spacing: 0.22em;\n  text-transform: uppercase;\n  font-weight: 700;\n  color: var(--mf-ochre, #e6b968);\n  margin-bottom: 10px;\n}\n.mfp.mfp-classic-australiana-booking .mfp-aside-title {\n  font-family: var(--mf-heading-font, Georgia, 'Times New Roman', serif);\n  font-size: 34px;\n  line-height: 1.05;\n  font-weight: 800;\n  letter-spacing: -0.01em;\n}\n.mfp.mfp-classic-australiana-booking .mfp-aside-tagline {\n  font-size: 14px;\n  margin-top: 8px;\n  letter-spacing: 0.04em;\n  opacity: 0.92;\n}\n\n/* ============================================================\n   FORM BODY (right column)\n   ============================================================ */\n.mfp.mfp-classic-australiana-booking .mfp-body {\n  flex: 1 1 auto;\n  min-width: 0;\n  padding: 40px 40px 32px;\n  background:\n    radial-gradient(circle at 100% 0%, rgba(217,154,63,0.10), transparent 55%),\n    var(--mf-bg, #f6eee0);\n}\n\n/* ---------- Stepper ---------- */\n.mfp.mfp-classic-australiana-booking .mfp-stepper-list {\n  list-style: none;\n  display: flex;\n  gap: 8px;\n  margin-bottom: 28px;\n  flex-wrap: wrap;\n}\n.mfp.mfp-classic-australiana-booking .mfp-stepper-item {\n  display: flex;\n  align-items: center;\n  gap: 8px;\n  font-size: 12px;\n  font-weight: 700;\n  color: var(--mf-muted, #9c8a72);\n  padding: 6px 12px 6px 6px;\n  border-radius: 999px;\n  background: var(--mf-surface, #efe3cd);\n  border: 1px solid var(--mf-border, #e4d6bd);\n}\n.mfp.mfp-classic-australiana-booking .mfp-stepper-item.is-active {\n  color: var(--mf-accent-ink, #8f3d17);\n  border-color: var(--mf-accent, #c05827);\n  background: var(--mf-surface-active, #f6e3cf);\n}\n.mfp.mfp-classic-australiana-booking .mfp-stepper-item.is-complete {\n  color: var(--mf-olive, #6b6b3a);\n}\n.mfp.mfp-classic-australiana-booking .mfp-step-badge {\n  display: inline-flex;\n  align-items: center;\n  justify-content: center;\n  width: 22px;\n  height: 22px;\n  border-radius: 50%;\n  background: var(--mf-surface-2, #e0cfad);\n  color: var(--mf-text, #3f342a);\n  font-size: 11px;\n  font-weight: 800;\n}\n.mfp.mfp-classic-australiana-booking .mfp-stepper-item.is-active .mfp-step-badge {\n  background: var(--mf-accent, #c05827);\n  color: var(--mf-on-accent, #fff);\n}\n\n/* ---------- Page head ---------- */\n.mfp.mfp-classic-australiana-booking .mfp-page-head {\n  margin-bottom: 24px;\n}\n.mfp.mfp-classic-australiana-booking .mfp-page-kicker {\n  display: inline-block;\n  font-size: 11px;\n  letter-spacing: 0.18em;\n  text-transform: uppercase;\n  font-weight: 700;\n  color: var(--mf-accent, #c05827);\n  margin-bottom: 8px;\n}\n.mfp.mfp-classic-australiana-booking .mfp-page-title {\n  font-family: var(--mf-heading-font, Georgia, 'Times New Roman', serif);\n  font-size: 27px;\n  line-height: 1.15;\n  font-weight: 800;\n  color: var(--mf-heading, #2f2318);\n  letter-spacing: -0.01em;\n}\n.mfp.mfp-classic-australiana-booking .mfp-page-intro {\n  margin-top: 8px;\n  font-size: 14px;\n  line-height: 1.55;\n  color: var(--mf-muted, #8b7a62);\n}\n\n/* ---------- Grid ---------- */\n.mfp.mfp-classic-australiana-booking .mfp-grid {\n  display: grid;\n  grid-template-columns: repeat(12, 1fr);\n  gap: 18px;\n}\n.mfp.mfp-classic-australiana-booking .mfp-col-12 { grid-column: span 12; }\n.mfp.mfp-classic-australiana-booking .mfp-col-6 { grid-column: span 6; }\n.mfp.mfp-classic-australiana-booking .mfp-col-3 { grid-column: span 3; }\n\n/* ---------- Fields (Builder-rendered) ---------- */\n.mfp.mfp-classic-australiana-booking label {\n  display: block;\n  font-size: 13px;\n  font-weight: 700;\n  color: var(--mf-label, #5a4a38);\n  margin-bottom: 7px;\n  letter-spacing: 0.01em;\n}\n.mfp.mfp-classic-australiana-booking input[type=\"text\"],\n.mfp.mfp-classic-australiana-booking input[type=\"email\"],\n.mfp.mfp-classic-australiana-booking input[type=\"tel\"],\n.mfp.mfp-classic-australiana-booking input[type=\"number\"],\n.mfp.mfp-classic-australiana-booking input[type=\"date\"],\n.mfp.mfp-classic-australiana-booking select,\n.mfp.mfp-classic-australiana-booking textarea {\n  width: 100%;\n  font: inherit;\n  font-size: 14px;\n  color: var(--mf-text, #3f342a);\n  background: var(--mf-input-bg, #fffdf7);\n  border: 1.5px solid var(--mf-input-border, #d9c7a6);\n  border-radius: var(--mf-input-radius, 10px);\n  padding: 12px 14px;\n  transition: border-color 0.15s ease, box-shadow 0.15s ease;\n}\n.mfp.mfp-classic-australiana-booking textarea {\n  resize: vertical;\n  min-height: 84px;\n}\n.mfp.mfp-classic-australiana-booking input:focus,\n.mfp.mfp-classic-australiana-booking select:focus,\n.mfp.mfp-classic-australiana-booking textarea:focus {\n  outline: none;\n  border-color: var(--mf-accent, #c05827);\n  box-shadow: 0 0 0 3px var(--mf-focus-ring, rgba(192,88,39,0.18));\n}\n.mfp.mfp-classic-australiana-booking ::placeholder {\n  color: var(--mf-placeholder, #b6a487);\n}\n\n/* ---------- Choice fields ---------- */\n.mfp.mfp-classic-australiana-booking .mfp-choice,\n.mfp.mfp-classic-australiana-booking .mf-radio,\n.mfp.mfp-classic-australiana-booking .mf-checkbox {\n  display: flex;\n  align-items: flex-start;\n  gap: 10px;\n  padding: 12px 14px;\n  border: 1.5px solid var(--mf-input-border, #d9c7a6);\n  border-radius: 10px;\n  background: var(--mf-input-bg, #fffdf7);\n  margin-bottom: 10px;\n  cursor: pointer;\n  font-size: 14px;\n  transition: border-color 0.15s ease, background 0.15s ease;\n}\n.mfp.mfp-classic-australiana-booking .mfp-choice:hover {\n  border-color: var(--mf-accent, #c05827);\n  background: var(--mf-surface-active, #f7ecd8);\n}\n\n/* ---------- Actions ---------- */\n.mfp.mfp-classic-australiana-booking .mfp-actions {\n  display: flex;\n  align-items: center;\n  gap: 12px;\n  margin-top: 32px;\n  padding-top: 24px;\n  border-top: 1px solid var(--mf-border, #e4d6bd);\n}\n.mfp.mfp-classic-australiana-booking .mfp-actions-spacer { flex: 1 1 auto; }\n.mfp.mfp-classic-australiana-booking .mfp-btn {\n  font: inherit;\n  font-size: 14px;\n  font-weight: 700;\n  padding: 12px 26px;\n  border-radius: 999px;\n  border: 1.5px solid transparent;\n  cursor: pointer;\n  transition: transform 0.08s ease, box-shadow 0.15s ease, background 0.15s ease;\n}\n.mfp.mfp-classic-australiana-booking .mfp-btn-primary {\n  background: var(--mf-accent, #c05827);\n  color: var(--mf-on-accent, #fff);\n  box-shadow: 0 6px 18px rgba(192,88,39,0.32);\n}\n.mfp.mfp-classic-australiana-booking .mfp-btn-primary:hover {\n  background: var(--mf-accent-ink, #8f3d17);\n}\n.mfp.mfp-classic-australiana-booking .mfp-btn-primary:active { transform: translateY(1px); }\n.mfp.mfp-classic-australiana-booking .mfp-btn-ghost {\n  background: transparent;\n  color: var(--mf-muted, #8b7a62);\n  border-color: var(--mf-border, #d9c7a6);\n}\n.mfp.mfp-classic-australiana-booking .mfp-btn-ghost:hover {\n  color: var(--mf-text, #3f342a);\n  border-color: var(--mf-accent, #c05827);\n}\n\n/* ---------- Responsive: stack, wavy edge moves to bottom ---------- */\n@media (max-width: 720px) {\n  .mfp.mfp-classic-australiana-booking {\n    flex-direction: column;\n  }\n  .mfp.mfp-classic-australiana-booking .mfp-aside {\n    flex: 0 0 auto;\n    min-height: 220px;\n    -webkit-mask-image: url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='720' height='220' viewBox='0 0 720 220' preserveAspectRatio='none'%3E%3Cpath fill='%23fff' d='M0,0 H720 V170 C620,150 660,210 560,190 C460,170 500,215 400,195 C300,175 340,215 240,195 C140,175 180,210 80,190 C40,182 20,188 0,185 Z'/%3E%3C/svg%3E\");\n    mask-image: url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='720' height='220' viewBox='0 0 720 220' preserveAspectRatio='none'%3E%3Cpath fill='%23fff' d='M0,0 H720 V170 C620,150 660,210 560,190 C460,170 500,215 400,195 C300,175 340,215 240,195 C140,175 180,210 80,190 C40,182 20,188 0,185 Z'/%3E%3C/svg%3E\");\n  }\n  .mfp.mfp-classic-australiana-booking .mfp-body {\n    padding: 28px 22px 26px;\n  }\n  .mfp.mfp-classic-australiana-booking .mfp-col-6,\n  .mfp.mfp-classic-australiana-booking .mfp-col-3 { grid-column: span 12; }\n}\n/* MF-QA-PAGING-v2 outback */\n.mfp.mfp-classic-australiana-booking .mfp-page{display:none!important;}\n.mfp.mfp-classic-australiana-booking .mfp-page.is-active{display:block!important;}\n\n/* MF-FIX outback-card 20260705 */\n.mf-form-wrapper.mf-custom-shell-mode .mfp.mfp-classic-australiana-booking.mfp-native-generated:not(.zz){background:var(--mf-bg,#f6eee0)!important;border:1px solid var(--mf-border,#e4d6bd)!important;border-radius:var(--mf-radius,14px)!important;max-width:900px!important;box-shadow:var(--mf-shadow,0 20px 60px rgba(63,52,42,.28))!important;overflow:hidden!important}\n\n/* MF-FIX outback-polish 20260705 */\n.mf-form-wrapper .mfp.mfp-classic-australiana-booking .mfp-aside-content .mfp-aside-title{color:var(--mf-on-hero,#fdf6e8)!important}\n.mf-form-wrapper.mf-custom-shell-mode .mfp.mfp-classic-australiana-booking.mfp-native-generated:not(.zz){border-color:#e4d6bd!important}\n\n/* MF-FIX outback-inputs 20260706 — pixel-match mock :3101 form controls.\n   The template styles bare input[type=...] (spec 0,2,1) but the Builder renders\n   controls as .mf-input / .mf-option-item and the shell .mf-input rule wins\n   (white #fafafa / grey #e2e8f0 border / 8px / 36px / 15px). Re-assert the\n   Outback cream look on the real classes with !important. Literal values —\n   the shell pollutes --mf-input-bg(#fff) and --mf-input-border(shorthand). */\n.mf-form-wrapper .mfp.mfp-classic-australiana-booking .mf-input,\n.mf-form-wrapper .mfp.mfp-classic-australiana-booking input[type=\"text\"],\n.mf-form-wrapper .mfp.mfp-classic-australiana-booking input[type=\"email\"],\n.mf-form-wrapper .mfp.mfp-classic-australiana-booking input[type=\"tel\"],\n.mf-form-wrapper .mfp.mfp-classic-australiana-booking input[type=\"number\"],\n.mf-form-wrapper .mfp.mfp-classic-australiana-booking input[type=\"date\"],\n.mf-form-wrapper .mfp.mfp-classic-australiana-booking input[type=\"url\"],\n.mf-form-wrapper .mfp.mfp-classic-australiana-booking select,\n.mf-form-wrapper .mfp.mfp-classic-australiana-booking .mf-select,\n.mf-form-wrapper .mfp.mfp-classic-australiana-booking textarea,\n.mf-form-wrapper .mfp.mfp-classic-australiana-booking .mf-textarea {\n  background: #fffdf7 !important;\n  border: 1px solid #d9c7a6 !important;\n  border-radius: 10px !important;\n  min-height: 47px !important;\n  padding: 12px 14px !important;\n  font-size: 14px !important;\n  color: #3f342a !important;\n  box-sizing: border-box !important;\n  box-shadow: none !important;\n}\n.mf-form-wrapper .mfp.mfp-classic-australiana-booking textarea,\n.mf-form-wrapper .mfp.mfp-classic-australiana-booking .mf-textarea { min-height: 84px !important; height: auto !important; }\n.mf-form-wrapper .mfp.mfp-classic-australiana-booking .mf-input::placeholder,\n.mf-form-wrapper .mfp.mfp-classic-australiana-booking input::placeholder,\n.mf-form-wrapper .mfp.mfp-classic-australiana-booking textarea::placeholder { color: #b6a487 !important; opacity: 1 !important; }\n.mf-form-wrapper .mfp.mfp-classic-australiana-booking .mf-input:focus,\n.mf-form-wrapper .mfp.mfp-classic-australiana-booking input:focus,\n.mf-form-wrapper .mfp.mfp-classic-australiana-booking select:focus,\n.mf-form-wrapper .mfp.mfp-classic-australiana-booking textarea:focus {\n  border-color: #c05827 !important;\n  box-shadow: 0 0 0 3px rgba(192,88,39,0.18) !important;\n  outline: none !important;\n}\n/* Choice cards (radio/checkbox) render as .mf-option-item, not the template's\n   .mfp-choice — give them the same cream/tan card so steps 2/3 match. */\n.mf-form-wrapper .mfp.mfp-classic-australiana-booking .mf-option-item,\n.mf-form-wrapper .mfp.mfp-classic-australiana-booking label.mf-option-item {\n  background: #fffdf7 !important;\n  border: 1px solid #d9c7a6 !important;\n  border-radius: 10px !important;\n  padding: 12px 14px !important;\n}\n.mf-form-wrapper .mfp.mfp-classic-australiana-booking .mf-option-item:hover {\n  border-color: #c05827 !important;\n  background: #f7ecd8 !important;\n}\n.mf-form-wrapper .mfp.mfp-classic-australiana-booking .mf-option-item.is-selected,\n.mf-form-wrapper .mfp.mfp-classic-australiana-booking .mf-option-item:has(input:checked) {\n  border-color: #c05827 !important;\n  background: #f6e3cf !important;\n}\n/* Nav buttons: shell bumps font to 15px; mock is 14px. */\n.mf-form-wrapper .mfp.mfp-classic-australiana-booking .mfp-btn { font-size: 14px !important; }\n\n/* MF-FIX outback-inputvars 20260706 — drive CustomShellCompat input styling (it reads var(--mf-input-bg),\n   var(--mf-input-border-color), var(--mf-input-radius)) to the Outback cream/tan by\n   SETTING those vars on the wrapper. megaform.css B47 sets them to #fafafa/#e2e8f0/8px\n   on .mf-form-wrapper; .mfp.mfp-classic-australiana-booking is a nearer ancestor of the\n   inputs, so its values win by inheritance — no !important needed. */\n.mf-form-wrapper .mfp.mfp-classic-australiana-booking {\n  --mf-input-bg: #fffdf7;\n  --mf-input-border: 1px solid #d9c7a6;\n  --mf-input-border-color: #d9c7a6;\n  --mf-input-radius: 10px;\n  --mf-input-focus-color: #c05827;\n  --mf-input-focus-ring: 0 0 0 3px rgba(192,88,39,0.18);\n}\n",
+    "premiumNativePageBreak": true,
+    "premiumGeneratedShell": true
+  }
+}

@@ -139,6 +139,112 @@ namespace MegaForm.Umbraco.Controllers
             catch (Exception) { return StatusCode(500, new { error = "could not read columns — check the connection in Settings and the server log" }); }
         }
 
+        // ─────────────────────────────────────────────────────────────────
+        //  [SourcePicker v20260715 parity] CustomTableRows — read LIVE rows from
+        //  the SQL table a form mirrors via settings.databaseInsert (parity with the
+        //  DNN/Oqtane endpoint the submission dashboard's source picker calls). The
+        //  default submission grid reads MF_Submissions JSON; this returns the ACTUAL
+        //  table rows so the dashboard can switch source JSON⇄SQL.
+        //
+        //  GET /api/AiTools/CustomTableRows?formId=N&page=1&pageSize=50
+        //  → { tableName, schemaName, idColumn, columns:[{name,type}], rows:[[…]], total, page, pageSize }
+        //
+        //  Security: admin-only; the connectionKey is resolved through OpenAiConnection,
+        //  so a key the operator never allow-listed (MegaForm:ExternalTables:AllowedConnections)
+        //  can never be opened whatever the form stores. Identifiers are regex-validated
+        //  before splicing. Read-only + bounded (paged in-memory like PreviewSql so the
+        //  same code runs on SQLite/PG/MySQL/MSSQL — OFFSET/FETCH is MSSQL-only).
+        // ─────────────────────────────────────────────────────────────────
+        [HttpGet("CustomTableRows")]
+        public IActionResult CustomTableRows(int formId, int page = 1, int pageSize = 50)
+        {
+            if (!IsAdmin) return Forbid();
+            if (formId <= 0) return BadRequest(new { error = "formId required" });
+
+            var form = _formRepo.GetForm(formId);
+            if (form == null) return NotFound(new { error = "form not found" });
+
+            string insertSql = null;
+            string connectionKey = "DashboardDatabase";
+            try
+            {
+                if (!string.IsNullOrWhiteSpace(form.SettingsJson))
+                {
+                    var s = JObject.Parse(form.SettingsJson);
+                    var di = s["databaseInsert"] ?? s["DatabaseInsert"];
+                    if (di != null)
+                    {
+                        var enabled = (bool?)(di["enabled"] ?? di["Enabled"]) ?? false;
+                        if (!enabled) return NotFound(new { error = "form has no database INSERT enabled — JSON submissions only", hint = "Enable Settings → Database section" });
+                        insertSql = (string)(di["insertSql"] ?? di["InsertSql"]);
+                        connectionKey = (string)(di["connectionKey"] ?? di["ConnectionKey"]) ?? connectionKey;
+                    }
+                }
+            }
+            catch { return StatusCode(500, new { error = "form settings could not be read" }); }
+            if (string.IsNullOrWhiteSpace(insertSql))
+                return NotFound(new { error = "form is not bound to a custom DB table" });
+
+            var m = System.Text.RegularExpressions.Regex.Match(insertSql,
+                @"INSERT\s+INTO\s+\[?(\w+)\]?(?:\.\[?(\w+)\]?)?", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            if (!m.Success) return BadRequest(new { error = "could not parse table from insertSql" });
+            var schemaName = m.Groups[2].Success ? m.Groups[1].Value : "dbo";
+            var tableName = m.Groups[2].Success ? m.Groups[2].Value : m.Groups[1].Value;
+            if (!System.Text.RegularExpressions.Regex.IsMatch(schemaName, @"^\w+$") ||
+                !System.Text.RegularExpressions.Regex.IsMatch(tableName, @"^\w+$"))
+                return BadRequest(new { error = "invalid identifier" });
+
+            page = Math.Max(1, page);
+            pageSize = Math.Max(1, Math.Min(pageSize, 200));   // bounded-read
+
+            try
+            {
+                using var conn = OpenAiConnection(connectionKey);
+                int total = 0;
+                using (var c = conn.CreateCommand())
+                {
+                    c.CommandText = "SELECT COUNT(*) FROM [" + schemaName + "].[" + tableName + "]";
+                    c.CommandTimeout = 15;
+                    var o = c.ExecuteScalar();
+                    total = o == null || o == DBNull.Value ? 0 : Convert.ToInt32(o);
+                }
+                using var cmd = conn.CreateCommand();
+                cmd.CommandText = "SELECT * FROM [" + schemaName + "].[" + tableName + "] ORDER BY 1 DESC";
+                cmd.CommandTimeout = 30;
+                using var r = cmd.ExecuteReader();
+                var cols = new List<object>();
+                for (int i = 0; i < r.FieldCount; i++)
+                    cols.Add(new { name = r.GetName(i), type = r.GetDataTypeName(i) });
+                // Provider-agnostic paging: stream and keep only the requested page
+                // (stop reading right after it — the page is the bounded read).
+                var skip = (long)(page - 1) * pageSize;
+                var rows = new List<object[]>();
+                long seen = 0;
+                while (seen < skip + pageSize && r.Read())
+                {
+                    if (seen++ < skip) continue;
+                    var row = new object[r.FieldCount];
+                    for (int i = 0; i < r.FieldCount; i++)
+                        row[i] = r.IsDBNull(i) ? null : r.GetValue(i);
+                    rows.Add(row);
+                }
+                return Ok(new
+                {
+                    tableName,
+                    schemaName,
+                    idColumn = r.FieldCount > 0 ? r.GetName(0) : "Id",
+                    columns = cols,
+                    rows,
+                    total,
+                    page,
+                    pageSize,
+                    source = "custom-db-live",
+                });
+            }
+            catch (UnauthorizedAccessException) { return BadRequest(new { error = "connection not allowed" }); }
+            catch (Exception) { return StatusCode(500, new { error = "could not read the table — check the connection in Settings and the server log" }); }
+        }
+
         [HttpPost("PreviewSql")]
         public IActionResult PreviewSql([FromBody] System.Text.Json.JsonElement body)
         {

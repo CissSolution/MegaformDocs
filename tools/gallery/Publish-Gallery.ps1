@@ -42,7 +42,7 @@ $ErrorActionPreference = 'Stop'
 [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
 $repoRoot = Resolve-Path (Join-Path $PSScriptRoot '..\..')
 if ([string]::IsNullOrWhiteSpace($Src)) {
-    $Src = Join-Path $repoRoot 'Samples\FormTemplates\Premium\DONEE'
+    $Src = Join-Path $repoRoot 'Samples\FormTemplates\Premium\GALLERY-PUBLISHED'
 }
 
 function Fail([string]$m) { Write-Host "ABORT: $m" -ForegroundColor Red; exit 1 }

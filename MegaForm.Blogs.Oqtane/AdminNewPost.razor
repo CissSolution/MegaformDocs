@@ -353,6 +353,8 @@
                         ["status"] = chosenStatus
                     }, Scope);
             }
+
+            if (_createdId > 0) await EnsureUniquePostUidAsync(_createdId);
         }
         catch (Exception)
         {
@@ -361,6 +363,50 @@
         finally
         {
             _saving = false;
+        }
+    }
+
+    /// <summary>
+    /// Give the new post a post_uid nothing else is using.
+    ///
+    /// 🔴 WHY THIS EXISTS. post_uid is a UniqueId field, so the server is supposed to generate it —
+    /// but every post created through this screen comes back as <c>POST-01001</c>. Measured on
+    /// :5131: 28 posts, 24 distinct uids; the 24 seeded posts are all distinct and the 4 created
+    /// here all collide on one value.
+    ///
+    /// That is not cosmetic. post_uid is the join key the blog app is built on:
+    /// BlogAnalyticsRollupService groups reader-events by it and writes the totals back to every
+    /// post carrying that uid, so four posts sharing one uid would all display the SAME read count,
+    /// and comments keyed to a post would attach to all of them. Read tracking is meaningless
+    /// without this repair.
+    ///
+    /// The generator itself is a Core concern and Core is frozen pending the owner's review, so the
+    /// module repairs its own output instead. The "S" prefix is deliberate: the seeded values are
+    /// POST-01001..POST-01024, i.e. numeric, and a submission id of 1001 would otherwise collide
+    /// with a seeded post one day.
+    /// </summary>
+    private async Task EnsureUniquePostUidAsync(int submissionId)
+    {
+        try
+        {
+            var record = await Mega.Records.GetRecordAsync(submissionId, Scope);
+            if (record == null) return;
+
+            var current = BlogData.Text(record, "post_uid", "").Trim();
+            if (current.Length > 0 &&
+                !await BlogData.IsPostUidTakenByAnotherAsync(Mega, Scope, AppKey, current, submissionId))
+                return;
+
+            await Mega.Records.PatchRecordAsync(submissionId,
+                new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["post_uid"] = BlogData.DerivePostUid(submissionId)
+                }, Scope);
+        }
+        catch (Exception)
+        {
+            // A post that saved is worth more than a perfect uid; the edit screen reports the
+            // collision so it can still be repaired by hand.
         }
     }
 

@@ -7,6 +7,7 @@
    ============================================================ */
 import { fitThumbFrames } from '@shared/thumb-fit';
 import { buildRealFieldMarkup, MF_PREVIEW_BASE_CSS } from '@shared/token-field-markup';
+import { activateFirstPreviewPage } from '@shared/preview-active-page';
 
 (function () {
   'use strict';
@@ -1105,6 +1106,9 @@ import { buildRealFieldMarkup, MF_PREVIEW_BASE_CSS } from '@shared/token-field-m
     html = html.replace(/\{\{field:[^}]+\}\}/g, '<div class="mf-field-group tpl-token-field-missing"><label class="mf-field-label">Field</label><div class="mf-input">Field placeholder</div></div>');
     // Drop any remaining {{…}} token the static preview does not implement ({{script:*}} etc.).
     html = html.replace(/\{\{[a-zA-Z0-9_:.\-]+\}\}/g, '');
+    // [GalleryPreviewBlank 2026-07-27] No step engine runs here, so nothing would carry
+    // `.is-active` and the template's own CSS would hide every page — see @shared/preview-active-page.
+    html = activateFirstPreviewPage(html);
     return html;
   }
 

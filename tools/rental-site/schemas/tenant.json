@@ -1,0 +1,280 @@
+{
+  "version": "1.0",
+  "fields": [
+    {
+      "key": "tenant_code",
+      "type": "Text",
+      "label": "Tenant code (Mã khách thuê)",
+      "order": 1,
+      "required": true,
+      "pageIndex": 0,
+      "placeholder": "KT-0001",
+      "helpText": "Unique business key. The private-documents record points back here with this exact value.",
+      "validation": {
+        "minLength": 2,
+        "maxLength": 40,
+        "pattern": "^[A-Z0-9][A-Z0-9_.-]{1,39}$",
+        "patternMessage": "Upper-case letters, digits, - . _ (2-40 chars), e.g. KT-0001."
+      }
+    },
+    {
+      "key": "room_code",
+      "type": "Text",
+      "label": "Room code (Mã phòng)",
+      "order": 2,
+      "required": true,
+      "pageIndex": 0,
+      "placeholder": "TB01-0203",
+      "helpText": "FOREIGN KEY. Must repeat the parent room record's Room code exactly.",
+      "validation": {
+        "minLength": 2,
+        "maxLength": 40,
+        "pattern": "^[A-Z0-9][A-Z0-9_.-]{1,39}$",
+        "patternMessage": "Must match an existing room code, e.g. TB01-0203."
+      }
+    },
+    {
+      "key": "full_name",
+      "type": "Text",
+      "label": "Full name (Họ và tên)",
+      "order": 3,
+      "required": true,
+      "pageIndex": 0,
+      "helpText": "FICTIONAL demo data only. Do not enter a real person.",
+      "validation": {
+        "minLength": 2,
+        "maxLength": 150
+      }
+    },
+    {
+      "key": "phone",
+      "type": "Text",
+      "label": "Phone (Số điện thoại)",
+      "order": 4,
+      "required": false,
+      "pageIndex": 0,
+      "placeholder": "0900000001",
+      "helpText": "Demo dataset uses the deliberately unassigned 09000000xx range.",
+      "validation": {
+        "maxLength": 20,
+        "pattern": "^0[0-9]{9}$",
+        "patternMessage": "Ten digits starting with 0, e.g. 0900000001."
+      }
+    },
+    {
+      "key": "email",
+      "type": "Text",
+      "label": "Email (Thư điện tử)",
+      "order": 5,
+      "required": false,
+      "pageIndex": 0,
+      "placeholder": "khach01@example.invalid",
+      "helpText": "Demo dataset uses the reserved .invalid / example.com domains so nothing can be delivered to a real inbox.",
+      "validation": {
+        "maxLength": 150,
+        "pattern": "^[^@\\s]+@[^@\\s]+\\.[A-Za-z]{2,}$",
+        "patternMessage": "Enter a valid email address."
+      }
+    },
+    {
+      "key": "date_of_birth",
+      "type": "Date",
+      "label": "Date of birth (Ngày sinh)",
+      "order": 6,
+      "required": false,
+      "pageIndex": 0
+    },
+    {
+      "key": "lease_start",
+      "type": "Date",
+      "label": "Lease start (Ngày bắt đầu thuê)",
+      "order": 7,
+      "required": true,
+      "pageIndex": 0
+    },
+    {
+      "key": "lease_end",
+      "type": "Date",
+      "label": "Lease end (Ngày kết thúc thuê)",
+      "order": 8,
+      "required": false,
+      "pageIndex": 0
+    },
+    {
+      "key": "monthly_rent_agreed",
+      "type": "Number",
+      "label": "Monthly rent agreed, VND (Giá thuê đã thoả thuận, VNĐ/tháng)",
+      "order": 9,
+      "required": true,
+      "pageIndex": 0,
+      "validation": {
+        "min": 0,
+        "max": 500000000
+      }
+    },
+    {
+      "key": "deposit_paid",
+      "type": "Number",
+      "label": "Deposit paid, VND (Tiền cọc đã nhận, VNĐ)",
+      "order": 10,
+      "required": false,
+      "pageIndex": 0,
+      "validation": {
+        "min": 0,
+        "max": 500000000
+      }
+    },
+    {
+      "key": "occupant_count",
+      "type": "Number",
+      "label": "Number of occupants (Số người ở)",
+      "order": 11,
+      "required": false,
+      "pageIndex": 0,
+      "defaultValue": "1",
+      "validation": {
+        "min": 1,
+        "max": 20
+      }
+    },
+    {
+      "key": "opening_electricity_reading",
+      "type": "Number",
+      "label": "Opening electricity reading (Chỉ số điện lúc nhận phòng)",
+      "order": 12,
+      "required": false,
+      "pageIndex": 0,
+      "validation": {
+        "min": 0,
+        "max": 1000000
+      }
+    },
+    {
+      "key": "opening_water_reading",
+      "type": "Number",
+      "label": "Opening water reading (Chỉ số nước lúc nhận phòng)",
+      "order": 13,
+      "required": false,
+      "pageIndex": 0,
+      "validation": {
+        "min": 0,
+        "max": 1000000
+      }
+    },
+    {
+      "key": "rule_order_ack",
+      "type": "Select",
+      "label": "House order rules acknowledged (Đã nhận nội quy về trật tự)",
+      "order": 14,
+      "required": false,
+      "pageIndex": 0,
+      "options": [
+        {
+          "label": "Yes (Có)",
+          "value": "yes"
+        },
+        {
+          "label": "No (Không)",
+          "value": "no"
+        }
+      ],
+      "defaultValue": "no"
+    },
+    {
+      "key": "rule_fire_safety_ack",
+      "type": "Select",
+      "label": "Fire safety rules acknowledged (Đã nhận nội quy phòng cháy)",
+      "order": 15,
+      "required": false,
+      "pageIndex": 0,
+      "options": [
+        {
+          "label": "Yes (Có)",
+          "value": "yes"
+        },
+        {
+          "label": "No (Không)",
+          "value": "no"
+        }
+      ],
+      "defaultValue": "no"
+    },
+    {
+      "key": "rule_hygiene_ack",
+      "type": "Select",
+      "label": "Hygiene rules acknowledged (Đã nhận nội quy vệ sinh)",
+      "order": 16,
+      "required": false,
+      "pageIndex": 0,
+      "options": [
+        {
+          "label": "Yes (Có)",
+          "value": "yes"
+        },
+        {
+          "label": "No (Không)",
+          "value": "no"
+        }
+      ],
+      "defaultValue": "no"
+    },
+    {
+      "key": "note",
+      "type": "Textarea",
+      "label": "Note (Ghi chú)",
+      "order": 17,
+      "required": false,
+      "pageIndex": 0,
+      "rows": 4,
+      "validation": {
+        "maxLength": 2000
+      }
+    },
+    {
+      "key": "demo_marker",
+      "type": "Hidden",
+      "label": "Demo marker (Dấu dữ liệu demo)",
+      "order": 18,
+      "required": false,
+      "pageIndex": 0,
+      "defaultValue": "DEMO-RENTAL-2026",
+      "helpText": "Seed marker. All rows carrying DEMO-RENTAL-2026 are fictional demo data and can be bulk-deleted."
+    }
+  ],
+  "pages": null,
+  "settings": {
+    "multiPage": false,
+    "layoutMode": "flow",
+    "displayOnly": false,
+    "hideHeader": false,
+    "showProgressBar": false,
+    "showPageTitles": false,
+    "honeypotFieldName": "__mf_hp",
+    "rateLimitWindowMinutes": 1,
+    "rateLimitMaxPerWindow": 2000,
+    "enableAnalytics": false,
+    "labelPosition": "top",
+    "formWidth": "100%",
+    "submitButtonText": "Save tenant (Lưu khách thuê)",
+    "theme": "default",
+    "defaultLanguage": "en",
+    "supportedLanguages": [
+      "en",
+      "vi-VN"
+    ],
+    "postSubmitExperience": {
+      "enabled": true,
+      "mode": "rich",
+      "title": "Saved",
+      "message": "The record has been saved.",
+      "showSubmissionId": true,
+      "submissionIdLabel": "Record ID",
+      "showAnswerSummary": false,
+      "allowFillAgain": true,
+      "fillAgainLabel": "Add another record",
+      "reviewBeforeSubmit": false,
+      "buttons": []
+    }
+  },
+  "customScripts": {}
+}

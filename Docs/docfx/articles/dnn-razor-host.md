@@ -1,11 +1,7 @@
 # Consumer — DNN Razor Host
 
-DNN does not use Microsoft DI for module code, so the SDK is consumed in one of two ways:
-
-1. **Direct singleton** — `DnnServiceLocator.Instance.Mega` (an `IMegaFormClient`). This is the
-   idiomatic DNN pattern and the one the shipped demos use.
-2. **Ambient accessor** — `MegaFormSdk.RunAsync(...)`, wired at module startup. Use this if you
-   prefer the same call shape as other hosts.
+DNN does not use Microsoft DI for module code, so the SDK is consumed through the **ambient
+accessor** `MegaFormSdk.RunAsync(...)`, wired once when `DnnServiceLocator` is first touched.
 
 Both read MegaForm data through only `IMegaFormClient`. This page documents the two shipped Razor
 Host samples and the DNN download endpoint.
@@ -21,14 +17,18 @@ accessor so `MegaFormSdk.RunAsync` works without a real DI container:
 ```csharp
 // From MegaForm.DNN.Services.DnnServiceLocator
 var sdkClient = new MegaFormClient(
-    FormRepo, SubmissionRepo, null, null, null, SubmissionProcessor);
+    FormRepo, SubmissionRepo, null,
+    new DnnFileRepository(), new DnnDiskStorageService(),
+    SubmissionProcessor, WorkflowTasks, WorkflowRepo);
 
 MegaFormSdk.Initialize(new SingleClientServiceProvider(sdkClient));
 ```
 
 `SingleClientServiceProvider` is a tiny `IServiceProvider` that serves exactly one service
 (`IMegaFormClient`) plus a no-op scope factory, so `MegaFormSdk.RunAsync`'s
-`CreateScope()` / `GetRequiredService<IMegaFormClient>()` calls work.
+`CreateScope()` / `GetRequiredService<IMegaFormClient>()` calls work. Because the client is built
+with the 8-argument constructor, the Files, Dashboard, SubmissionDashboard, and Inbox APIs all work
+on DNN, not just Forms and Submissions.
 
 ## Razor Host helper pattern
 
@@ -161,8 +161,8 @@ public class SdkDemoController : DnnApiController
     public async Task<HttpResponseMessage> Download(int submissionId, int fileId)
     {
         var scope   = new MegaFormScope { PortalId = PortalSettings.PortalId };
-        var content = await DnnServiceLocator.Instance.Mega.Files
-            .OpenAsync(submissionId, fileId, scope);
+        var content = await MegaFormSdk.RunAsync(c =>
+            c.Files.OpenAsync(submissionId, fileId, scope));
         if (content is null) return Request.CreateResponse(HttpStatusCode.NotFound);
 
         var resp = new HttpResponseMessage(HttpStatusCode.OK)

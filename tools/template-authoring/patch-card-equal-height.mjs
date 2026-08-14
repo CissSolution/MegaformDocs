@@ -15,7 +15,7 @@ import { fileURLToPath } from 'node:url';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const repo = path.resolve(here, '..', '..');
-const srcDir = path.join(repo, 'Samples', 'FormTemplates', 'Premium', 'DONEE');
+const srcDir = path.join(repo, 'Samples', 'FormTemplates', 'Premium', 'GALLERY-PUBLISHED');
 const mirrorDirs = [path.join(repo, 'MegaForm.Oqtane.Server', 'wwwroot', 'Modules', 'MegaForm', 'Templates')];
 
 const MARKER = '[CardEqualHeight v20260801]';

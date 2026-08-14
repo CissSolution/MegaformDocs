@@ -16,9 +16,8 @@ import { compositeCellStyle } from '../renderer/helpers';
 // [FlagPreview 2026-07-28] Same flag chip the runtime picker draws — the canvas preview
 // showed the dial code "+1" where the published form shows a flag.
 import { previewFlagHtml } from '../renderer/country-picker';
-// [2026-06-27 #2 Steps-in-builder] Surface the custom-shell wizard's step structure
-// (which lives only in customHtml, invisible to the schema-driven canvas).
-import { fieldStepMap } from '@shared/custom-html-insert';
+// Surface the schema-owned page-break structure in the builder canvas.
+import { listSteps } from '@shared/form-steps';
 // MegaFormBuilder is a global defined by megaform-builder-core.js
 
 (function () {
@@ -30,6 +29,10 @@ import { fieldStepMap } from '@shared/custom-html-insert';
     let sortableInstance: any = null;
     let rowColSortables: any[] = [];
     let flexGridSortables: any[] = [];
+
+    function stepT(key: string, fallback: string, params?: Record<string, any>): string {
+        return (B as any).builderT ? (B as any).builderT(key, fallback, params) : fallback;
+    }
 
     function initModule(): void {
         (B as any)._builderLabelRulesBadge = LABEL_RULE_BADGE;
@@ -1787,21 +1790,16 @@ import { fieldStepMap } from '@shared/custom-html-insert';
         if (emptyState) emptyState.style.display = 'none';
         container.classList.remove('mf-canvas-fields-empty');
 
-        // [2026-06-27 #2 Steps-in-builder] For a custom-shell WIZARD form, step membership
-        // lives only in customHtml (the data-step panels) — invisible to this schema-driven
-        // canvas. Parse it (prefix-agnostic, works for au/bg/ey/fi) and drop a "Step N · Title"
-        // divider before the first field of each step, so the builder shows the wizard's pages.
-        const wizardStepMap = hasCustomHtml ? fieldStepMap(String(s.customHtml || s.CustomHtml || '')) : {};
-        const hasWizardSteps = Object.keys(wizardStepMap).length > 0;
-        let lastStepOrdinal = -1;
+        // Step membership is owned by schema Section page breaks. Show editable dividers only
+        // when there is more than one page; a one-page form has no step navigation.
+        const schemaSteps = listSteps(B.state.schema.fields);
+        const stepAtIndex = new Map<number, any>();
+        if (schemaSteps.length > 1) schemaSteps.forEach(step => stepAtIndex.set(step.startIndex, step));
 
         B.state.schema.fields.forEach((field: any, index: number) => {
-            if (hasWizardSteps) {
-                const step = wizardStepMap[String(field.key)];
-                if (step && step.ordinal !== lastStepOrdinal) {
-                    container.appendChild(makeStepDivider(step.ordinal, step.label));
-                    lastStepOrdinal = step.ordinal;
-                }
+            const step = stepAtIndex.get(index);
+            if (step) {
+                container.appendChild(makeStepDivider(step.ordinal, step.label, schemaSteps.length));
             }
             if (field.type === 'Row') {
                 container.appendChild(renderRowOnCanvas(field, index));
@@ -1847,23 +1845,80 @@ import { fieldStepMap } from '@shared/custom-html-insert';
         return { sources, targets };
     }
 
-    // [2026-06-27 #2] A read-only "Step N · Title" divider shown before each wizard step's
-    // fields. NOT a .mf-canvas-item, so it is ignored by SortableJS draggable selection and
+    // An editable "Step N · Title" divider shown before each wizard step's fields. It is not
+    // a .mf-canvas-item, so it is ignored by SortableJS draggable selection and
     // by the index math (syncCanvasIndexes / getCanvasInsertIndexFromDom count only
     // .mf-canvas-item) — it can't perturb reorder. Inline-styled (no CSS-build dependency).
-    function makeStepDivider(ordinal: number, label: string): HTMLElement {
+    function makeStepDivider(ordinal: number, label: string, totalSteps: number): HTMLElement {
         const d = document.createElement('div');
         d.className = 'mf-canvas-step-divider';
         d.setAttribute('data-step-ordinal', String(ordinal));
         d.setAttribute('contenteditable', 'false');
-        d.style.cssText = 'display:flex;align-items:center;gap:10px;margin:18px 2px 8px;user-select:none;pointer-events:none;';
-        const safe = B.escHtml ? B.escHtml(String(label || '')) : String(label || '').replace(/[<>&]/g, '');
+        d.style.cssText = 'display:flex;align-items:center;gap:10px;margin:18px 2px 8px;user-select:none;';
+        const escStep = (value: unknown): string => B.escHtml
+            ? B.escHtml(String(value || ''))
+            : String(value || '').replace(/[<>&"']/g, '');
+        const safe = escStep(label);
+        const stepName = stepT('steps.step_default', 'Step {n}', { n: ordinal });
+        const renameTitle = stepT('steps.rename', 'Rename step');
+        const removeTitle = totalSteps > 1
+            ? stepT('steps.remove', 'Remove step')
+            : stepT('steps.cannot_remove_last', 'A form must keep at least one step.');
         d.innerHTML =
             '<span style="display:inline-flex;align-items:center;gap:7px;padding:4px 12px;border-radius:999px;' +
             'background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;font-weight:700;font-size:11px;letter-spacing:.04em;white-space:nowrap;">' +
-            '<i class="fas fa-layer-group" style="font-size:10px;"></i> STEP ' + ordinal + '</span>' +
-            '<span style="font-weight:600;font-size:13px;color:#475569;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + safe + '</span>' +
-            '<span style="flex:1;height:1px;background:linear-gradient(90deg,#e2e8f0,transparent);"></span>';
+            '<i class="fas fa-layer-group" style="font-size:10px;"></i><span style="text-transform:uppercase;">' + escStep(stepName) + '</span></span>' +
+            '<button type="button" data-mf-step-label title="' + escStep(renameTitle) + '" aria-label="' + escStep(renameTitle) + '" ' +
+            'style="min-width:0;border:0;background:transparent;padding:3px 2px;font-weight:600;font-size:13px;color:#475569;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:text;text-align:left;">' + safe + '</button>' +
+            '<span style="flex:1;height:1px;background:linear-gradient(90deg,#e2e8f0,transparent);"></span>' +
+            '<span style="display:inline-flex;align-items:center;gap:4px;">' +
+            '<button type="button" data-mf-step-edit title="' + escStep(renameTitle) + '" aria-label="' + escStep(renameTitle) + '" style="width:28px;height:28px;border:1px solid #dbe4f0;border-radius:8px;background:#fff;color:#64748b;cursor:pointer;"><i class="fas fa-pen"></i></button>' +
+            '<button type="button" data-mf-step-remove title="' + escStep(removeTitle) + '" aria-label="' + escStep(removeTitle) + '"' +
+            (totalSteps <= 1 ? ' disabled' : '') +
+            ' style="width:28px;height:28px;border:1px solid #dbe4f0;border-radius:8px;background:#fff;color:#ef4444;cursor:' + (totalSteps <= 1 ? 'not-allowed' : 'pointer') + ';opacity:' + (totalSteps <= 1 ? '.4' : '1') + ';"><i class="fas fa-trash-can"></i></button></span>';
+
+        const labelButton = d.querySelector<HTMLElement>('[data-mf-step-label]');
+        const editButton = d.querySelector<HTMLElement>('[data-mf-step-edit]');
+        const removeButton = d.querySelector<HTMLButtonElement>('[data-mf-step-remove]');
+        const beginEdit = (event: Event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            if (d.querySelector('[data-mf-step-input]')) return;
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = String(label || '');
+            input.setAttribute('data-mf-step-input', '1');
+            input.setAttribute('aria-label', renameTitle);
+            input.style.cssText = 'min-width:120px;max-width:280px;height:30px;border:1px solid #818cf8;border-radius:7px;padding:4px 8px;font:600 13px/1.2 inherit;color:#334155;outline:none;';
+            if (labelButton) labelButton.style.display = 'none';
+            d.insertBefore(input, labelButton ? labelButton.nextSibling : d.children[1]);
+            let finished = false;
+            const finish = (commit: boolean) => {
+                if (finished) return;
+                finished = true;
+                const value = String(input.value || '').trim();
+                input.remove();
+                if (labelButton) labelButton.style.display = '';
+                if (commit && value && value !== label) {
+                    B.callModule('steps', 'rename', [ordinal, value]);
+                }
+            };
+            input.addEventListener('keydown', event => {
+                event.stopPropagation();
+                if (event.key === 'Enter') finish(true);
+                if (event.key === 'Escape') finish(false);
+            });
+            input.addEventListener('blur', () => window.setTimeout(() => finish(true), 0));
+            input.focus();
+            input.select();
+        };
+        labelButton?.addEventListener('click', beginEdit);
+        editButton?.addEventListener('click', beginEdit);
+        removeButton?.addEventListener('click', event => {
+            event.preventDefault();
+            event.stopPropagation();
+            if (!removeButton.disabled) B.callModule('steps', 'remove', [ordinal]);
+        });
         return d;
     }
 
@@ -2851,17 +2906,24 @@ import { fieldStepMap } from '@shared/custom-html-insert';
                     pull: true,
                     put(_to: any, _from: any, dragEl: HTMLElement) {
                         if (dragEl.classList.contains('mf-palette-item')) return true;
-                        if (dragEl.classList.contains('mf-canvas-row')) return false;
-                        if (isTopLevelCanvasDrag(dragEl)) return false;
-                        if (dragEl.classList.contains('mf-canvas-field')) return false;
-                        if (dragEl.classList.contains('mf-row-field')) return true;
+                        if (dragEl.classList.contains('mf-canvas-row')) return false; // never nest a Row inside a cell
+                        if (dragEl.classList.contains('mf-row-field')) return true;    // reorder/move between cells
+                        // [Lỗi1 2026-07-18] Allow dragging an EXISTING top-level field into a cell.
+                        // Reject only when that top-level item is itself a Row (no nested rows).
+                        if (isTopLevelCanvasDrag(dragEl)
+                            || dragEl.classList.contains('mf-canvas-item')
+                            || dragEl.classList.contains('mf-canvas-field')) {
+                            const idx = parseInt(dragEl.getAttribute('data-index') || '-1', 10);
+                            const f = idx >= 0 ? B.state.schema.fields[idx] : null;
+                            return !(f && f.type === 'Row');
+                        }
                         return false;
                     }
                 },
                 onMove(evt: any) {
                     const dragged = evt && evt.dragged ? evt.dragged as HTMLElement : null;
                     if (dragged && dragged.classList.contains('mf-canvas-row')) return false;
-                    if (isTopLevelCanvasDrag(dragged)) return false;
+                    // [Lỗi1 2026-07-18] top-level fields may now hover into a cell (Row items still blocked above).
                     if (dragged && dragged.classList.contains('mf-palette-item') && dragged.getAttribute('data-type') === 'Row') return false;
                     const related = evt && evt.related ? evt.related as HTMLElement : null;
                     if (related && related.classList.contains('mf-row-col-empty')) return 1;
@@ -2916,11 +2978,8 @@ import { fieldStepMap } from '@shared/custom-html-insert';
                             movedField = srcRow.columns[srcCI].fields.splice(srcFI, 1)[0];
                         }
                     } else if (el.classList.contains('mf-canvas-item') || el.classList.contains('mf-canvas-field')) {
-                        if (isTopLevelCanvasDrag(el)) {
-                            B.showToast('Sort fields on the main canvas; add new fields to rows from the palette.', 'info');
-                            render();
-                            return;
-                        }
+                        // [Lỗi1 2026-07-18] Moving an existing top-level field into a cell is now allowed
+                        // (previously blocked with an info toast). The Row guard below still prevents nesting rows.
                         const mainIdx = parseInt(el.getAttribute('data-index') || '-1', 10);
                         const mainField = B.state.schema.fields[mainIdx];
                         if (mainField?.type === 'Row') {

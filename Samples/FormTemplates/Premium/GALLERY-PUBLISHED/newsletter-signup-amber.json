@@ -1,0 +1,166 @@
+{
+  "version": "1.0",
+  "slug": "newsletter-signup-amber",
+  "title": "Newsletter Signup",
+  "description": "Amber newsletter card: a 448px column on a warm gradient wash, a white card with a yellow-to-orange mail tile, an email field, a business-type select and two frequency checkboxes side by side above a gradient Subscribe button. Transcribed from the newsletter mock.",
+  "category": "marketing",
+  "categories": [
+    "marketing",
+    "premium",
+    "newsletter"
+  ],
+  "icon": "mail",
+  "submitButtonText": "Subscribe",
+  "successMessage": "Thank you for joining our newsletter.",
+  "settings": {
+    "theme": "custom",
+    "multiPage": false,
+    "showProgressBar": false,
+    "customContent": {
+      "newsletter_signup": "Newsletter Signup",
+      "get_the_latest_updates_delivered_to_your_inbox": "Get the latest updates delivered to your inbox.",
+      "email_address": "Email Address *",
+      "business_type": "Business Type",
+      "frequency_preference": "Frequency Preference",
+      "subscribe": "Subscribe"
+    },
+    "customScripts": {},
+    "customHtml": "<div class='mfp mfp-nlt mfp-native-generated' data-mf-flexgrid=\"locked\" style=\"background:transparent!important;border:0!important;border-radius:0!important;padding:0!important;box-shadow:none!important\"><div class='nlt-page'><div class='nlt-shell'><div class='nlt-card'><div class='nlt-head'><div class='nlt-tile'><i class='fa fa-envelope-o'></i></div><div class='nlt-head-h'>{{content:newsletter_signup}}</div><div class='nlt-head-d'>{{content:get_the_latest_updates_delivered_to_your_inbox}}</div></div><div class='nlt-body'><label class='nlt-field'><span class='nlt-label'>{{content:email_address}}</span>{{field:email}}</label><label class='nlt-field'><span class='nlt-label'>{{content:business_type}}</span>{{field:business_type}}</label><label class='nlt-field nlt-freq'><span class='nlt-label'>{{content:frequency_preference}}</span>{{field:frequency}}</label><button class='nlt-submit' type='submit'>{{content:subscribe}}</button></div></div></div></div></div>",
+    "customCss": "@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700;800&display=swap');\n.mfp.mfp-nlt.mfp-native-generated {--nlt-primary:#EAB308;--nlt-accent:#F97316;--nlt-surface:var(--mf-page-surface,var(--mf-preset-surface,#FFFFFF));--nlt-text:var(--mf-page-text,var(--mf-preset-text,#080C0F));--nlt-muted:var(--mf-page-muted,var(--mf-preset-muted,#5E6468));--nlt-border:var(--mf-page-border,var(--mf-preset-border,#D2D8DD));--nlt-on-primary:var(--mf-preset-on-primary,#FCFCFC);--nlt-deco:#F97316;--nlt-page:#FFFBEB;--nlt-fill:#FFFBEB;--nlt-fill-strong:color-mix(in srgb, var(--nlt-text) 9%, var(--nlt-surface));--nlt-soft:color-mix(in srgb, var(--nlt-primary) 12%, var(--nlt-surface));--nlt-hairline:color-mix(in srgb, var(--nlt-text) 12%, var(--nlt-surface));}.mfp.mfp-nlt.mfp-native-generated {background:transparent!important;border:0!important;padding:0!important;font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif}.mfp.mfp-nlt.mfp-native-generated {--nlt-primary:var(--mf-page-primary,var(--mf-preset-primary,#EAB308));--nlt-accent:var(--mf-page-accent,var(--mf-preset-accent,#F97316));--nlt-surface:var(--mf-page-surface,var(--mf-preset-surface,#FFFFFF));--nlt-text:var(--mf-page-text,var(--mf-preset-text,#080C0F));--nlt-border:var(--mf-page-border,var(--mf-preset-border,#D2D8DD));--nlt-on-primary:var(--mf-page-on-primary,var(--mf-preset-on-primary,#FCFCFC));--nlt-page:var(--mf-preset-bg,#FFFBEB);}@container (max-width:520px){.mfp.mfp-nlt.mfp-native-generated [class*=\"-grid\"],.mfp.mfp-nlt.mfp-native-generated [class*=\"-meta\"],.mfp.mfp-nlt.mfp-native-generated [class*=\"-scores\"],.mfp.mfp-nlt.mfp-native-generated [class*=\"-charts\"],.mfp.mfp-nlt.mfp-native-generated [class*=\"-cols\"]{grid-template-columns:1fr!important}.mfp.mfp-nlt.mfp-native-generated [class*=\"-body\"],.mfp.mfp-nlt.mfp-native-generated [class*=\"-split\"],.mfp.mfp-nlt.mfp-native-generated [class*=\"-foot\"],.mfp.mfp-nlt.mfp-native-generated [class*=\"-head\"],.mfp.mfp-nlt.mfp-native-generated [class*=\"-row\"]{flex-wrap:wrap!important}.mfp.mfp-nlt.mfp-native-generated [class*=\"-aside\"],.mfp.mfp-nlt.mfp-native-generated [class*=\"-side\"]{flex:1 1 100%!important;width:100%!important;max-width:none!important}}.mfp.mfp-nlt.mfp-native-generated  img{max-width:100%!important;height:auto}.mfp.mfp-nlt.mfp-native-generated {overflow-wrap:break-word}\n\n/* The wrapper itself: strip the host's card, but NOT its width. Layout > Max width in the module\n   settings (480/640/768/960/Full) is a max-width on THIS element, and the previous version of this\n   rule overrode it with max-width:none!important - so picking 960 did nothing at all. */\n.mf-form-wrapper:has(.mfp-nlt){background:transparent!important;border:0!important;\n  border-radius:0!important;box-shadow:none!important;padding:0!important}\n/* The boxes INSIDE it have their own measures, and those are what squeezed the design. */\n.mf-form-wrapper:has(.mfp-nlt) > .mf-form-inner,\n.mf-form-wrapper:has(.mfp-nlt) .mf-form,\n.mf-form-wrapper:has(.mfp-nlt) .mf-fields-container{background:transparent!important;\n  border:0!important;border-radius:0!important;box-shadow:none!important;padding:0!important;\n  margin:0!important;max-width:none!important;width:100%!important}\n\n.mfp.mfp-nlt.mfp-native-generated {font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif!important;color:var(--nlt-text)}\n.mfp.mfp-nlt.mfp-native-generated .nlt-page{padding:64px 0;background:linear-gradient(to bottom right,var(--nlt-page) 0%,#FFF7ED 100%)}\n.mfp.mfp-nlt.mfp-native-generated .nlt-shell{max-width:448px;margin:0 auto;padding:0 16px}\n.mfp.mfp-nlt.mfp-native-generated .nlt-back{line-height:0}\n/* mb-6 sits on the LINK in the mock, not on a wrapper. */\n.mfp.mfp-nlt.mfp-native-generated .nlt-back-link{display:inline-flex;align-items:center;margin-bottom:24px;font-size:14px;\n  line-height:20px;font-weight:400;color:#5E6468}\n.mfp.mfp-nlt.mfp-native-generated .nlt-back-link i{margin-right:4px;font-size:14px;line-height:16px}\n.mfp.mfp-nlt.mfp-native-generated .nlt-card{display:flex;flex-direction:column;gap:24px;padding:24px 0;border:1px solid var(--nlt-border);\n  border-radius:12px;background:#fff;box-shadow:0 1px 2px 0 rgba(0,0,0,.05)}\n/* CardHeader is a grid with gap-2; the description carries no margin of its own. */\n.mfp.mfp-nlt.mfp-native-generated .nlt-head{display:grid;gap:8px;padding:0 24px;text-align:center}\n.mfp.mfp-nlt.mfp-native-generated .nlt-tile{display:flex;align-items:center;justify-content:center;width:48px;height:48px;\n  margin:0 auto 16px;border-radius:8px;color:#fff;font-size:24px;line-height:24px;\n  background:linear-gradient(to right,var(--nlt-primary) 0%,var(--nlt-accent) 100%)}\n.mfp.mfp-nlt.mfp-native-generated .nlt-head-h{font-size:24px;line-height:32px;font-weight:600;color:var(--nlt-text)}\n.mfp.mfp-nlt.mfp-native-generated .nlt-head-d{margin:0;font-size:14px;line-height:20px;font-weight:400;color:#5E6468}\n.mfp.mfp-nlt.mfp-native-generated .nlt-body{display:flex;flex-direction:column;gap:20px;padding:0 24px}\n.mfp.mfp-nlt.mfp-native-generated .nlt-field{display:block;margin:0}\n/* shadcn's Label is flex/items-center/gap-2 - the gap is measurable even with one child. */\n.mfp.mfp-nlt.mfp-native-generated .nlt-label{display:flex;align-items:center;gap:8px;margin:0 0 8px;font-size:14px;\n  line-height:14px;font-weight:500;color:var(--nlt-text)}\n.mfp.mfp-nlt.mfp-native-generated .nlt-freq .nlt-label{margin-bottom:12px}\n\n/* megaform sets font-family on label/input/select/textarea with !important, so an authored\n   <span> inside a <label> inherits the HOST typeface no matter what the shell root declares.\n   Element selectors are (0,3,1) here - above megaform, below every authored class rule - and\n   <i> is left alone so Font Awesome keeps its own family. */\n.mfp.mfp-nlt.mfp-native-generated label,.mfp.mfp-nlt.mfp-native-generated span,.mfp.mfp-nlt.mfp-native-generated p,.mfp.mfp-nlt.mfp-native-generated div,.mfp.mfp-nlt.mfp-native-generated ul,.mfp.mfp-nlt.mfp-native-generated li,.mfp.mfp-nlt.mfp-native-generated h1,.mfp.mfp-nlt.mfp-native-generated h2,.mfp.mfp-nlt.mfp-native-generated h3,.mfp.mfp-nlt.mfp-native-generated button{font-family:inherit!important}\n.mfp.mfp-nlt.mfp-native-generated .mf-field-label{display:none!important}\n/* A wizard's page-break Section renders a visible heading the mock has no room for - it exists to\n   split the pages, not to be seen. */\n.mfp.mfp-nlt.mfp-native-generated .mf-section-break,.mfp.mfp-nlt.mfp-native-generated .mf-section-title{display:none!important}\n.mfp.mfp-nlt.mfp-native-generated .mf-field-group{margin:0!important;width:100%}\n.mfp.mfp-nlt.mfp-native-generated .mf-form-title,.mfp.mfp-nlt.mfp-native-generated .mf-form-description,.mfp.mfp-nlt.mfp-native-generated .mf-form-actions{display:none!important}\n.mfp.mfp-nlt.mfp-native-generated .mf-option-item{margin:0!important}\n/* megaform gives every option chip a 36px floor and paints .mf-option-icon as a rounded tile. */\n.mfp.mfp-nlt.mfp-native-generated .mf-option-group--chips .mf-option-check,\n.mfp.mfp-nlt.mfp-native-generated .mf-option-group--cards .mf-option-check{display:none!important}\n.mfp.mfp-nlt.mfp-native-generated .mf-option-group--chips .mf-option-ui{min-height:0!important;height:auto!important}\n.mfp.mfp-nlt.mfp-native-generated .mf-option-group--cards .mf-option-copy{display:block;width:100%}\n\n.mfp.mfp-nlt.mfp-native-generated .mf-input[class]{width:100%!important;box-sizing:border-box!important;\n  border:1px solid var(--nlt-border)!important;border-radius:6px!important;background:transparent!important;\n  padding:4px 12px!important;min-height:0!important;height:36px!important;color:var(--nlt-text)!important;\n  font-family:inherit!important;font-size:14px!important;line-height:20px!important;\n  font-weight:400!important;box-shadow:0 1px 2px 0 rgba(0,0,0,.05)!important}\n.mfp.mfp-nlt.mfp-native-generated .mf-select[class]{width:100%!important;box-sizing:border-box!important;\n  border:1px solid var(--nlt-border)!important;border-radius:6px!important;\n  background:rgb(247,249,250)!important;padding:0 12px!important;min-height:0!important;\n  height:40px!important;color:var(--nlt-text)!important;font-family:inherit!important;\n  font-size:14px!important;line-height:20px!important;font-weight:400!important;\n  box-shadow:none!important;appearance:none!important;-webkit-appearance:none!important}\n.mfp.mfp-nlt.mfp-native-generated .mf-input[class]::placeholder{color:#5E6468!important;opacity:1}\n.mfp.mfp-nlt.mfp-native-generated .mf-input[class]:focus,.mfp.mfp-nlt.mfp-native-generated .mf-select[class]:focus{border-color:var(--nlt-border)!important;\n  box-shadow:none!important;outline:none!important}\n/* Two real checkboxes on ONE row, 16px apart - the mock has no chips here. */\n.mfp.mfp-nlt.mfp-native-generated .nlt-freq .mf-option-group{display:flex!important;flex-direction:row!important;gap:16px!important;\n  flex-wrap:nowrap!important}\n.mfp.mfp-nlt.mfp-native-generated .nlt-freq .mf-option-item{margin:0!important}\n.mfp.mfp-nlt.mfp-native-generated .nlt-freq .mf-option-ui{display:flex;align-items:center;gap:8px;padding:0;border:0;\n  background:transparent}\n.mfp.mfp-nlt.mfp-native-generated .nlt-freq .mf-option-label{display:flex;align-items:center;gap:8px;font-size:14px;\n  line-height:14px;font-weight:400;color:var(--nlt-text)}\n.mfp.mfp-nlt.mfp-native-generated .nlt-freq input[type=\"checkbox\"]{width:16px!important;height:16px!important;margin:0!important;\n  flex:0 0 16px!important;border:1px solid var(--nlt-border)!important;border-radius:4px!important}\n.mfp.mfp-nlt.mfp-native-generated button.nlt-submit[type=\"submit\"]{display:flex;align-items:center;justify-content:center;gap:8px;\n  width:100%!important;height:36px!important;padding:8px 16px!important;border:0!important;\n  border-radius:6px!important;\n  background:linear-gradient(to right,var(--nlt-primary) 0%,var(--nlt-accent) 100%)!important;color:var(--nlt-on-primary)!important;\n  font-family:inherit!important;font-size:14px!important;line-height:20px!important;\n  font-weight:500!important;letter-spacing:normal!important;text-transform:none!important;\n  cursor:pointer!important;box-shadow:none!important}\n/* The mock's button is never gated. */\n.mfp.mfp-nlt.mfp-native-generated button.nlt-submit.mf-nav-blocked,.mfp.mfp-nlt.mfp-native-generated button.nlt-submit[disabled]{opacity:1;\n  background:linear-gradient(to right,var(--nlt-primary) 0%,var(--nlt-accent) 100%)!important;filter:none!important}\n.mfp.mfp-nlt.mfp-native-generated .nlt-page{padding:0!important;background:transparent!important;min-height:0!important}.mfp.mfp-nlt.mfp-native-generated .nlt-shell,.mfp.mfp-nlt.mfp-native-generated .nlt-wrap{max-width:none!important;margin:0!important}.mfp.mfp-nlt.mfp-native-generated .nlt-grid,.mfp.mfp-nlt.mfp-native-generated .nlt-main,.mfp.mfp-nlt.mfp-native-generated .nlt-hero-in,.mfp.mfp-nlt.mfp-native-generated .nlt-card{max-width:none!important;margin-left:0!important;margin-right:0!important}",
+    "themeSelector": false,
+    "premiumGeneratedShell": true,
+    "gateNavigationUntilValid": true,
+    "postSubmitExperience": {
+      "enabled": true,
+      "mode": "rich",
+      "title": "You're Subscribed!",
+      "message": "Thank you for joining our newsletter.",
+      "showSubmissionId": true,
+      "submissionIdLabel": "Reference:",
+      "showAnswerSummary": false,
+      "allowFillAgain": true,
+      "fillAgainLabel": "Submit another",
+      "doneLabel": "Done"
+    },
+    "themeCompatibility": {
+      "policy": "hybrid",
+      "supportsPageColors": false,
+      "supportsPageTypography": true,
+      "supportsDarkHost": true,
+      "prefixes": [
+        "nlt"
+      ],
+      "immutable": [
+        "primary",
+        "accent",
+        "deco"
+      ]
+    }
+  },
+  "fields": [
+    {
+      "placeholder": "you@example.com",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "email",
+      "type": "Email",
+      "label": "Email Address *",
+      "required": true
+    },
+    {
+      "placeholder": "Select type",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Startup",
+          "value": "Startup"
+        },
+        {
+          "label": "Small / Medium Business",
+          "value": "Small / Medium Business"
+        },
+        {
+          "label": "Enterprise",
+          "value": "Enterprise"
+        },
+        {
+          "label": "Agency",
+          "value": "Agency"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "dropdown"
+      },
+      "key": "business_type",
+      "type": "Select",
+      "label": "Business Type",
+      "required": false,
+      "optionDisplay": "dropdown",
+      "choiceDisplay": "dropdown",
+      "optionVariant": "dropdown",
+      "widgetProps": {
+        "optionDisplay": "dropdown"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Weekly",
+          "value": "Weekly"
+        },
+        {
+          "label": "Monthly",
+          "value": "Monthly"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "list"
+      },
+      "key": "frequency",
+      "type": "Checkbox",
+      "label": "Frequency Preference",
+      "required": false,
+      "optionDisplay": "list",
+      "choiceDisplay": "list",
+      "optionVariant": "list",
+      "widgetProps": {
+        "optionDisplay": "list"
+      },
+      "allowOptionHtml": true
+    }
+  ],
+  "rules": [],
+  "workflow": {
+    "notifications": []
+  }
+}

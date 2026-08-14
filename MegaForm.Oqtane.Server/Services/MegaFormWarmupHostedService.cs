@@ -1,8 +1,10 @@
 using System;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Extensions.Hosting;
@@ -34,6 +36,7 @@ namespace MegaForm.Oqtane.Server.Services
         private readonly IServer _server;
         private readonly IHostApplicationLifetime _lifetime;
         private readonly ILogger<MegaFormWarmupHostedService> _logger;
+        private readonly IWebHostEnvironment _env;
 
         // Anonymous, read-only endpoints that exercise the public-form critical path.
         // A 404/403 still JIT-compiles the routing + MVC + EF-in-request-scope pipeline,
@@ -48,15 +51,64 @@ namespace MegaForm.Oqtane.Server.Services
         public MegaFormWarmupHostedService(
             IServer server,
             IHostApplicationLifetime lifetime,
-            ILogger<MegaFormWarmupHostedService> logger)
+            ILogger<MegaFormWarmupHostedService> logger,
+            IWebHostEnvironment env)
         {
             _server = server;
             _lifetime = lifetime;
             _logger = logger;
+            _env = env;
+        }
+
+        // ── [LocaleSwap 2026-08-13] retired locale packs ──────────────────────────────
+        // vi-VN and ru-RU left the shipped pack. A nupkg install EXTRACTS over the existing
+        // wwwroot and never deletes files the new version dropped, while i18n/list unions
+        // index.json with a DISK SCAN — so on every upgraded site the retired packs would
+        // keep appearing in the Language Manager and keep being served. Delete them once,
+        // here, where there is no request and therefore no unauthenticated caller: the file
+        // names are compile-time constants and nothing on this path reads user input.
+        private static readonly string[] RetiredLocales = { "vi-VN", "ru-RU" };
+        // Dropped next to the packs after the sweep. Its presence is what lets an admin
+        // re-create one of these locales in the Language Manager later without the next
+        // restart deleting their work.
+        private const string RetiredLocaleMarker = ".retired-locales-2026-08-13";
+
+        private void SweepRetiredLocales()
+        {
+            try
+            {
+                var root = _env?.WebRootPath;
+                if (string.IsNullOrEmpty(root)) return;
+                var moduleJs = Path.Combine(root, "Modules", "MegaForm", "js");
+                var removed = 0;
+                foreach (var sub in new[] { "builder", "bundles", "plugins", null })
+                {
+                    var dir = sub == null ? Path.Combine(moduleJs, "i18n") : Path.Combine(moduleJs, sub, "i18n");
+                    if (!Directory.Exists(dir)) continue;
+                    var marker = Path.Combine(dir, RetiredLocaleMarker);
+                    if (File.Exists(marker)) continue;          // already swept — hands off
+                    foreach (var code in RetiredLocales)
+                    {
+                        var stale = Path.Combine(dir, code + ".json");
+                        try { if (File.Exists(stale)) { File.Delete(stale); removed++; } } catch { }
+                    }
+                    try { File.WriteAllText(marker, "vi-VN and ru-RU were removed from the shipped locale set on 2026-08-13.\n"); } catch { }
+                }
+                if (removed > 0)
+                    _logger.LogInformation("[MegaForm i18n] removed {Count} retired locale pack file(s) (vi-VN, ru-RU)", removed);
+            }
+            catch (Exception ex)
+            {
+                // Read-only wwwroot or a locked file: the only cost is that the retired packs
+                // stay listed. Never let this stop the host.
+                _logger.LogInformation("[MegaForm i18n] retired-locale sweep skipped ({Reason})", ex.GetType().Name);
+            }
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
+            SweepRetiredLocales();
+
             if (string.Equals(Environment.GetEnvironmentVariable("MEGAFORM_DISABLE_WARMUP"), "1", StringComparison.Ordinal))
             {
                 _logger.LogInformation("[MegaForm Warmup] disabled via MEGAFORM_DISABLE_WARMUP=1");

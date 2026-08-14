@@ -1,3 +1,13 @@
+1.17.13
+
+- The article tree now opens scrolled to the article you are reading. The left column is a scroll
+  box holding every article in the channel and it opened at the top, so on a 38-article channel an
+  article in the newest branch sat ~1380px down a 960px box: the row, and its branch heading, were
+  420px below the fold. It reads as "this page is not in the left list", which is what it was
+  reported as. Measured on ?doc=int-sql-insert before and after; rows already in view are untouched
+  and the page's own scroll position is never moved (scrollTop arithmetic, not scrollIntoView -
+  scrollIntoView on a child of an overflow box also scrolls the window).
+
 1.17.12
 
 - FIX for 1.17.11, which rendered the blog and the article channel as an EMPTY PAGE. Guarding the

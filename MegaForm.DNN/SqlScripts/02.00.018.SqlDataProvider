@@ -1,0 +1,292 @@
+-- =====================================================================
+-- MegaForm 02.00.018 (v2) - consolidated install script
+--
+-- [SqlMerge 2026-08-14] This file is the byte-for-byte concatenation of the
+-- per-version scripts listed below, in the exact order MegaForm.dnn declared
+-- them. Nothing was rewritten. DNN runs every declared script whose version is
+-- newer than the installed one, so an upgrade re-runs this entire file and each
+-- section has to stay idempotent on its own. Both files were verified by running
+-- them twice against an empty database: zero errors on the second pass.
+-- Add new work as a NEW versioned script; do not append to this one.
+--
+-- Merged sections:
+--   02.00.09.SqlDataProvider
+--   02.00.012.SqlDataProvider
+--   02.00.015.SqlDataProvider
+--   02.00.018.SqlDataProvider
+-- =====================================================================
+GO
+
+
+-- ---------------------------------------------------------------------
+-- BEGIN 02.00.09.SqlDataProvider
+-- ---------------------------------------------------------------------
+-- MegaForm 02.00.09 - repair the App Builder schema on sites whose package
+-- version advanced past 01.06.42 before that idempotent migration was applied.
+-- Additive only: existing forms, typed values, submissions, and workflows remain unchanged.
+
+IF OBJECT_ID(N'dbo.MF_AppDefinitions', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.MF_AppDefinitions
+    (
+        AppId              INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_MF_AppDefinitions PRIMARY KEY,
+        PortalId           INT NOT NULL,
+        AppKey             NVARCHAR(80) NOT NULL,
+        AppName            NVARCHAR(200) NOT NULL,
+        Description        NVARCHAR(1000) NULL,
+        AppScope           NVARCHAR(80) NULL,
+        Icon               NVARCHAR(100) NULL,
+        AccentColor        NVARCHAR(32) NULL,
+        ManifestJson       NVARCHAR(MAX) NULL,
+        SettingsJson       NVARCHAR(MAX) NULL,
+        ResourcesJson      NVARCHAR(MAX) NULL,
+        IsEnabled          BIT NOT NULL CONSTRAINT DF_MF_AppDefinitions_IsEnabled DEFAULT(1),
+        SortOrder          INT NOT NULL CONSTRAINT DF_MF_AppDefinitions_SortOrder DEFAULT(0),
+        CreatedByUserId    INT NOT NULL CONSTRAINT DF_MF_AppDefinitions_CreatedBy DEFAULT(0),
+        CreatedOnUtc       DATETIME2(3) NOT NULL CONSTRAINT DF_MF_AppDefinitions_Created DEFAULT(SYSUTCDATETIME()),
+        ModifiedByUserId   INT NOT NULL CONSTRAINT DF_MF_AppDefinitions_ModifiedBy DEFAULT(0),
+        ModifiedOnUtc      DATETIME2(3) NULL,
+        CONSTRAINT UQ_MF_AppDefinitions_Portal_Key UNIQUE(PortalId, AppKey)
+    );
+END
+GO
+
+IF NOT EXISTS (
+    SELECT 1 FROM sys.indexes
+    WHERE object_id=OBJECT_ID(N'dbo.MF_AppDefinitions')
+      AND name=N'IX_MF_AppDefinitions_Portal_Scope'
+)
+    CREATE INDEX IX_MF_AppDefinitions_Portal_Scope
+        ON dbo.MF_AppDefinitions(PortalId, AppScope, IsEnabled, SortOrder);
+GO
+
+IF OBJECT_ID(N'dbo.MF_AppQueries', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.MF_AppQueries
+    (
+        QueryId            INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_MF_AppQueries PRIMARY KEY,
+        AppId              INT NOT NULL,
+        FormId             INT NOT NULL CONSTRAINT DF_MF_AppQueries_FormId DEFAULT(0),
+        QueryKey           NVARCHAR(80) NOT NULL,
+        QueryName          NVARCHAR(200) NOT NULL,
+        Description        NVARCHAR(1000) NULL,
+        QueryType          NVARCHAR(40) NULL,
+        DefinitionJson     NVARCHAR(MAX) NULL,
+        IsSystem           BIT NOT NULL CONSTRAINT DF_MF_AppQueries_IsSystem DEFAULT(0),
+        SortOrder          INT NOT NULL CONSTRAINT DF_MF_AppQueries_SortOrder DEFAULT(0),
+        CreatedByUserId    INT NOT NULL CONSTRAINT DF_MF_AppQueries_CreatedBy DEFAULT(0),
+        CreatedOnUtc       DATETIME2(3) NOT NULL CONSTRAINT DF_MF_AppQueries_Created DEFAULT(SYSUTCDATETIME()),
+        ModifiedByUserId   INT NOT NULL CONSTRAINT DF_MF_AppQueries_ModifiedBy DEFAULT(0),
+        ModifiedOnUtc      DATETIME2(3) NULL,
+        CONSTRAINT UQ_MF_AppQueries_App_Key UNIQUE(AppId, QueryKey),
+        CONSTRAINT FK_MF_AppQueries_App FOREIGN KEY(AppId)
+            REFERENCES dbo.MF_AppDefinitions(AppId) ON DELETE CASCADE
+    );
+END
+GO
+
+IF NOT EXISTS (
+    SELECT 1 FROM sys.indexes
+    WHERE object_id=OBJECT_ID(N'dbo.MF_AppQueries')
+      AND name=N'IX_MF_AppQueries_App_Form'
+)
+    CREATE INDEX IX_MF_AppQueries_App_Form
+        ON dbo.MF_AppQueries(AppId, FormId, SortOrder);
+GO
+
+GO
+-- END 02.00.09.SqlDataProvider
+
+-- ---------------------------------------------------------------------
+-- BEGIN 02.00.012.SqlDataProvider
+-- ---------------------------------------------------------------------
+-- MegaForm 02.00.012 - Workflow Timer Scheduler Registration
+-- [CloudReady A2 v20260806] Registers the DNN scheduled task that resumes due
+-- Delay waits and sends the one-shot overdue task reminder.
+--
+-- Numbered 02.00.012, not 01.06.43: the package is already at 02.00.011 on every
+-- installed site, and DNN only runs scripts whose version is HIGHER than the
+-- installed one. An 01.06.xx script would be skipped forever and the scheduled
+-- task would never be registered. Keep new scripts in the 02.00.xxx series.
+
+IF NOT EXISTS (SELECT 1 FROM Schedule WHERE TypeFullName = 'MegaForm.DNN.Services.WorkflowTimerScheduleItem, MegaForm.DNN')
+BEGIN
+    INSERT INTO Schedule (
+        TypeFullName,
+        TimeLapse,
+        TimeLapseMeasurement,
+        RetryTimeLapse,
+        RetryTimeLapseMeasurement,
+        RetainHistoryNum,
+        AttachToEvent,
+        CatchUpEnabled,
+        Enabled,
+        ObjectDependencies,
+        Servers,
+        FriendlyName
+    )
+    VALUES (
+        'MegaForm.DNN.Services.WorkflowTimerScheduleItem, MegaForm.DNN',
+        1,
+        'm',
+        2,
+        'm',
+        10,
+        '',
+        0,
+        1,
+        '',
+        NULL,
+        'MegaForm Workflow Timer'
+    );
+END
+GO
+
+PRINT 'MegaForm 02.00.012 - Workflow timer scheduler registered.';
+
+GO
+-- END 02.00.012.SqlDataProvider
+
+-- ---------------------------------------------------------------------
+-- BEGIN 02.00.015.SqlDataProvider
+-- ---------------------------------------------------------------------
+-- MegaForm 02.00.015 - sortable form list
+--
+-- The Persona Bar panel pages the list on the SERVER (20 rows at a time), so sorting the rows
+-- the browser happens to hold would only reorder one page of a hundred forms and call it sorted.
+-- The order has to come from the same query that does the paging, which means it has to come
+-- from here.
+--
+-- No dynamic SQL: @SortBy and @SortDir are parameters, and the ORDER BY is a fixed set of CASE
+-- terms. A value that is not on the list simply matches no term and the list falls back to the
+-- order it has always had (CreatedOnUtc DESC), which is also the tie-breaker.
+--
+-- Numbered 02.00.015 because the package is at 02.00.014 on installed sites and DNN only runs
+-- scripts whose version is higher than the installed one.
+
+IF OBJECT_ID('dbo.usp_MF_Form_List','P') IS NOT NULL DROP PROCEDURE dbo.usp_MF_Form_List;
+GO
+CREATE PROCEDURE dbo.usp_MF_Form_List
+    @PortalId INT,
+    @Status   NVARCHAR(20) = NULL,
+    @Search   NVARCHAR(200) = NULL,
+    @PageIndex INT = 0,
+    @PageSize  INT = 20,
+    @SortBy   NVARCHAR(20) = NULL,   -- title | submissions | modified | created (default)
+    @SortDir  NVARCHAR(4)  = NULL    -- asc | desc (default desc for dates, asc for text)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @Desc BIT = CASE WHEN @SortDir = 'desc' THEN 1 ELSE 0 END;
+
+    ;WITH q AS (
+        SELECT f.*,
+               (SELECT COUNT(*) FROM dbo.MF_Submissions s WHERE s.FormId = f.FormId AND s.IsSpam = 0) AS SubmissionCount
+        FROM dbo.MF_Forms f
+        WHERE f.PortalId = @PortalId
+          AND (@Status IS NULL OR f.[Status] = @Status)
+          AND (@Search IS NULL OR f.Title LIKE '%' + @Search + '%')
+    )
+    SELECT *
+    FROM q
+    ORDER BY
+        CASE WHEN @SortBy = 'title'       AND @Desc = 0 THEN q.Title END ASC,
+        CASE WHEN @SortBy = 'title'       AND @Desc = 1 THEN q.Title END DESC,
+        CASE WHEN @SortBy = 'status'      AND @Desc = 0 THEN q.[Status] END ASC,
+        CASE WHEN @SortBy = 'status'      AND @Desc = 1 THEN q.[Status] END DESC,
+        CASE WHEN @SortBy = 'submissions' AND @Desc = 0 THEN q.SubmissionCount END ASC,
+        CASE WHEN @SortBy = 'submissions' AND @Desc = 1 THEN q.SubmissionCount END DESC,
+        CASE WHEN @SortBy = 'modified'    AND @Desc = 0 THEN COALESCE(q.UpdatedOnUtc, q.CreatedOnUtc) END ASC,
+        CASE WHEN @SortBy = 'modified'    AND @Desc = 1 THEN COALESCE(q.UpdatedOnUtc, q.CreatedOnUtc) END DESC,
+        CASE WHEN @SortBy = 'created'     AND @Desc = 0 THEN q.CreatedOnUtc END ASC,
+        q.CreatedOnUtc DESC
+    OFFSET @PageIndex * @PageSize ROWS FETCH NEXT @PageSize ROWS ONLY;
+END
+GO
+
+GO
+-- END 02.00.015.SqlDataProvider
+
+-- ---------------------------------------------------------------------
+-- BEGIN 02.00.018.SqlDataProvider
+-- ---------------------------------------------------------------------
+-- MegaForm 02.00.018 - Automation AsyncWorker scheduler
+
+-- [OutboxInstall 2026-08-14] The ALTER statements below used to be the first thing this script
+-- did, but nothing in SqlScripts\ ever created the table: MF_AutomationOutbox is built at runtime
+-- by DnnAutomationExecutionQueue.EnsureSchema, which does not run until the first enqueue. On a
+-- fresh install the ALTERs therefore hit a table that does not exist and the install log carries
+-- "Msg 4902 - Cannot find the object dbo.MF_AutomationOutbox" (verified by running this script on
+-- an empty database). The scheduler row still landed, because it sits in the batch after GO, so
+-- the failure looked harmless while being real. Create the table here, matching EnsureSchema
+-- column for column - the two definitions must stay in step.
+IF OBJECT_ID('dbo.MF_AutomationOutbox','U') IS NULL
+CREATE TABLE [dbo].[MF_AutomationOutbox] (
+    [OutboxId] bigint IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    [FormId] int NOT NULL,
+    [SubmissionId] int NULL,
+    [Stage] nvarchar(30) NOT NULL,
+    [PayloadJson] nvarchar(max) NULL,
+    [Status] nvarchar(20) NOT NULL DEFAULT('pending'),
+    [Attempts] int NOT NULL DEFAULT(0),
+    [LastError] nvarchar(2000) NULL,
+    [QueuedOnUtc] datetime NOT NULL,
+    [NextRunUtc] datetime NULL,
+    [CompletedUtc] datetime NULL
+);
+GO
+
+IF COL_LENGTH('dbo.MF_AutomationOutbox','LockedOnUtc') IS NULL
+    ALTER TABLE [dbo].[MF_AutomationOutbox] ADD [LockedOnUtc] datetime NULL;
+IF COL_LENGTH('dbo.MF_AutomationOutbox','LockedBy') IS NULL
+    ALTER TABLE [dbo].[MF_AutomationOutbox] ADD [LockedBy] nvarchar(100) NULL;
+GO
+
+-- EnsureSchema creates this index too; without it here, a fresh install would leave the worker's
+-- dequeue scanning the table until the first runtime enqueue happened to add it.
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_MF_AutomationOutbox_Pending')
+    CREATE INDEX [IX_MF_AutomationOutbox_Pending]
+        ON [dbo].[MF_AutomationOutbox] ([Status], [NextRunUtc]);
+GO
+
+IF NOT EXISTS (
+    SELECT 1 FROM Schedule
+    WHERE TypeFullName = 'MegaForm.DNN.Services.AutomationWorkerScheduleItem, MegaForm.DNN'
+)
+BEGIN
+    INSERT INTO Schedule (
+        TypeFullName,
+        TimeLapse,
+        TimeLapseMeasurement,
+        RetryTimeLapse,
+        RetryTimeLapseMeasurement,
+        RetainHistoryNum,
+        AttachToEvent,
+        CatchUpEnabled,
+        Enabled,
+        ObjectDependencies,
+        Servers,
+        FriendlyName
+    )
+    VALUES (
+        'MegaForm.DNN.Services.AutomationWorkerScheduleItem, MegaForm.DNN',
+        1,
+        'm',
+        2,
+        'm',
+        10,
+        '',
+        0,
+        1,
+        '',
+        NULL,
+        'MegaForm Automation Worker'
+    );
+END
+GO
+
+PRINT 'MegaForm 02.00.018 - Automation worker scheduler registered.';
+
+GO
+-- END 02.00.018.SqlDataProvider

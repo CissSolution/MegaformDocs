@@ -23,8 +23,13 @@
 
 import S from './db-tables-strings.json';
 import { loadAllowedConnections } from './db-insert-picker';
+import { classifyTable, GROUP_ORDER, TableGroupKey } from './db-table-groups';
 
-const BADGE = 'BuilderDbTablesTab v20260722-01';
+const BADGE = 'BuilderDbTablesTab v20260813-01';
+
+/** How many rows a group renders before it asks to be paged. 74 tables in one run was the
+ *  complaint; a group never dumps more than this without the user asking for it. */
+const PAGE_SIZE = 25;
 
 interface DbTable { name: string; schema?: string; rowCount?: number; }
 interface DbColumn { name: string; dataType: string; nullable: boolean; isPrimary?: boolean; isIdentity?: boolean; maxLength: number; uiType: string; }
@@ -110,9 +115,32 @@ interface DbColumn { name: string; dataType: string; nullable: boolean; isPrimar
 #mf-db-tables-selected .mfsel-btn-clear[disabled]{opacity:.5;cursor:not-allowed}
 #mf-db-tables-body .mf-bdb-empty{padding:30px;text-align:center;color:#94a3b8;font-style:italic;font-size:12px}
 #mf-db-tables-body .mf-bdb-err{padding:14px;color:#b91c1c;background:#fee2e2;border:1px solid #fecaca;border-radius:8px;margin:10px 12px;font-size:12px;line-height:1.5}
+#mf-db-tables-body .mf-bdb-group{border-bottom:1px solid #e2e8f0}
+#mf-db-tables-body .mf-bdb-group-head{width:100%;display:flex;align-items:center;gap:8px;padding:9px 14px;background:#f8fafc;border:0;border-top:1px solid #eef2f7;cursor:pointer;font-family:inherit;font-size:12px;font-weight:700;color:#0f172a;text-align:left}
+#mf-db-tables-body .mf-bdb-group-head:hover{background:#f1f5f9}
+#mf-db-tables-body .mf-bdb-group-head:focus-visible{outline:2px solid #0ea5e9;outline-offset:-2px}
+#mf-db-tables-body .mf-bdb-group-caret{display:inline-block;width:10px;color:#94a3b8;transition:transform .15s}
+#mf-db-tables-body .mf-bdb-group.is-open>.mf-bdb-group-head .mf-bdb-group-caret{transform:rotate(90deg)}
+#mf-db-tables-body .mf-bdb-group-count{margin-left:auto;font-size:11px;font-weight:600;color:#475569;background:#e2e8f0;border-radius:999px;padding:1px 8px}
+#mf-db-tables-body .mf-bdb-group[data-group="mine"]>.mf-bdb-group-head{background:#ecfeff;color:#0e7490}
+#mf-db-tables-body .mf-bdb-group[data-group="mine"]>.mf-bdb-group-head:hover{background:#cffafe}
+#mf-db-tables-body .mf-bdb-group[data-group="mine"] .mf-bdb-group-count{background:#a5f3fc;color:#0e7490}
+#mf-db-tables-body .mf-bdb-group-body{display:none}
+#mf-db-tables-body .mf-bdb-group.is-open>.mf-bdb-group-body{display:block}
+#mf-db-tables-body .mf-bdb-group-empty{padding:12px 16px;font-size:11px;color:#64748b;font-style:italic;line-height:1.5}
+#mf-db-tables-body .mf-bdb-more{display:block;width:calc(100% - 24px);margin:6px 12px 10px;padding:6px 10px;border:1px dashed #cbd5e1;border-radius:7px;background:#fff;color:#475569;font-size:11px;font-weight:600;font-family:inherit;cursor:pointer}
+#mf-db-tables-body .mf-bdb-more:hover{border-color:#0ea5e9;color:#0369a1;background:#f0f9ff}
 #mf-db-tables-body .mf-bdb-table{border-bottom:1px solid #f1f5f9;font-size:13px}
-#mf-db-tables-body .mf-bdb-table-head{padding:10px 14px;display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;cursor:pointer}
+#mf-db-tables-body .mf-bdb-table-head{padding:5px 12px;display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;cursor:pointer;min-height:30px}
 #mf-db-tables-body .mf-bdb-table-head:hover{background:#f8fafc}
+/* The two action buttons on every row were the bulk of the noise. They stay in the layout (no
+   reflow on hover) but only paint when the row is hovered or holds focus. Devices without hover
+   — touch — keep them visible, see the @media below. */
+#mf-db-tables-body .mf-bdb-table-add-row{opacity:0;transition:opacity .12s}
+#mf-db-tables-body .mf-bdb-table-head:hover .mf-bdb-table-add-row,
+#mf-db-tables-body .mf-bdb-table-head:focus-within .mf-bdb-table-add-row,
+#mf-db-tables-body .mf-bdb-table.is-open .mf-bdb-table-add-row{opacity:1}
+@media (hover:none){#mf-db-tables-body .mf-bdb-table-add-row{opacity:1}}
 #mf-db-tables-body .mf-bdb-table-schema{font-size:10px;color:#94a3b8;background:#f1f5f9;padding:2px 6px;border-radius:4px;font-family:'Cascadia Code',Consolas,monospace}
 #mf-db-tables-body .mf-bdb-table-name{font-weight:600;color:#0f172a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:'Cascadia Code',Consolas,monospace;font-size:12px}
 #mf-db-tables-body .mf-bdb-table-add{padding:4px 10px;border-radius:6px;background:#0ea5e9;color:#fff;border:0;cursor:pointer;font-size:11px;font-weight:600;font-family:inherit}
@@ -186,6 +214,11 @@ interface DbColumn { name: string; dataType: string; nullable: boolean; isPrimar
   // convenience selector, not a trust boundary. Threaded into Subform/Tables + Subform/Columns
   // + the Capability probe; changing it MUST invalidate both caches (they are conn-agnostic).
   let selectedConnKey = 'DashboardDatabase';
+  // [DbPaneGrouping v20260813] Only the customer's own tables are open on arrival; the plumbing
+  // groups stay shut until asked for. Each group renders PAGE_SIZE rows at a time.
+  const groupOpen: Record<TableGroupKey, boolean> = { mine: true, megaform: false, platform: false };
+  const groupShown: Record<TableGroupKey, number> = { mine: PAGE_SIZE, megaform: PAGE_SIZE, platform: PAGE_SIZE };
+  function resetPaging() { groupShown.mine = PAGE_SIZE; groupShown.megaform = PAGE_SIZE; groupShown.platform = PAGE_SIZE; }
 
   // [v20260530-01] Persist the picked tables per form so the strip survives
   // reloads. Keyed by formId; loaded on mount, saved on every change.
@@ -309,7 +342,8 @@ interface DbColumn { name: string; dataType: string; nullable: boolean; isPrimar
     const search = host.querySelector('[data-search]') as HTMLInputElement;
     const toggle = host.querySelector('[data-show-system]') as HTMLInputElement;
     const connSel = host.querySelector('[data-conn]') as HTMLSelectElement | null;
-    search.addEventListener('input', () => renderList(host, search.value.trim().toLowerCase()));
+    // Paging is per-search: a new query starts back at the first page of every group.
+    search.addEventListener('input', () => { resetPaging(); renderList(host, search.value.trim().toLowerCase()); });
     toggle.addEventListener('change', () => {
       showSystem = toggle.checked;
       tablesCache = null; // force refetch
@@ -357,13 +391,69 @@ interface DbColumn { name: string; dataType: string; nullable: boolean; isPrimar
     }
   }
 
+  function groupLabel(k: TableGroupKey): string {
+    return k === 'mine' ? S.groupMine : (k === 'megaform' ? S.groupMegaForm : S.groupPlatform);
+  }
+
   function renderList(host: HTMLElement, filter: string) {
     const list = host.querySelector('[data-list]') as HTMLElement;
     if (!list) return;
     const tables = (tablesCache || []).filter(t => !filter || t.name.toLowerCase().includes(filter) || (t.schema || '').toLowerCase().includes(filter));
     if (!tables.length) { list.innerHTML = '<div class="mf-bdb-empty">' + S.noMatchPrefix + escapeHtml(filter) + S.noMatchSuffix + '</div>'; return; }
-    list.innerHTML = tables.map(t => renderTableRow(t)).join('');
+
+    // [DbPaneGrouping v20260813] Bucket first, then render. Everything the customer owns is in
+    // "mine"; MegaForm's and the site's own tables collapse below it.
+    const buckets: Record<TableGroupKey, DbTable[]> =
+      { mine: [] as DbTable[], megaform: [] as DbTable[], platform: [] as DbTable[] };
+    tables.forEach(t => { buckets[classifyTable(t.name)].push(t); });
+
+    // Typing in the filter is an explicit request to see the matches — open every group holding one.
+    const filtering = !!filter;
+
+    list.innerHTML = GROUP_ORDER.map((k) => {
+      const rows = buckets[k];
+      // "Your tables" renders even when empty, so an admin can tell the pane loaded and simply has
+      // nothing of theirs on this connection — rather than wondering whether it failed.
+      if (!rows.length && k !== 'mine') return '';
+      const open  = filtering ? rows.length > 0 : groupOpen[k];
+      const shown = Math.min(rows.length, groupShown[k]);
+      const rest  = rows.length - shown;
+      const more  = String(S.groupShowMore)
+        .replace('{n}', String(Math.min(rest, PAGE_SIZE)))
+        .replace('{total}', String(rest));
+      return '<div class="mf-bdb-group' + (open ? ' is-open' : '') + '" data-group="' + k + '">' +
+        '<button type="button" class="mf-bdb-group-head" data-group-toggle="' + k + '"' +
+          ' aria-expanded="' + (open ? 'true' : 'false') + '" title="' + escapeAttr(S.groupCollapseHint) + '">' +
+          '<span class="mf-bdb-group-caret" aria-hidden="true">▶</span>' +
+          '<span>' + escapeHtml(groupLabel(k)) + '</span>' +
+          '<span class="mf-bdb-group-count">' + rows.length + '</span>' +
+        '</button>' +
+        // A shut group renders no rows at all — 74 hidden rows carrying 148 hidden buttons is what
+        // the pane used to cost. Toggling re-renders, so nothing is lost by leaving them out.
+        '<div class="mf-bdb-group-body">' + (!open ? '' :
+          ((rows.length
+            ? rows.slice(0, shown).map(t => renderTableRow(t)).join('')
+            : '<div class="mf-bdb-group-empty">' + escapeHtml(S.groupMineEmpty) + '</div>') +
+          (rest > 0 ? '<button type="button" class="mf-bdb-more" data-group-more="' + k + '">' + escapeHtml(more) + '</button>' : ''))
+        ) + '</div>' +
+      '</div>';
+    }).join('');
+
     list.querySelectorAll('.mf-bdb-table').forEach((el) => wireTableRow(el as HTMLElement));
+    list.querySelectorAll('[data-group-toggle]').forEach((el) => {
+      el.addEventListener('click', () => {
+        const k = (el.getAttribute('data-group-toggle') || 'mine') as TableGroupKey;
+        groupOpen[k] = !groupOpen[k];
+        renderList(host, filter);
+      });
+    });
+    list.querySelectorAll('[data-group-more]').forEach((el) => {
+      el.addEventListener('click', () => {
+        const k = (el.getAttribute('data-group-more') || 'mine') as TableGroupKey;
+        groupShown[k] += PAGE_SIZE;
+        renderList(host, filter);
+      });
+    });
   }
 
   function renderTableRow(t: DbTable): string {

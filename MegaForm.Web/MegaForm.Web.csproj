@@ -8,12 +8,28 @@
     <Nullable>disable</Nullable>
     <IsPackable>true</IsPackable>
     <PackageId>MegaForm.Web</PackageId>
+    <Authors>MegaForm Team</Authors>
+    <Company>MegaForm</Company>
+    <Copyright>© 2026 MegaForm. All rights reserved.</Copyright>
+    <Description>ASP.NET Core web host implementation for MegaForm: REST API, admin UI shell, database layer, and public form rendering.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>icon.png</PackageIcon>
+    <PackageProjectUrl>https://megaform.github.io/MegaFormSolution</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/megaform/MegaFormSolution.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>megaform;forms;aspnetcore;mvc;workflow;admin;submissions</PackageTags>
+    <PackageReleaseNotes>MegaForm.Web 1.7.3: REST API surface, admin/dashboard UI shell, public form host, EF Core data layer, and schema migration runner.</PackageReleaseNotes>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <!-- Expose wwwroot as static web assets and serve them at the site root
          so consumers see /megaform/css/* instead of /_content/MegaForm.Web/* -->
     <StaticWebAssetBasePath>/</StaticWebAssetBasePath>
     <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
   </PropertyGroup>
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+    <None Include="icon.png" Pack="true" PackagePath="\" />
+  </ItemGroup>
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <ProjectReference Include="..\MegaForm.Core\MegaForm.Core.csproj" />

@@ -7,6 +7,7 @@ import { MegaFormBuilder } from './core';
 import { ensureFieldSettingsBadge, getActiveField, hasActiveFieldSelection } from './field-settings';
 import { openIconPalette, ensureIconPaletteStyles } from './icon-palette';
 import { wireDbInsertPicker } from './db-insert-picker';
+import { getPlatformHostConfig } from '../shared/platform-host';
 (function () {
     'use strict';
     var B = MegaFormBuilder;
@@ -2489,8 +2490,27 @@ import { wireDbInsertPicker } from './db-insert-picker';
             // generic long placeholder only when no table columns are loaded.
             var sampleData: Record<string, any> = ((window as any).MFDbInsertSampleData && (window as any).MFDbInsertSampleData()) || {};
             if (!Object.keys(sampleData).length) keys.forEach(function(k){ sampleData[k] = '__test_' + k; });
+            // The runner ALWAYS injects these eight audit tokens before binding
+            // (MegaForm.Core/Services/LifecycleRunner.cs:252-259), so SQL that uses them is correct
+            // — but the tester compared the statement against form fields only and reported them as
+            // "⚠ Unbound (no matching field)", i.e. a warning about the one thing the author had no
+            // need to wire. Stand in for the server here so the test says what a real submit does.
+            var _auditNow = new Date().toISOString().slice(0, 19).replace('T', ' ');
+            var _serverStamped: Record<string, any> = {
+                _createdBy: 0, _createdOn: _auditNow, _modifiedBy: 0, _modifiedOn: _auditNow,
+                _portalId: 0, _ipAddress: '', _formId: _resolveFormId(), _submissionId: 0
+            };
+            Object.keys(_serverStamped).forEach(function(k){
+                if (!(k in sampleData)) sampleData[k] = _serverStamped[k];
+            });
             try {
-                var platform = String(((window as any).__MF_PLATFORM__ || {}).platform || '').toLowerCase();
+                // 🔴 On the DNN builder page `window.__MF_PLATFORM__` is an EMPTY object (measured
+                // 2026-08-13 on dnn_megafresh.ai): reading it alone resolved '' , so this button
+                // posted to the OQTANE route and answered 404 on every DNN site — "Test
+                // (transaction rollback)" had never once run there, while the DNN endpoint itself
+                // works. getPlatformHostConfig() falls back to #mf-builder-root's
+                // data-platform="dnn", which IS populated.
+                var platform = String(getPlatformHostConfig().platform || '').toLowerCase();
                 var url = platform === 'dnn' ? '/DesktopModules/MegaForm/API/Submit/TestInsert' : '/api/MegaForm/Field/TestInsert';
                 var body = { connectionKey: c.connectionKey || '', databaseType: c.databaseType || '', insertSql: c.insertSql || '', parameterMapping: c.parameterMapping || {}, sampleData: sampleData };
                 var headers: Record<string,string> = { 'Content-Type': 'application/json' };
@@ -2547,7 +2567,9 @@ import { wireDbInsertPicker } from './db-insert-picker';
             if (!fieldKey) { resultEl.style.color = '#fca5a5'; resultEl.textContent = 'Select a field first (its "key" is required).'; return; }
             if (!formId)   { resultEl.style.color = '#fca5a5'; resultEl.textContent = 'Save form first (formId not set yet).'; return; }
             try {
-                var platform = String(((window as any).__MF_PLATFORM__ || {}).platform || '').toLowerCase();
+                // Same empty-__MF_PLATFORM__ trap as the INSERT test above: the field-options "Test"
+                // button 404'd on DNN for the same reason. Resolve through the shared helper.
+                var platform = String(getPlatformHostConfig().platform || '').toLowerCase();
                 var url = platform === 'dnn'
                     ? '/DesktopModules/MegaForm/API/Submit/FieldOptions?formId=' + formId + '&fieldKey=' + encodeURIComponent(fieldKey)
                     : '/api/MegaForm/Field/Options?formId=' + formId + '&fieldKey=' + encodeURIComponent(fieldKey);

@@ -1,0 +1,97 @@
+@page "/Support"
+@model MegaForm.Samples.CorporateWeb.Pages.SupportModel
+@{
+    ViewData["Title"] = "Support";
+}
+
+<section class="content-page support-page">
+    <div class="container">
+        <div class="support-intro">
+            <h1>Support center</h1>
+            <p class="lead">
+                A support page usually mixes self-service content with a ticket form. The form on the right
+                is embedded with the MegaForm TagHelper; the FAQ on the left is ordinary Razor markup.
+            </p>
+        </div>
+
+        <div class="two-column">
+            <div class="text-column">
+                <h2>Frequently asked questions</h2>
+
+                <div class="faq-item">
+                    <h3>How do I reset my password?</h3>
+                    <p>
+                        Use the <a href="#">password reset</a> page. If you still cannot sign in, open a ticket
+                        and select <strong>Account access</strong> as the category.
+                    </p>
+                </div>
+
+                <div class="faq-item">
+                    <h3>Where can I download invoices?</h3>
+                    <p>
+                        Invoices are available from the billing portal. For billing disputes, use the ticket
+                        form and attach a PDF or screenshot.
+                    </p>
+                </div>
+
+                <div class="faq-item">
+                    <h3>Do you offer SLA support?</h3>
+                    <p>
+                        Yes. Enterprise customers can set <strong>High</strong> priority on tickets for
+                        faster response times.
+                    </p>
+                </div>
+
+                <div class="cta-row" style="justify-content: flex-start;">
+                    <a class="btn btn-secondary" href="/embedding">Embedding guide</a>
+                </div>
+            </div>
+
+            <div class="form-column">
+                <div class="support-form-card">
+                    <h2>Open a support ticket</h2>
+
+                    @if (Model.FormId > 0)
+                    {
+                        <div class="support-form-host">
+                            <megaform form-id="@Model.FormId" mode="embed" min-height="760" theme="corporate" radius="12"></megaform>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="no-form">
+                            <p>No published support form was found. The seeder may still be running.</p>
+                            <a class="btn btn-secondary" href="/admin" target="_blank">Open MegaForm admin</a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <h2>Code used on this page</h2>
+        <p>
+            Load the support form by title so it is separate from the contact or newsletter forms:
+        </p>
+        <div class="code-block">
+            <pre><code>public void OnGet()
+{
+    var form = _formRepo.ListForms(portalId: 0, status: "published", pageSize: 100)
+                        .FirstOrDefault(f =&gt; f.Title == "Support Ticket");
+    FormId = form?.FormId ?? 0;
+}</code></pre>
+        </div>
+        <p>
+            Render it next to the FAQ content:
+        </p>
+        <div class="code-block">
+            <pre><code>&lt;div class="two-column"&gt;
+    &lt;div class="text-column"&gt;
+        &lt;!-- FAQ markup --&gt;
+    &lt;/div&gt;
+    &lt;div class="form-column"&gt;
+        &lt;megaform form-id="@@Model.FormId" mode="embed" min-height="760" theme="corporate"&gt;&lt;/megaform&gt;
+    &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+        </div>
+    </div>
+</section>

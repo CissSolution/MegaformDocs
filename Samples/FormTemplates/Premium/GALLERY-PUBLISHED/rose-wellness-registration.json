@@ -1,0 +1,324 @@
+{
+  "version": "1.0",
+  "slug": "rose-wellness-registration",
+  "title": "EuroYouth 2026 — Registration",
+  "description": "Two-column EuroYouth registration: a dark rose panel carrying the programme photograph, headline, member statistics and the team, beside a cream column whose white card holds seven underlined fields, programme pills and a live completion meter. Converted from the rose-registration mock, structure and values transcribed from its source.",
+  "category": "registration",
+  "categories": [
+    "registration",
+    "premium",
+    "education"
+  ],
+  "icon": "user-plus",
+  "submitButtonText": "Submit Application",
+  "successMessage": "Registration received. A confirmation is on its way.",
+  "settings": {
+    "theme": "custom",
+    "multiPage": false,
+    "showProgressBar": false,
+    "customContent": {
+      "euroyouth_2026": "EuroYouth 2026",
+      "shape_your": "Shape your",
+      "future": "future",
+      "in_europe": "in Europe.",
+      "join_a_community_of_young_leaders_explorers_and_chan": "Join a community of young leaders, explorers and changemakers across 40+ countries. One application opens every door.",
+      "text_12k": "12K+",
+      "members": "Members",
+      "text_98": "98%",
+      "satisfaction": "Satisfaction",
+      "text_40": "40+",
+      "countries": "Countries",
+      "our_team": "Our Team",
+      "am": "AM",
+      "aria_morel": "Aria Morel",
+      "programme_director": "Programme Director",
+      "js": "JS",
+      "jonas_steyn": "Jonas Steyn",
+      "community_lead": "Community Lead",
+      "lk": "LK",
+      "lena_kovacs": "Lena Kovacs",
+      "youth_coordinator": "Youth Coordinator",
+      "registration_2026": "Registration 2026",
+      "apply_now": "Apply now",
+      "fill_in_the_7_fields_below_and_well_match_you_with_t": "Fill in the 7 fields below and we'll match you with the perfect programme.",
+      "first_name": "First name",
+      "last_name": "Last name",
+      "email_address": "Email address",
+      "phone": "Phone",
+      "country": "Country",
+      "programme": "Programme",
+      "why_do_you_want_to_join": "Why do you want to join?",
+      "text_0_of_7_fields_complete": "0 of 7 fields complete",
+      "text_0": "0%",
+      "submit_application": "Submit Application",
+      "by_submitting_you_agree_to_our": "By submitting you agree to our",
+      "privacy_policy": "Privacy Policy",
+      "and_terms": "& Terms.",
+      "hero_image": "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs="
+    },
+    "customScripts": {
+      "progress": "(function(){\n  var root = (typeof __mfCurrentScriptRoot !== 'undefined' && __mfCurrentScriptRoot) || document;\n  var scope = (root && root.closest) ? (root.closest('.mfp') || document) : document;\n  var KEYS = ['first_name','last_name','email','phone','country','programme','motivation'];\n  function filled(key){\n    var els = scope.querySelectorAll('[name=\"' + key + '\"]');\n    if (!els.length) return false;\n    var first = els[0];\n    if (first.type === 'checkbox' || first.type === 'radio') {\n      for (var i = 0; i < els.length; i++) if (els[i].checked) return true;\n      return false;\n    }\n    return String(first.value || '').trim().length > 0;\n  }\n  function paint(){\n    var n = 0;\n    for (var i = 0; i < KEYS.length; i++) if (filled(KEYS[i])) n++;\n    var pct = Math.round((n / KEYS.length) * 100);\n    var c = scope.querySelector('[data-mf-echo=\"progress_count\"]');\n    var t = scope.querySelector('[data-mf-echo=\"progress_pct\"]');\n    var b = scope.querySelector('[data-mf-echo=\"progress_bar\"]');\n    if (c) c.textContent = n + ' of ' + KEYS.length + ' fields complete';\n    if (t) { t.textContent = pct + '%'; t.style.color = (n === KEYS.length) ? '#C2185B' : '#6B6B6E'; }\n    if (b) b.style.width = pct + '%';\n  }\n  scope.addEventListener('input', paint, true);\n  scope.addEventListener('change', paint, true);\n  paint();\n})();"
+    },
+    "customHtml": "<div class='mfp mfp-rws mfp-native-generated' data-mf-flexgrid=\"locked\" style=\"background:transparent!important;border:0!important;border-radius:0!important;padding:0!important;box-shadow:none!important\"><div class='rws-grid'><aside class='rws-aside'><div class='rws-accent-a' role='presentation'></div><div class='rws-accent-b' role='presentation'></div><div class='rws-photo'><img class='rws-content-image' src='{{content:hero_image}}' alt='' aria-hidden='true'><div class='rws-photo-tint' role='presentation'></div><div class='rws-brand'><span class='rws-brand-mark'><i class='fa fa-globe'></i></span><span class='rws-brand-text'>{{content:euroyouth_2026}}</span></div></div><div class='rws-panel'><div class='rws-panel-top'><span class='rws-pill'></span><h2 class='rws-aside-title'>{{content:shape_your}}<br><em>{{content:future}}</em> {{content:in_europe}}</h2><p class='rws-aside-lede'>{{content:join_a_community_of_young_leaders_explorers_and_chan}}</p></div><div class='rws-stats'><div class='rws-stat'><div class='rws-stat-v'>{{content:text_12k}}</div><div class='rws-stat-l'>{{content:members}}</div></div><div class='rws-stat'><div class='rws-stat-v'>{{content:text_98}}</div><div class='rws-stat-l'>{{content:satisfaction}}</div></div><div class='rws-stat'><div class='rws-stat-v'>{{content:text_40}}</div><div class='rws-stat-l'>{{content:countries}}</div></div></div><div class='rws-team'><p class='rws-team-cap'>{{content:our_team}}</p><div class='rws-team-list'><div class='rws-member'><span class='rws-avatar'>{{content:am}}</span><span class='rws-member-text'><span class='rws-member-name'>{{content:aria_morel}}</span><span class='rws-member-role'>{{content:programme_director}}</span></span></div><div class='rws-member'><span class='rws-avatar'>{{content:js}}</span><span class='rws-member-text'><span class='rws-member-name'>{{content:jonas_steyn}}</span><span class='rws-member-role'>{{content:community_lead}}</span></span></div><div class='rws-member'><span class='rws-avatar'>{{content:lk}}</span><span class='rws-member-text'><span class='rws-member-name'>{{content:lena_kovacs}}</span><span class='rws-member-role'>{{content:youth_coordinator}}</span></span></div></div></div></div></aside><section class='rws-main'><div class='rws-head'><div class='rws-eyebrow-row'><span class='rws-pill-sm'></span><span class='rws-eyebrow'>{{content:registration_2026}}</span></div><h1 class='rws-title'>{{content:apply_now}}</h1><p class='rws-lede'>{{content:fill_in_the_7_fields_below_and_well_match_you_with_t}}</p></div><div class='rws-card'><div class='rws-row2'><label class='rws-field'><span class='rws-label'><i class='fa fa-user'></i>{{content:first_name}}</span>{{field:first_name}}</label><label class='rws-field'><span class='rws-label'><i class='fa fa-user'></i>{{content:last_name}}</span>{{field:last_name}}</label></div><label class='rws-field rws-solo'><span class='rws-label'><i class='fa fa-envelope'></i>{{content:email_address}}</span>{{field:email}}</label><div class='rws-row2'><label class='rws-field'><span class='rws-label'><i class='fa fa-phone'></i>{{content:phone}}</span>{{field:phone}}</label><label class='rws-field'><span class='rws-label'><i class='fa fa-map-marker'></i>{{content:country}}</span>{{field:country}}</label></div><label class='rws-field rws-solo'><span class='rws-label'><i class='fa fa-briefcase'></i>{{content:programme}}</span>{{field:programme}}</label><label class='rws-field rws-solo rws-solo-last'><span class='rws-label'><i class='fa fa-calendar'></i>{{content:why_do_you_want_to_join}}</span>{{field:motivation}}</label>{{script:progress}}<div class='rws-progress'><div class='rws-progress-row'><span class='rws-progress-text' data-mf-echo='progress_count'>{{content:text_0_of_7_fields_complete}}</span><span class='rws-progress-pct' data-mf-echo='progress_pct'>{{content:text_0}}</span></div><div class='rws-bar'><div class='rws-bar-fill' data-mf-echo='progress_bar'></div></div></div><button class='rws-submit' type='submit'>{{content:submit_application}}<i class='fa fa-check'></i></button><p class='rws-foot'>{{content:by_submitting_you_agree_to_our}} <span class='rws-link'>{{content:privacy_policy}}</span> {{content:and_terms}}</p></div></section></div></div>",
+    "customCss": "@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700;800&display=swap');\n.mfp.mfp-rws.mfp-native-generated {--rws-primary:#C2185B;--rws-accent:#880E4F;--rws-surface:var(--mf-page-surface,var(--mf-preset-surface,#FFFFFF));--rws-text:var(--mf-page-text,var(--mf-preset-text,#1C1C1E));--rws-muted:var(--mf-page-muted,var(--mf-preset-muted,#6B6B6E));--rws-border:var(--mf-page-border,var(--mf-preset-border,#F0D9E2));--rws-on-primary:var(--mf-preset-on-primary,#FFFFFF);--rws-deco:#F48FB1;--rws-page:#FFF8F5;--rws-fill:#FFF8F5;--rws-fill-strong:color-mix(in srgb, var(--rws-text) 9%, var(--rws-surface));--rws-soft:color-mix(in srgb, var(--rws-primary) 12%, var(--rws-surface));--rws-hairline:color-mix(in srgb, var(--rws-text) 12%, var(--rws-surface));}.mfp.mfp-rws.mfp-native-generated {background:transparent!important;border:0!important;padding:0!important;font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif}.mfp.mfp-rws.mfp-native-generated {--rws-primary:var(--mf-page-primary,var(--mf-preset-primary,#C2185B));--rws-accent:var(--mf-page-accent,var(--mf-preset-accent,#880E4F));--rws-surface:var(--mf-page-surface,var(--mf-preset-surface,#FFFFFF));--rws-text:var(--mf-page-text,var(--mf-preset-text,#1C1C1E));--rws-border:var(--mf-page-border,var(--mf-preset-border,#F0D9E2));--rws-on-primary:var(--mf-page-on-primary,var(--mf-preset-on-primary,#FFFFFF));--rws-page:var(--mf-preset-bg,#FFF8F5);}@container (max-width:520px){.mfp.mfp-rws.mfp-native-generated [class*=\"-grid\"],.mfp.mfp-rws.mfp-native-generated [class*=\"-meta\"],.mfp.mfp-rws.mfp-native-generated [class*=\"-scores\"],.mfp.mfp-rws.mfp-native-generated [class*=\"-charts\"],.mfp.mfp-rws.mfp-native-generated [class*=\"-cols\"]{grid-template-columns:1fr!important}.mfp.mfp-rws.mfp-native-generated [class*=\"-body\"],.mfp.mfp-rws.mfp-native-generated [class*=\"-split\"],.mfp.mfp-rws.mfp-native-generated [class*=\"-foot\"],.mfp.mfp-rws.mfp-native-generated [class*=\"-head\"],.mfp.mfp-rws.mfp-native-generated [class*=\"-row\"]{flex-wrap:wrap!important}.mfp.mfp-rws.mfp-native-generated [class*=\"-aside\"],.mfp.mfp-rws.mfp-native-generated [class*=\"-side\"]{flex:1 1 100%!important;width:100%!important;max-width:none!important}}.mfp.mfp-rws.mfp-native-generated  img{max-width:100%!important;height:auto}.mfp.mfp-rws.mfp-native-generated {overflow-wrap:break-word}\n\n/* The wrapper itself: strip the host's card, but NOT its width. Layout > Max width in the module\n   settings (480/640/768/960/Full) is a max-width on THIS element, and the previous version of this\n   rule overrode it with max-width:none!important - so picking 960 did nothing at all. */\n.mf-form-wrapper:has(.mfp-rws){background:transparent!important;border:0!important;\n  border-radius:0!important;box-shadow:none!important;padding:0!important}\n/* The boxes INSIDE it have their own measures, and those are what squeezed the design. */\n.mf-form-wrapper:has(.mfp-rws) > .mf-form-inner,\n.mf-form-wrapper:has(.mfp-rws) .mf-form,\n.mf-form-wrapper:has(.mfp-rws) .mf-fields-container{background:transparent!important;\n  border:0!important;border-radius:0!important;box-shadow:none!important;padding:0!important;\n  margin:0!important;max-width:none!important;width:100%!important}\n\n/* page ------------------------------------------------------------------ */\n.mfp.mfp-rws.mfp-native-generated {container-type:inline-size;font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif!important;color:var(--rws-text)}\n/* min-h-screen on the mock's <main>: the panel is as tall as the window, which is what gives the\n   photograph its 52% and leaves the team list room. Without it the aside collapsed to the form's\n   height and clipped Lena Kovacs. */\n.mfp.mfp-rws.mfp-native-generated .rws-grid{display:grid;grid-template-columns:1fr;max-width:1152px;margin:0 auto;\n  min-height:100vh;background:var(--rws-page)}\n/* The mock hides the panel below lg (1024px). A CONTAINER query, not a media query: the form is\n   embedded in a CMS pane whose width has nothing to do with the viewport's. */\n@container (min-width:1024px){.mfp.mfp-rws.mfp-native-generated .rws-grid{grid-template-columns:420px 1fr}}\n\n/* left panel ------------------------------------------------------------ */\n.mfp.mfp-rws.mfp-native-generated .rws-aside{position:relative;display:none;flex-direction:column;overflow:hidden;\n  background:var(--rws-text);min-height:760px}\n@container (min-width:1024px){.mfp.mfp-rws.mfp-native-generated .rws-aside{display:flex}}\n.mfp.mfp-rws.mfp-native-generated .rws-accent-a{position:absolute;top:-64px;right:-64px;width:256px;height:256px;\n  transform:rotate(45deg);background:var(--rws-primary);opacity:.18;pointer-events:none}\n.mfp.mfp-rws.mfp-native-generated .rws-accent-b{position:absolute;bottom:-80px;left:-80px;width:288px;height:288px;\n  transform:rotate(12deg);background:var(--rws-accent);opacity:.22;pointer-events:none}\n.mfp.mfp-rws.mfp-native-generated .rws-photo{position:relative;height:52%;width:100%;overflow:hidden;\n  background-image:url('/DesktopModules/MegaForm/Assets/img/rose-wellness-registration/rose-wellness-hero.png'),url('/Modules/MegaForm/img/rose-wellness-registration/rose-wellness-hero.png');\n  background-size:cover;background-position:50% 0}\n.mfp.mfp-rws.mfp-native-generated img.rws-content-image{position:absolute!important;inset:0!important;display:block!important;\n  width:100%!important;height:100%!important;object-fit:cover!important;object-position:50% 0!important;\n  border:0!important;border-radius:0!important;pointer-events:none!important}\n.mfp.mfp-rws.mfp-native-generated .rws-photo-tint{position:absolute;inset:0;\n  background:linear-gradient(to bottom,rgba(194,24,91,.13) 0%,rgba(28,28,30,.93) 100%)}\n.mfp.mfp-rws.mfp-native-generated .rws-brand{position:absolute;top:24px;left:24px;display:flex;align-items:center;gap:10px}\n.mfp.mfp-rws.mfp-native-generated .rws-brand-mark{display:flex;align-items:center;justify-content:center;width:36px;height:36px;\n  border-radius:12px;background:var(--rws-primary);color:#fff;font-size:20px;line-height:1}\n.mfp.mfp-rws.mfp-native-generated .rws-brand-text{font-size:12px;line-height:16px;font-weight:700;letter-spacing:.15em;\n  text-transform:uppercase;color:#fff}\n.mfp.mfp-rws.mfp-native-generated .rws-panel{position:relative;display:flex;flex:1 1 auto;flex-direction:column;\n  justify-content:space-between;padding:32px}\n.mfp.mfp-rws.mfp-native-generated .rws-pill{display:inline-block;width:40px;height:4px;border-radius:999px;background:var(--rws-primary);\n  margin-bottom:12px}\n/* Headings and paragraphs need the element in the selector AND !important: the compat bridge\n   qualifies h1/h2/p with an element token, which outranks a class-only rule, and it was silently\n   turning the Playfair panel headline back into Inter and every 12px caption into 15px/200. */\n.mfp.mfp-rws.mfp-native-generated h2.rws-aside-title{margin:0!important;font-family:'Playfair Display',Georgia,'Times New Roman',serif!important;font-size:30px!important;\n  line-height:1.25!important;font-weight:700!important;color:#fff!important}\n.mfp.mfp-rws.mfp-native-generated h2.rws-aside-title em{font-style:normal;color:#F48FB1}\n.mfp.mfp-rws.mfp-native-generated p.rws-aside-lede{margin:12px 0 0!important;font-size:14px!important;line-height:1.625!important;\n  font-weight:400!important;color:#A8A8AA!important}\n.mfp.mfp-rws.mfp-native-generated .rws-stats{display:flex;align-items:center;gap:24px;padding:20px 0;\n  border-top:1px solid #2E2E30;border-bottom:1px solid #2E2E30}\n.mfp.mfp-rws.mfp-native-generated .rws-stat{flex:1 1 0;text-align:center}\n/* text-2xl is 24px/32px, not 24px/1.2 */\n.mfp.mfp-rws.mfp-native-generated .rws-stat-v{font-family:'Playfair Display',Georgia,'Times New Roman',serif;font-size:24px;line-height:32px;font-weight:700;color:#F48FB1}\n.mfp.mfp-rws.mfp-native-generated .rws-stat-l{margin-top:2px;font-size:11px;line-height:16px;font-weight:400;\n  text-transform:uppercase;letter-spacing:.1em;color:#6B6B6E}\n.mfp.mfp-rws.mfp-native-generated p.rws-team-cap{margin:0 0 12px!important;font-size:11px!important;line-height:16px!important;\n  text-transform:uppercase!important;letter-spacing:.1em!important;font-weight:600!important;\n  color:#6B6B6E!important}\n.mfp.mfp-rws.mfp-native-generated .rws-team-list{display:flex;flex-direction:column;gap:12px}\n.mfp.mfp-rws.mfp-native-generated .rws-member{display:flex;align-items:center;gap:12px}\n.mfp.mfp-rws.mfp-native-generated .rws-avatar{display:flex;align-items:center;justify-content:center;flex:0 0 auto;\n  width:40px;height:40px;border-radius:999px;background:var(--rws-primary);color:#fff;font-size:12px;\n  line-height:16px;font-weight:700;box-shadow:0 0 0 2px #831843}\n.mfp.mfp-rws.mfp-native-generated .rws-member-text{display:flex;flex-direction:column}\n.mfp.mfp-rws.mfp-native-generated .rws-member-name{font-size:14px;line-height:20px;font-weight:600;color:#fff}\n.mfp.mfp-rws.mfp-native-generated .rws-member-role{font-size:11px;line-height:16px;font-weight:400;color:#6B6B6E}\n\n/* right column ---------------------------------------------------------- */\n.mfp.mfp-rws.mfp-native-generated .rws-main{display:flex;flex-direction:column;justify-content:center;padding:48px 24px;\n  background:var(--rws-page)}\n@container (min-width:640px){.mfp.mfp-rws.mfp-native-generated .rws-main{padding:48px 40px}}\n@container (min-width:1024px){.mfp.mfp-rws.mfp-native-generated .rws-main{padding:48px 56px}}\n.mfp.mfp-rws.mfp-native-generated .rws-back{display:inline-flex;align-items:center;gap:6px;margin-bottom:32px;font-size:14px;\n  line-height:20px;font-weight:500;color:#6B6B6E}\n.mfp.mfp-rws.mfp-native-generated .rws-head{margin-bottom:32px}\n.mfp.mfp-rws.mfp-native-generated .rws-eyebrow-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}\n.mfp.mfp-rws.mfp-native-generated .rws-pill-sm{width:32px;height:4px;border-radius:999px;background:var(--rws-primary)}\n.mfp.mfp-rws.mfp-native-generated .rws-eyebrow{font-size:11px;line-height:16px;font-weight:700;text-transform:uppercase;\n  letter-spacing:.18em;color:var(--rws-primary)}\n.mfp.mfp-rws.mfp-native-generated h1.rws-title{margin:0!important;font-family:'Playfair Display',Georgia,'Times New Roman',serif!important;font-size:36px!important;\n  line-height:1.25!important;font-weight:700!important;color:var(--rws-text)!important}\n.mfp.mfp-rws.mfp-native-generated p.rws-lede{margin:8px 0 0!important;font-size:14px!important;line-height:1.625!important;\n  font-weight:400!important;color:#6B6B6E!important}\n\n/* form card ------------------------------------------------------------- */\n.mfp.mfp-rws.mfp-native-generated .rws-card{padding:32px;border:1px solid var(--rws-border);border-radius:24px;background:#fff;\n  box-shadow:0 1px 2px rgba(0,0,0,.05)}\n/* .rws-field FIRST: it zeroes the margin, and at equal specificity the later rule wins - declared\n   after .rws-solo it silently ate every 28px gap between the single-column fields. */\n.mfp.mfp-rws.mfp-native-generated .rws-field{display:block;margin:0}\n.mfp.mfp-rws.mfp-native-generated .rws-row2{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:28px}\n.mfp.mfp-rws.mfp-native-generated .rws-solo{margin-bottom:28px}\n.mfp.mfp-rws.mfp-native-generated .rws-solo-last{margin-bottom:32px}\n.mfp.mfp-rws.mfp-native-generated .rws-label{display:block;margin:0 0 6px;font-size:12px;line-height:16px;font-weight:600;\n  text-transform:uppercase;letter-spacing:.1em;color:#6B6B6E}\n.mfp.mfp-rws.mfp-native-generated .rws-label i{margin-right:4px;font-size:12px;line-height:16px}\n.mfp.mfp-rws.mfp-native-generated .mf-field-label{display:none!important}\n/* A wizard's page-break Section renders a visible heading the mock has no room for - it exists to\n   split the pages, not to be seen. */\n.mfp.mfp-rws.mfp-native-generated .mf-section-break,.mfp.mfp-rws.mfp-native-generated .mf-section-title{display:none!important}\n.mfp.mfp-rws.mfp-native-generated .mf-field-group{margin:0!important;width:100%}\n.mfp.mfp-rws.mfp-native-generated .mf-form-title,.mfp.mfp-rws.mfp-native-generated .mf-form-description{display:none!important}\n.mfp.mfp-rws.mfp-native-generated .mf-form-actions{display:none!important}\n\n/* controls: the mock's inputs are an UNDERLINE, not a box -------------- */\n.mfp.mfp-rws.mfp-native-generated .mf-input[class],.mfp.mfp-rws.mfp-native-generated .mf-select[class]{width:100%!important;box-sizing:border-box!important;\n  border:0!important;border-bottom:2px solid var(--rws-border)!important;border-radius:0!important;\n  background:transparent!important;padding:10px 0!important;min-height:0!important;\n  height:auto!important;color:var(--rws-text)!important;font-family:inherit!important;\n  font-size:15px!important;line-height:24px!important;font-weight:400!important;\n  box-shadow:none!important;appearance:none!important;-webkit-appearance:none!important}\n.mfp.mfp-rws.mfp-native-generated .mf-input[class]:focus,.mfp.mfp-rws.mfp-native-generated .mf-select[class]:focus{border-bottom-color:var(--rws-primary)!important;\n  box-shadow:none!important;outline:none!important}\n.mfp.mfp-rws.mfp-native-generated .mf-input[class]::placeholder,.mfp.mfp-rws.mfp-native-generated .mf-textarea[class]::placeholder{color:#C8C8CA!important;opacity:1}\n/* The mock greys a select until it has a value. It is required, so an empty one is :invalid -\n   that is the only hook CSS has for \"nothing chosen yet\". */\n.mfp.mfp-rws.mfp-native-generated .mf-select[class]:invalid{color:#C8C8CA!important}\n.mfp.mfp-rws.mfp-native-generated .mf-textarea[class]{width:100%!important;box-sizing:border-box!important;margin-top:4px!important;\n  border:2px solid var(--rws-border)!important;border-radius:12px!important;background:transparent!important;\n  padding:12px 16px!important;min-height:96px!important;height:auto!important;resize:none!important;\n  color:var(--rws-text)!important;font-family:inherit!important;font-size:14px!important;\n  line-height:1.625!important;box-shadow:none!important}\n.mfp.mfp-rws.mfp-native-generated .mf-textarea[class]:focus{border-color:var(--rws-primary)!important;box-shadow:none!important}\n\n/* programme pills ------------------------------------------------------- */\n.mfp.mfp-rws.mfp-native-generated .mf-option-group--chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}\n.mfp.mfp-rws.mfp-native-generated .mf-option-item{margin:0!important}\n.mfp.mfp-rws.mfp-native-generated .mf-option-group--chips .mf-option-check{display:none!important}\n.mfp.mfp-rws.mfp-native-generated .mf-option-group--chips .mf-option-ui{display:block;gap:0;padding:6px 16px;\n  border:1.5px solid var(--rws-border);border-radius:9999px;background:#FCE4EC;color:var(--rws-primary);\n  font-size:13px;line-height:20px;font-weight:500;text-align:center;cursor:pointer;\n  transition:all .15s ease}\n.mfp.mfp-rws.mfp-native-generated .mf-option-group--chips .mf-option-label{font-size:13px;line-height:20px;font-weight:500;\n  color:inherit}\n.mfp.mfp-rws.mfp-native-generated .mf-option-group--chips .mf-option-item.is-selected .mf-option-ui,\n.mfp.mfp-rws.mfp-native-generated .mf-option-group--chips input:checked+.mf-option-ui{background:var(--rws-primary);border-color:var(--rws-primary);\n  color:#fff}\n\n/* completion meter ------------------------------------------------------ */\n.mfp.mfp-rws.mfp-native-generated .rws-progress{margin-bottom:24px}\n.mfp.mfp-rws.mfp-native-generated .rws-progress-row{display:flex;justify-content:space-between;margin-bottom:6px}\n.mfp.mfp-rws.mfp-native-generated .rws-progress-text{font-size:12px;line-height:16px;font-weight:500;color:#6B6B6E}\n.mfp.mfp-rws.mfp-native-generated .rws-progress-pct{font-size:12px;line-height:16px;font-weight:700;color:#6B6B6E}\n.mfp.mfp-rws.mfp-native-generated .rws-bar{width:100%;height:6px;border-radius:999px;overflow:hidden;background:#FCE4EC}\n.mfp.mfp-rws.mfp-native-generated .rws-bar-fill{width:0;height:100%;border-radius:999px;background:var(--rws-primary);\n  transition:width .5s ease}\n\n/* submit + footnote ----------------------------------------------------- */\n.mfp.mfp-rws.mfp-native-generated button.rws-submit[type=\"submit\"]{display:flex;align-items:center;justify-content:center;gap:8px;\n  width:100%!important;padding:14px 0!important;border:0!important;border-radius:9999px!important;\n  background:linear-gradient(135deg,var(--rws-primary) 0%,var(--rws-accent) 100%)!important;color:#fff!important;\n  font-family:inherit!important;font-size:14px!important;line-height:20px!important;\n  font-weight:700!important;letter-spacing:normal!important;text-transform:none!important;\n  cursor:pointer!important;box-shadow:none!important}\n.mfp.mfp-rws.mfp-native-generated button.rws-submit[type=\"submit\"]:hover{opacity:.9}\n/* The mock's CTA has no disabled state - it validates on click and stays full colour. Fading it\n   while blocked was our addition, and it is visible in the diff. */\n.mfp.mfp-rws.mfp-native-generated button.rws-submit.mf-nav-blocked,.mfp.mfp-rws.mfp-native-generated button.rws-submit[disabled]{opacity:1;\n  background:linear-gradient(135deg,var(--rws-primary) 0%,var(--rws-accent) 100%)!important;\n  cursor:not-allowed!important;filter:none!important}\n.mfp.mfp-rws.mfp-native-generated p.rws-foot{margin:16px 0 0!important;text-align:center!important;font-size:12px!important;\n  line-height:16px!important;font-weight:400!important;color:#6B6B6E!important}\n.mfp.mfp-rws.mfp-native-generated .rws-link{text-decoration:underline;color:var(--rws-primary);cursor:pointer;font-size:12px;\n  line-height:16px;font-weight:400}\n.mfp.mfp-rws.mfp-native-generated .rws-page{padding:0!important;background:transparent!important;min-height:0!important}.mfp.mfp-rws.mfp-native-generated .rws-shell,.mfp.mfp-rws.mfp-native-generated .rws-wrap{max-width:none!important;margin:0!important}.mfp.mfp-rws.mfp-native-generated .rws-grid,.mfp.mfp-rws.mfp-native-generated .rws-main,.mfp.mfp-rws.mfp-native-generated .rws-hero-in,.mfp.mfp-rws.mfp-native-generated .rws-card{max-width:none!important;margin-left:0!important;margin-right:0!important}.mfp.mfp-rws.mfp-native-generated .rws-grid{border:1px solid var(--rws-border)!important;border-radius:12px!important;overflow:hidden}.mf-form-wrapper.mf-has-date-popover .mfp.mfp-rws.mfp-native-generated .rws-grid{overflow:visible!important}",
+    "themeSelector": false,
+    "premiumGeneratedShell": true,
+    "gateNavigationUntilValid": true,
+    "postSubmitExperience": {
+      "enabled": true,
+      "mode": "rich",
+      "title": "You’re registered!",
+      "message": "Thank you, {{field:first_name}}. We’ll send confirmation to {{field:email}} within 48 hours.",
+      "showSubmissionId": true,
+      "submissionIdLabel": "Reference:",
+      "showAnswerSummary": false,
+      "allowFillAgain": true,
+      "fillAgainLabel": "Submit another",
+      "doneLabel": "Done"
+    },
+    "themeCompatibility": {
+      "policy": "hybrid",
+      "supportsPageColors": false,
+      "supportsPageTypography": true,
+      "supportsDarkHost": true,
+      "prefixes": [
+        "rws"
+      ],
+      "immutable": [
+        "primary",
+        "accent",
+        "deco"
+      ]
+    }
+  },
+  "fields": [
+    {
+      "placeholder": "Elena",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "first_name",
+      "type": "Text",
+      "label": "First name",
+      "required": true
+    },
+    {
+      "placeholder": "Müller",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "last_name",
+      "type": "Text",
+      "label": "Last name",
+      "required": true
+    },
+    {
+      "placeholder": "elena@example.com",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "email",
+      "type": "Email",
+      "label": "Email address",
+      "required": true
+    },
+    {
+      "placeholder": "+49 123 456 789",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "phone",
+      "type": "Phone",
+      "label": "Phone",
+      "required": true
+    },
+    {
+      "placeholder": "Select…",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Germany",
+          "value": "Germany"
+        },
+        {
+          "label": "France",
+          "value": "France"
+        },
+        {
+          "label": "Spain",
+          "value": "Spain"
+        },
+        {
+          "label": "Italy",
+          "value": "Italy"
+        },
+        {
+          "label": "Portugal",
+          "value": "Portugal"
+        },
+        {
+          "label": "Netherlands",
+          "value": "Netherlands"
+        },
+        {
+          "label": "Austria",
+          "value": "Austria"
+        },
+        {
+          "label": "Belgium",
+          "value": "Belgium"
+        },
+        {
+          "label": "Greece",
+          "value": "Greece"
+        },
+        {
+          "label": "Poland",
+          "value": "Poland"
+        },
+        {
+          "label": "Sweden",
+          "value": "Sweden"
+        },
+        {
+          "label": "Ireland",
+          "value": "Ireland"
+        },
+        {
+          "label": "United Kingdom",
+          "value": "United Kingdom"
+        },
+        {
+          "label": "Other",
+          "value": "Other"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "dropdown"
+      },
+      "key": "country",
+      "type": "Select",
+      "label": "Country",
+      "required": true,
+      "optionDisplay": "dropdown",
+      "choiceDisplay": "dropdown",
+      "optionVariant": "dropdown",
+      "widgetProps": {
+        "optionDisplay": "dropdown"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Erasmus Exchange",
+          "value": "Erasmus Exchange"
+        },
+        {
+          "label": "Language Immersion",
+          "value": "Language Immersion"
+        },
+        {
+          "label": "Solidarity Corps",
+          "value": "Solidarity Corps"
+        },
+        {
+          "label": "Youth Leadership",
+          "value": "Youth Leadership"
+        },
+        {
+          "label": "Creative Arts",
+          "value": "Creative Arts"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "chips"
+      },
+      "key": "programme",
+      "type": "Radio",
+      "label": "Programme",
+      "required": true,
+      "optionDisplay": "chips",
+      "choiceDisplay": "chips",
+      "optionVariant": "chips",
+      "widgetProps": {
+        "optionDisplay": "chips"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "Tell us a little about your motivation…",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "motivation",
+      "type": "Textarea",
+      "label": "Why do you want to join?",
+      "required": true
+    }
+  ],
+  "rules": [],
+  "workflow": {
+    "notifications": []
+  }
+}

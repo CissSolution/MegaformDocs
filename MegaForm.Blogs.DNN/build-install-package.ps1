@@ -87,6 +87,8 @@ try {
         'Templates/newsroom-post.html' = Join-Path $PSScriptRoot 'Assets\Templates\newsroom-post.html'
         'Templates/journal-home.html' = Join-Path $PSScriptRoot 'Assets\Templates\journal-home.html'
         'Templates/journal-post.html' = Join-Path $PSScriptRoot 'Assets\Templates\journal-post.html'
+        'Templates/acme-home.html' = Join-Path $PSScriptRoot 'Assets\Templates\acme-home.html'
+        'Templates/acme-post.html' = Join-Path $PSScriptRoot 'Assets\Templates\acme-post.html'
     }
 
     # Fail loudly when a declared payload file is missing. A clean clone that silently
@@ -99,6 +101,18 @@ try {
     }
     if ($missing.Count -gt 0) {
         throw "Missing package source file(s):`n  " + ($missing -join "`n  ")
+    }
+
+    # And the other direction, which is the one that actually bites: the check above only
+    # sees files someone REMEMBERED to declare. A template added to Assets\Templates and not
+    # listed above ships as a catalog entry with no file behind it, and the console answers
+    # "That gallery template is not installed on this site." Nothing else in the build notices.
+    $declaredTemplates = $assetFiles.Keys | Where-Object { $_ -like 'Templates/*' } | ForEach-Object { Split-Path $_ -Leaf }
+    $undeclared = Get-ChildItem -LiteralPath (Join-Path $PSScriptRoot 'Assets\Templates') -File |
+                  Where-Object { $declaredTemplates -notcontains $_.Name } |
+                  ForEach-Object { $_.Name }
+    if ($undeclared.Count -gt 0) {
+        throw "Template file(s) in Assets\Templates are NOT declared in `$assetFiles, so the package would ship a catalog entry with no file:`n  " + ($undeclared -join "`n  ")
     }
 
     New-ContentZip -Path $razorZip -Files $razorFiles

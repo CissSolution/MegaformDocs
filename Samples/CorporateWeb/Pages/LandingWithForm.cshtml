@@ -1,0 +1,80 @@
+@page "/LandingWithForm"
+@model MegaForm.Samples.CorporateWeb.Pages.LandingWithFormModel
+@{
+    ViewData["Title"] = "Landing Page with Form";
+}
+
+<section class="landing-hero">
+    <div class="container">
+        <div class="landing-hero-grid">
+            <div class="landing-hero-content">
+                <span class="eyebrow">MegaForm in action</span>
+                <h1>Embed a newsletter signup in your landing page</h1>
+                <p>
+                    This page demonstrates a typical marketing landing page. The signup card on the right
+                    is a MegaForm rendered inline with the <code>&lt;megaform&gt;</code> TagHelper. The host page
+                    controls the layout, typography, and call-to-action while MegaForm handles the form engine.
+                </p>
+                <ul class="checklist">
+                    <li>Keep visitors on your branded landing page.</li>
+                    <li>No iframe borders or conflicting CSS.</li>
+                    <li>Submissions go straight to the MegaForm dashboard.</li>
+                </ul>
+            </div>
+
+            <div class="landing-form-card">
+                <div class="landing-form-header">
+                    <h2>Join our newsletter</h2>
+                    <p>Get the latest updates delivered to your inbox.</p>
+                </div>
+
+                @if (Model.FormId > 0)
+                {
+                    <div class="landing-form-host">
+                        <megaform form-id="@Model.FormId" mode="embed" min-height="420" theme="corporate" radius="12"></megaform>
+                    </div>
+                }
+                else
+                {
+                    <div class="no-form">
+                        <p>No published newsletter form was found. The seeder may still be running.</p>
+                        <a class="btn btn-secondary" href="/admin" target="_blank">Open MegaForm admin</a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="content-page">
+    <div class="container">
+        <h2>Code used on this page</h2>
+        <p>
+            The model loads a form by title so the landing page always embeds the right form:
+        </p>
+        <div class="code-block">
+            <pre><code>public void OnGet()
+{
+    var form = _formRepo.ListForms(portalId: 0, status: "published", pageSize: 100)
+                        .FirstOrDefault(f =&gt; f.Title == "Newsletter Signup");
+    FormId = form?.FormId ?? 0;
+}</code></pre>
+        </div>
+        <p>
+            The view embeds the form inside a styled card:
+        </p>
+        <div class="code-block">
+            <pre><code>&lt;div class="landing-form-card"&gt;
+    &lt;div class="landing-form-header"&gt;
+        &lt;h2&gt;Join our newsletter&lt;/h2&gt;
+    &lt;/div&gt;
+    &lt;megaform form-id="@@Model.FormId" mode="embed" min-height="420" theme="corporate" radius="12"&gt;&lt;/megaform&gt;
+&lt;/div&gt;</code></pre>
+        </div>
+
+        <div class="cta-row">
+            <a class="btn btn-primary" href="/embedding">Read the full embedding guide</a>
+            <a class="btn btn-secondary" href="/Support">View support page sample</a>
+        </div>
+    </div>
+</section>

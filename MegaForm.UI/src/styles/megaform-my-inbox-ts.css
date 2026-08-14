@@ -576,6 +576,7 @@
 }
 
 .mf-mi3-badge-pending   { background: #fffbeb; color: #b45309; border-color: #fde68a; }
+.mf-mi3-badge-claimed   { background: #eef2ff; color: #4338ca; border-color: #c7d2fe; }
 .mf-mi3-badge-approved  { background: #f0fdf4; color: #047857; border-color: #bbf7d0; }
 .mf-mi3-badge-rejected  { background: #fef2f2; color: #b91c1c; border-color: #fecaca; }
 .mf-mi3-badge-forwarded { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
@@ -1327,6 +1328,14 @@
   border-color: var(--border, #ebebeb);
 }
 .mf-mi3-act-export:hover { background: #f8fafc; }
+
+/* [SubmissionPrint v20260713] Print / Save PDF — same quiet tone as Export */
+.mf-mi3-act-print {
+  background: #fff;
+  color: #475569;
+  border-color: var(--border, #ebebeb);
+}
+.mf-mi3-act-print:hover { background: #f8fafc; }
 
 .mf-mi3-detail-done {
   display: inline-flex;

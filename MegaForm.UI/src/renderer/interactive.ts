@@ -11,6 +11,7 @@ import { bindMasks } from './mask';
 // instance), which left the date-picker buttons English even after the catalog
 // loaded. The embedded copy auto-boots + loads the catalog and stays stable.
 import { t as embT, getLocale as embGetLocale } from '@i18n';
+import { uploadPickedFiles } from './file-upload-client';
 
 /** Bind all interactive element handlers */
 export function bindInteractiveElements(config: RendererConfig): void {
@@ -957,7 +958,11 @@ function bindFileUploads(config: RendererConfig): void {
     const input = zone.querySelector<HTMLInputElement>('input[type="file"]');
     if (!input) return;
 
-    const fieldKey = input.name || '';
+    // [ReceiptUploadFix v20260713-01] The SSR markup keeps the field key on the
+    // hidden value-input (name) / the file input's data-field-key — input.name
+    // alone was empty there, which also broke the schema lookup below.
+    const hidden = zone.querySelector<HTMLInputElement>('input[type="hidden"]');
+    const fieldKey = input.getAttribute('data-field-key') || input.name || hidden?.name || '';
     let fieldCfg: any = null;
     config.schema?.fields?.forEach(f => { if (f.key === fieldKey) fieldCfg = f; });
     const fs = fieldCfg?.fileSettings || {};
@@ -967,6 +972,7 @@ function bindFileUploads(config: RendererConfig): void {
 
     zone.addEventListener('click', (e: MouseEvent) => {
       if ((e.target as HTMLElement).closest('.mf-file-remove')) return;
+      if (e.target === input) return;
       input.click();
     });
     zone.addEventListener('dragover', (e: DragEvent) => { e.preventDefault(); zone.classList.add('mf-file-dragover'); });
@@ -980,14 +986,43 @@ function bindFileUploads(config: RendererConfig): void {
       }
     });
 
-    input.addEventListener('change', function () {
+    // [ReceiptUploadFix v20260713-01] The picked files must be UPLOADED, not just
+    // listed: the JSON submit path sends field values only, so without an upload
+    // here the hidden value stayed empty and the submission saved file-less while
+    // the UI showed "Ready ✓". Upload via the host's Upload/File endpoint (which
+    // re-validates extension/size server-side) and store the returned metadata in
+    // the hidden input — the same contract PersistSubmissionFiles* reads on submit.
+    const renderItems = (files: File[], state: 'uploading' | 'success'): void => {
+      const list = zone.querySelector<HTMLElement>('.mf-file-list');
+      if (!list) return;
+      list.innerHTML = files.map((f, index) => {
+        const ext = (f.name.split('.').pop() || 'file').toUpperCase();
+        const status = state === 'uploading'
+          ? `<span class="mf-file-status" aria-label="Uploading">&#8987;</span>`
+          : `<span class="mf-file-status" aria-label="Uploaded">&#10003;</span>`;
+        return `<div class="mf-file-item${state === 'success' ? ' mf-file-item-success' : ''}" data-index="${index}">` +
+          `<span class="mf-file-type-icon">${esc(ext.slice(0, 3))}</span>` +
+          `<span class="mf-file-meta"><span class="mf-file-name">${esc(f.name)}</span><span class="mf-file-size">${(f.size / 1024).toFixed(1)} KB</span></span>` +
+          status +
+          `<button type="button" class="mf-file-remove" aria-label="Remove file">&#215;</button>` +
+        `</div>`;
+      }).join('');
+    };
+    const setHiddenValue = (metas: unknown[] | null): void => {
+      if (!hidden) return;
+      hidden.value = metas && metas.length ? JSON.stringify(metas) : '';
+      hidden.dispatchEvent(new Event('change', { bubbles: true }));
+    };
+
+    input.addEventListener('change', async function () {
       const list = zone.querySelector<HTMLElement>('.mf-file-list');
       const errEl = fieldKey ? document.getElementById(`mf-err-${fieldKey}`) : null;
       if (errEl) { errEl.textContent = ''; errEl.style.display = 'none'; }
       if (list) list.innerHTML = '';
       const errors: string[] = [];
+      let accepted: File[] = [];
 
-      Array.from(this.files || []).forEach((f, index) => {
+      Array.from(this.files || []).forEach(f => {
         if (f.size > maxSizeBytes) {
           errors.push(`${f.name} exceeds ${fs.maxSizeMB || 10}MB limit`);
           return;
@@ -1000,21 +1035,33 @@ function bindFileUploads(config: RendererConfig): void {
             return;
           }
         }
-        if (list) {
-          const ext = (f.name.split('.').pop() || 'file').toUpperCase();
-          list.innerHTML += `<div class="mf-file-item mf-file-item-success" data-index="${index}">` +
-            `<span class="mf-file-type-icon">${esc(ext.slice(0, 3))}</span>` +
-            `<span class="mf-file-meta"><span class="mf-file-name">${esc(f.name)}</span><span class="mf-file-size">${(f.size / 1024).toFixed(1)} KB</span></span>` +
-            `<span class="mf-file-status" aria-label="Ready">&#10003;</span>` +
-            `<button type="button" class="mf-file-remove" aria-label="Remove file">&#215;</button>` +
-          `</div>`;
-        }
+        accepted.push(f);
       });
+      const maxFiles = Number(fs.maxFiles || 0);
+      if (maxFiles > 0 && accepted.length > maxFiles) accepted = accepted.slice(0, maxFiles);
 
       if (errors.length > 0) {
         input.value = '';
         if (list) list.innerHTML = '';
+        setHiddenValue(null);
         if (errEl) { errEl.textContent = errors.join('; '); errEl.style.display = ''; }
+        return;
+      }
+      if (!accepted.length) { setHiddenValue(null); return; }
+
+      renderItems(accepted, 'uploading');
+      try {
+        const metas = await uploadPickedFiles(config.apiBaseUrl, config.formId, fieldKey, accepted);
+        setHiddenValue(metas);
+        renderItems(accepted, 'success');
+      } catch (err) {
+        input.value = '';
+        if (list) list.innerHTML = '';
+        setHiddenValue(null);
+        if (errEl) {
+          errEl.textContent = (err instanceof Error && err.message) ? err.message : embT('widget.file.upload_failed', 'Upload failed');
+          errEl.style.display = '';
+        }
       }
     });
 
@@ -1024,6 +1071,7 @@ function bindFileUploads(config: RendererConfig): void {
       e.preventDefault();
       e.stopPropagation();
       input.value = '';
+      setHiddenValue(null);
       const list = zone.querySelector<HTMLElement>('.mf-file-list');
       if (list) list.innerHTML = '';
     });
@@ -1043,7 +1091,7 @@ function bindFileUploadsLegacy(config: RendererConfig): void {
     let allowedTypes = fs.allowedTypes || fs.allowedExtensions || '';
     if (Array.isArray(allowedTypes)) allowedTypes = allowedTypes.join(',');
 
-    zone.addEventListener('click', () => input.click());
+    zone.addEventListener('click', (e: MouseEvent) => { if (e.target !== input) input.click(); });
     zone.addEventListener('dragover', (e: DragEvent) => { e.preventDefault(); zone.classList.add('mf-file-dragover'); });
     zone.addEventListener('dragleave', () => zone.classList.remove('mf-file-dragover'));
     zone.addEventListener('drop', (e: DragEvent) => {

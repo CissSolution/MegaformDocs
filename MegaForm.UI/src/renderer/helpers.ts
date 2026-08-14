@@ -311,7 +311,7 @@ export const COMPOSITE_PRESETS: Record<string, { parts: CompositePart[]; combine
       // the retired Phone Pro widget) instead of a plain `+1 (US/CA)` <select>. Stores
       // the dial code as its value so combine() is unchanged.
       // [LocaleDefaultCountry 2026-07-28] No hard-coded def: an unset default lets the picker
-      // follow the form's language (vi-VN → VN). A designer who wants a fixed country sets
+      // follow the form's language (ur-PK → PK). A designer who wants a fixed country sets
       // `def` in the Input Designer, and forms saved before this keep whatever they stored.
       { key: 'country', width: '116px', type: 'country' },
       { key: 'area', placeholder: 'Area', width: '74px', maxLength: 4 },

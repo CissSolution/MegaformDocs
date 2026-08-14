@@ -171,6 +171,174 @@ namespace MegaForm.Core.Services.GalleryRepo
             return result;
         }
 
+        // ══════════════════════════════════════════════════════
+        //  PER-TEMPLATE KNOWLEDGE  [KbPerTemplate v20260812]
+        // ══════════════════════════════════════════════════════
+
+        /// <summary>
+        /// Outcome of installing one template's knowledge. Deliberately NOT a bool: the whole
+        /// reason this feature was invisible for a year is that every KB path answered "fine"
+        /// whether or not it did anything (DnnKbSeeder swallows, the Oqtane seeder defers, the
+        /// gallery never published a kb channel at all). The caller is expected to surface
+        /// <see cref="Message"/> — a template that installed WITHOUT its knowledge is a real,
+        /// reportable state, not a success.
+        /// </summary>
+        public sealed class KnowledgeInstallResult
+        {
+            /// <summary>True only when knowledge rows were actually merged into the store.</summary>
+            public bool Installed { get; set; }
+            /// <summary>True when the manifest entry carries no KB pointer at all (a template
+            /// published before the KB channel existed) — nothing failed, there is nothing to do.</summary>
+            public bool NotPublished { get; set; }
+            public int Entries { get; set; }
+            public int Rules { get; set; }
+            public int GuideFiles { get; set; }
+            /// <summary>Human-readable state, always set. Never an exception message
+            /// (SECURITY_CODING_RULES §10) — the strings here are our own.</summary>
+            public string Message { get; set; }
+
+            public static KnowledgeInstallResult Skip(string message)
+                => new KnowledgeInstallResult { Installed = false, NotPublished = true, Message = message };
+
+            public static KnowledgeInstallResult Fail(string message)
+                => new KnowledgeInstallResult { Installed = false, Message = message };
+        }
+
+        /// <summary>Guide resources are markdown + the generated facts map, nothing else. An
+        /// extension allowlist keeps a compromised or malformed bundle from writing anything
+        /// executable into the module's Resources folder.</summary>
+        private static readonly string[] AllowedKbResourceExtensions = { ".md", ".json" };
+
+        /// <summary>
+        /// Downloads this template's knowledge bundle (sha256-verified against the manifest),
+        /// writes the guide/facts resources into <paramref name="guidesDir"/>, and merges the
+        /// seed-shaped rows through <see cref="AiKnowledge.AiKnowledgeSeedMerger"/> — the same
+        /// upsert path the bundled seed uses, so re-installing a template is idempotent.
+        ///
+        /// Ordering matters: resources are written BEFORE the rows are merged. A template_guide
+        /// row points at its file with {"guide_file": …}; if the row landed first and the write
+        /// then failed, get_template_guide would answer with the literal string
+        /// "[guide_file not found: …]" and the AI would take THAT as the design contract.
+        ///
+        /// Never throws — the template itself is already installed by the time this runs, so a
+        /// knowledge failure is reported, not propagated.
+        /// </summary>
+        public async Task<KnowledgeInstallResult> InstallKnowledgeAsync(
+            GalleryRepoTemplateInfo info,
+            string guidesDir,
+            MegaForm.Core.Services.AiKnowledge.IAiKnowledgeService knowledge,
+            int? userId)
+        {
+            if (info == null || string.IsNullOrWhiteSpace(info.Kb))
+                return KnowledgeInstallResult.Skip("This template has no knowledge bundle published yet.");
+            if (knowledge == null)
+                return KnowledgeInstallResult.Fail("The knowledge store is unavailable on this site, so the template's AI knowledge was not installed.");
+
+            var download = await _repo.DownloadFileAsync(info.Kb, info.KbSha256, GalleryRepositoryService.MaxKbBundleBytes)
+                                      .ConfigureAwait(false);
+            if (!download.Success)
+                return KnowledgeInstallResult.Fail("Knowledge bundle download failed: " + (download.Message ?? "unknown error"));
+
+            KbTemplateBundle bundle;
+            try
+            {
+                var json = new UTF8Encoding(false).GetString(StripBom(download.Bytes));
+                bundle = Newtonsoft.Json.JsonConvert.DeserializeObject<KbTemplateBundle>(json);
+            }
+            catch
+            {
+                return KnowledgeInstallResult.Fail("The knowledge bundle is not readable.");
+            }
+            if (bundle?.Seed == null)
+                return KnowledgeInstallResult.Fail("The knowledge bundle carries no knowledge.");
+
+            // ── resources first ──────────────────────────────
+            var guideFiles = 0;
+            var resourceProblem = (string)null;
+            foreach (var res in bundle.Resources ?? new List<KbRepoFileInfo>())
+            {
+                if (res == null || string.IsNullOrWhiteSpace(res.Path)) continue;
+                var written = await TryWriteKbResourceAsync(res, guidesDir).ConfigureAwait(false);
+                if (written == null) guideFiles++;
+                else { resourceProblem = written; break; }
+            }
+            if (resourceProblem != null)
+                return KnowledgeInstallResult.Fail("Design guide not installed: " + resourceProblem);
+
+            // ── then the rows ────────────────────────────────
+            MegaForm.Core.Services.AiKnowledge.AiKnowledgeSeedMerger.Result merge;
+            try
+            {
+                merge = MegaForm.Core.Services.AiKnowledge.AiKnowledgeSeedMerger.Merge(
+                    bundle.Seed.ToString(Newtonsoft.Json.Formatting.None), knowledge, userId);
+            }
+            catch
+            {
+                return KnowledgeInstallResult.Fail("The knowledge store rejected this template's knowledge.");
+            }
+
+            // A merge that wrote nothing is a FAILURE, not a quiet success. Row-level errors are
+            // collected by the merger rather than thrown, so without this check a bundle whose
+            // every row failed would report "installed".
+            if (merge.Entries == 0)
+                return KnowledgeInstallResult.Fail(
+                    "No knowledge rows could be written"
+                    + (merge.Errors.Count > 0 ? " (" + merge.Errors.Count + " row error(s))" : "") + ".");
+
+            return new KnowledgeInstallResult
+            {
+                Installed = true,
+                Entries = merge.Entries,
+                Rules = merge.Rules,
+                GuideFiles = guideFiles,
+                Message = "Installed " + merge.Entries + " knowledge entr" + (merge.Entries == 1 ? "y" : "ies")
+                    + (guideFiles > 0 ? " and " + guideFiles + " design guide file(s)" : string.Empty)
+                    + (merge.Errors.Count > 0 ? " (" + merge.Errors.Count + " row(s) skipped)" : string.Empty) + ".",
+            };
+        }
+
+        /// <summary>
+        /// Writes one guide resource under <paramref name="guidesDir"/>. Returns null on success
+        /// or a message describing why not. Hardened the same way as the artwork extractor: the
+        /// name is sanitized, the RESOLVED path must still be inside the root, and the extension
+        /// must be on the allowlist. Unlike artwork, an existing file IS overwritten — the guide
+        /// is versioned with the template, and a stale contract is worse than a replaced one.
+        /// </summary>
+        private async Task<string> TryWriteKbResourceAsync(KbRepoFileInfo res, string guidesDir)
+        {
+            if (string.IsNullOrWhiteSpace(guidesDir)) return "no guide folder is configured on this site";
+
+            var safeRel = GalleryRepositoryService.SanitizeRelativePath(res.Path);
+            if (safeRel == null) return "unsafe path in the bundle";
+            // Resources are published under kb/TemplateGuides/<name>; only the leaf is used, so a
+            // bundle cannot choose a subdirectory of the module's Resources folder.
+            var name = safeRel.Substring(safeRel.LastIndexOf('/') + 1);
+            if (name.Length == 0) return "unnamed resource in the bundle";
+            var ext = System.IO.Path.GetExtension(name);
+            if (Array.IndexOf(AllowedKbResourceExtensions, (ext ?? string.Empty).ToLowerInvariant()) < 0)
+                return "unsupported guide file type '" + ext + "'";
+
+            var download = await _repo.DownloadFileAsync(safeRel, res.Sha256, GalleryRepositoryService.MaxKbResourceBytes)
+                                      .ConfigureAwait(false);
+            if (!download.Success) return download.Message ?? "download failed";
+
+            try
+            {
+                var rootFull = System.IO.Path.GetFullPath(guidesDir);
+                var rootPrefix = rootFull.TrimEnd(System.IO.Path.DirectorySeparatorChar, System.IO.Path.AltDirectorySeparatorChar)
+                                 + System.IO.Path.DirectorySeparatorChar;
+                var dest = System.IO.Path.GetFullPath(System.IO.Path.Combine(rootFull, name));
+                if (!dest.StartsWith(rootPrefix, StringComparison.OrdinalIgnoreCase)) return "path escapes the guide folder";
+                System.IO.Directory.CreateDirectory(rootFull);
+                System.IO.File.WriteAllBytes(dest, download.Bytes);
+                return null;
+            }
+            catch
+            {
+                return "could not be written to disk";
+            }
+        }
+
         private static byte[] StripBom(byte[] b)
         {
             if (b != null && b.Length >= 3 && b[0] == 0xEF && b[1] == 0xBB && b[2] == 0xBF)

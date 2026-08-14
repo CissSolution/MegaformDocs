@@ -47,7 +47,7 @@ namespace MegaForm.WebApi
             var registry = new DnnConnectionRegistry(GetPortalSetting);
             var formRepo = DnnServiceLocator.Instance.FormRepo;
             var subRepo = DnnServiceLocator.Instance.SubmissionRepo;
-            return new DataRepeaterService(registry, formRepo, subRepo);
+            return new DataRepeaterService(registry, formRepo, subRepo, DnnServiceLocator.Instance.DataResolver);
         }
 
         private string MergeRequestParameterJson(string json)

@@ -793,5 +793,245 @@ namespace MegaForm.DNN.Data
         }
 
         #endregion
+
+        #region App Definitions and Named Queries
+
+        public static List<AppDefinitionInfo> ListAppDefinitions(int portalId, string appScope = null)
+        {
+            var list = new List<AppDefinitionInfo>();
+            using (var conn = new SqlConnection(ConnectionString))
+            using (var cmd = new SqlCommand(
+                @"SELECT * FROM dbo.MF_AppDefinitions
+                  WHERE PortalId=@PortalId
+                    AND (@AppScope IS NULL OR AppScope=@AppScope)
+                  ORDER BY SortOrder, AppName, AppId", conn))
+            {
+                cmd.Parameters.AddWithValue("@PortalId", portalId);
+                cmd.Parameters.AddWithValue("@AppScope",
+                    string.IsNullOrWhiteSpace(appScope) ? (object)DBNull.Value : appScope.Trim());
+                conn.Open();
+                using (var r = cmd.ExecuteReader())
+                    while (r.Read()) list.Add(MapAppDefinition(r));
+            }
+            return list;
+        }
+
+        public static AppDefinitionInfo GetAppDefinition(int portalId, string appKey)
+        {
+            using (var conn = new SqlConnection(ConnectionString))
+            using (var cmd = new SqlCommand(
+                @"SELECT TOP 1 * FROM dbo.MF_AppDefinitions
+                  WHERE PortalId=@PortalId AND AppKey=@AppKey", conn))
+            {
+                cmd.Parameters.AddWithValue("@PortalId", portalId);
+                cmd.Parameters.AddWithValue("@AppKey", (appKey ?? string.Empty).Trim());
+                conn.Open();
+                using (var r = cmd.ExecuteReader())
+                    return r.Read() ? MapAppDefinition(r) : null;
+            }
+        }
+
+        public static int SaveAppDefinition(AppDefinitionInfo app)
+        {
+            if (app == null) return 0;
+            var created = app.CreatedOnUtc == default(DateTime) ? DateTime.UtcNow : app.CreatedOnUtc;
+            using (var conn = new SqlConnection(ConnectionString))
+            using (var cmd = conn.CreateCommand())
+            {
+                cmd.CommandText = @"
+MERGE dbo.MF_AppDefinitions WITH (HOLDLOCK) AS target
+USING (SELECT @AppId AS AppId, @PortalId AS PortalId, @AppKey AS AppKey) AS source
+ON (source.AppId > 0 AND target.AppId=source.AppId)
+   OR (source.AppId <= 0 AND target.PortalId=source.PortalId AND target.AppKey=source.AppKey)
+WHEN MATCHED THEN UPDATE SET
+  AppName=@AppName, Description=@Description, AppScope=@AppScope, Icon=@Icon,
+  AccentColor=@AccentColor, ManifestJson=@ManifestJson, SettingsJson=@SettingsJson,
+  ResourcesJson=@ResourcesJson, IsEnabled=@IsEnabled, SortOrder=@SortOrder,
+  ModifiedByUserId=@ModifiedByUserId, ModifiedOnUtc=SYSUTCDATETIME()
+WHEN NOT MATCHED THEN INSERT
+  (PortalId,AppKey,AppName,Description,AppScope,Icon,AccentColor,ManifestJson,
+   SettingsJson,ResourcesJson,IsEnabled,SortOrder,CreatedByUserId,CreatedOnUtc)
+VALUES
+  (@PortalId,@AppKey,@AppName,@Description,@AppScope,@Icon,@AccentColor,@ManifestJson,
+   @SettingsJson,@ResourcesJson,@IsEnabled,@SortOrder,@CreatedByUserId,@CreatedOnUtc)
+OUTPUT INSERTED.AppId;";
+                AddAppParameters(cmd, app, created);
+                conn.Open();
+                app.AppId = Convert.ToInt32(cmd.ExecuteScalar());
+                return app.AppId;
+            }
+        }
+
+        public static void DeleteAppDefinition(int appId)
+        {
+            using (var conn = new SqlConnection(ConnectionString))
+            using (var cmd = new SqlCommand("DELETE FROM dbo.MF_AppDefinitions WHERE AppId=@AppId", conn))
+            {
+                cmd.Parameters.AddWithValue("@AppId", appId);
+                conn.Open();
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+        public static List<AppQueryDefinitionInfo> ListAppQueries(int appId)
+        {
+            var list = new List<AppQueryDefinitionInfo>();
+            using (var conn = new SqlConnection(ConnectionString))
+            using (var cmd = new SqlCommand(
+                @"SELECT * FROM dbo.MF_AppQueries WHERE AppId=@AppId
+                  ORDER BY SortOrder, QueryName, QueryId", conn))
+            {
+                cmd.Parameters.AddWithValue("@AppId", appId);
+                conn.Open();
+                using (var r = cmd.ExecuteReader())
+                    while (r.Read()) list.Add(MapAppQuery(r));
+            }
+            return list;
+        }
+
+        public static AppQueryDefinitionInfo GetAppQuery(int appId, string queryKey)
+        {
+            using (var conn = new SqlConnection(ConnectionString))
+            using (var cmd = new SqlCommand(
+                @"SELECT TOP 1 * FROM dbo.MF_AppQueries
+                  WHERE AppId=@AppId AND QueryKey=@QueryKey", conn))
+            {
+                cmd.Parameters.AddWithValue("@AppId", appId);
+                cmd.Parameters.AddWithValue("@QueryKey", (queryKey ?? string.Empty).Trim());
+                conn.Open();
+                using (var r = cmd.ExecuteReader())
+                    return r.Read() ? MapAppQuery(r) : null;
+            }
+        }
+
+        public static int SaveAppQuery(AppQueryDefinitionInfo query)
+        {
+            if (query == null) return 0;
+            var created = query.CreatedOnUtc == default(DateTime) ? DateTime.UtcNow : query.CreatedOnUtc;
+            using (var conn = new SqlConnection(ConnectionString))
+            using (var cmd = conn.CreateCommand())
+            {
+                cmd.CommandText = @"
+MERGE dbo.MF_AppQueries WITH (HOLDLOCK) AS target
+USING (SELECT @QueryId AS QueryId, @AppId AS AppId, @QueryKey AS QueryKey) AS source
+ON (source.QueryId > 0 AND target.QueryId=source.QueryId)
+   OR (source.QueryId <= 0 AND target.AppId=source.AppId AND target.QueryKey=source.QueryKey)
+WHEN MATCHED THEN UPDATE SET
+  FormId=@FormId, QueryName=@QueryName, Description=@Description, QueryType=@QueryType,
+  DefinitionJson=@DefinitionJson, IsSystem=@IsSystem, SortOrder=@SortOrder,
+  ModifiedByUserId=@ModifiedByUserId, ModifiedOnUtc=SYSUTCDATETIME()
+WHEN NOT MATCHED THEN INSERT
+  (AppId,FormId,QueryKey,QueryName,Description,QueryType,DefinitionJson,IsSystem,
+   SortOrder,CreatedByUserId,CreatedOnUtc)
+VALUES
+  (@AppId,@FormId,@QueryKey,@QueryName,@Description,@QueryType,@DefinitionJson,@IsSystem,
+   @SortOrder,@CreatedByUserId,@CreatedOnUtc)
+OUTPUT INSERTED.QueryId;";
+                AddQueryParameters(cmd, query, created);
+                conn.Open();
+                query.QueryId = Convert.ToInt32(cmd.ExecuteScalar());
+                return query.QueryId;
+            }
+        }
+
+        public static void DeleteAppQuery(int queryId)
+        {
+            using (var conn = new SqlConnection(ConnectionString))
+            using (var cmd = new SqlCommand("DELETE FROM dbo.MF_AppQueries WHERE QueryId=@QueryId", conn))
+            {
+                cmd.Parameters.AddWithValue("@QueryId", queryId);
+                conn.Open();
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+        private static void AddAppParameters(SqlCommand cmd, AppDefinitionInfo app, DateTime created)
+        {
+            cmd.Parameters.AddWithValue("@AppId", app.AppId);
+            cmd.Parameters.AddWithValue("@PortalId", app.PortalId);
+            cmd.Parameters.AddWithValue("@AppKey", (app.AppKey ?? string.Empty).Trim());
+            cmd.Parameters.AddWithValue("@AppName", (app.AppName ?? string.Empty).Trim());
+            cmd.Parameters.AddWithValue("@Description", DbValue(app.Description));
+            cmd.Parameters.AddWithValue("@AppScope", DbValue(app.AppScope));
+            cmd.Parameters.AddWithValue("@Icon", DbValue(app.Icon));
+            cmd.Parameters.AddWithValue("@AccentColor", DbValue(app.AccentColor));
+            cmd.Parameters.AddWithValue("@ManifestJson", DbValue(app.ManifestJson));
+            cmd.Parameters.AddWithValue("@SettingsJson", DbValue(app.SettingsJson));
+            cmd.Parameters.AddWithValue("@ResourcesJson", DbValue(app.ResourcesJson));
+            cmd.Parameters.AddWithValue("@IsEnabled", app.IsEnabled);
+            cmd.Parameters.AddWithValue("@SortOrder", app.SortOrder);
+            cmd.Parameters.AddWithValue("@CreatedByUserId", app.CreatedByUserId);
+            cmd.Parameters.AddWithValue("@CreatedOnUtc", created);
+            cmd.Parameters.AddWithValue("@ModifiedByUserId", app.ModifiedByUserId);
+        }
+
+        private static void AddQueryParameters(SqlCommand cmd, AppQueryDefinitionInfo query, DateTime created)
+        {
+            cmd.Parameters.AddWithValue("@QueryId", query.QueryId);
+            cmd.Parameters.AddWithValue("@AppId", query.AppId);
+            cmd.Parameters.AddWithValue("@FormId", query.FormId);
+            cmd.Parameters.AddWithValue("@QueryKey", (query.QueryKey ?? string.Empty).Trim());
+            cmd.Parameters.AddWithValue("@QueryName", (query.QueryName ?? string.Empty).Trim());
+            cmd.Parameters.AddWithValue("@Description", DbValue(query.Description));
+            cmd.Parameters.AddWithValue("@QueryType", DbValue(query.QueryType));
+            cmd.Parameters.AddWithValue("@DefinitionJson", DbValue(query.DefinitionJson));
+            cmd.Parameters.AddWithValue("@IsSystem", query.IsSystem);
+            cmd.Parameters.AddWithValue("@SortOrder", query.SortOrder);
+            cmd.Parameters.AddWithValue("@CreatedByUserId", query.CreatedByUserId);
+            cmd.Parameters.AddWithValue("@CreatedOnUtc", created);
+            cmd.Parameters.AddWithValue("@ModifiedByUserId", query.ModifiedByUserId);
+        }
+
+        private static object DbValue(string value) =>
+            string.IsNullOrWhiteSpace(value) ? (object)DBNull.Value : value;
+
+        private static string ReadString(IDataRecord r, string name)
+        {
+            var ordinal = r.GetOrdinal(name);
+            return r.IsDBNull(ordinal) ? null : r.GetString(ordinal);
+        }
+
+        private static AppDefinitionInfo MapAppDefinition(IDataRecord r) => new AppDefinitionInfo
+        {
+            AppId = r.GetInt32(r.GetOrdinal("AppId")),
+            PortalId = r.GetInt32(r.GetOrdinal("PortalId")),
+            AppKey = ReadString(r, "AppKey"),
+            AppName = ReadString(r, "AppName"),
+            Description = ReadString(r, "Description"),
+            AppScope = ReadString(r, "AppScope"),
+            Icon = ReadString(r, "Icon"),
+            AccentColor = ReadString(r, "AccentColor"),
+            ManifestJson = ReadString(r, "ManifestJson"),
+            SettingsJson = ReadString(r, "SettingsJson"),
+            ResourcesJson = ReadString(r, "ResourcesJson"),
+            IsEnabled = r.GetBoolean(r.GetOrdinal("IsEnabled")),
+            SortOrder = r.GetInt32(r.GetOrdinal("SortOrder")),
+            CreatedByUserId = r.GetInt32(r.GetOrdinal("CreatedByUserId")),
+            CreatedOnUtc = r.GetDateTime(r.GetOrdinal("CreatedOnUtc")),
+            ModifiedByUserId = r.GetInt32(r.GetOrdinal("ModifiedByUserId")),
+            ModifiedOnUtc = r.IsDBNull(r.GetOrdinal("ModifiedOnUtc"))
+                ? (DateTime?)null : r.GetDateTime(r.GetOrdinal("ModifiedOnUtc"))
+        };
+
+        private static AppQueryDefinitionInfo MapAppQuery(IDataRecord r) => new AppQueryDefinitionInfo
+        {
+            QueryId = r.GetInt32(r.GetOrdinal("QueryId")),
+            AppId = r.GetInt32(r.GetOrdinal("AppId")),
+            FormId = r.GetInt32(r.GetOrdinal("FormId")),
+            QueryKey = ReadString(r, "QueryKey"),
+            QueryName = ReadString(r, "QueryName"),
+            Description = ReadString(r, "Description"),
+            QueryType = ReadString(r, "QueryType"),
+            DefinitionJson = ReadString(r, "DefinitionJson"),
+            IsSystem = r.GetBoolean(r.GetOrdinal("IsSystem")),
+            SortOrder = r.GetInt32(r.GetOrdinal("SortOrder")),
+            CreatedByUserId = r.GetInt32(r.GetOrdinal("CreatedByUserId")),
+            CreatedOnUtc = r.GetDateTime(r.GetOrdinal("CreatedOnUtc")),
+            ModifiedByUserId = r.GetInt32(r.GetOrdinal("ModifiedByUserId")),
+            ModifiedOnUtc = r.IsDBNull(r.GetOrdinal("ModifiedOnUtc"))
+                ? (DateTime?)null : r.GetDateTime(r.GetOrdinal("ModifiedOnUtc"))
+        };
+
+        #endregion
     }
 }

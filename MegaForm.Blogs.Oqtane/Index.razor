@@ -2,6 +2,10 @@
 @inherits ModuleBase
 @inject MegaForm.Sdk.IMegaFormClient Mega
 @inject NavigationManager Nav
+@* Read tracking identifies a visitor with a random id kept in their own browser. This module is a
+   CLIENT assembly (it must be able to run under WebAssembly), so IHttpContextAccessor is not
+   available to it at all — which turns out to be the better answer anyway. See TrackReadAsync. *@
+@inject IJSRuntime JS
 
 @* MegaForm Blogs - public Oqtane surface (twin of MegaFormBlogs.cshtml).
 
@@ -20,15 +24,18 @@
        into Oqtane's admin dialog. *@
     <ConsoleShell Scope="_scope"
                   ConsoleBaseUrl="@BaseUrl"
-                  BlogUrl="@BaseUrl"
+                  BlogUrl="@PublicBaseUrl()"
+                  PostUrl="ConsolePostUrl"
                   AppKey="@_config.AppKey"
                   IsNews="_config.IsNews"
                   Allowed="_consoleAllowed"
-                  View="@_consoleView" />
+                  View="@_consoleView"
+                  EditId="_consoleEditId" />
 }
 else
 {
-<link rel="stylesheet" href="/Modules/MegaFormBlogs/megaform-blogs.css?v=20260730e" />
+<link rel="stylesheet" href="/Modules/MegaFormBlogs/megaform-blogs.css?v=20260731a" />
+<script src="/Modules/MegaFormBlogs/megaform-blogs-read.js?v=20260731a"></script>
 
 <main class="@_config.WrapperClass()" aria-labelledby="mfb-title">
     @if (_loadError != null)
@@ -144,11 +151,20 @@ else
         @* ---- listing / category / author / archive / featured -------------------------- *@
         @if (_config.ShowHero && _config.Mode != "archive")
         {
-            <section class="mfb-hero">
+            @* The module's own eyebrow + H1 + strapline are OFF by default since 1.4.0.
+               Both hosts already print a title above the module — Oqtane's container renders
+               ModuleState.Title, DNN's renders the module header — so rendering a second, larger
+               one stacked directly under it is duplicated chrome, and it pushed the actual
+               content most of a screen down. Turn "Hero heading" on for a standalone magazine
+               page where nothing else supplies the title. *@
+            <section class="mfb-hero @(_config.ShowHeroText ? "" : "mfb-hero-bare")">
                 <div class="mfb-shell">
-                    <span class="mfb-eyebrow">@HeroEyebrow</span>
-                    <h1 id="mfb-title">@HeroTitle</h1>
-                    <p>@HeroSubtitle</p>
+                    @if (_config.ShowHeroText)
+                    {
+                        <span class="mfb-eyebrow">@HeroEyebrow</span>
+                        <h1 id="mfb-title">@HeroTitle</h1>
+                        <p>@HeroSubtitle</p>
+                    }
                     @if (_featured != null)
                     {
                         <article class="mfb-feature">
@@ -193,7 +209,12 @@ else
                     <header class="mfb-section-head">
                         <div>
                             <span class="mfb-trend">↗</span>
-                            <h2 id="@(_config.ShowHero && _config.Mode != "archive" ? "" : "mfb-title")">@SectionHeading</h2>
+                            @* main[aria-labelledby] points at whichever heading actually exists.
+                               With the hero heading off (the default) that is this h2, not the
+                               hero h1 — a dangling aria-labelledby names nothing to a screen
+                               reader. Tracks ShowHeroText, not ShowHero: the featured card can
+                               be on while the heading is off. *@
+                            <h2 id="@(HeroHeadingRendered ? "" : "mfb-title")">@SectionHeading</h2>
                         </div>
                         <span>@_total @(_total == 1 ? ItemLabelSingular : ItemLabelPlural)</span>
                     </header>
@@ -323,9 +344,13 @@ else
     private BlogUrlState _url = new BlogUrlState();
     private BlogQueryPlan _plan = BlogQueryPlan.Build(new BlogInstanceConfig(), new BlogUrlState());
 
+    /// <summary>The slug whose read has already been recorded on this circuit.</summary>
+    private string _trackedSlug;
+
     private MegaFormScope _scope = new MegaFormScope();
     private bool _consoleAllowed;
     private string _consoleView = "dashboard";
+    private int _consoleEditId;
 
     public override string Title => "MegaForm Blogs";
 
@@ -375,6 +400,11 @@ else
 
         var requested = BlogUrlState.Read(Nav?.Uri ?? "", "view", 32).ToLowerInvariant();
         _consoleView = BlogInstanceConfig.ConsoleRoutes.Contains(requested) ? requested : _config.ConsoleView;
+        _consoleEditId = BlogUrlState.ReadId(Nav?.Uri ?? "", "id");
+
+        // "edit" without a post is not a screen. Land on the board instead of rendering an
+        // editor that can only say "no post was selected".
+        if (_consoleView == "edit" && _consoleEditId <= 0) _consoleView = "editorial";
     }
 
     private async Task LoadAsync()
@@ -443,6 +473,62 @@ else
     }
 
     /// <summary>
+    /// Record that this post was read.
+    ///
+    /// ⭐ WHY THIS RUNS FROM JAVASCRIPT AND NOT ON THE SERVER RENDER.
+    /// This module is a CLIENT assembly — it has to be loadable under WebAssembly — so
+    /// IHttpContextAccessor is not merely unavailable at runtime, it does not compile. There is no
+    /// request, no IP and no user agent here.
+    ///
+    /// Asking the browser instead is better on every axis that matters:
+    ///  - PRIVACY: the visitor id is a random value the browser generated and keeps in its own
+    ///    localStorage. No IP is read, nothing is hashed, and clearing site data resets it.
+    ///  - BOTS: crawlers, uptime monitors and link previewers do not execute JavaScript, so they
+    ///    are excluded by construction rather than by guessing from a user-agent blocklist.
+    ///  - DOUBLE RENDER: this module does not override ModuleBase.RenderMode, so it runs
+    ///    Interactive even on a Static site and renders twice per visit. Counting after the circuit
+    ///    connects, once per slug, sidesteps that entirely.
+    ///
+    /// Its own try/catch, and it never touches _loadError: a reader's page must not show an error
+    /// banner because analytics failed.
+    /// </summary>
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        try
+        {
+            if (!_config.TrackReads || _config.IsConsole || _detail == null) return;
+
+            var slug = BlogData.Text(_detail, "slug", "");
+            if (slug.Length == 0 || string.Equals(slug, _trackedSlug, StringComparison.Ordinal)) return;
+
+            var postUid = BlogData.Text(_detail, "post_uid", "");
+            if (postUid.Length == 0) return;   // unattributable: the rollup groups on post_uid
+
+            // Mark before awaiting: a second render must not race a second write in.
+            _trackedSlug = slug;
+
+            var visitorKey = await JS.InvokeAsync<string>("megaFormBlogsVisitorId");
+            if (string.IsNullOrWhiteSpace(visitorKey)) return;
+
+            await BlogReadTracker.TrackReadAsync(
+                Mega, _scope, _config.AppKey,
+                postUid, slug,
+                visitorKey,
+                _scope?.UserId ?? 0,
+                referrer: "",
+                // null means "no user agent to judge" — the JS call above already proved this is a
+                // real browser, so the blocklist has nothing left to add.
+                userAgent: null);
+        }
+        catch (Exception)
+        {
+            // Analytics must never break a reader's page. A prerender pass where JS interop is not
+            // available yet lands here too, and the next render simply tries again.
+            _trackedSlug = null;
+        }
+    }
+
+    /// <summary>
     /// The hero. An empty FeaturedQueryKey means the admin turned the hero off; in "featured" mode
     /// the main query IS the featured query, so reuse its first row instead of querying twice.
     /// </summary>
@@ -472,6 +558,10 @@ else
     private string UntitledLabel => _config.IsNews ? "Untitled article" : "Untitled story";
     private string ItemLabelSingular => _config.IsNews ? "article" : "story";
     private string ItemLabelPlural => _config.IsNews ? "articles" : "stories";
+
+    /// <summary>True when the hero actually renders an h1 that aria-labelledby can point at.</summary>
+    private bool HeroHeadingRendered
+        => _config.ShowHero && _config.ShowHeroText && _config.Mode != "archive";
 
     private string HeroEyebrow => Or(_config.HeroEyebrow, _config.IsNews ? "Latest" : "◆ Featured stories");
 
@@ -520,10 +610,16 @@ else
     /// them on this page. SlugSource picks between ?slug= and Oqtane url parameters.
     /// </summary>
     private string SlugUrl(AppRecordDto record)
+        => PostUrlForSlug(BlogData.Text(record, "slug", ""));
+
+    /// <summary>
+    /// The reader-facing URL for one slug. Shared with the console, which hands this method to
+    /// its screens so an editor can preview a post without knowing the site's page layout.
+    /// </summary>
+    private string PostUrlForSlug(string slug)
     {
-        var slug = BlogData.Text(record, "slug", "");
-        var target = DetailBaseUrl();
-        if (slug.Length == 0) return target;
+        var target = _config.IsConsole ? PublicBaseUrl() : DetailBaseUrl();
+        if (string.IsNullOrWhiteSpace(slug)) return target;
 
         if (_config.SlugSource == "urlparameters")
             return target.TrimEnd('/') + "/!/" + Uri.EscapeDataString(slug);
@@ -531,14 +627,37 @@ else
         return target + "?" + _config.SlugParam + "=" + Uri.EscapeDataString(slug);
     }
 
-    private string DetailBaseUrl()
+    private string DetailBaseUrl() => PageUrlOr(_config.DetailPageId, BaseUrl);
+
+    /// <summary>
+    /// Where readers actually are. A console instance sits on an admin page, so its own URL is
+    /// the wrong answer — PublicPageId names the public surface, with DetailPageId as a sensible
+    /// second guess and this page as the last resort (which is what it did before the setting
+    /// existed, so an un-configured console behaves exactly as it used to).
+    /// </summary>
+    private string PublicBaseUrl()
+        => PageUrlOr(_config.PublicPageId, PageUrlOr(_config.DetailPageId, BaseUrl));
+
+    /// <summary>
+    /// The console's preview links. Returns "" — which hides them — while the resolved public
+    /// page is still this console's own page, because a "view the post" link that lands back on
+    /// the console is the same broken promise as the placeholder tiles it replaced. Naming a
+    /// page in the Public blog page setting turns the links on.
+    /// </summary>
+    private string ConsolePostUrl(string slug)
+        => PublicIsElsewhere ? PostUrlForSlug(slug) : "";
+
+    private bool PublicIsElsewhere
+        => !string.Equals(PublicBaseUrl(), BaseUrl, StringComparison.OrdinalIgnoreCase);
+
+    private string PageUrlOr(int pageId, string fallback)
     {
-        if (_config.DetailPageId > 0)
+        if (pageId > 0)
         {
-            var target = PageState?.Pages?.FirstOrDefault(p => p != null && p.PageId == _config.DetailPageId);
+            var target = PageState?.Pages?.FirstOrDefault(p => p != null && p.PageId == pageId);
             if (target != null) return NavigateUrl(target.Path);
         }
-        return BaseUrl;
+        return fallback;
     }
 
     private string CategoryUrl(string category)

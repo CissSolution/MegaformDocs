@@ -37,6 +37,10 @@ const entries: Record<string, string> = {
   'settings-popup': resolve(__dirname, 'src/view-designer/settings-popup.ts'),
   'dnn-host':       resolve(__dirname, 'src/dnn-host/index.ts'),
   workflow:         resolve(__dirname, 'src/builder/workflow/index.ts'),
+  // [UmbracoHostEntry v20260716] Tiny host-page bootstrap that injects the
+  // Bellissima backoffice bearer token into the shared TS admin surfaces.
+  // Output → megaform-umbraco-host.js, referenced by MegaForm.Umbraco views.
+  'umbraco-host':   resolve(__dirname, 'src/umbraco-host/index.ts'),
   // [PluginBuildEntry v20260708] PDF Form widget plugin — ships as
   // js/plugins/megaform-widget-pdf-form.js (self-contained, CSS inlined via
   // ?inline import in its index.ts). Before this entry existed the deployed

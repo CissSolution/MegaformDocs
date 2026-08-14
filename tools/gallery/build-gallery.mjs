@@ -24,6 +24,7 @@ import { createHash } from 'node:crypto';
 import { readdirSync, readFileSync, writeFileSync, mkdirSync, rmSync, existsSync } from 'node:fs';
 import { join, resolve, basename, dirname, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { buildTemplateKb, toSeedDocument, formTemplateSlug } from './kb-from-template.mjs';
 
 const args = process.argv.slice(2);
 const argOf = (name, dflt) => {
@@ -34,7 +35,7 @@ const argOf = (name, dflt) => {
 // fileURLToPath (not .pathname) — the repo path contains spaces, which stay
 // %20-escaped in a URL pathname and break every fs call downstream.
 const REPO_ROOT = resolve(join(dirname(fileURLToPath(import.meta.url)), '..', '..'));
-const SRC = resolve(argOf('src', join(REPO_ROOT, 'Samples', 'FormTemplates', 'Premium', 'DONEE')));
+const SRC = resolve(argOf('src', join(REPO_ROOT, 'Samples', 'FormTemplates', 'Premium', 'GALLERY-PUBLISHED')));
 const OUT = resolve(argOf('out', join(REPO_ROOT, 'gallery-dist')));
 const PUBLIC_BASE = argOf('base', '');
 // Canonical image source (Assets/img is the repo's single source of truth for
@@ -156,12 +157,32 @@ const bundledImages = new Set();
 let bundledImageBytes = 0;
 // Redundant source copies whose slug is already published — excluded from the package.
 const duplicateFiles = [];
+// [KbPerTemplate v20260812] KB channel accounting — one bundle per template, plus the
+// guide/facts resources those bundles reference.
+const kbFiles = [];          // { path, sha256, sizeBytes } for kb/manifest.json
+const kbTemplates = [];      // { slug, path, sha256, sizeBytes }
+const kbWarnings = [];
+const kbSlugs = [];          // KB entry slugs now SERVED by the gallery (leave the package)
+let kbWithGuide = 0;
+let kbBytes = 0;
+// Guides live beside the module, not in the template folder. DNN is the canonical copy —
+// gen-template-facts.cjs writes the same bytes to all three platform folders.
+const GUIDE_DIR = resolve(argOf('guides', join(REPO_ROOT, 'MegaForm.DNN', 'Resources', 'TemplateGuides')));
 
 mkdirSync(join(OUT, 'templates'), { recursive: true });
+mkdirSync(join(OUT, 'kb', 'templates'), { recursive: true });
+mkdirSync(join(OUT, 'kb', 'TemplateGuides'), { recursive: true });
 // Clear stale template files so a removed source template disappears from the repo.
 for (const stale of existsSync(join(OUT, 'templates')) ? readdirSync(join(OUT, 'templates')) : []) {
   const low = stale.toLowerCase();
   if (low.endsWith('.json') || low.endsWith('.zip')) rmSync(join(OUT, 'templates', stale), { force: true });
+}
+// Same for the KB channel: a retired template must not leave its knowledge behind, or the
+// AI keeps recommending a design nobody can install any more.
+for (const sub of ['templates', 'TemplateGuides']) {
+  for (const stale of readdirSync(join(OUT, 'kb', sub))) {
+    rmSync(join(OUT, 'kb', sub, stale), { force: true });
+  }
 }
 
 for (const file of readTemplates(SRC)) {
@@ -234,6 +255,50 @@ for (const file of readTemplates(SRC)) {
     }
   }
 
+  // ── per-template AI knowledge ───────────────────────────
+  // [KbPerTemplate v20260812] The owner's rule: a template's KB travels WITH the
+  // template instead of shipping inside the module package. Derived from this very
+  // document (kb-from-template.mjs), so publishing a template publishes its knowledge
+  // in the same push — they can never drift apart, and a template can no longer reach
+  // a customer with no knowledge attached.
+  const kb = buildTemplateKb({ doc, slug, guideDir: GUIDE_DIR });
+  for (const w of kb.warnings) kbWarnings.push({ slug, warning: w });
+
+  // Guide markdown + facts map are separate files: the bundle stays small and readable,
+  // each resource carries its own sha256, and the trust chain is unbroken (manifest pins
+  // the bundle, the bundle pins its resources).
+  const kbResources = [];
+  for (const r of kb.resources) {
+    const rel = 'kb/TemplateGuides/' + r.name;
+    writeFileSync(join(OUT, 'kb', 'TemplateGuides', r.name), r.data);
+    const entry = { path: rel, sha256: sha256Hex(r.data), sizeBytes: r.data.length };
+    kbResources.push(entry);
+    kbFiles.push(entry);
+    kbBytes += r.data.length;
+  }
+
+  const kbDoc = {
+    kbVersion: 1,
+    slug,
+    // Seed-shaped: AiKnowledgeSeedMerger.Merge consumes this sub-document verbatim,
+    // so the install path needs no parser of its own.
+    seed: toSeedDocument(kb.entries),
+    resources: kbResources,
+  };
+  const kbBuf = Buffer.from(JSON.stringify(kbDoc, null, 2) + '\n', 'utf8');
+  const kbRel = 'kb/templates/' + slug + '.json';
+  writeFileSync(join(OUT, 'kb', 'templates', slug + '.json'), kbBuf);
+  const kbSha = sha256Hex(kbBuf);
+  kbTemplates.push({ slug, path: kbRel, sha256: kbSha, sizeBytes: kbBuf.length });
+  kbBytes += kbBuf.length;
+  // kbSlugs is the "safe to delete from the package" list, NOT "what was published". The four
+  // BUNDLED starters are published here too (so they stay updatable and the feed is complete) but
+  // their TEMPLATE ships inside the package — strip their knowledge and an offline install would
+  // hold a template whose KB exists only on a gallery it cannot reach. Knowledge ships wherever
+  // its template ships.
+  if (!BUNDLED_SLUGS.has(slug)) for (const e of kb.entries) kbSlugs.push(e.Slug);
+  if (kb.entries.some((e) => e.Kind === 'template_guide')) kbWithGuide++;
+
   const cats = Array.isArray(doc.categories) ? doc.categories.filter(Boolean).map(String) : [];
   entries.push({
     slug,
@@ -251,6 +316,12 @@ for (const file of readTemplates(SRC)) {
     assetFiles: bundleFiles.map((f) => f.name),
     sha256: sha256Hex(bytes),
     sizeBytes: bytes.length,
+    // [KbPerTemplate v20260812] Pointer to this template's knowledge bundle, pinned by
+    // hash exactly like the template and the artwork. Same version, same push: editing a
+    // guide changes this sha256, so an install that already has the old KB re-downloads it.
+    kb: kbRel,
+    kbSha256: kbSha,
+    kbSizeBytes: kbBuf.length,
     // [QuickStart 2026-07-24] Was hard-coded true. This source folder IS the premium set, so
     // true remains the default, but a template that states its own flag is believed — otherwise
     // dropping a free starter in here would silently publish it as premium (and lock it on
@@ -269,6 +340,26 @@ for (const e of entries) e.updatedUtc = generatedUtc;
 
 const manifest = { repoVersion: 1, generatedUtc, templates: entries };
 writeFileSync(join(OUT, 'manifest.json'), JSON.stringify(manifest, null, 2) + '\n', 'utf8');
+
+// ── KB channel manifest ───────────────────────────────────
+// [KbPerTemplate v20260812] kb/manifest.json was a 404 on every install ever shipped:
+// GalleryRepositoryService has had a `kb` channel since v20260723 and nothing ever
+// published into it. This is the file that makes the channel real. It stays a CHANNEL
+// index (what knowledge exists, pinned by hash) — the install path resolves a single
+// template's bundle straight from manifest.json's kb/kbSha256 pointer and never needs
+// to read this, so a stale copy cannot break an install.
+kbTemplates.sort((a, b) => a.slug.localeCompare(b.slug));
+kbFiles.sort((a, b) => a.path.localeCompare(b.path));
+writeFileSync(join(OUT, 'kb', 'manifest.json'), JSON.stringify({
+  repoVersion: 1,
+  generatedUtc,
+  // No shared seed file: template knowledge is per-template by design. The module's
+  // core KB (widgets, patterns, rules) still ships in the package — only knowledge
+  // ABOUT A GALLERY TEMPLATE moved out here.
+  seed: null,
+  templates: kbTemplates,
+  files: kbFiles,
+}, null, 2) + '\n', 'utf8');
 
 // ── human-friendly landing page ────────────────────────────
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -345,6 +436,14 @@ writeFileSync(excludePath, JSON.stringify({
     .map((p) => p.replace(/^img\//, ''))
     .sort(),
   imageBytes: assetBytesMoved - bundledImageBytes,
+  // [KbPerTemplate v20260812] KB entry slugs the GALLERY now serves. strip-seed-kb.mjs
+  // removes exactly these rows from the seed copied into the package, so a template's
+  // knowledge arrives with the template instead of being frozen into every build. Slugs
+  // absent from this list (the module's own widget/pattern/rule knowledge, and the
+  // bundled quick-start starters) keep shipping — an offline install must still have an
+  // AI that works.
+  kbSlugs: kbSlugs.slice().sort(),
+  kbGuideFiles: kbFiles.map((f) => f.path.replace(/^kb\/TemplateGuides\//, '')).sort(),
 }, null, 2) + '\n', 'utf8');
 
 // ── keep the Oqtane .nuspec in sync ───────────────────────
@@ -415,6 +514,36 @@ for (const e of entries) {
     if (sha256Hex(ab) !== e.assetsSha256) { broken.push(`${e.slug}: assets sha256 mismatch`); continue; }
     if (ab.length !== e.assetsSizeBytes) { broken.push(`${e.slug}: assets sizeBytes mismatch`); continue; }
   }
+  // [KbPerTemplate v20260812] The KB bundle is downloaded with the same
+  // DownloadFileAsync that refuses an unverifiable file, so an unhashed or mismatched
+  // bundle is a template whose knowledge can never install — a hard build failure, not
+  // a warning. Its resources are verified too: they are pinned inside the bundle, and a
+  // guide that fails its hash leaves the AI editing a premium shell with no contract.
+  if (e.kb) {
+    const kp = join(OUT, e.kb);
+    if (!existsSync(kp)) { broken.push(`${e.slug}: kb bundle missing (${e.kb})`); continue; }
+    const kbuf = readFileSync(kp);
+    if (sha256Hex(kbuf) !== e.kbSha256) { broken.push(`${e.slug}: kb sha256 mismatch`); continue; }
+    if (kbuf.length !== e.kbSizeBytes) { broken.push(`${e.slug}: kb sizeBytes mismatch`); continue; }
+    let kdoc;
+    try { kdoc = JSON.parse(kbuf.toString('utf8')); }
+    catch { broken.push(`${e.slug}: kb bundle is not valid JSON`); continue; }
+    if (!kdoc.seed || !Array.isArray(kdoc.seed.entries) || kdoc.seed.entries.length === 0) {
+      broken.push(`${e.slug}: kb bundle carries no entries`); continue;
+    }
+    let resBroken = null;
+    for (const r of kdoc.resources || []) {
+      const rp = join(OUT, r.path);
+      if (!existsSync(rp)) { resBroken = `kb resource missing (${r.path})`; break; }
+      const rb = readFileSync(rp);
+      if (sha256Hex(rb) !== r.sha256) { resBroken = `kb resource sha256 mismatch (${r.path})`; break; }
+      if (rb.length !== r.sizeBytes) { resBroken = `kb resource sizeBytes mismatch (${r.path})`; break; }
+    }
+    if (resBroken) { broken.push(`${e.slug}: ${resBroken}`); continue; }
+  } else {
+    broken.push(`${e.slug}: no kb bundle — every published template must carry its knowledge`);
+    continue;
+  }
   verified++;
 }
 
@@ -431,7 +560,23 @@ if (missingImages.length) {
   for (const m of missingImages.slice(0, 15)) console.log('    ! ' + m.rel + '  (referenced by ' + m.file + ')');
   if (missingImages.length > 15) console.log('    ... and ' + (missingImages.length - 15) + ' more');
 }
-console.log('  manifest  : manifest.json (repoVersion 1)');
+console.log('  knowledge : ' + kbTemplates.length + ' bundle(s), ' + kbWithGuide + ' with a refine guide, '
+  + kbFiles.length + ' resource file(s), ' + (kbBytes / 1024).toFixed(0) + ' KB total');
+// Never let a coverage gap read as success: a template with no guide still installs, but
+// the AI edits its premium shell without a design contract — say which ones, every run.
+const noGuide = [...new Set(kbWarnings.filter((w) => /no guide file/.test(w.warning)).map((w) => w.slug))]
+  .map((slug) => ({ slug }));
+const deadPointer = kbWarnings.filter((w) => /pointer is dead|does not match/.test(w.warning));
+if (noGuide.length) {
+  console.log('    ! ' + noGuide.length + ' template(s) ship CREATE knowledge only (no <slug>.guide.md):');
+  for (const w of noGuide.slice(0, 8)) console.log('      - ' + w.slug);
+  if (noGuide.length > 8) console.log('      ... and ' + (noGuide.length - 8) + ' more');
+}
+if (deadPointer.length) {
+  console.log('    ! ' + deadPointer.length + ' template(s) declare templateGuideSlug with nothing behind it:');
+  for (const w of deadPointer) console.log('      - ' + w.slug + ': ' + w.warning);
+}
+console.log('  manifest  : manifest.json + kb/manifest.json (repoVersion 1)');
 console.log('  bundled   : ' + entries.filter((e) => BUNDLED_SLUGS.has(e.slug)).length + '/' + BUNDLED_SLUGS.size
   + ' premium starter(s) kept in the package'
   + (entries.filter((e) => BUNDLED_SLUGS.has(e.slug)).length === BUNDLED_SLUGS.size ? '' : '  ⚠ a BUNDLED_SLUGS entry matched no template'));

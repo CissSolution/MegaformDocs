@@ -33,11 +33,31 @@ export const CURSOR_SCRIPT = `
     'box-shadow:0 0 0 4px rgba(223,0,0,.12)', 'pointer-events:none', 'opacity:0',
     'transition:left .45s cubic-bezier(.4,0,.2,1),top .45s cubic-bezier(.4,0,.2,1),opacity .2s,transform .12s',
   ].join(';');
-  const attach = () => { if (document.body && !dot.isConnected) document.body.appendChild(dot); };
+  // Always move the dot to the END of <body>, not merely "append it if detached". Full-screen product
+  // overlays (the BPMN editor, the builder shell) also sit at z-index 2147483647, and equal z-index is
+  // broken by DOM ORDER - an overlay mounted after the cursor paints on top of it. The cursor then
+  // measures perfectly (display block, visibility visible, opacity 1, a real 22px rect at the right
+  // coordinates) and is nowhere in the recording, which sends you hunting for a style bug that is not
+  // there. A "dotIsLastChild: false" reading is the tell.
+  // (No backticks in this comment: CURSOR_SCRIPT is itself a template literal, so one would end it.)
+  const attach = () => {
+    if (!document.body) return;
+    if (dot !== document.body.lastElementChild) document.body.appendChild(dot);
+  };
   attach();
   document.addEventListener('DOMContentLoaded', attach);
+  // ðŸ”´ The cursor lives on <body>, and MegaForm's full-screen modes hide every direct child of body
+  // that is not on their whitelist - builder/loader ships
+  // 'body.mf-builder-open>*:not(#mf-builder-root)...{display:none!important}' and the BPMN editor
+  // ships 'body.mf-dnn-workflow-open > *:not(...){display:none!important}'. The dot then reports
+  // opacity 1, the right left/top and z-index 2147483647 while computing display:none, which reads
+  // like a z-index fight it is not: it filmed a whole BPMN demo with no cursor in a single frame.
+  // An INLINE !important declaration outranks any author stylesheet whatever its specificity, so
+  // reassert it on every move instead of trying to out-specify the rule.
+  const show = () => dot.style.setProperty('display', 'block', 'important');
+  show();
   window.__mfCursor = {
-    to(x, y) { attach(); dot.style.left = x + 'px'; dot.style.top = y + 'px'; dot.style.opacity = '1'; },
+    to(x, y) { attach(); show(); dot.style.left = x + 'px'; dot.style.top = y + 'px'; dot.style.opacity = '1'; },
     press() { dot.style.transform = 'scale(.6)'; setTimeout(() => { dot.style.transform = 'scale(1)'; }, 160); },
     hide() { dot.style.opacity = '0'; },
   };
@@ -133,16 +153,21 @@ export function pickSegments(webm, { threshold = 1.6, pad = 1, gap = 2, maxSecon
  * webm -> GIF. `segments` keeps only the interesting time ranges, so a 40s recording with a
  * 20s "saving…" gap still becomes a short GIF.
  */
-export function toGif(webm, gifOut, { width = 820, fps = 6, quality = 24, segments = null } = {}) {
+export function toGif(webm, gifOut, { width = 820, fps = 6, quality = 24, segments = null, crop = null } = {}) {
   const work = fs.mkdtempSync(path.join(path.dirname(gifOut), 'frames-'));
   const ff = ffmpegPath();
   const ranges = segments && segments.length ? segments : [null];
   let index = 0;
+  // `crop` = {x, y, w, h} in RECORDED pixels, applied before the scale. A 1500px-wide capture shrunk
+  // to a 720px GIF renders 12px UI text at ~6px, which is not reading material - the point of a
+  // settings-panel demo is that the reader can read the settings. Cropping to the panel keeps the
+  // text near 1:1 instead of spending the width on chrome nobody is looking at.
+  const vf = (crop ? `crop=${crop.w}:${crop.h}:${crop.x}:${crop.y},` : '') + `scale=${width}:-1`;
 
   for (const range of ranges) {
     const args = [];
     if (range) { args.push('-ss', String(range[0]), '-t', String(range[1] - range[0])); }
-    args.push('-i', webm, '-vf', `scale=${width}:-1`, '-r', String(fps),
+    args.push('-i', webm, '-vf', vf, '-r', String(fps),
               path.join(work, `s${index}-%05d.png`));
     execFileSync(ff, args, { stdio: 'ignore' });
     index++;

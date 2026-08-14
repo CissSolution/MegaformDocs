@@ -1,0 +1,27 @@
+@page
+@model MegaForm.Samples.CorporateWeb.Pages.TermsModel
+@{
+    ViewData["Title"] = "Terms and Conditions";
+}
+
+<section class="content-page">
+    <div class="container">
+        <h1>Terms and Conditions</h1>
+        <p>
+            This is a demonstration website. The data you submit through the contact form
+            is stored locally in the sample database for testing purposes only.
+        </p>
+        <p>
+            Do not submit real personal information, passwords, or payment details.
+            The admin credentials for the MegaForm console are printed in the application
+            logs on first run.
+        </p>
+        <p>
+            For a real deployment, configure SMTP, HTTPS, strong authentication secrets,
+            and a privacy policy appropriate for your jurisdiction.
+        </p>
+        <div class="cta-row">
+            <a class="btn btn-secondary" href="/Contact">Back to contact form</a>
+        </div>
+    </div>
+</section>

@@ -6,6 +6,7 @@ using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using Oqtane.Controllers;
 using Oqtane.Enums;
 using Oqtane.Infrastructure;
@@ -132,7 +133,7 @@ namespace MegaForm.Oqtane.Server.Controllers
         }
 
         [HttpGet("Tables")]
-        public IActionResult ListTables([FromQuery] string connectionKey = null)
+        public IActionResult ListTables([FromQuery] string connectionKey = null, [FromQuery] int showAll = 0)
         {
             if (!IsAdmin) return Unauthorized();
             var connKey = string.IsNullOrWhiteSpace(connectionKey) ? "DashboardDatabase" : connectionKey.Trim();
@@ -141,37 +142,62 @@ namespace MegaForm.Oqtane.Server.Controllers
             {
                 using var conn = OpenSubformConnection(connKey);
                 using var cmd = conn.CreateCommand();
+                // [ShowAllParity v20260813] The builder's Database tab has always drawn a "Show
+                // system tables" checkbox and always sent ?showAll=1 when it was ticked — this
+                // endpoint just never read it, so on Oqtane the checkbox was inert and the tab
+                // listed every base table on the connection (74 on a stock 10.1 site, none of them
+                // the customer's). Default now hides the platform's and MegaForm's own tables, the
+                // same contract the DNN twin has had since v20260529-01; tick the box to see them.
+                // Both lists are EXACT NAMES, so a customer table is never eaten by a prefix.
+                var hideSystem = showAll != 1;
                 if (IsSqlite(conn))
                 {
+                    var sqliteFilter = hideSystem
+                        ? "\n                          AND name NOT IN (" + PlatformSystemTables.SqlNameList() +
+                          ")\n                          AND name NOT IN (" + MegaFormInternalTables.SqlNameList() +
+                          ")\n                          AND name NOT LIKE 'AspNet%'"
+                        : string.Empty;
                     cmd.CommandText = @"
                         SELECT 'main' AS TABLE_SCHEMA, name AS TABLE_NAME
                         FROM sqlite_master
                         WHERE type = 'table'
-                          AND name NOT LIKE 'sqlite_%'
+                          AND name NOT LIKE 'sqlite_%'" + sqliteFilter + @"
                         ORDER BY name";
                 }
                 else
                 {
+                    var filter = hideSystem
+                        ? "\n                          AND TABLE_NAME NOT IN (" + PlatformSystemTables.SqlNameList() +
+                          ")\n                          AND TABLE_NAME NOT IN (" + MegaFormInternalTables.SqlNameList() +
+                          ")\n                          AND TABLE_NAME NOT LIKE 'AspNet%'"
+                        : string.Empty;
                     cmd.CommandText = @"
                         SELECT TABLE_SCHEMA, TABLE_NAME
                         FROM INFORMATION_SCHEMA.TABLES
                         WHERE TABLE_TYPE = 'BASE TABLE'
                           AND TABLE_NAME NOT LIKE 'sys%'
-                          AND TABLE_NAME NOT LIKE 'MS%'
+                          AND TABLE_NAME NOT LIKE 'MS%'" + filter + @"
                         ORDER BY TABLE_SCHEMA, TABLE_NAME";
                 }
                 var list = new List<SubformTableInfo>();
                 using var r = cmd.ExecuteReader();
                 while (r.Read())
                     list.Add(new SubformTableInfo { Schema = r.GetString(0), Name = r.GetString(1) });
-                return Ok(new { tables = list });
+                return Ok(new { tables = list, showAll = showAll == 1 });
             }
             catch (InvalidOperationException ioe) when (ioe.Message.Contains("Connection string", StringComparison.OrdinalIgnoreCase))
             {
-                // Graceful degrade when DashboardDatabase is not configured
-                return Ok(new { tables = new List<SubformTableInfo>(), warning = ioe.Message });
+                // Graceful degrade when DashboardDatabase is not configured.
+                // [Rule10 2026-07-27] Static text — the provider message names the connection.
+                return Ok(new { tables = new List<SubformTableInfo>(), warning = "connection is not configured" });
             }
-            catch (Exception ex) { return StatusCode(500, new { error = ex.Message }); }
+            // [Rule10 2026-07-27] Never echo the provider exception: it leaks the database name and
+            // the app-pool identity (e.g. Cannot open database "X" … Login failed for 'IIS APPPOOL\Y').
+            catch (Exception ex)
+            {
+                _logger.Log(LogLevel.Error, this, LogFunction.Read, ex, "Subform.Tables failed for {Key}", connKey);
+                return StatusCode(500, new { error = "could not list tables" });
+            }
         }
 
         [HttpGet("Columns")]
@@ -186,20 +212,55 @@ namespace MegaForm.Oqtane.Server.Controllers
             {
                 using var conn = OpenSubformConnection(connKey);
                 using var cmd = conn.CreateCommand();
+                // [ColumnsFix v20260813] This endpoint returned 500 for EVERY table on SQL Server.
+                // INFORMATION_SCHEMA.IS_NULLABLE is the string 'YES'/'NO', and Convert.ToBoolean("YES")
+                // throws FormatException — which the catch below turned into "could not read columns".
+                // Consequence: on Oqtane the Database tab could list tables but never expand one, and
+                // "+ DataGrid" (which loads columns first) failed too. The DNN twin reads
+                // `GetString(2) == "YES"` and has always worked. Both column shapes are now cast in
+                // SQL so one reader loop is correct for SQL Server and SQLite alike.
+                // Verified against :5131 (Oqtane 10.1 / SQL Express), 2026-08-13.
+                //
+                // IsPrimary/IsIdentity have existed on SubformDbColumn since it was written and were
+                // never populated by any platform. They are filled here because "+ DataGrid" drops
+                // identity columns (`cols.filter(c => !c.isIdentity)`) — without the flag every
+                // generated Subform offered the IDENTITY key as an editable column.
                 if (IsSqlite(conn))
                 {
                     // SQLite PRAGMA cannot be parameterised, but tableName has
                     // already been validated for dangerous chars above.
                     cmd.CommandText = $@"
-                        SELECT name, type, NOT notnull, COALESCE(dflt_value,'')
+                        SELECT name,
+                               type,
+                               NOT notnull,
+                               0,
+                               0,
+                               CASE WHEN pk > 0 THEN 1 ELSE 0 END
                         FROM pragma_table_info('{tableName.Replace("'", "''")}')
                         ORDER BY cid";
                 }
                 else
                 {
                     cmd.CommandText = @"
-                        SELECT c.COLUMN_NAME, c.DATA_TYPE, c.IS_NULLABLE, ISNULL(c.CHARACTER_MAXIMUM_LENGTH,0)
+                        SELECT c.COLUMN_NAME,
+                               c.DATA_TYPE,
+                               CAST(CASE WHEN c.IS_NULLABLE = 'YES' THEN 1 ELSE 0 END AS bit),
+                               ISNULL(c.CHARACTER_MAXIMUM_LENGTH, 0),
+                               CAST(ISNULL(COLUMNPROPERTY(
+                                   OBJECT_ID(QUOTENAME(c.TABLE_SCHEMA) + '.' + QUOTENAME(c.TABLE_NAME)),
+                                   c.COLUMN_NAME, 'IsIdentity'), 0) AS bit),
+                               CAST(CASE WHEN pk.COLUMN_NAME IS NULL THEN 0 ELSE 1 END AS bit)
                         FROM INFORMATION_SCHEMA.COLUMNS c
+                        LEFT JOIN (
+                            SELECT ku.TABLE_SCHEMA, ku.TABLE_NAME, ku.COLUMN_NAME
+                            FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc
+                            JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE ku
+                              ON tc.CONSTRAINT_NAME = ku.CONSTRAINT_NAME
+                             AND tc.TABLE_SCHEMA    = ku.TABLE_SCHEMA
+                            WHERE tc.CONSTRAINT_TYPE = 'PRIMARY KEY'
+                        ) pk ON pk.TABLE_SCHEMA = c.TABLE_SCHEMA
+                            AND pk.TABLE_NAME   = c.TABLE_NAME
+                            AND pk.COLUMN_NAME  = c.COLUMN_NAME
                         WHERE c.TABLE_NAME = @t
                         ORDER BY c.ORDINAL_POSITION";
                     var p = cmd.CreateParameter(); p.ParameterName = "@t"; p.Value = tableName; cmd.Parameters.Add(p);
@@ -215,13 +276,20 @@ namespace MegaForm.Oqtane.Server.Controllers
                         Name = r.GetString(0),
                         DataType = type,
                         Nullable = Convert.ToBoolean(r.GetValue(2)),
-                        MaxLength = 0,
+                        MaxLength = Convert.ToInt32(r.GetValue(3)),
+                        IsIdentity = Convert.ToBoolean(r.GetValue(4)),
+                        IsPrimary = Convert.ToBoolean(r.GetValue(5)),
                         UiType = ClassifyUiType(type)
                     });
                 }
                 return Ok(new { table = tableName, columns = cols });
             }
-            catch (Exception ex) { return StatusCode(500, new { error = ex.Message }); }
+            // [Rule10 2026-07-27] see GetTables — provider messages leak DB name + app-pool identity.
+            catch (Exception ex)
+            {
+                _logger.Log(LogLevel.Error, this, LogFunction.Read, ex, "Subform.Columns failed for {Table}", tableName);
+                return StatusCode(500, new { error = "could not read columns" });
+            }
         }
 
         [HttpPost("Compute")]
@@ -242,7 +310,12 @@ namespace MegaForm.Oqtane.Server.Controllers
                     Formatted = value.ToString(System.Globalization.CultureInfo.InvariantCulture)
                 });
             }
-            catch (Exception ex) { return Ok(new SubformComputeResult { Error = ex.Message }); }
+            // [Rule10 2026-07-27] The evaluator's own InvalidOperationException describes the
+            // *designer's formula* (Unknown function, Mismatched parens, …) and carries no server
+            // state, so it stays — it is the only useful feedback while authoring a formula.
+            // Anything else is unexpected and must not reach the client (this action is anonymous).
+            catch (InvalidOperationException ioe) { return Ok(new SubformComputeResult { Error = ioe.Message }); }
+            catch (Exception) { return Ok(new SubformComputeResult { Error = "formula could not be evaluated" }); }
         }
 
         [HttpGet("Rows")]
@@ -272,7 +345,12 @@ namespace MegaForm.Oqtane.Server.Controllers
                 }
                 return Ok(new { rows });
             }
-            catch (Exception ex) { return StatusCode(500, new { error = ex.Message }); }
+            // [Rule10 2026-07-27] see GetTables — provider messages leak DB name + app-pool identity.
+            catch (Exception ex)
+            {
+                _logger.Log(LogLevel.Error, this, LogFunction.Read, ex, "Subform.Rows failed for {Table}", tableName);
+                return StatusCode(500, new { error = "could not read rows" });
+            }
         }
 
         private static bool IsSafeIdentifier(string value)
@@ -361,9 +439,13 @@ namespace MegaForm.Oqtane.Server.Controllers
                     message = "Table " + fullName + " created successfully."
                 });
             }
+            // [Rule10 2026-07-27] Admin-only, but the provider message still names the database and
+            // the app-pool login on a connection failure. Log it; tell the caller only that the
+            // statement was rejected by the database.
             catch (Exception ex)
             {
-                return BadRequest(new { error = "SQL error: " + ex.Message });
+                _logger.Log(LogLevel.Error, this, LogFunction.Create, ex, "Subform.ApplyDdl failed for {Table}", targetTable);
+                return BadRequest(new { error = "the database rejected this CREATE TABLE statement" });
             }
         }
 

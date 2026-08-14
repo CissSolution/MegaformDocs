@@ -20,10 +20,12 @@
 <ConsoleShell Scope="_scope"
               ConsoleBaseUrl="@AdminBaseUrl"
               BlogUrl="@BlogUrl"
+              PostUrl="PostUrlForSlug"
               AppKey="@_config.AppKey"
               IsNews="_config.IsNews"
               Allowed="_allowed"
-              View="@_view" />
+              View="@_view"
+              EditId="_editId" />
 
 @code {
     private static readonly string[] BlogRoles =
@@ -34,6 +36,7 @@
 
     private bool _allowed;
     private string _view = "dashboard";
+    private int _editId;
     private MegaFormScope _scope = new MegaFormScope();
     private BlogInstanceConfig _config = new BlogInstanceConfig();
 
@@ -53,7 +56,34 @@
     // onto the public page. EditUrl(action) is the idiom MegaForm's own module uses
     // (Oqtane.Client/Index.razor:2786).
     private string AdminBaseUrl => EditUrl("Edit");
-    private string BlogUrl => NavigateUrl(PageState.Page.Path);
+
+    /// <summary>
+    /// The public surface. PublicPageId names it explicitly; without it this route falls back to
+    /// the page the console was opened from, which is what it did before the setting existed.
+    /// </summary>
+    private string BlogUrl
+    {
+        get
+        {
+            var pageId = _config.PublicPageId > 0 ? _config.PublicPageId : _config.DetailPageId;
+            if (pageId > 0)
+            {
+                var target = PageState?.Pages?.FirstOrDefault(p => p != null && p.PageId == pageId);
+                if (target != null) return NavigateUrl(target.Path);
+            }
+            return NavigateUrl(PageState.Page.Path);
+        }
+    }
+
+    /// <summary>Reader-facing URL for one slug — the console's preview links. Twin of Index.razor's.</summary>
+    private string PostUrlForSlug(string slug)
+    {
+        var target = BlogUrl;
+        if (string.IsNullOrWhiteSpace(slug)) return target;
+        if (_config.SlugSource == "urlparameters")
+            return target.TrimEnd('/') + "/!/" + Uri.EscapeDataString(slug);
+        return target + "?" + _config.SlugParam + "=" + Uri.EscapeDataString(slug);
+    }
 
     protected override void OnParametersSet()
     {
@@ -61,6 +91,8 @@
 
         _view = BlogUrlState.Read(Nav?.Uri ?? "", "view", 32).ToLowerInvariant();
         if (!BlogInstanceConfig.ConsoleRoutes.Contains(_view)) _view = _config.ConsoleView;
+        _editId = BlogUrlState.ReadId(Nav?.Uri ?? "", "id");
+        if (_view == "edit" && _editId <= 0) _view = "editorial";
 
         var user = PageState?.User;
         var roles = SplitRoles(user?.Roles);

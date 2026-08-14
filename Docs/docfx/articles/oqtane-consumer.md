@@ -19,7 +19,7 @@ services.AddScoped<IFormRepository, EfFormRepository>();
 services.AddScoped<ISubmissionRepository, EfSubmissionRepository>();
 services.AddScoped<MegaForm.Core.Interfaces.IFileRepository, EfFileRepository>();
 services.AddScoped<IStorageService, OqtaneStorageService>();
-MegaFormSdkServiceCollectionExtensions.AddMegaFormSdk(services);
+services.AddMegaFormSdk();
 ```
 
 ## 2. Inject it into a component

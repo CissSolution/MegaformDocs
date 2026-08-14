@@ -6,8 +6,9 @@ import { WizardData, WizardField, themeMeta, fontStack, roundnessPx, FONT_STYLES
 import { mfField, buildFieldFromCatalog, catalogLabel } from './field-catalog';
 import { syncFieldPlaceholders } from '@shared/custom-html-insert';
 import { migratePremiumWizardSchemaToNative } from '@shared/premium-native-migration';
+import { listSteps } from '@shared/form-steps';
 import { applyDefaultPureGridShell } from '../ai-form-creator';
-import { applyPremiumStepDetailsToFields, applyPremiumStepDetailsToHtml } from './premium-steps';
+import { applyPremiumStepDetailsToFields } from './premium-steps';
 
 function slug(s: string, used: Set<string>): string {
   let base = String(s || 'field').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '') || 'field';
@@ -104,18 +105,44 @@ export interface WizardSaveCtx { moduleId: number; siteId: number; }
 function premiumDto(data: WizardData, ctx: WizardSaveCtx): any {
   const t = data.templateRecord || {};
   const settings: any = JSON.parse(JSON.stringify(t.settings || {}));
-  // Edited working copy (③ add/remove) if present, else the template's fields. Strip the
-  // UI-only __step marker before emit.
-  const srcFields = Array.isArray(data.premiumFields) ? data.premiumFields : (Array.isArray(t.fields) ? t.fields : []);
-  const fields = JSON.parse(JSON.stringify(srcFields));
-  fields.forEach((f: any) => { if (f && f.__step != null) delete f.__step; });
+  // Run the existing native migration against the untouched template first. Its output is
+  // therefore independent of step add/remove/rename operations. The canonical working field
+  // list is overlaid afterwards, so structural step edits never rewrite the premium shell.
+  const baseFields = JSON.parse(JSON.stringify(Array.isArray(t.fields) ? t.fields : []));
+  const schema: any = { version: '1.0', fields: baseFields, settings };
+  migratePremiumWizardSchemaToNative(schema);
+  const originalDataKeys = new Set(
+    (schema.fields || [])
+      .filter((field: any) => String(field?.type || field?.Type || '') !== 'Section')
+      .map((field: any) => String(field?.key || field?.Key || ''))
+      .filter(Boolean),
+  );
+
+  // Edited canonical working copy (Section page-breaks included). Strip the UI-only
+  // ordinal marker before emit; premiumStepIndex is intentionally left untouched.
+  const srcFields = Array.isArray(data.premiumFields) ? data.premiumFields : schema.fields;
+  const fields = JSON.parse(JSON.stringify(srcFields || []));
+  fields.forEach((field: any) => { if (field && field.__step != null) delete field.__step; });
   applyPremiumStepDetailsToFields(fields, data.premiumStepDetails);
-  // Reconcile the custom-shell layout so add/remove reflects in the premium HTML before the
-  // native migration turns data-step wizard structure into schema Section.pageBreak.
-  if (typeof settings.customHtml === 'string' && settings.customHtml) {
-    settings.customHtml = applyPremiumStepDetailsToHtml(settings.customHtml, data.premiumStepDetails);
-    settings.customHtml = syncFieldPlaceholders(settings.customHtml, fields);
+  schema.fields = fields;
+  schema.Fields = fields;
+
+  // Preserve the pre-existing field add/remove feature. Only a real field-key set change
+  // may reconcile placeholders; step-only changes keep customHtml byte-identical.
+  const editedDataKeys = new Set(
+    fields
+      .filter((field: any) => String(field?.type || field?.Type || '') !== 'Section')
+      .map((field: any) => String(field?.key || field?.Key || ''))
+      .filter(Boolean),
+  );
+  const fieldKeysChanged = originalDataKeys.size !== editedDataKeys.size
+    || Array.from(originalDataKeys).some(key => !editedDataKeys.has(key));
+  if (fieldKeysChanged && typeof settings.customHtml === 'string' && settings.customHtml) {
+    settings.customHtml = syncFieldPlaceholders(settings.customHtml, fields.filter((field: any) => String(field?.type || field?.Type || '') !== 'Section'));
   }
+  const multiPage = listSteps(fields).length > 1;
+  settings.multiPage = multiPage;
+  settings.MultiPage = multiPage;
   // Layer Publish options (additive — no style clobber).
   settings.accessLevel = data.accessLevel;
   settings.allowAnonymous = !!data.allowAnonymous;
@@ -125,8 +152,6 @@ function premiumDto(data: WizardData, ctx: WizardSaveCtx): any {
   settings.createdViaWizard = true;
   settings.createdFromTemplateId = t.id || '';
 
-  const schema = { version: '1.0', fields, settings };
-  migratePremiumWizardSchemaToNative(schema);
   const requireAuth = data.accessLevel === 'authenticated' || data.accessLevel === 'restricted';
   const workflowJson = buildWorkflow(data);
   const theme = typeof settings.theme === 'string' ? settings.theme : '';

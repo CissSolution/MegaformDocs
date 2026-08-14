@@ -1,0 +1,279 @@
+{
+  "version": "1.0",
+  "slug": "job-application-northwind",
+  "title": "Apply for Position",
+  "description": "Job application: a sticky progress sidebar beside a white form card with contact, position and cover-letter sections, a live character counter and a draft/submit button pair. Transcribed from the job-application mock.",
+  "category": "hr",
+  "categories": [
+    "hr",
+    "premium",
+    "recruitment"
+  ],
+  "icon": "briefcase",
+  "submitButtonText": "Submit Application",
+  "successMessage": "Application received. We will be in touch.",
+  "settings": {
+    "theme": "custom",
+    "multiPage": false,
+    "showProgressBar": false,
+    "customContent": {
+      "job_application": "Job Application",
+      "step_1_of_1": "Step 1 of 1",
+      "personal_info": "Personal Info",
+      "position_details": "Position Details",
+      "text_3": "3",
+      "cover_letter": "Cover Letter",
+      "apply_for_position": "Apply for Position",
+      "complete_this_form_to_submit_your_job_application": "Complete this form to submit your job application",
+      "contact_information": "Contact Information",
+      "full_name": "Full Name",
+      "phone": "Phone",
+      "email": "Email",
+      "position": "Position",
+      "years_of_experience": "Years of Experience",
+      "expected_salary_annual": "Expected Salary (annual)",
+      "available_start_date": "Available Start Date",
+      "text_0_2000_characters": "0 / 2000 characters",
+      "save_as_draft": "Save as Draft",
+      "submit_application": "Submit Application"
+    },
+    "customScripts": {
+      "cover_count": "(function(){\n  var root = (typeof __mfCurrentScriptRoot !== 'undefined' && __mfCurrentScriptRoot) || document;\n  var scope = (root && root.closest) ? (root.closest('.mfp') || document) : document;\n  function paint(){\n    var ta = scope.querySelector('[name=\"cover_letter\"]');\n    var n = scope.querySelector('[data-mf-cover-count=\"1\"]');\n    if (ta && n) n.textContent = String((ta.value || '').length) + ' / 2000 characters';\n  }\n  scope.addEventListener('input', paint, true);\n  scope.addEventListener('change', paint, true);\n  paint();\n})();"
+    },
+    "customHtml": "<div class='mfp mfp-jba mfp-native-generated' data-mf-flexgrid=\"locked\" style=\"background:transparent!important;border:0!important;border-radius:0!important;padding:0!important;box-shadow:none!important\"><div class='jba-page'><div class='jba-shell'><div class='jba-grid'><div class='jba-side'><div class='jba-side-card'><div class='jba-side-h'><i class='fa fa-file-text-o jba-side-i'></i><span class='jba-side-t'><span class='jba-side-n'>{{content:job_application}}</span><span class='jba-side-s'>{{content:step_1_of_1}}</span></span></div><div class='jba-steps'><div class='jba-step'><span class='jba-badge jba-badge-on'>&#10003;</span><span class='jba-step-l'>{{content:personal_info}}</span></div><div class='jba-step'><span class='jba-badge jba-badge-on'>&#10003;</span><span class='jba-step-l'>{{content:position_details}}</span></div><div class='jba-step'><span class='jba-badge jba-badge-off'>{{content:text_3}}</span><span class='jba-step-l'>{{content:cover_letter}}</span></div></div></div></div><div class='jba-main'><div class='jba-card'><h1 class='jba-h1'>{{content:apply_for_position}}</h1><p class='jba-lede'>{{content:complete_this_form_to_submit_your_job_application}}</p><div class='jba-form'><div class='jba-sec'><h3 class='jba-h3'>{{content:contact_information}}</h3><div class='jba-grid2'><label class='jba-field'><span class='jba-label'>{{content:full_name}} <span class='jba-req'>*</span></span>{{field:full_name}}</label><label class='jba-field'><span class='jba-label'>{{content:phone}} <span class='jba-req'>*</span></span>{{field:phone}}</label><label class='jba-field jba-span2'><span class='jba-label'>{{content:email}} <span class='jba-req'>*</span></span>{{field:email}}</label></div></div><div class='jba-sec jba-sec-top'><h3 class='jba-h3'>{{content:position_details}}</h3><div class='jba-grid2'><label class='jba-field'><span class='jba-label'>{{content:position}} <span class='jba-req'>*</span></span>{{field:position}}</label><label class='jba-field'><span class='jba-label'>{{content:years_of_experience}} <span class='jba-req'>*</span></span>{{field:experience}}</label><label class='jba-field'><span class='jba-label'>{{content:expected_salary_annual}}</span>{{field:salary}}</label><label class='jba-field'><span class='jba-label'>{{content:available_start_date}} <span class='jba-req'>*</span></span>{{field:start_date}}</label></div></div><div class='jba-sec jba-sec-top'><h3 class='jba-h3'>{{content:cover_letter}}</h3><div class='jba-ta'>{{field:cover_letter}}</div><p class='jba-count' data-mf-cover-count='1'>{{content:text_0_2000_characters}}</p></div>{{script:cover_count}}<div class='jba-cta'><span class='jba-draft'>{{content:save_as_draft}}</span><button class='jba-submit' type='submit'>{{content:submit_application}}</button></div></div></div></div></div></div></div></div>",
+    "customCss": "@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700;800&display=swap');\n.mfp.mfp-jba.mfp-native-generated {--jba-primary:#4F39F6;--jba-accent:#4F39F6;--jba-surface:var(--mf-page-surface,var(--mf-preset-surface,#FFFFFF));--jba-text:var(--mf-page-text,var(--mf-preset-text,#0F172B));--jba-muted:var(--mf-page-muted,var(--mf-preset-muted,#62748E));--jba-border:var(--mf-page-border,var(--mf-preset-border,#E2E8F0));--jba-on-primary:var(--mf-preset-on-primary,#FFFFFF);--jba-deco:#4F39F6;--jba-page:#F8FAFC;--jba-fill:#F8FAFC;--jba-fill-strong:color-mix(in srgb, var(--jba-text) 9%, var(--jba-surface));--jba-soft:color-mix(in srgb, var(--jba-primary) 12%, var(--jba-surface));--jba-hairline:color-mix(in srgb, var(--jba-text) 12%, var(--jba-surface));}.mfp.mfp-jba.mfp-native-generated {background:transparent!important;border:0!important;padding:0!important;font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif}.mfp.mfp-jba.mfp-native-generated {--jba-primary:var(--mf-page-primary,var(--mf-preset-primary,#4F39F6));--jba-accent:var(--mf-page-accent,var(--mf-preset-accent,#4F39F6));--jba-surface:var(--mf-page-surface,var(--mf-preset-surface,#FFFFFF));--jba-text:var(--mf-page-text,var(--mf-preset-text,#0F172B));--jba-border:var(--mf-page-border,var(--mf-preset-border,#E2E8F0));--jba-on-primary:var(--mf-page-on-primary,var(--mf-preset-on-primary,#FFFFFF));--jba-page:var(--mf-preset-bg,#F8FAFC);}@container (max-width:520px){.mfp.mfp-jba.mfp-native-generated [class*=\"-grid\"],.mfp.mfp-jba.mfp-native-generated [class*=\"-meta\"],.mfp.mfp-jba.mfp-native-generated [class*=\"-scores\"],.mfp.mfp-jba.mfp-native-generated [class*=\"-charts\"],.mfp.mfp-jba.mfp-native-generated [class*=\"-cols\"]{grid-template-columns:1fr!important}.mfp.mfp-jba.mfp-native-generated [class*=\"-body\"],.mfp.mfp-jba.mfp-native-generated [class*=\"-split\"],.mfp.mfp-jba.mfp-native-generated [class*=\"-foot\"],.mfp.mfp-jba.mfp-native-generated [class*=\"-head\"],.mfp.mfp-jba.mfp-native-generated [class*=\"-row\"]{flex-wrap:wrap!important}.mfp.mfp-jba.mfp-native-generated [class*=\"-aside\"],.mfp.mfp-jba.mfp-native-generated [class*=\"-side\"]{flex:1 1 100%!important;width:100%!important;max-width:none!important}}.mfp.mfp-jba.mfp-native-generated  img{max-width:100%!important;height:auto}.mfp.mfp-jba.mfp-native-generated {overflow-wrap:break-word}\n.mfp.mfp-jba.mfp-native-generated {font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif!important;color:var(--jba-text)}\n.mfp.mfp-jba.mfp-native-generated .jba-page{padding:48px 16px;\n  background:linear-gradient(to bottom right,var(--jba-page) 0%,#F1F5F9 100%)}\n.mfp.mfp-jba.mfp-native-generated .jba-shell{max-width:896px;margin:0 auto}\n.mfp.mfp-jba.mfp-native-generated .jba-back{line-height:0}\n.mfp.mfp-jba.mfp-native-generated .jba-back-link{display:inline-flex;align-items:center;gap:8px;margin-bottom:32px;font-size:16px;\n  line-height:24px;font-weight:400;color:#45556C}\n.mfp.mfp-jba.mfp-native-generated .jba-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;align-items:start}\n.mfp.mfp-jba.mfp-native-generated .jba-main{grid-column:span 2}\n\n/* sticky sidebar --------------------------------------------------------- */\n.mfp.mfp-jba.mfp-native-generated .jba-side-card{position:sticky;top:16px;padding:24px;border:1px solid var(--jba-border);\n  border-radius:12px;background:#fff}\n.mfp.mfp-jba.mfp-native-generated .jba-side-h{display:flex;align-items:center;gap:12px;margin-bottom:16px}\n.mfp.mfp-jba.mfp-native-generated .jba-side-i{flex:0 0 32px;font-size:32px;line-height:32px;color:var(--jba-primary)}\n.mfp.mfp-jba.mfp-native-generated .jba-side-t{display:flex;flex-direction:column}\n.mfp.mfp-jba.mfp-native-generated .jba-side-n{font-size:16px;line-height:24px;font-weight:700;color:var(--jba-text)}\n.mfp.mfp-jba.mfp-native-generated .jba-side-s{font-size:12px;line-height:16px;font-weight:400;color:#62748E}\n.mfp.mfp-jba.mfp-native-generated .jba-steps{display:flex;flex-direction:column;gap:12px}\n.mfp.mfp-jba.mfp-native-generated .jba-step{display:flex;align-items:center;gap:8px}\n.mfp.mfp-jba.mfp-native-generated .jba-badge{display:flex;align-items:center;justify-content:center;flex:0 0 24px;width:24px;\n  height:24px;border-radius:999px;font-size:12px;line-height:16px;font-weight:700}\n.mfp.mfp-jba.mfp-native-generated .jba-badge-on{background:var(--jba-primary);color:#fff}\n.mfp.mfp-jba.mfp-native-generated .jba-badge-off{background:#CAD5E2;color:#314158}\n.mfp.mfp-jba.mfp-native-generated .jba-step-l{font-size:14px;line-height:20px;font-weight:400;color:#314158}\n\n/* form card -------------------------------------------------------------- */\n.mfp.mfp-jba.mfp-native-generated .jba-card{padding:32px;border:1px solid var(--jba-border);border-radius:16px;background:#fff;\n  box-shadow:0 10px 15px -3px rgba(0,0,0,.1),0 4px 6px -4px rgba(0,0,0,.1)}\n.mfp.mfp-jba.mfp-native-generated h1.jba-h1{margin:0 0 8px!important;font-size:30px!important;line-height:36px!important;\n  font-weight:700!important;color:var(--jba-text)!important}\n.mfp.mfp-jba.mfp-native-generated p.jba-lede{margin:0 0 32px!important;font-size:16px!important;line-height:24px!important;\n  font-weight:400!important;color:#45556C!important}\n.mfp.mfp-jba.mfp-native-generated .jba-form{display:flex;flex-direction:column;gap:24px}\n.mfp.mfp-jba.mfp-native-generated .jba-sec-top{padding-top:24px;border-top:1px solid var(--jba-border)}\n.mfp.mfp-jba.mfp-native-generated h3.jba-h3{margin:0 0 16px!important;font-size:18px!important;line-height:28px!important;\n  font-weight:600!important;color:var(--jba-text)!important}\n.mfp.mfp-jba.mfp-native-generated .jba-grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}\n.mfp.mfp-jba.mfp-native-generated .jba-span2{grid-column:1/-1}\n.mfp.mfp-jba.mfp-native-generated .jba-field{display:block;margin:0}\n.mfp.mfp-jba.mfp-native-generated .jba-label{display:block;margin:0 0 8px;font-size:14px;line-height:20px;font-weight:500;\n  color:#314158}\n.mfp.mfp-jba.mfp-native-generated .jba-req{color:#FB2C36}\n.mfp.mfp-jba.mfp-native-generated p.jba-count{margin:4px 0 0!important;font-size:12px!important;line-height:16px!important;\n  font-weight:400!important;color:#62748E!important}\n\n/* megaform sets font-family on label/input/select/textarea with !important, so an authored\n   <span> inside a <label> inherits the HOST typeface no matter what the shell root declares.\n   Element selectors are (0,3,1) here - above megaform, below every authored class rule - and\n   <i> is left alone so Font Awesome keeps its own family. */\n.mfp.mfp-jba.mfp-native-generated label,.mfp.mfp-jba.mfp-native-generated span,.mfp.mfp-jba.mfp-native-generated p,.mfp.mfp-jba.mfp-native-generated div,.mfp.mfp-jba.mfp-native-generated ul,.mfp.mfp-jba.mfp-native-generated li,.mfp.mfp-jba.mfp-native-generated h1,.mfp.mfp-jba.mfp-native-generated h2,.mfp.mfp-jba.mfp-native-generated h3,.mfp.mfp-jba.mfp-native-generated button{font-family:inherit!important}\n.mfp.mfp-jba.mfp-native-generated .mf-field-label{display:none!important}\n/* A wizard's page-break Section renders a visible heading the mock has no room for - it exists to\n   split the pages, not to be seen. */\n.mfp.mfp-jba.mfp-native-generated .mf-section-break,.mfp.mfp-jba.mfp-native-generated .mf-section-title{display:none!important}\n.mfp.mfp-jba.mfp-native-generated .mf-field-group{margin:0!important;width:100%}\n.mfp.mfp-jba.mfp-native-generated .mf-form-title,.mfp.mfp-jba.mfp-native-generated .mf-form-description,.mfp.mfp-jba.mfp-native-generated .mf-form-actions{display:none!important}\n.mfp.mfp-jba.mfp-native-generated .mf-option-item{margin:0!important}\n/* megaform gives every option chip a 36px floor and paints .mf-option-icon as a rounded tile. */\n.mfp.mfp-jba.mfp-native-generated .mf-option-group--chips .mf-option-check,\n.mfp.mfp-jba.mfp-native-generated .mf-option-group--cards .mf-option-check{display:none!important}\n.mfp.mfp-jba.mfp-native-generated .mf-option-group--chips .mf-option-ui{min-height:0!important;height:auto!important}\n.mfp.mfp-jba.mfp-native-generated .mf-option-group--cards .mf-option-copy{display:block;width:100%}\n\n\n.mfp.mfp-jba.mfp-native-generated .mf-input[class],.mfp.mfp-jba.mfp-native-generated .mf-select[class]{width:100%!important;box-sizing:border-box!important;\n  border:1px solid #CAD5E2!important;border-radius:8px!important;background:var(--jba-surface)!important;\n  padding:12px 16px!important;min-height:0!important;height:auto!important;\n  color:var(--jba-text)!important;font-family:inherit!important;font-size:16px!important;\n  line-height:24px!important;font-weight:400!important;box-shadow:none!important}\n.mfp.mfp-jba.mfp-native-generated .mf-input[class]:focus,.mfp.mfp-jba.mfp-native-generated .mf-select[class]:focus{border-color:var(--jba-primary)!important;\n  box-shadow:none!important;outline:none!important}\n.mfp.mfp-jba.mfp-native-generated .mf-input[class]::placeholder,.mfp.mfp-jba.mfp-native-generated .mf-textarea[class]::placeholder{color:#62748E!important;opacity:1}\n\n\n.mfp.mfp-jba.mfp-native-generated .mf-textarea[class]{width:100%!important;box-sizing:border-box!important;\n  border:1px solid #CAD5E2!important;border-radius:8px!important;background:#fff!important;\n  padding:12px 16px!important;min-height:218px!important;height:218px!important;\n  resize:none!important;color:var(--jba-text)!important;font-family:inherit!important;\n  font-size:16px!important;line-height:24px!important;box-shadow:none!important}\n\n/* the two half-width buttons -------------------------------------------- */\n.mfp.mfp-jba.mfp-native-generated .jba-cta{display:flex;gap:12px;padding-top:24px}\n/* min-width:0 on both, or a flex item still refuses to shrink below its content and the pair\n   stops splitting the row evenly. */\n.mfp.mfp-jba.mfp-native-generated .jba-draft{display:flex;align-items:center;justify-content:center;gap:8px;flex:1 1 0;\n  min-width:0;height:44px;padding:8px 16px;box-sizing:border-box;border:1px solid #D2D8DD;\n  border-radius:6px;background:#fff;text-align:center;font-size:14px;line-height:20px;\n  font-weight:500;color:rgb(8,12,15);cursor:pointer}\n.mfp.mfp-jba.mfp-native-generated button.jba-submit[type=\"submit\"]{display:flex;align-items:center;justify-content:center;\n  gap:8px;flex:1 1 0;min-width:0;width:auto!important;height:44px!important;\n  padding:8px 16px!important;border:0!important;\n  border-radius:6px!important;background:var(--jba-primary)!important;color:#fff!important;\n  font-family:inherit!important;font-size:14px!important;line-height:20px!important;\n  font-weight:500!important;letter-spacing:normal!important;text-transform:none!important;\n  cursor:pointer!important;box-shadow:none!important}\n/* the mock never gates this button */\n.mfp.mfp-jba.mfp-native-generated button.jba-submit.mf-nav-blocked,.mfp.mfp-jba.mfp-native-generated button.jba-submit[disabled]{opacity:1!important;\n  background:var(--jba-primary)!important;cursor:not-allowed!important;filter:none!important}\n.mfp.mfp-jba.mfp-native-generated .jba-page{padding:0!important;background:transparent!important;min-height:0!important}.mfp.mfp-jba.mfp-native-generated .jba-shell,.mfp.mfp-jba.mfp-native-generated .jba-wrap{max-width:none!important;margin:0!important}.mfp.mfp-jba.mfp-native-generated .jba-grid,.mfp.mfp-jba.mfp-native-generated .jba-main,.mfp.mfp-jba.mfp-native-generated .jba-hero-in,.mfp.mfp-jba.mfp-native-generated .jba-card{max-width:none!important;margin-left:0!important;margin-right:0!important}.mfp.mfp-jba.mfp-native-generated .jba-page{border:1px solid var(--jba-border)!important;border-radius:12px!important;overflow:hidden;background:var(--jba-page)!important}.mf-form-wrapper.mf-has-date-popover .mfp.mfp-jba.mfp-native-generated .jba-page{overflow:visible!important}",
+    "themeSelector": false,
+    "premiumGeneratedShell": true,
+    "gateNavigationUntilValid": true,
+    "postSubmitExperience": {
+      "enabled": true,
+      "mode": "rich",
+      "title": "Application submitted",
+      "message": "Thank you, {{field:full_name}}. We sent a confirmation to {{field:email}}.",
+      "showSubmissionId": true,
+      "submissionIdLabel": "Reference:",
+      "showAnswerSummary": false,
+      "allowFillAgain": true,
+      "fillAgainLabel": "Submit another",
+      "doneLabel": "Done"
+    },
+    "themeCompatibility": {
+      "policy": "hybrid",
+      "supportsPageColors": false,
+      "supportsPageTypography": true,
+      "supportsDarkHost": true,
+      "prefixes": [
+        "jba"
+      ],
+      "immutable": [
+        "primary",
+        "accent",
+        "deco"
+      ]
+    }
+  },
+  "fields": [
+    {
+      "placeholder": "John Doe",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "full_name",
+      "type": "Text",
+      "label": "Full Name",
+      "required": true
+    },
+    {
+      "placeholder": "(555) 123-4567",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "phone",
+      "type": "Text",
+      "label": "Phone",
+      "required": true
+    },
+    {
+      "placeholder": "john@example.com",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "email",
+      "type": "Email",
+      "label": "Email",
+      "required": true
+    },
+    {
+      "placeholder": "Select a position",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Frontend Developer",
+          "value": "frontend"
+        },
+        {
+          "label": "Backend Developer",
+          "value": "backend"
+        },
+        {
+          "label": "Full Stack Developer",
+          "value": "fullstack"
+        },
+        {
+          "label": "UI/UX Designer",
+          "value": "designer"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "dropdown"
+      },
+      "key": "position",
+      "type": "Select",
+      "label": "Position",
+      "required": true,
+      "optionDisplay": "dropdown",
+      "choiceDisplay": "dropdown",
+      "optionVariant": "dropdown",
+      "widgetProps": {
+        "optionDisplay": "dropdown"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "Select experience",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "0-1 years",
+          "value": "0-1"
+        },
+        {
+          "label": "1-3 years",
+          "value": "1-3"
+        },
+        {
+          "label": "3-5 years",
+          "value": "3-5"
+        },
+        {
+          "label": "5+ years",
+          "value": "5+"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "dropdown"
+      },
+      "key": "experience",
+      "type": "Select",
+      "label": "Years of Experience",
+      "required": true,
+      "optionDisplay": "dropdown",
+      "choiceDisplay": "dropdown",
+      "optionVariant": "dropdown",
+      "widgetProps": {
+        "optionDisplay": "dropdown"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "$80,000 - $120,000",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "salary",
+      "type": "Text",
+      "label": "Expected Salary (annual)",
+      "required": false
+    },
+    {
+      "placeholder": "mm/dd/yyyy",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "start_date",
+      "type": "Date",
+      "label": "Available Start Date",
+      "required": true
+    },
+    {
+      "placeholder": "Tell us why you're a great fit for this position...",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "cover_letter",
+      "type": "Textarea",
+      "label": "Cover Letter",
+      "required": false
+    }
+  ],
+  "rules": [],
+  "workflow": {
+    "notifications": []
+  }
+}

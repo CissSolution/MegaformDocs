@@ -24,6 +24,23 @@ export interface ProviderPreset {
   models: string[];
   api: 'openai' | 'anthropic' | 'claude-cli';
   helpUrl: string;
+  /**
+   * [Ollama/Qwen 2026-07-18] Local / self-hosted OpenAI-compatible endpoints
+   * (Ollama, LM Studio) accept requests with NO API key. When true, the chat
+   * path skips the "No API key configured" gate and omits the Authorization
+   * header (a user MAY still supply a key for a secured proxy — it is sent when
+   * present). Cloud Qwen (DashScope) is OpenAI-compatible but DOES need a key,
+   * so it leaves this false.
+   */
+  noApiKey?: boolean;
+  /**
+   * [Ollama server-proxy 2026-07-18] Route chat through the SAME-ORIGIN MegaForm
+   * server endpoint (/…/AiAssistant/OllamaProxy) instead of calling the provider
+   * baseUrl directly. The server forwards to the admin-configured local Ollama —
+   * this avoids the browser CORS + mixed-content (HTTPS→http://localhost) walls.
+   * baseUrl is resolved per-platform at chat time, so the preset leaves it blank.
+   */
+  serverProxy?: boolean;
 }
 
 export interface AIConfig {
@@ -178,13 +195,47 @@ declare global {
       api: 'openai',
       helpUrl: 'https://openrouter.ai/keys',
     },
-    local: {
-      label: 'Local (Ollama / LM Studio)',
-      baseUrl: 'http://localhost:11434/v1',
-      defaultModel: 'llama3.1',
-      models: ['llama3.1', 'qwen2.5', 'mistral', 'codellama'],
+    qwen: {
+      // Alibaba Qwen via DashScope's OpenAI-compatible endpoint (cloud, needs key).
+      label: 'Qwen (Alibaba DashScope · International)',
+      baseUrl: 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1',
+      defaultModel: 'qwen-plus',
+      models: ['qwen-max', 'qwen-plus', 'qwen-turbo', 'qwen2.5-72b-instruct', 'qwen2.5-14b-instruct', 'qwen2.5-coder-32b-instruct', 'qwen-vl-max'],
       api: 'openai',
-      helpUrl: 'https://ollama.com/',
+      helpUrl: 'https://bailian.console.alibabacloud.com/',
+    },
+    'qwen-cn': {
+      label: 'Qwen (Alibaba DashScope · China)',
+      baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+      defaultModel: 'qwen-plus',
+      models: ['qwen-max', 'qwen-plus', 'qwen-turbo', 'qwen2.5-72b-instruct', 'qwen2.5-coder-32b-instruct', 'qwen-vl-max'],
+      api: 'openai',
+      helpUrl: 'https://bailian.console.aliyun.com/',
+    },
+    local: {
+      // Ollama / LM Studio — local OpenAI-compatible server, no API key required.
+      // Pull models with e.g. `ollama pull qwen2.5`. For a Qwen local model set
+      // Model to qwen2.5 / qwen2.5-coder / qwen3, etc.
+      label: 'Ollama / LM Studio (Local · no key)',
+      baseUrl: 'http://localhost:11434/v1',
+      defaultModel: 'qwen2.5',
+      models: ['qwen2.5', 'qwen2.5-coder', 'qwen2.5:14b', 'qwen3', 'llama3.1', 'llama3.2', 'mistral', 'gemma2', 'phi3', 'codellama', 'deepseek-r1'],
+      api: 'openai',
+      noApiKey: true,
+      helpUrl: 'https://ollama.com/library',
+    },
+    'ollama-proxy': {
+      // Ollama via the MegaForm server relay — browser → server → localhost Ollama.
+      // No CORS / mixed-content issues (works on HTTPS sites). Admin must have the
+      // server reach Ollama (default http://localhost:11434/v1). baseUrl resolved per-platform.
+      label: 'Ollama (via server · no CORS/HTTPS issues)',
+      baseUrl: '',
+      defaultModel: 'qwen2.5',
+      models: ['qwen2.5', 'qwen2.5-coder', 'qwen3', 'llama3.1', 'llama3.2', 'mistral', 'gemma2', 'deepseek-r1'],
+      api: 'openai',
+      noApiKey: true,
+      serverProxy: true,
+      helpUrl: 'https://ollama.com/library',
     },
     'megaform-local': {
       label: 'MegaForm Local AI (no API key)',
@@ -314,7 +365,13 @@ declare global {
       if (r.ok) {
         const def = (await r.json()) as AIConfig;
         // [B88] claude-cli and megaform-local need no apiKey — accept on provider name.
-        if (def && (def.apiKey || def.provider === 'claude-cli' || def.provider === 'megaform-local')) {
+        // [Ollama/Qwen] local OpenAI-compatible providers (p.noApiKey, e.g. Ollama) also
+        // carry no apiKey, so accept the server default on provider identity too.
+        const defKeyless = !!def && (
+          def.provider === 'claude-cli' ||
+          def.provider === 'megaform-local' ||
+          (!!providers[def.provider] && !!providers[def.provider]!.noApiKey));
+        if (def && (def.apiKey || defKeyless)) {
           setConfig(def);
           // eslint-disable-next-line no-console
           console.log('[MF_AI] loaded server default provider:', def.provider);
@@ -410,8 +467,15 @@ declare global {
     const cfg = getConfig();
     const p = providers[cfg.provider] || providers['openai']!;
     // [B88] claude-cli needs no API key (server shells out to the local CLI).
-    if (p.api !== 'claude-cli' && cfg.provider !== 'megaform-local' && !cfg.apiKey) throw new Error('No API key configured. Open AI Settings.');
-    const baseUrl = (cfg.baseUrl || p.baseUrl).replace(/\/+$/, '');
+    // [Ollama/Qwen] local providers (Ollama / LM Studio, p.noApiKey) also need none.
+    const keyless = p.api === 'claude-cli' || cfg.provider === 'megaform-local' || !!p.noApiKey;
+    if (!keyless && !cfg.apiKey) throw new Error('No API key configured. Open AI Settings.');
+    // [Ollama server-proxy] serverProxy providers resolve to the same-origin MegaForm
+    // relay path per platform (…/AiAssistant/OllamaProxy) — cfg.baseUrl is ignored so
+    // the relay target stays server-controlled.
+    const baseUrl = p.serverProxy
+      ? aiAssistantDefaultConfigUrl().replace(/\/DefaultConfig(\?.*)?$/, '/OllamaProxy')
+      : (cfg.baseUrl || p.baseUrl).replace(/\/+$/, '');
     const model = cfg.model || p.defaultModel;
     const attachments = opts.attachments || [];
     const history = (opts.history || []) as ChatMessageWithTools[];
@@ -560,9 +624,19 @@ declare global {
     // retried ONCE — but the OpenAI window resets at 60s, so the second
     // retry could also hit. Retrying 3 times spanning ~60s gives the
     // window enough room to clear without nagging the user.
-    const doFetch = () => fetch(baseUrl + '/chat/completions', {
+    // [Ollama/Qwen] Omit Authorization for keyless local endpoints; send it when a
+    // key is present (cloud Qwen/OpenAI, or a secured Ollama proxy).
+    const oaHeaders: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (cfg.apiKey) oaHeaders['Authorization'] = 'Bearer ' + cfg.apiKey;
+    // serverProxy → append the platform site-id query so the relay resolves settings;
+    // credentials:'same-origin' sends the auth cookie to the relay (ignored cross-origin).
+    const oaChatUrl = p.serverProxy
+      ? withPortalIdQuery(baseUrl + '/chat/completions')
+      : (baseUrl + '/chat/completions');
+    const doFetch = () => fetch(oaChatUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + cfg.apiKey },
+      credentials: 'same-origin',
+      headers: oaHeaders,
       body: JSON.stringify(body),
     });
     let res = await doFetch();

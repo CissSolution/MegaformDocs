@@ -42,18 +42,22 @@ namespace MegaForm.Oqtane.Server.Controllers
         private readonly IFormRepository _forms;
         private readonly IExternalBindingStore _bindings;
 
+        private readonly global::Oqtane.Repository.ISettingRepository _settingRepo;
+
         public ExternalTableController(
             IConnectionRegistry registry,
             IConfiguration config,
             IFormRepository forms,
             IExternalBindingStore bindings,
             ILogManager logger,
-            IHttpContextAccessor accessor) : base(logger, accessor)
+            IHttpContextAccessor accessor,
+            global::Oqtane.Repository.ISettingRepository settingRepo = null) : base(logger, accessor)
         {
             _registry = registry;
             _config = config;
             _forms = forms;
             _bindings = bindings;
+            _settingRepo = settingRepo;
         }
 
         private bool IsAdmin => User.IsInRole(RoleNames.Admin) || User.IsInRole(RoleNames.Host);
@@ -84,13 +88,42 @@ namespace MegaForm.Oqtane.Server.Controllers
         private List<string> AllowedConnections()
         {
             var configured = _config.GetSection("MegaForm:ExternalTables:AllowedConnections").Get<string[]>();
-            if (configured != null && configured.Length > 0)
-                return configured.Where(k => !string.IsNullOrWhiteSpace(k)).ToList();
+            var list = configured != null && configured.Length > 0
+                ? configured.Where(k => !string.IsNullOrWhiteSpace(k)).ToList()
+                : (string.IsNullOrWhiteSpace(_config["ConnectionStrings:DashboardDatabase"])
+                    ? new List<string>()
+                    : new List<string> { "DashboardDatabase" });
 
-            var dashboard = _config["ConnectionStrings:DashboardDatabase"];
-            return string.IsNullOrWhiteSpace(dashboard)
-                ? new List<string>()
-                : new List<string> { "DashboardDatabase" };
+            // [NamedConnections v20260717-01] Admin-saved connections (Database Settings popup) are
+            // allow-listed too — saving one is admin-gated, so it carries appsettings-level trust.
+            foreach (var name in SavedConnectionNames())
+                if (!list.Any(k => string.Equals(k, name, StringComparison.OrdinalIgnoreCase)))
+                    list.Add(name);
+            return list;
+        }
+
+        private IEnumerable<string> SavedConnectionNames()
+        {
+            try
+            {
+                if (_settingRepo == null) return Enumerable.Empty<string>();
+                var siteId = SiteId;
+                if (siteId <= 0)
+                {
+                    // [NamedConnections v20260717-01] AuthEntityId(Site)=-1 trap: an admin XHR with
+                    // no entity context. The tenant alias is the same seam the runtime registry
+                    // resolves with, so reader and writer agree on which site owns the catalog.
+                    var tenants = HttpContext?.RequestServices?.GetService(typeof(ITenantManager)) as ITenantManager;
+                    var alias = tenants?.GetAlias();
+                    if (alias != null && alias.SiteId > 0) siteId = alias.SiteId;
+                }
+                if (siteId <= 0) return Enumerable.Empty<string>();
+                var all = _settingRepo.GetSettings(EntityNames.Site, siteId);
+                var json = all?.FirstOrDefault(s => string.Equals(s.SettingName,
+                    MegaForm.Core.Services.NamedConnectionCatalog.SettingKey, StringComparison.OrdinalIgnoreCase))?.SettingValue;
+                return MegaForm.Core.Services.NamedConnectionCatalog.Names(json).ToList();
+            }
+            catch { return Enumerable.Empty<string>(); }
         }
 
         private bool IsAllowed(string key)

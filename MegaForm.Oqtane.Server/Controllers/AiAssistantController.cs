@@ -111,11 +111,11 @@ namespace MegaForm.Oqtane.Server.Controllers
                 var env = HttpContext.RequestServices.GetService(typeof(Microsoft.AspNetCore.Hosting.IWebHostEnvironment)) as Microsoft.AspNetCore.Hosting.IWebHostEnvironment;
                 var webRoot = env?.WebRootPath ?? string.Empty;
                 var contentRoot = env?.ContentRootPath ?? string.Empty;
-                return MegaForm.Core.Services.AiAssistant.AiFeatureGate.IsEnabled(webRoot, contentRoot);
+                return MegaForm.Core.Services.AiAssistant.AiFeatureGate.IsAvailable(webRoot, contentRoot);
             }
             catch
             {
-                return MegaForm.Core.Services.AiAssistant.AiFeatureGate.IsEnabled();
+                return MegaForm.Core.Services.AiAssistant.AiFeatureGate.IsAvailable();
             }
         }
 
@@ -157,11 +157,22 @@ namespace MegaForm.Oqtane.Server.Controllers
             // actually run even if a client were bypassed. The `trial` flag lets the builder show a
             // locked "Upgrade" CTA instead of the AI UI.
             var trialLocked = MegaForm.Core.Services.LicenseService.IsTrial();
+
+            var provider = read(AiSettingKeys.Provider, localAi ? "megaform-local" : "openai");
+            var baseUrl = read(AiSettingKeys.BaseUrl, localAi ? "/api/MegaFormAi" : "https://api.openai.com/v1");
+            var model = read(AiSettingKeys.Model, localAi ? "megaform-local-kb" : "gpt-4o");
+            // [AiConfigCoherence v20260812] Heal a stored combination that cannot serve the chosen
+            // provider — the settings panel saves the four fields independently, so switching to
+            // OpenAI while baseUrl still reads "/api/MegaFormAi" left every request going to the
+            // built-in KB mock and the assistant replying with raw knowledge text. Healing on READ
+            // (not only on save) means sites already in that state recover without re-saving.
+            MegaForm.Core.Services.AiAssistant.AiProviderEndpoints.Coerce(provider, ref baseUrl, ref model);
+
             return Ok(new
             {
-                provider = read(AiSettingKeys.Provider, localAi ? "megaform-local" : "openai"),
-                baseUrl = read(AiSettingKeys.BaseUrl, localAi ? "/api/MegaFormAi" : "https://api.openai.com/v1"),
-                model = read(AiSettingKeys.Model, localAi ? "megaform-local-kb" : "gpt-4o"),
+                provider,
+                baseUrl,
+                model,
                 apiKey = (includeKey && !trialLocked) ? read(AiSettingKeys.ApiKey, string.Empty) : string.Empty,
                 enabled = enabled && !trialLocked,
                 trial = trialLocked,
@@ -180,9 +191,18 @@ namespace MegaForm.Oqtane.Server.Controllers
             if (config == null) return BadRequest(new { error = "body required" });
             var siteId = ResolveSiteId();
             if (siteId <= 0) return BadRequest(new { error = "site context missing" });
-            UpsertSetting(siteId, AiSettingKeys.Provider, config.Provider ?? "openai", false);
-            UpsertSetting(siteId, AiSettingKeys.BaseUrl, config.BaseUrl ?? string.Empty, false);
-            UpsertSetting(siteId, AiSettingKeys.Model, config.Model ?? string.Empty, false);
+            // [AiConfigCoherence v20260812] Store a combination that can actually serve the chosen
+            // provider. Saving the panel's four fields verbatim is what let "provider=openai +
+            // baseUrl=/api/MegaFormAi" reach the database and silently route every request to the
+            // built-in KB mock. A deliberately typed custom endpoint is preserved — see Coerce.
+            var provider = config.Provider ?? "openai";
+            var baseUrl = config.BaseUrl ?? string.Empty;
+            var model = config.Model ?? string.Empty;
+            MegaForm.Core.Services.AiAssistant.AiProviderEndpoints.Coerce(provider, ref baseUrl, ref model);
+
+            UpsertSetting(siteId, AiSettingKeys.Provider, provider, false);
+            UpsertSetting(siteId, AiSettingKeys.BaseUrl, baseUrl, false);
+            UpsertSetting(siteId, AiSettingKeys.Model, model, false);
             UpsertSetting(siteId, AiSettingKeys.Enabled, config.Enabled ? "true" : "false", false);
             // IsPrivate=true so the value is not returned by Oqtane's public
             // settings endpoint (only via this controller's GET, gated by role).
@@ -309,6 +329,70 @@ namespace MegaForm.Oqtane.Server.Controllers
             catch (System.Exception ex)
             {
                 return StatusCode(500, new { ok = false, message = ex.Message });
+            }
+        }
+
+        // ══════════════════════════════════════════════════════
+        //  [Ollama server-proxy 2026-07-18] POST OllamaProxy/chat/completions
+        //  Same-origin relay so the browser never has to reach localhost:11434
+        //  directly — removes the CORS + mixed-content (HTTPS→http://localhost)
+        //  problems of client-direct Ollama. Admin-only + dev.lock gated.
+        //  Forwards the OpenAI-compatible body to the admin-configured local
+        //  Ollama endpoint (MegaForm_AI_OllamaBaseUrl, default localhost:11434/v1).
+        //  The destination is a SERVER setting, never a client value → not an
+        //  SSRF vector. Errors are sanitized (no stack traces to the browser).
+        // ══════════════════════════════════════════════════════
+        [HttpPost("OllamaProxy/chat/completions")]
+        [Authorize]
+        public async System.Threading.Tasks.Task<IActionResult> OllamaProxyChat()
+        {
+            if (!IsAiEnabled()) return NotFound();
+            if (!IsAdmin) return StatusCode(403, new { error = "Administrators only." });
+
+            var settings = ReadSettings(ResolveSiteId());
+            string configuredBase;
+            settings.TryGetValue(MegaForm.Core.Services.AiAssistant.OllamaProxy.BaseUrlSettingKey, out configuredBase);
+            string target, err;
+            if (!MegaForm.Core.Services.AiAssistant.OllamaProxy.TryResolveChatUrl(configuredBase, out target, out err))
+                return BadRequest(new { error = err });
+
+            string apiKey;
+            settings.TryGetValue(MegaForm.Core.Services.AiAssistant.OllamaProxy.ApiKeySettingKey, out apiKey);
+
+            string requestBody;
+            using (var reader = new System.IO.StreamReader(Request.Body, System.Text.Encoding.UTF8))
+                requestBody = await reader.ReadToEndAsync();
+            if (string.IsNullOrWhiteSpace(requestBody)) requestBody = "{}";
+            if (requestBody.Length > 2000000)
+                return BadRequest(new { error = "Request body too large." });
+
+            try
+            {
+                var httpFactory = HttpContext?.RequestServices?.GetService(typeof(System.Net.Http.IHttpClientFactory)) as System.Net.Http.IHttpClientFactory;
+                var client = httpFactory != null ? httpFactory.CreateClient("megaform-ollama") : new System.Net.Http.HttpClient();
+                client.Timeout = System.TimeSpan.FromMinutes(5);
+                using (var req = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Post, target))
+                {
+                    req.Content = new System.Net.Http.StringContent(requestBody, System.Text.Encoding.UTF8, "application/json");
+                    if (!string.IsNullOrWhiteSpace(apiKey))
+                        req.Headers.TryAddWithoutValidation("Authorization", "Bearer " + apiKey.Trim());
+                    using (var resp = await client.SendAsync(req))
+                    {
+                        var respBody = await resp.Content.ReadAsStringAsync();
+                        return new ContentResult
+                        {
+                            StatusCode = (int)resp.StatusCode,
+                            Content = respBody,
+                            ContentType = "application/json",
+                        };
+                    }
+                }
+            }
+            catch (System.Exception)
+            {
+                // [SecRule 10] Never leak ex.Message / stack to the client. The usual cause is
+                // Ollama not running or a wrong MegaForm_AI_OllamaBaseUrl — give a safe hint only.
+                return StatusCode(502, new { error = "Cannot reach the local Ollama endpoint. Ensure Ollama is running and MegaForm_AI_OllamaBaseUrl is correct." });
             }
         }
     }

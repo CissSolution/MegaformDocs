@@ -4,6 +4,7 @@
 import type { WorkflowInboxApi } from '../workflow-inbox/api';
 import type { WorkflowInboxTask, WorkflowInboxTaskAction } from '../workflow-inbox/types';
 import { div, span, btn, mk, ic, relativeTime, prettyStatus, T } from './ui';
+import { parseServerDate } from './types';
 
 const ACTION_VERB: Record<number, [string, string]> = {
   1: ['inbox.verb_created', 'created the task'],
@@ -231,6 +232,6 @@ function buildSimpleFields(detail: any): HTMLElement {
 
 function parseIso(value?: string | null): number {
   if (!value) return 0;
-  const t = new Date(value).getTime();
+  const t = parseServerDate(value).getTime();
   return Number.isNaN(t) ? 0 : t;
 }

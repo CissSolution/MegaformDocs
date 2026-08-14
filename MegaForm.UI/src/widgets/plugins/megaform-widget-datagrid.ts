@@ -352,9 +352,14 @@
     // and sync() actually have a target. Without this, submissions saved
     // empty strings for every DataGrid field. SQL display mode renders a
     // read-only view and skips the hidden input.
+    var seedValue = '';
+    if (!props.useSql) {
+      var rawSeed = field && (field.defaultValue != null ? field.defaultValue : field.DefaultValue);
+      if (rawSeed != null) seedValue = typeof rawSeed === 'string' ? rawSeed : JSON.stringify(rawSeed);
+    }
     var hiddenInput = props.useSql
       ? ''
-      : '<input type="hidden" name="' + attr(field.key) + '" value="" data-mfw-dgrid-state="1" />';
+      : '<input type="hidden" name="' + attr(field.key) + '" value="' + attr(seedValue) + '" data-mfw-dgrid-state="1" />';
     return hiddenInput + '<div class="mfw-dgrid row-' + esc(props.rowHeight || 'normal') + '"' +
       ' id="' + attr(wrapId) + '"' +
       ' data-badge="' + attr(BADGE) + '"' +

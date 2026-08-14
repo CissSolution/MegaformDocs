@@ -9,6 +9,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using MegaForm.Core.Interfaces;
 using MegaForm.Core.Models;
+using MegaForm.Core.Services.TypedSubmission;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -31,6 +32,7 @@ namespace MegaForm.Core.Services
         private readonly IConnectionRegistry _registry;
         private readonly IFormRepository _formRepo;
         private readonly ISubmissionRepository _subs;   // optional — only needed for the "megaform_submissions" source
+        private readonly SubmissionDataResolver _dataResolver;
 
         private static readonly Regex _dangerousPattern = new Regex(
             @"\b(INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|TRUNCATE|EXEC|EXECUTE|GRANT|REVOKE|MERGE)\b",
@@ -50,11 +52,12 @@ namespace MegaForm.Core.Services
         // where the SQL text cannot be rewritten with TOP/LIMIT). See Docs/SECURITY_CODING_RULES §11.
         private const int MAX_OPTION_ROWS = 500;
 
-        public DataRepeaterService(IConnectionRegistry registry, IFormRepository formRepo, ISubmissionRepository subs = null)
+        public DataRepeaterService(IConnectionRegistry registry, IFormRepository formRepo, ISubmissionRepository subs = null, SubmissionDataResolver dataResolver = null)
         {
             _registry = registry;
             _formRepo = formRepo;
             _subs = subs;
+            _dataResolver = dataResolver;
         }
 
         // ─── Public: Execute Query ────────────────────────────────────────────
@@ -145,7 +148,13 @@ namespace MegaForm.Core.Services
             }
             catch (Exception ex)
             {
-                result.Error = "Query execution failed: " + ex.Message;
+                // [SecFix Phase0-3a 2026-07-22] Never echo ex.Message to the caller — this
+                // endpoint is anonymous on public forms and the raw message leaks SQL text,
+                // table/column names, and connection details. TODO: route the full exception
+                // through the host's logging pipeline (this service has no logger dependency
+                // today and we must not add one for a shared Core library).
+                Debug.WriteLine("DataRepeaterService.ExecuteQuery failed: " + ex);
+                result.Error = "Query execution failed.";
             }
 
             sw.Stop();
@@ -310,7 +319,7 @@ namespace MegaForm.Core.Services
             }
         }
 
-        // Parse one submission's DataJson into a key→display-value map, plus pseudo-keys.
+        // Parse one submission's typed/DataJson data into a key→display-value map, plus pseudo-keys.
         private Dictionary<string, object> ParseSubmissionData(SubmissionInfo s)
         {
             var map = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
@@ -318,15 +327,30 @@ namespace MegaForm.Core.Services
             map["__id"] = s.SubmissionId;
             map["__status"] = s.Status;
             map["__date"] = s.SubmittedOnUtc.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-            if (!string.IsNullOrWhiteSpace(s.DataJson))
+
+            Dictionary<string, object> source = null;
+            if (_dataResolver != null && _dataResolver.HasTypedData(s.SubmissionId))
+            {
+                try { source = _dataResolver.GetData(s.SubmissionId, s.DataJson); }
+                catch { source = null; }
+            }
+
+            if (source == null && !string.IsNullOrWhiteSpace(s.DataJson))
             {
                 try
                 {
                     var jo = JObject.Parse(s.DataJson);
+                    source = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
                     foreach (var p in jo.Properties())
-                        map[p.Name] = StringifyToken(p.Value);
+                        source[p.Name] = StringifyToken(p.Value);
                 }
                 catch { /* malformed DataJson → just the pseudo-keys */ }
+            }
+
+            if (source != null)
+            {
+                foreach (var kv in source)
+                    map[kv.Key] = kv.Value;
             }
             return map;
         }
@@ -424,7 +448,8 @@ namespace MegaForm.Core.Services
         // ─── Public: Execute Filter Options Query ─────────────────────────────
 
         public List<DataRepeaterFilterOption> ExecuteFilterQuery(
-            int formId, string widgetKey, string filterKey, string contextJson = null)
+            int formId, string widgetKey, string filterKey, string contextJson = null,
+            Dictionary<string, object> serverParameters = null)
         {
             var options = new List<DataRepeaterFilterOption>();
             try
@@ -447,6 +472,8 @@ namespace MegaForm.Core.Services
                         cmd.CommandTimeout = 10;
 
                         var parameters = ParseJsonParameters(contextJson);
+                        // [SecFix Phase0-3b] server identity values override client context params.
+                        MergeServerParameters(parameters, serverParameters);
                         foreach (var kv in parameters)
                         {
                             var p = cmd.CreateParameter();
@@ -501,7 +528,8 @@ namespace MegaForm.Core.Services
         }
 
         public List<DataRepeaterFilterOption> ExecuteGridColumnOptionsQuery(
-            int formId, string widgetKey, string columnKey, string contextJson = null)
+            int formId, string widgetKey, string columnKey, string contextJson = null,
+            Dictionary<string, object> serverParameters = null)
         {
             var options = new List<DataRepeaterFilterOption>();
             try
@@ -542,7 +570,7 @@ namespace MegaForm.Core.Services
                 var connectionKey = (column.Value<string>("optionsConnectionKey") ?? widgetProps.Value<string>("connectionKey") ?? string.Empty).Trim();
                 var databaseType = (column.Value<string>("optionsDatabaseType") ?? widgetProps.Value<string>("databaseType") ?? string.Empty).Trim();
 
-                return ExecuteOptionsQuery(connectionKey, databaseType, sqlOrProc, optionsType, contextJson);
+                return ExecuteOptionsQuery(connectionKey, databaseType, sqlOrProc, optionsType, contextJson, serverParameters);
             }
             catch
             {
@@ -795,7 +823,31 @@ namespace MegaForm.Core.Services
             {
                 dict[kv.Key] = kv.Value;
             }
+
+            // [SecFix Phase0-3b 2026-07-22] Server-side reserved parameters (currentuserid /
+            // currentusername / currentuseremail from the authenticated identity) are merged
+            // LAST so they override any client-supplied value — anti-spoof.
+            MergeServerParameters(dict, request.ServerParameters);
             return dict;
+        }
+
+        // Server parameters always win over client-supplied values of the same name.
+        private static void MergeServerParameters(Dictionary<string, object> dict, Dictionary<string, object> serverParameters)
+        {
+            if (dict == null || serverParameters == null) return;
+            foreach (var kv in serverParameters)
+            {
+                if (!string.IsNullOrWhiteSpace(kv.Key))
+                    dict[kv.Key] = kv.Value;
+            }
+        }
+
+        // [SecFix Phase0-3c 2026-07-22] Opt-in widget flag: the host controller calls this
+        // before running any DataRepeater endpoint and rejects anonymous callers when true.
+        public bool WidgetRequiresAuth(int formId, string widgetKey)
+        {
+            var config = ExtractWidgetConfig(formId, widgetKey);
+            return config != null && config.RequireAuth;
         }
 
         private Dictionary<string, object> ParseJsonParameters(string json)
@@ -824,7 +876,8 @@ namespace MegaForm.Core.Services
         }
 
         private List<DataRepeaterFilterOption> ExecuteOptionsQuery(
-            string connectionKey, string databaseType, string sqlOrProc, string optionsType, string contextJson)
+            string connectionKey, string databaseType, string sqlOrProc, string optionsType, string contextJson,
+            Dictionary<string, object> serverParameters = null)
         {
             var options = new List<DataRepeaterFilterOption>();
             if (string.IsNullOrWhiteSpace(sqlOrProc)) return options;
@@ -852,6 +905,8 @@ namespace MegaForm.Core.Services
                     }
 
                     var parameters = ParseJsonParameters(contextJson);
+                    // [SecFix Phase0-3b] server identity values override client context params.
+                    MergeServerParameters(parameters, serverParameters);
                     foreach (var kv in parameters)
                     {
                         var p = cmd.CreateParameter();

@@ -1,0 +1,17 @@
+{
+  "sections": {
+    "megaform": "MegaForm"
+  },
+  "sectionViews": {
+    "megaformDashboard": "Dashboard",
+    "megaformBuilder": "Builder",
+    "megaformSubmissions": "Submissions",
+    "megaformLanguages": "Languages"
+  },
+  "contentApps": {
+    "megaformSubmissions": "MegaForm"
+  },
+  "propertyEditors": {
+    "megaformFormPicker": "MegaForm Form Picker"
+  }
+}

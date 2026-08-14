@@ -471,13 +471,48 @@ export interface StudioHost {
   initialPrompt?: string;   // pre-fill + auto-send (e.g. widget-drop "+ AI Form")
 }
 
+function ensureAiCreatorResponsiveCss(): void {
+  if (document.getElementById('mfd-ai-responsive-css')) return;
+  const style = document.createElement('style');
+  style.id = 'mfd-ai-responsive-css';
+  style.textContent = [
+    '#mfd-ai-form-creator-root:not(.is-builder){padding:0!important;align-items:stretch!important;justify-content:stretch!important}',
+    '#mfd-ai-form-creator-root:not(.is-builder)>.mfd-ai-modal{width:100vw!important;height:100vh!important;height:100dvh!important;max-width:none!important;max-height:none!important;border:0!important;border-radius:0!important;box-shadow:none!important}',
+    '#mfd-ai-form-creator-root .mfd-ai-workspace{min-width:0!important}',
+    '#mfd-ai-form-creator-root .mfd-ai-chat,#mfd-ai-form-creator-root .mfd-ai-preview-pane{min-width:0!important;min-height:0!important}',
+    '@media(max-width:1080px){#mfd-ai-form-creator-root:not(.is-builder) .mfd-ai-workspace{grid-template-columns:minmax(300px,42%) minmax(0,1fr)!important}}',
+    '@media(max-width:760px){',
+    '#mfd-ai-form-creator-root:not(.is-builder) .mfd-ai-head{padding:10px 12px!important;min-height:58px}',
+    '#mfd-ai-form-creator-root:not(.is-builder) .mfd-ai-workspace{grid-template-columns:1fr!important;grid-template-rows:minmax(0,58%) minmax(0,42%)!important}',
+    '#mfd-ai-form-creator-root:not(.is-builder) .mfd-ai-chat{border-right:0!important;border-bottom:1px solid #1e293b}',
+    '#mfd-ai-form-creator-root:not(.is-builder) [data-mfd-ai-log]{padding:10px!important}',
+    '#mfd-ai-form-creator-root:not(.is-builder) .mfd-ai-composer{padding:10px!important}',
+    '#mfd-ai-form-creator-root:not(.is-builder) [data-mfd-ai-input]{min-height:54px!important;max-height:82px!important;resize:none!important}',
+    '#mfd-ai-form-creator-root:not(.is-builder) .mfd-ai-preview-head{padding:7px 10px!important}',
+    '#mfd-ai-form-creator-root:not(.is-builder) [data-mfd-ai-preview]{padding:10px!important}',
+    '#mfd-ai-form-creator-root:not(.is-builder) .mfd-ai-actions{padding:8px!important;gap:6px!important;flex-wrap:wrap!important}',
+    '#mfd-ai-form-creator-root:not(.is-builder) .mfd-ai-actions button{flex:1 1 92px!important;min-width:0!important;padding:7px 6px!important}',
+    '}',
+    '@media(max-width:430px){',
+    '#mfd-ai-form-creator-root:not(.is-builder) .mfd-ai-head-subtitle{display:none}',
+    '#mfd-ai-form-creator-root:not(.is-builder) .mfd-ai-workspace{grid-template-rows:minmax(0,62%) minmax(0,38%)!important}',
+    '#mfd-ai-form-creator-root:not(.is-builder) .mfd-ai-tabs{padding:5px 8px 0!important}',
+    '#mfd-ai-form-creator-root:not(.is-builder) .mfd-ai-tabs button{padding:7px 10px!important}',
+    '#mfd-ai-form-creator-root:not(.is-builder) .mfd-ai-composer [data-mfd-ai-attach]~span{display:none!important}',
+    '}',
+  ].join('');
+  document.head.appendChild(style);
+}
+
 export function openAiFormCreator(host?: StudioHost): void {
   if (document.getElementById('mfd-ai-form-creator-root')) return;
 
   const isBuilder = !!(host && host.mode === 'builder');
+  ensureAiCreatorResponsiveCss();
 
   const overlay = document.createElement('div');
   overlay.id = 'mfd-ai-form-creator-root';
+  overlay.className = isBuilder ? 'mfd-ai-overlay is-builder' : 'mfd-ai-overlay';
   // [UNIFY] Survive the builder's fullscreen-takeover CSS (hides non-overlay
   // direct body children) AND stack above #mf-builder-root (z-index 2147483000)
   // when launched from the builder. Harmless on the dashboard.
@@ -500,9 +535,20 @@ export function openAiFormCreator(host?: StudioHost): void {
       'backdrop-filter:blur(2px)',
       'font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif',
     ].join(';');
+    // [AiPreviewBlank v20260726] `mf-host-overlay` is REQUIRED here, not decorative — the same
+    // trap the gallery template preview hit. The admin shell injects a one-surface-at-a-time
+    // guard (FormView.ascx): `html.mf-admin-shell-route .mf-form-wrapper:not(.mf-host-overlay
+    // .mf-form-wrapper){display:none!important}`. The live preview mounts a REAL
+    // .mf-form-wrapper via MegaFormRenderer, so without this opt-out the rule hid the entire
+    // form and the preview showed ONLY the title — reading as "the AI produced no fields"
+    // when the schema in fact had them all (owner report: "form nhập liệu cho bảng X").
+    // Dashboard branch ONLY: the class also carries `inset:0`, which would give the builder's
+    // right-docked panel a `left:0` and let a transparent overlay swallow canvas clicks.
+    overlay.classList.add('mf-host-overlay');
   }
 
   const modal = document.createElement('div');
+  modal.className = isBuilder ? 'mfd-ai-modal is-builder' : 'mfd-ai-modal';
   if (isBuilder) {
     modal.style.cssText = [
       'background:#0f172a', 'color:#e2e8f0',
@@ -855,20 +901,20 @@ function renderShellHtml(isBuilder?: boolean): string {
     ? T('ai.subtitle_builder', 'Describe a change — it is applied live to the form on the canvas.')
     : T('ai.subtitle', 'Describe your form — AI will generate it. Preview, then save and run.');
   const parts: string[] = [
-    '<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:#1e293b;border-bottom:1px solid #334155;">',
+    '<div class="mfd-ai-head" style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:#1e293b;border-bottom:1px solid #334155;">',
     '  <div style="display:flex;align-items:center;gap:10px;">',
     '    <span style="font-size:22px;line-height:1;">✨</span>',
     '    <div>',
     '      <div style="font-weight:700;font-size:15px;color:#f1f5f9;">' + title + '</div>',
-    '      <div style="font-size:11px;color:#94a3b8;">' + subtitle + '</div>',
+    '      <div class="mfd-ai-head-subtitle" style="font-size:11px;color:#94a3b8;">' + subtitle + '</div>',
     '    </div>',
     '  </div>',
     '  <button type="button" data-mfd-ai-close style="background:transparent;border:1px solid #334155;color:#cbd5e1;border-radius:8px;width:34px;height:34px;cursor:pointer;font-size:18px;line-height:1;">×</button>',
     '</div>',
-    '<div style="flex:1;display:grid;grid-template-columns:' + (isBuilder ? '1fr' : 'minmax(0,440px) 1fr') + ';min-height:0;">',
-    '  <div style="display:flex;flex-direction:column;background:#0f172a;border-right:1px solid #1e293b;min-height:0;">',
+    '<div class="mfd-ai-workspace" style="flex:1;display:grid;grid-template-columns:' + (isBuilder ? '1fr' : 'minmax(0,440px) 1fr') + ';min-height:0;">',
+    '  <div class="mfd-ai-chat" style="display:flex;flex-direction:column;background:#0f172a;border-right:1px solid #1e293b;min-height:0;">',
     // ─── Tab navigation ───
-    '    <div style="display:flex;gap:0;padding:8px 12px 0;background:#0b1224;border-bottom:1px solid #1e293b;">',
+    '    <div class="mfd-ai-tabs" style="display:flex;gap:0;padding:8px 12px 0;background:#0b1224;border-bottom:1px solid #1e293b;">',
     '      <button type="button" data-mfd-ai-tab="chat" style="background:#1e293b;color:#f1f5f9;border:0;border-radius:8px 8px 0 0;padding:8px 18px;font-size:12px;font-weight:600;cursor:pointer;border-bottom:2px solid #6366f1;">💬 ' + T('ai.tab_chat', 'Chat') + '</button>',
     '      <button type="button" data-mfd-ai-tab="db" style="background:transparent;color:#94a3b8;border:0;border-radius:8px 8px 0 0;padding:8px 18px;font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;">📊 ' + T('ai.tab_database', 'Database') + ' <span data-mfd-ai-tab-db-badge style="background:#334155;color:#cbd5e1;padding:2px 7px;border-radius:9999px;font-size:10px;font-weight:600;">0</span></button>',
     '    </div>',
@@ -897,7 +943,7 @@ function renderShellHtml(isBuilder?: boolean): string {
     '        <div data-mfd-ai-db-selected style="display:flex;flex-wrap:wrap;gap:4px;max-height:64px;overflow-y:auto;"></div>',
     '      </div>',
     '    </div>',
-    '    <div style="border-top:1px solid #1e293b;padding:14px;background:#0b1224;">',
+    '    <div class="mfd-ai-composer" style="border-top:1px solid #1e293b;padding:14px;background:#0b1224;">',
     '      <div data-mfd-ai-attachments style="display:none;flex-wrap:wrap;gap:6px;margin-bottom:10px;"></div>',
     '      <div data-mfd-ai-droparea style="position:relative;">',
     '        <textarea data-mfd-ai-input placeholder="' + T('ai.input_ph', 'Describe the form you need (e.g. an event-registration form with name, email, phone, attendance date, notes) · Paste or drop an image / .txt file for the AI to reference').replace(/"/g, '&quot;') + '" rows="3" style="width:100%;background:#1e293b;border:1px solid #334155;color:#f1f5f9;border-radius:8px;padding:10px 12px;font-size:13px;resize:vertical;outline:none;box-sizing:border-box;"></textarea>',
@@ -915,13 +961,13 @@ function renderShellHtml(isBuilder?: boolean): string {
   ];
   if (!isBuilder) {
     parts.push(
-      '  <div style="display:flex;flex-direction:column;background:#f8fafc;color:#0f172a;min-height:0;">',
-      '    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 18px;background:#fff;border-bottom:1px solid #e2e8f0;">',
+      '  <div class="mfd-ai-preview-pane" style="display:flex;flex-direction:column;background:#f8fafc;color:#0f172a;min-height:0;">',
+      '    <div class="mfd-ai-preview-head" style="display:flex;justify-content:space-between;align-items:center;padding:10px 18px;background:#fff;border-bottom:1px solid #e2e8f0;">',
       '      <div style="font-weight:600;font-size:13px;color:#0f172a;">' + T('ai.live_preview', 'Live preview') + '</div>',
       '      <div data-mfd-ai-status style="font-size:11px;color:#64748b;">' + T('ai.no_form_yet', '(no form yet)') + '</div>',
       '    </div>',
       '    <div data-mfd-ai-preview style="flex:1;overflow-y:auto;padding:24px;"></div>',
-      '    <div style="border-top:1px solid #e2e8f0;background:#f1f5f9;padding:12px 18px;display:flex;gap:8px;justify-content:flex-end;">',
+      '    <div class="mfd-ai-actions" style="border-top:1px solid #e2e8f0;background:#f1f5f9;padding:12px 18px;display:flex;gap:8px;justify-content:flex-end;">',
       '      <button type="button" data-mfd-ai-action="regen"  disabled style="background:#fff;border:1px solid #cbd5e1;color:#475569;padding:8px 14px;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;opacity:0.5;">🔁 ' + T('ai.regenerate', 'Regenerate') + '</button>',
       '      <button type="button" data-mfd-ai-action="builder" disabled style="background:#fff;border:1px solid #cbd5e1;color:#475569;padding:8px 14px;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;opacity:0.5;">✏️ ' + T('ai.open_builder', 'Open Builder') + '</button>',
       '      <button type="button" data-mfd-ai-action="save"   disabled style="background:#16a34a;color:#fff;border:0;padding:8px 18px;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;opacity:0.5;">✅ ' + T('ai.save_use', 'Save & Use Now') + '</button>',
@@ -1445,7 +1491,13 @@ function ensureBuilderSafeField(f: any): any {
 function mergeKeepStyleFields(existing: any[], aiFields: any[]): any[] {
   const byKey: Record<string, any> = {};
   for (const f of existing || []) if (f && f.key) byKey[String(f.key)] = f;
+  // [OnRails v20260726] `type` / `properties` / `widgetProps` ARE author-editable on a premium
+  // edit — "retarget this form at table X" means exactly retyping a field (Text → Select with
+  // optionsSql, → Date, → Number). They used to be dropped, so a kept key silently stayed a
+  // plain Text and its optionsSql never landed. Containers stay frozen (a Row/Section retype
+  // would strip its columns and take the shell's grid with it).
   const SAFE = ['label', 'placeholder', 'required', 'helpText', 'defaultValue', 'options'];
+  const CONTAINER = ['Row', 'Section'];
   const out: any[] = [];
   for (const af of aiFields || []) {
     if (!af || !af.key) continue;
@@ -1457,16 +1509,33 @@ function mergeKeepStyleFields(existing: any[], aiFields: any[]): any[] {
         if (k === 'options' && !Array.isArray(orig.options)) continue;   // don't graft options onto a non-option field
         merged[k] = af[k];
       }
+      if (af.type && af.type !== orig.type && CONTAINER.indexOf(String(orig.type)) < 0 && CONTAINER.indexOf(String(af.type)) < 0) merged.type = af.type;
+      if (af.properties && typeof af.properties === 'object') merged.properties = Object.assign({}, merged.properties || {}, af.properties);
+      if (af.widgetProps && typeof af.widgetProps === 'object') merged.widgetProps = Object.assign({}, merged.widgetProps || {}, af.widgetProps);
       out.push(ensureBuilderSafeField(merged));
     } else {
       out.push(ensureBuilderSafeField({
         key: af.key, type: af.type || 'Text', label: af.label || af.key,
         required: !!af.required, placeholder: af.placeholder || '', helpText: af.helpText || '',
         options: Array.isArray(af.options) ? af.options : [], defaultValue: af.defaultValue ?? '',
-        validation: {}, properties: {}, widgetProps: {},
+        validation: {}, properties: af.properties && typeof af.properties === 'object' ? af.properties : {},
+        widgetProps: af.widgetProps && typeof af.widgetProps === 'object' ? af.widgetProps : {},
       }));
     }
   }
+  // [OnRails v20260726] STRUCTURE IS NOT THE AI'S TO DELETE. A premium template carries
+  // Section/step markers (premium_step_1..N), Headings and Dividers that the frozen shell's
+  // markup + wizard paging depend on. Retargeting a 4-step premium form at a SQL table made the
+  // model return data fields only, so three steps vanished and the wizard collapsed to one page.
+  // Re-insert every structural field the AI dropped, at its original position.
+  const kept: Record<string, boolean> = {};
+  out.forEach(f => { if (f && f.key) kept[String(f.key)] = true; });
+  const STRUCTURAL = ['Section', 'Heading', 'Divider', 'HtmlBlock', 'Html', 'Image'];
+  (existing || []).forEach((f, i) => {
+    if (!f || !f.key || kept[String(f.key)]) return;
+    if (STRUCTURAL.indexOf(String(f.type)) < 0) return;
+    out.splice(Math.min(i, out.length), 0, JSON.parse(JSON.stringify(f)));
+  });
   return out;
 }
 
@@ -1527,8 +1596,10 @@ async function callAI(userText: string, history: any[], attachments?: any[], sel
     const shellTexts = collectHtmlTextNodes(String(_exSettings.customHtml || ''));
     system += '\n\n🔒 PREMIUM KEEP-STYLE EDIT — this form has an IMMUTABLE premium design (customHtml + customCss + theme). You MUST NOT emit customHtml or customCss, and MUST NOT change theme — they are preserved automatically. Return JSON shaped {"schema":{version,title,description,fields,settings},"htmlTextSwaps":[{"find","replace"}],"explain"}.\n'
       + '- ALWAYS set schema.title AND schema.description to the rebranded copy (the form metadata name) so the dashboard + canvas title update too.\n'
-      + '- Apply the user request by editing fields (relabel / add / remove / reorder). Keep every other field key/order/options intact.\n'
-      + '- In schema.settings put ONLY themeCssOverrides (colour tweaks via the template CSS vars) — OMIT customHtml / customCss / theme entirely.\n'
+      + '- Apply the user request by editing fields (relabel / retype / add / remove / reorder). Keep every other field key/order/options intact.\n'
+      + '- 🛑 NEVER drop a Section / Heading / Divider field — those are the template STEPS and headings the shell paints; deleting one collapses the wizard. Return them unchanged in place (they are restored automatically if you forget).\n'
+      + '- RETARGET AT A SQL TABLE ("make this form write into table X"): keep the shell, rename/retype the DATA fields to the real columns (Select + properties.optionsSource:"sql" + properties.optionsSql for FK columns) and ALSO emit schema.settings.databaseInsert {enabled,connectionKey,databaseType,insertSql,parameterMapping} — that is the ONE settings key besides themeCssOverrides you may emit.\n'
+      + '- In schema.settings put ONLY themeCssOverrides (colour tweaks via the template CSS vars) and, when retargeting, databaseInsert — OMIT customHtml / customCss / theme entirely.\n'
       + '- To rebrand HARDCODED copy baked into the shell (hero title + subtitle, EVERY stepper label, eyebrow/step numbers, section headings + captions, button text), add {"find":"<exact current text>","replace":"<new text>"} entries to htmlTextSwaps. `find` MUST be one of the SHELL TEXTS below verbatim; `replace` MUST be plain text (no < > tags). Rebrand EVERY shell text that names the OLD theme/brand or topic — do not leave any old-brand wording behind. This rebrands the look WITHOUT changing its structure.\n'
       + '- Change colour ONLY if the user asks, and ONLY via themeCssOverrides.\n'
       + 'SHELL TEXTS (exact current strings you may rebrand): ' + JSON.stringify(shellTexts);

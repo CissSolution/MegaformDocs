@@ -222,6 +222,40 @@ namespace MegaForm.Blogs.Client
             return 0;
         }
 
+        /// <summary>
+        /// The identity a post gets when the server-generated one is missing or already taken.
+        ///
+        /// 🔴 The "S" is load-bearing. Seeded posts use POST-01001..POST-01024 — a zero-padded
+        /// NUMBER — so a bare "POST-" + submissionId would collide with a seeded post the day a
+        /// site reaches submission 1001. A submission id is unique per portal forever, so this is.
+        /// </summary>
+        public static string DerivePostUid(int submissionId)
+            => "POST-S" + submissionId.ToString(CultureInfo.InvariantCulture);
+
+        /// <summary>
+        /// True when another post already carries this post_uid.
+        ///
+        /// Why it matters: post_uid is the join key the whole blog app hangs off.
+        /// BlogAnalyticsRollupService groups reader-events by it and writes the totals back to
+        /// EVERY post carrying that value, so a duplicate makes several posts report one another's
+        /// read counts. Measured on :5131: POST-01001 was shared by a seeded post and all four
+        /// posts created through the console, so one article's reads landed on five articles.
+        /// </summary>
+        public static async Task<bool> IsPostUidTakenByAnotherAsync(
+            IMegaFormClient client, MegaFormScope scope, string appKey, string postUid, int submissionId)
+        {
+            if (client == null || string.IsNullOrWhiteSpace(postUid)) return false;
+
+            var request = new AppQueryRequest { Page = 1, PageSize = 5 };
+            request.Parameters["post_uid"] = postUid.Trim();
+            var existing = await client.Queries.ExecuteAsync(
+                string.IsNullOrWhiteSpace(appKey) ? AppKey : appKey, PostsQuery, request, scope);
+
+            var items = existing?.Items;
+            if (items == null || items.Count == 0) return false;
+            return items.Any(r => r.SubmissionId != submissionId);
+        }
+
         /// <summary>Lucide icon paths, inlined so the module ships no icon font and no CDN.</summary>
         public static MarkupString Icon(string name, string cssClass = "mfba-icon")
         {

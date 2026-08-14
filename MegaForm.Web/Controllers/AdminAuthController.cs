@@ -11,7 +11,6 @@ using MegaForm.Web.Data;
 
 namespace MegaForm.Web.Controllers
 {
-    [Route("admin")]
     public class AdminAuthController : Controller
     {
         private readonly MegaFormDbContext _db;
@@ -24,7 +23,7 @@ namespace MegaForm.Web.Controllers
         }
 
         [AllowAnonymous]
-        [HttpGet("login")]
+        [HttpGet("/admin/login")]
         public async System.Threading.Tasks.Task<IActionResult> Login(string returnUrl = null)
         {
             if (!SetupController.IsSetupComplete(_env))
@@ -41,7 +40,7 @@ namespace MegaForm.Web.Controllers
 
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
-        [HttpPost("login")]
+        [HttpPost("/admin/login")]
         public async System.Threading.Tasks.Task<IActionResult> LoginPost(string usernameOrEmail, string password, bool rememberMe = false, string returnUrl = null)
         {
             if (!SetupController.IsSetupComplete(_env))
@@ -79,7 +78,7 @@ namespace MegaForm.Web.Controllers
             return LocalRedirect(SafeReturnUrl(returnUrl));
         }
 
-        [HttpGet("logout")]
+        [HttpGet("/admin/logout")]
         public async System.Threading.Tasks.Task<IActionResult> Logout(string returnUrl = "/admin/login")
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);

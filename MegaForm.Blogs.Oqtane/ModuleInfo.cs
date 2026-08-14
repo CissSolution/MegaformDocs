@@ -17,8 +17,8 @@ namespace MegaForm.Blogs.Client
                         + "listing, article detail, category, author, archive, featured strip or "
                         + "editorial console, chosen per instance in Module Settings.",
             // Oqtane only swaps the DLL when this version increases.
-            Version = "1.3.0",
-            ReleaseVersions = "1.1.0,1.2.0,1.3.0",
+            Version = "1.4.0",
+            ReleaseVersions = "1.1.0,1.2.0,1.3.0,1.4.0",
             Dependencies = "MegaForm.Sdk",
             PackageName = "MegaForm.Blogs.Oqtane",
             Categories = "Common",

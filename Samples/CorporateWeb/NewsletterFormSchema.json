@@ -1,0 +1,70 @@
+{
+  "version": "1.0",
+  "fields": [
+    {
+      "key": "email",
+      "type": "Email",
+      "label": "Email Address",
+      "placeholder": "you@example.com",
+      "required": true,
+      "order": 1,
+      "pageIndex": 0,
+      "width": "100%",
+      "prefillParam": "email"
+    },
+    {
+      "key": "first_name",
+      "type": "Text",
+      "label": "First Name",
+      "placeholder": "Your first name",
+      "required": true,
+      "order": 2,
+      "pageIndex": 0,
+      "width": "100%",
+      "prefillParam": "name"
+    },
+    {
+      "key": "interests",
+      "type": "Checkbox",
+      "label": "I'm interested in",
+      "order": 3,
+      "pageIndex": 0,
+      "options": [
+        { "label": "Product updates", "value": "product_updates" },
+        { "label": "Tips & tutorials", "value": "tips" },
+        { "label": "Company news", "value": "company_news" }
+      ]
+    },
+    {
+      "key": "consent",
+      "type": "Checkbox",
+      "label": "I agree to receive marketing emails",
+      "required": true,
+      "order": 4,
+      "pageIndex": 0
+    },
+    {
+      "key": "utm_source",
+      "type": "Hidden",
+      "label": "UTM Source",
+      "order": 99,
+      "pageIndex": 0,
+      "prefillParam": "utm_source"
+    }
+  ],
+  "pages": [
+    { "index": 0, "title": "Newsletter", "description": "Subscribe to our newsletter" }
+  ],
+  "settings": {
+    "multiPage": false,
+    "showProgressBar": false,
+    "showPageTitles": false,
+    "honeypotFieldName": "__mf_hp",
+    "rateLimitWindowMinutes": 5,
+    "rateLimitMaxPerWindow": 5,
+    "enableAnalytics": true,
+    "labelPosition": "top",
+    "formWidth": "100%",
+    "saveAndContinueDays": 7
+  }
+}

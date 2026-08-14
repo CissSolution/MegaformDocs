@@ -604,10 +604,24 @@ function bootDashboard(root: HTMLElement): void {
   tryInit();
 }
 
+/// A surface can exist TWICE on a DNN page: once inside this host's overlay, and once rendered by
+/// the module itself when the page was opened straight at that surface (`/mfqa-admin#mf-submissions`).
+/// Duplicate ids are invalid HTML, but they are what the page has - and `getElementById` returns the
+/// FIRST in document order, which is the overlay copy even when the overlay is `display:none`.
+/// Measured on megaclean008.ai: the submissions app mounted into the hidden copy (table with 12
+/// rows, 0x0) while the visible root kept its "Loading submissions…" placeholder forever.
+/// Prefer the root the user can actually see; when the overlay IS open it is visible and still
+/// wins, because it comes first.
+function rootById(id: string): HTMLElement | null {
+  const all = Array.from(document.querySelectorAll<HTMLElement>(`[id="${id}"]`));
+  if (!all.length) return null;
+  return all.find((el) => el.getClientRects().length > 0) || all[0];
+}
+
 function bootSubmissions(root: HTMLElement): void {
   // [SubmissionsShellRoute v20260609-01] Canonical SubmissionsShell is the
   // only submission dashboard. Gmail-style inbox was removed.
-  if (root.dataset.booted) return;
+  if (!root || root.dataset.booted) return;
   if (!root.dataset.platform) root.dataset.platform = 'dnn';
   if (!root.dataset.mfApiBase) root.dataset.mfApiBase = '/API/MegaForm/';
   const init = window.MegaForm?.initSubmissions;
@@ -1021,7 +1035,7 @@ function setLiveEditorTriggerVisible(visible: boolean): void {
 // below tolerates the bundle not being ready yet, so no extra wiring is required.
 // Bump whenever the builder bundle's CONTENT changes: the URL is the cache key, so a stale
 // stamp serves yesterday's bundle from the browser cache and the fix "does not work".
-const BUILDER_LAZY_VERSION = '20260715-B238';
+const BUILDER_LAZY_VERSION = '20260726-B416-StepCanvasActions';
 let _builderBundleRequested = false;
 function ensureBuilderBundleLazyLoaded(assetsBase: string): void {
   if (_builderBundleRequested) return;
@@ -1202,10 +1216,10 @@ function init(): void {
     applySurfaceMode(overlay);
     if (writeHash) setHash(mode, forceNew);
     if (mode === 'dashboard') bootDashboard(document.getElementById('mf-host-dashboard-root') as HTMLElement);
-    if (mode === 'submissions') bootSubmissions(document.getElementById('mf-submissions-root') as HTMLElement);
-    if (mode === 'myinbox') bootMyInbox(document.getElementById('mf-myinbox-root') as HTMLElement);
+    if (mode === 'submissions') bootSubmissions(rootById('mf-submissions-root') as HTMLElement);
+    if (mode === 'myinbox') bootMyInbox(rootById('mf-myinbox-root') as HTMLElement);
     if (mode === 'views') renderViews(host, els);
-    if (mode === 'languages') bootLanguages(document.getElementById('mf-languages-root') as HTMLElement);
+    if (mode === 'languages') bootLanguages(rootById('mf-languages-root') as HTMLElement);
     if (mode === 'theme') {
       window.setTimeout(() => {
         try { window.dispatchEvent(new Event('resize')); } catch {}

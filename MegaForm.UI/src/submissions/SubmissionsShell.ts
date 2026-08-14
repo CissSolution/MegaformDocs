@@ -1248,17 +1248,23 @@ function buildRow(sub: Submission, isAllForms: boolean): HTMLTableRowElement {
     delBtn.title = 'Delete';
     delBtn.style.cssText = (delBtn.style.cssText || '') + ';color:#dc2626';
     mk(actBar, viewBtn, delBtn);
+  } else {
+    // [SqlRowDetail v20260726] SQL-table rows stay read-only (no bulk/delete), but the owner wants
+    // to inspect one — give them a View button that opens the row's own data as a read-only sheet.
+    const viewBtn = btn('mf-ic-btn', ic('eye', 14), (e) => { e.stopPropagation(); openSqlRowSheet(sub); });
+    viewBtn.title = 'View row';
+    mk(actBar, viewBtn);
   }
   tdAct.appendChild(actBar); tr.appendChild(tdAct);
 
-  if (!isSqlRow) {
-    tr.style.cursor = 'pointer';
-    tr.addEventListener('click', (e) => {
-      const target = e.target as HTMLElement;
-      if (target.closest('input,button,a,.mf-subs-act-bar,.mf-td-act')) return;
-      openDetailSheet(sub);
-    });
-  }
+  // Whole-row click opens the detail sheet. SQL-table rows open their own read-only key/value
+  // sheet (openSqlRowSheet); real submissions open the full detail (openDetailSheet).
+  tr.style.cursor = 'pointer';
+  tr.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement;
+    if (target.closest('input,button,a,.mf-subs-act-bar,.mf-td-act')) return;
+    if (isSqlRow) openSqlRowSheet(sub); else openDetailSheet(sub);
+  });
 
   return tr;
 }
@@ -1281,7 +1287,15 @@ function renderCell(sub: Submission, data: Record<string, unknown>, key: string,
       const wrap = div();
       const nameVal = String(data['name'] || data['full_name'] || data['first_name'] || data['fullName'] || '—');
       const emailVal = String(data['email'] || data['work_email'] || '');
-      wrap.innerHTML = `<div class="mf-td-name">${nameVal}</div>${emailVal ? `<div class="mf-td-email">${emailVal}</div>` : ''}`;
+      // [SecFix SEC-01 2026-07-21] name/email come from attacker-controlled
+      // submission DataJson — never interpolate into innerHTML (stored XSS).
+      // Build nodes with textContent like the other cells below.
+      const nameEl = div('mf-td-name'); nameEl.textContent = nameVal;
+      wrap.appendChild(nameEl);
+      if (emailVal) {
+        const emailEl = div('mf-td-email'); emailEl.textContent = emailVal;
+        wrap.appendChild(emailEl);
+      }
       return wrap;
     }
     case 'date': {
@@ -1549,6 +1563,75 @@ function openDetailSheet(sub: Submission): void {
 
   // Load detail via API
   viewSubmissionDetail(sub.submissionId, body, overlay);
+
+  panel.appendChild(head);
+  panel.appendChild(body);
+  overlay.appendChild(panel);
+  document.body.appendChild(overlay);
+  requestAnimationFrame(() => panel.classList.add('is-visible'));
+}
+
+// [SqlRowDetail v20260726] SQL-table rows have no MF_Submissions record to GET, so the standard
+// detail sheet (viewSubmissionDetail → fetch by id) can't serve them and the row was left un-clickable.
+// The owner wants clicking a SQL-table row to open a details window — render the row's OWN data
+// (already parsed client-side by rowData()) as a read-only key/value sheet, no server round-trip.
+function openSqlRowSheet(sub: Submission): void {
+  const rowVals = rowData(sub) || {};
+  // [SqlRowUnifiedDetail v20260726] The owner wants ONE detail UI regardless of source: a SQL-table
+  // row that links back to a real MF_Submissions record (SubmissionId column — present whenever the
+  // form's Database-Insert INSERT carries :_submissionId) must open the SAME rich submission detail
+  // (avatar + FORM RESPONSES + Details/History/Workflow tabs + Print/Export) that JSON-source mode
+  // shows, not a separate key/value sheet. Delegate to openDetailSheet with the REAL id. Only raw
+  // seeded rows with no link fall through to the read-only key/value sheet below.
+  const linkId = Number(
+    (rowVals as any).SubmissionId ?? (rowVals as any).submissionId ??
+    (rowVals as any).SubmissionID ?? (rowVals as any).submission_id ?? 0);
+  if (Number.isFinite(linkId) && linkId > 0) {
+    openDetailSheet({ ...sub, submissionId: linkId } as Submission);
+    return;
+  }
+
+  document.querySelector('.mf-sheet-overlay')?.remove();
+  const overlay = div('mf-sheet-overlay');
+  overlay.style.zIndex = '200030';
+  const panel = div('mf-sheet-panel');
+
+  const head = div('mf-sheet-head');
+  const tableName = (getSubsState() as any).sqlTableName || 'SQL table';
+  const title = div('mf-sheet-title', `Row — ${tableName}`);
+  const actions = div('mf-sheet-head-actions');
+  const expandBtn = btn('mf-sheet-fs', ic('maximize', 14), () => {
+    panel.classList.toggle('is-expanded');
+    expandBtn.innerHTML = panel.classList.contains('is-expanded') ? ic('minimize', 14) : ic('maximize', 14);
+  });
+  const closeBtn = btn('mf-sheet-close', ic('close', 14), () => overlay.remove());
+  mk(actions, expandBtn, closeBtn);
+  mk(head, title, actions);
+
+  const body = div('mf-sheet-body');
+  const data = rowData(sub) || {};
+  const wrap = div('mf-sqlrow-detail');
+  wrap.style.cssText = 'padding:16px 20px;display:flex;flex-direction:column;';
+  const keys = Object.keys(data);
+  if (!keys.length) {
+    wrap.innerHTML = `<div class="mf-subs-empty" style="padding:24px;color:#64748b">No data on this row.</div>`;
+  } else {
+    keys.forEach((k) => {
+      const raw = (data as any)[k];
+      const val = raw == null ? '' : (typeof raw === 'object' ? JSON.stringify(raw) : String(raw));
+      const rowEl = document.createElement('div');
+      rowEl.style.cssText = 'display:grid;grid-template-columns:minmax(140px,220px) 1fr;gap:14px;padding:10px 4px;border-bottom:1px solid #eef2f7;align-items:start;';
+      const kEl = document.createElement('div');
+      kEl.style.cssText = 'font-weight:600;color:#475569;font-size:13px;word-break:break-word;';
+      kEl.textContent = k;
+      const vEl = document.createElement('div');
+      vEl.style.cssText = 'color:#0f172a;font-size:14px;word-break:break-word;white-space:pre-wrap;';
+      vEl.textContent = val;
+      mk(rowEl, kEl, vEl);
+      wrap.appendChild(rowEl);
+    });
+  }
+  body.appendChild(wrap);
 
   panel.appendChild(head);
   panel.appendChild(body);

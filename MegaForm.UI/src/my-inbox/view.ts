@@ -2,8 +2,9 @@
 // Adapted from the Next.js mock design to vanilla TS + CSS.
 import type { MyInboxResult, WorkflowInboxTask, DirectoryGroup } from '../workflow-inbox/types';
 import type { InboxTaskItem, InboxView, InboxTab, ReplyMode, InboxSort, InboxDensity, InboxTaskStatus } from './types';
-import { VIEW_META, STATUS_CONFIG, PRIORITY_CONFIG, HISTORY_TYPE_CFG, STATUS_RANK, adaptTask } from './types';
+import { VIEW_META, STATUS_CONFIG, PRIORITY_CONFIG, HISTORY_TYPE_CFG, STATUS_RANK, adaptTask, parseServerDate } from './types';
 import { div, span, btn, mk, ic, escapeHtml, escapeAttr, isImageUrl, isHttpUrl, looksLikeHtml, sanitizeHtml, T, el } from './ui';
+import { submissionPrintUrl } from './print-link';
 
 // [DetailRender 2026-06-16] Render a structured/composite field value (a JSON object such
 // as Address parts, Phone-pro, or Confirm-email) as a clean headline + humanized part list
@@ -25,6 +26,38 @@ function mfRenderPartValue(s: string): string {
   if (isHttpUrl(s)) return `<a href="${escapeAttr(s)}" target="_blank" rel="noopener noreferrer">${escapeHtml(s)}</a>`;
   return escapeHtml(s);
 }
+/** True for a JSON array of row objects — what a DataGrid / repeater submits. */
+function mfLooksLikeRowArray(s: unknown): boolean {
+  if (typeof s !== 'string') return false;
+  const t = s.trim();
+  if (t.length < 2 || t.charAt(0) !== '[') return false;
+  try {
+    const a = JSON.parse(t);
+    return Array.isArray(a) && a.length > 0 && a.every((r) => r && typeof r === 'object' && !Array.isArray(r));
+  } catch { return false; }
+}
+
+/**
+ * [GridRowsInDetail v20260726] Render a submitted line-item grid as a real table. The Core display
+ * value is deliberately just "N rows" (DescribeGridValue) so lists/CSV/e-mail stay short — but in the
+ * submission detail an invoice must show the lines that were actually ordered.
+ */
+function mfRenderRowArray(raw: string): string {
+  let rows: Array<Record<string, unknown>>;
+  try { rows = JSON.parse(raw); } catch { return escapeHtml(raw); }
+  if (!Array.isArray(rows) || !rows.length) return '<span class="mf-mi3-cell-empty">—</span>';
+  const cols: string[] = [];
+  rows.forEach((r) => Object.keys(r || {}).forEach((k) => { if (!k.startsWith('__') && cols.indexOf(k) < 0) cols.push(k); }));
+  if (!cols.length) return '<span class="mf-mi3-cell-empty">—</span>';
+  const head = cols.map((c) => `<th style="text-align:left;padding:4px 8px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:#64748b;border-bottom:1px solid #e2e8f0;">${escapeHtml(mfHumanizePartKey(c))}</th>`).join('');
+  const body = rows.map((r) => '<tr>' + cols.map((c) => {
+    const v = r[c];
+    const txt = v == null ? '' : (typeof v === 'object' ? JSON.stringify(v) : String(v));
+    return `<td style="padding:4px 8px;font-size:12px;color:#0f172a;border-bottom:1px solid #f1f5f9;">${escapeHtml(txt)}</td>`;
+  }).join('') + '</tr>').join('');
+  return `<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;margin-top:2px;"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`;
+}
+
 function mfRenderStructuredValue(raw: string): string {
   let obj: Record<string, unknown>;
   try { obj = JSON.parse(raw); } catch { return escapeHtml(raw); }
@@ -474,8 +507,18 @@ function buildActionBar(ctx: BoardContext, task: InboxTaskItem): HTMLElement {
         if (mode === 'export') ctx.onExport(task);
         else ctx.onReplyMode(mode);
       });
-    // No workflow task → only Export (the rest would be no-ops).
+    // [SubmissionPrint v20260713] Print / Save PDF — opens the server-rendered
+    // per-submission document. Self-contained (no ctx callback) so it works in
+    // BOTH hosts (My Inbox board + Submissions detail sheet); hidden on
+    // platforms without the endpoint (DNN).
+    const printUrl = submissionPrintUrl(task.source.submissionId);
+    const mkPrint = (): HTMLButtonElement =>
+      btn('mf-mi3-act-btn mf-mi3-act-print', `${ic('fileText', 14)}${T('inbox.print', 'Print')}`, () => {
+        try { window.open(printUrl as string, '_blank', 'noopener'); } catch { /* popup blocked */ }
+      });
+    // No workflow task → only Print + Export (the rest would be no-ops).
     if (ctx.hideTaskActions) {
+      if (printUrl) mk(bar, mkPrint());
       mk(bar, mkAct('export', 'download', T('inbox.export', 'Export'), 'mf-mi3-act-export'));
       return bar;
     }
@@ -501,6 +544,7 @@ function buildActionBar(ctx: BoardContext, task: InboxTaskItem): HTMLElement {
     } else {
       bar.appendChild(span('mf-mi3-detail-done', `${T('inbox.completed', 'Task completed')}`));
     }
+    if (printUrl) mk(bar, mkPrint());
     mk(bar,
       mkAct('export', 'download', T('inbox.export', 'Export'), 'mf-mi3-act-export'),
     );
@@ -664,12 +708,17 @@ function buildDetailTabDetails(task: InboxTaskItem, loading: boolean): HTMLEleme
       // content and images as <img> instead of raw escaped text.
       const isImage = ft === 'image' || ft === 'signature' || isImageUrl(v);
       const isRich = !isImage && (ft === 'html' || ft === 'richtext' || ft === 'rich_text' || ft === 'wysiwyg' || looksLikeHtml(v));
-      const wide = f.type === 'long' || isRich || isImage;
+      const wide = f.type === 'long' || isRich || isImage || mfLooksLikeRowArray(v);
       const cell = div('mf-mi3-detail-cell' + (wide ? ' is-wide' : ''));
 
       let valueHtml: string;
       let kindClass: string;
-      if (isImage) {
+      if (!String(v || '').trim()) {
+        // [DetailShowsEveryAnswer v20260726] An unanswered field stays on the grid so the panel
+        // mirrors the form; an em dash reads as "left blank" instead of an empty-looking cell.
+        valueHtml = '<span class="mf-mi3-cell-empty" style="color:#94a3b8;">—</span>';
+        kindClass = ' is-empty';
+      } else if (isImage) {
         valueHtml = `<img class="mf-mi3-cell-img" src="${escapeAttr(v)}" alt="${escapeAttr(f.label)}" loading="lazy" style="max-width:100%;height:auto;border-radius:8px;display:block;margin-top:2px;">`;
         kindClass = ' is-image';
       } else if (isRich) {
@@ -678,6 +727,10 @@ function buildDetailTabDetails(task: InboxTaskItem, loading: boolean): HTMLEleme
       } else if (isHttpUrl(v)) {
         valueHtml = `<a href="${escapeAttr(v)}" target="_blank" rel="noopener noreferrer">${escapeHtml(v)}</a>`;
         kindClass = '';
+      } else if (mfLooksLikeRowArray(v)) {
+        // line-item grid → real table, not "3 rows"
+        valueHtml = mfRenderRowArray(v);
+        kindClass = ' is-structured';
       } else if (ft === 'composite' || mfLooksLikeJsonObject(v)) {
         // Composite / structured widget value (Address, Phone parts, Confirm-email…) →
         // clean headline + humanized parts instead of raw JSON.
@@ -853,8 +906,8 @@ function getAllTasks(ctx: BoardContext): InboxTaskItem[] {
 const PRIORITY_RANK: Record<string, number> = { urgent: 0, high: 1, normal: 2, low: 3 };
 
 function sortTasks(list: InboxTaskItem[], sortBy: InboxSort): InboxTaskItem[] {
-  const ts = (t: InboxTaskItem): number => new Date(t.source.createdAt || 0).getTime();
-  const due = (t: InboxTaskItem): number => (t.source.dueAt ? new Date(t.source.dueAt).getTime() : Number.MAX_SAFE_INTEGER);
+  const ts = (t: InboxTaskItem): number => (t.source.createdAt ? parseServerDate(t.source.createdAt).getTime() : 0);
+  const due = (t: InboxTaskItem): number => (t.source.dueAt ? parseServerDate(t.source.dueAt).getTime() : Number.MAX_SAFE_INTEGER);
   const arr = list.slice();
   switch (sortBy) {
     case 'oldest': arr.sort((a, b) => ts(a) - ts(b)); break;
@@ -872,8 +925,13 @@ function sortTasks(list: InboxTaskItem[], sortBy: InboxSort): InboxTaskItem[] {
 // [Badge fix 2026-07-12] "Assigned to Me" used to count every 'pending' task —
 // including Incoming ones nobody has claimed yet. Assignment is a fact
 // (assignedUserId on the raw task), not a derived status.
+// [AssignedBadge fix 2026-07-13] …but assignedUserId alone misses ad-hoc
+// Send-to-Inbox tasks, which the server matches by AssignedUserName with a NULL
+// id — the badge read 0 and the view sat empty while MyInbox said inProgress=7.
+// load() stamps assignedToMe from the server's own inProgress bucket.
 function isAssignedOpen(t: InboxTaskItem): boolean {
-  return t.source.assignedUserId != null && !['done', 'approved', 'rejected'].includes(t.status);
+  return (t.source.assignedToMe === true || t.source.assignedUserId != null)
+    && !['done', 'approved', 'rejected'].includes(t.status);
 }
 
 function countByView(tasks: InboxTaskItem[]): Record<InboxView, number> {

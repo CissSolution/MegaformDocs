@@ -2,8 +2,9 @@
 // formPages[] maps 1:1 to MegaForm Section pageBreak (see transform.ts).
 import { WizardData, SetFn, WizardField, FormPage, PremiumStepDetail } from './types';
 import { curatedFields, fieldsInGroup, FIELD_GROUPS, catalogLabel, catalogIcon, buildFieldFromCatalog, FieldDef } from './field-catalog';
-import { parseWizardStructure, fieldStepMap } from '@shared/custom-html-insert';
-import { h, icon, toggle } from './ui';
+import { parseWizardStructure } from '@shared/custom-html-insert';
+import { addStep, annotateStepOrdinals, listSteps, removeStep, renameStep } from '@shared/form-steps';
+import { h, icon, toggle, wt } from './ui';
 import { premiumStepDetailsFor } from './premium-steps';
 
 let counter = 2000;
@@ -66,12 +67,9 @@ function fieldListEl(fields: WizardField[], onAdd: (t: string) => void, onLabel:
 }
 
 // ── ③ PREMIUM (custom-shell) EDITOR ──────────────────────────────────────────
-// Premium templates ship their own layout (customHtml + data-step panels + *_wizard
-// scripts). They ARE editable here: fields are shown per step and can be added/removed. On
-// Create, transform.ts reconciles customHtml via syncFieldPlaceholders — new fields inherit
-// the template's field styling and land in the right data-step panel; removed fields' labels
-// + review-summary rows are cleaned. The renderer's submit-guard keeps edited wizards
-// submitting even when the *_wizard script's per-index validation references a removed field.
+// Premium templates ship their own layout (customHtml + data-step panels). The editable
+// working copy is canonical native fields with Section page-break anchors. Structural step
+// edits therefore use the same shared model as Builder and never cut data-step HTML blocks.
 function collectFieldKeys(fields: any[]): Set<string> {
   const s = new Set<string>();
   (function walk(arr: any[]) { for (const f of arr || []) { if (f && f.key) s.add(String(f.key)); if (f && Array.isArray(f.columns)) for (const c of f.columns) walk(c.fields || []); } })(fields);
@@ -99,15 +97,12 @@ function premiumFieldsEditor(data: WizardData, set: SetFn): HTMLElement {
   const t = data.templateRecord || {};
   const html = String((t.settings && t.settings.customHtml) || '');
   const struct = parseWizardStructure(html);
-  const stepMap = fieldStepMap(html);
   const details = premiumStepDetailsFor(t, data.premiumStepDetails);
   const fields: any[] = data.premiumFields || [];
+  annotateStepOrdinals(fields);
+  const steps = listSteps(fields);
   const used = collectFieldKeys(fields);
   const ownField = (f: any) => f && f.type !== 'Section' && f.type !== 'Hidden';
-
-  // Annotate own fields with a display step ordinal (originals from the parsed shell; new
-  // ones keep the ordinal assigned at add time).
-  fields.forEach(f => { if (f && f.__step == null && f.key && stepMap[f.key]) f.__step = stepMap[f.key].ordinal; });
 
   const byKey = (k: string) => fields.find(f => f.key === k);
   const setLabel = (key: string, v: string) => { const f = byKey(key); if (f) f.label = v; set({}, { rerender: false }); };
@@ -116,8 +111,13 @@ function premiumFieldsEditor(data: WizardData, set: SetFn): HTMLElement {
   const setStepDetail = (index: number, key: keyof PremiumStepDetail, value: string) => {
     const next = premiumStepDetailsFor(t, data.premiumStepDetails);
     next[index] = { ...next[index], [key]: value };
+    const nextFields = key === 'navLabel'
+      ? renameStep(fields, index + 1, value || next[index].title || wt('steps.step_default', 'Step {n}', { n: index + 1 }))
+      : fields;
+    annotateStepOrdinals(nextFields);
     data.premiumStepDetails = next;
-    set({ premiumStepDetails: next }, { rerender: false });
+    data.premiumFields = nextFields;
+    set({ premiumStepDetails: next, premiumFields: nextFields }, { rerender: false });
   };
   const onStepDetailInput = (index: number, key: keyof PremiumStepDetail, fallback: string) => (e: any) => {
     const value = e.target.value;
@@ -127,28 +127,23 @@ function premiumFieldsEditor(data: WizardData, set: SetFn): HTMLElement {
       if (title) title.textContent = value || fallback;
     }
   };
-  const addField = (ordinal: number | null, stepVal: number | null, catalogKey: string) => {
+  const addField = (ordinal: number | null, catalogKey: string) => {
     const label = catalogLabel(catalogKey);
     const nf = buildFieldFromCatalog(catalogKey, uniqueFieldKey(label, used), label, false);
     if (!nf) return;
     if (ordinal != null) nf.__step = ordinal;
-    if (stepVal != null) nf.step = stepVal;
-    // Insert right after the last field already in this step (else the nearest earlier step)
-    // so syncFieldPlaceholders clones that sibling's wrapper → the new field lands in the
-    // same data-step panel with the template's label styling.
-    let insertAt = fields.length, found = false;
-    if (ordinal != null) for (let target = ordinal; target >= 1 && !found; target--) {
-      for (let i = fields.length - 1; i >= 0; i--) { if (fields[i].__step === target) { insertAt = i + 1; found = true; break; } }
-    }
+    const targetStep = ordinal == null ? null : steps[ordinal - 1];
+    const insertAt = targetStep ? targetStep.endIndex : fields.length;
     const next = fields.slice(); next.splice(insertAt, 0, nf);
+    annotateStepOrdinals(next);
     set({ premiumFields: next });
   };
 
   const onMore = () => { paletteExpanded = !paletteExpanded; set({}, { rerender: true }); };
-  const premiumFieldListEl = (stepFields: any[], ordinal: number | null, stepVal: number | null, emptyLabel: string) => {
+  const premiumFieldListEl = (stepFields: any[], ordinal: number | null, emptyLabel: string) => {
     const items = stepFields.map((f: any) => premiumRow(f, v => setLabel(f.key, v), () => toggleReq(f.key), () => removeKey(f.key)));
     return h('div', null, [
-      palette(ck => addField(ordinal, stepVal, ck), onMore),
+      palette(ck => addField(ordinal, ck), onMore),
       h('div', { class: 'mfw-flbl', style: 'margin-bottom:8px' }, 'Fields'),
       items.length
         ? h('div', null, items)
@@ -159,19 +154,55 @@ function premiumFieldsEditor(data: WizardData, set: SetFn): HTMLElement {
     ]);
   };
 
+  const deletePremiumStep = (ordinal: number) => {
+    if (steps.length <= 1) return;
+    const nextFields = removeStep(fields, ordinal, 'merge-prev');
+    annotateStepOrdinals(nextFields);
+    const nextDetails = details.filter((_detail, index) => index !== ordinal - 1);
+    if (activePremiumStepOrdinal > ordinal) activePremiumStepOrdinal--;
+    else if (activePremiumStepOrdinal === ordinal) activePremiumStepOrdinal = Math.min(ordinal, nextDetails.length);
+    set({ premiumFields: nextFields, premiumStepDetails: nextDetails });
+  };
+
+  const addPremiumStep = () => {
+    const ordinal = steps.length + 1;
+    const identity = details.reduce((max, detail) => Math.max(max, Number(detail.step) || 0), -1) + 1;
+    const label = wt('steps.step_default', 'Step {n}', { n: ordinal });
+    const nextFields = addStep(fields, fields.length, {
+      label,
+      properties: {
+        premiumNativeStep: true,
+        generatedPremiumStep: true,
+        legacyDataStep: identity,
+      },
+    });
+    annotateStepOrdinals(nextFields);
+    const nextDetails = details.concat({
+      step: identity,
+      navLabel: label,
+      navSubtitle: '',
+      title: label,
+      description: '',
+    });
+    activePremiumStepOrdinal = ordinal;
+    set({ premiumFields: nextFields, premiumStepDetails: nextDetails });
+  };
+
   if (struct.isWizard) {
-    if (!details[activePremiumStepOrdinal - 1]) activePremiumStepOrdinal = 1;
-    const activeIndex = Math.max(0, Math.min(activePremiumStepOrdinal - 1, Math.max(0, details.length - 1)));
-    const activeStruct = struct.steps[activeIndex] || struct.steps[0];
+    if (!steps[activePremiumStepOrdinal - 1]) activePremiumStepOrdinal = 1;
+    const activeIndex = Math.max(0, Math.min(activePremiumStepOrdinal - 1, Math.max(0, steps.length - 1)));
+    const activeStep = steps[activeIndex];
+    const detailAtIndex = details[activeIndex];
+    const activeStruct = struct.steps.find(step => detailAtIndex && step.step === detailAtIndex.step) || struct.steps[activeIndex] || struct.steps[0];
     const activeDetail = details[activeIndex] || {
       step: activeStruct ? activeStruct.step : activePremiumStepOrdinal,
-      navLabel: 'Step ' + activePremiumStepOrdinal,
+      navLabel: wt('steps.step_default', 'Step {n}', { n: activePremiumStepOrdinal }),
       navSubtitle: '',
-      title: 'Step ' + activePremiumStepOrdinal,
+      title: wt('steps.step_default', 'Step {n}', { n: activePremiumStepOrdinal }),
       description: '',
     };
     const total = fields.filter(ownField).length;
-    const stepFields = fields.filter(f => ownField(f) && f.__step === activePremiumStepOrdinal);
+    const stepFields = (activeStep ? activeStep.fields : []).filter(ownField);
     const header = h('div', { style: 'display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px' }, [
       h('div', null, [h('h2', null, 'Build your form'), h('p', { class: 'sub', style: 'margin:4px 0 0' }, 'Add fields to each step. ' + total + ' field' + (total !== 1 ? 's' : '') + ' total.')]),
       h('div', { style: 'display:flex;flex-direction:column;gap:8px;align-items:flex-end' }, [
@@ -187,43 +218,63 @@ function premiumFieldsEditor(data: WizardData, set: SetFn): HTMLElement {
     ]);
 
     const sidebar = h('div', { style: 'width:170px;flex:0 0 170px;background:#fff;border-radius:11px;padding:9px;box-shadow:0 1px 3px rgba(15,23,42,.05)' }, [
-      h('div', { class: 'mfw-flbl', style: 'margin-bottom:6px' }, 'Steps (' + details.length + ')'),
-      ...details.map((d, i) => {
+      h('div', { class: 'mfw-flbl', style: 'margin-bottom:6px' }, wt('steps.title', 'Steps') + ' (' + steps.length + ')'),
+      ...steps.map((step, i) => {
+        const d = details[i] || { navLabel: step.label, title: step.label };
         const ordinal = i + 1;
         const isActive = ordinal === activePremiumStepOrdinal;
-        const count = fields.filter(f => ownField(f) && f.__step === ordinal).length;
-        return h('button', {
-          type: 'button',
-          style: 'display:flex;align-items:center;gap:8px;width:100%;text-align:left;border:0;border-radius:9px;padding:8px 9px;cursor:pointer;font-size:12px;font-weight:600;margin-bottom:4px;' + (isActive ? 'background:#eef2ff;color:#6366f1' : 'background:none;color:#64748b'),
-          onclick: () => { activePremiumStepOrdinal = ordinal; set({}); },
+        const count = step.fields.filter(ownField).length;
+        return h('div', {
+          style: 'position:relative;margin-bottom:4px',
+          onmouseenter: (event: any) => {
+            const remove = event.currentTarget.querySelector('[data-mfw-remove-step]') as HTMLElement | null;
+            if (remove) remove.style.opacity = '1';
+          },
+          onmouseleave: (event: any) => {
+            const remove = event.currentTarget.querySelector('[data-mfw-remove-step]') as HTMLElement | null;
+            if (remove) remove.style.opacity = '.28';
+          },
         }, [
-          h('span', { style: 'width:20px;height:20px;border-radius:50%;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:0 0 20px;' + (isActive ? 'background:#6366f1;color:#fff' : 'background:#e2e8f0;color:#64748b') }, String(ordinal)),
-          h('span', { style: 'flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap' }, d.navLabel || d.title || ('Step ' + ordinal)),
-          h('span', { style: 'font-size:9px;color:#94a3b8' }, String(count)),
+          h('button', {
+            type: 'button',
+            style: 'display:flex;align-items:center;gap:8px;width:100%;text-align:left;border:0;border-radius:9px;padding:8px 9px;cursor:pointer;font-size:12px;font-weight:600;' + (isActive ? 'background:#eef2ff;color:#6366f1' : 'background:none;color:#64748b'),
+            onclick: () => { activePremiumStepOrdinal = ordinal; set({}); },
+          }, [
+            h('span', { style: 'width:20px;height:20px;border-radius:50%;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:0 0 20px;' + (isActive ? 'background:#6366f1;color:#fff' : 'background:#e2e8f0;color:#64748b') }, String(ordinal)),
+            h('span', { style: 'flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap' }, d.navLabel || d.title || wt('steps.step_default', 'Step {n}', { n: ordinal })),
+            h('span', { style: 'font-size:9px;color:#94a3b8' }, String(count)),
+          ]),
+          steps.length > 1 ? h('button', {
+            type: 'button',
+            title: wt('steps.remove', 'Remove step'),
+            'data-mfw-remove-step': '1',
+            style: 'position:absolute;right:-4px;top:-4px;width:16px;height:16px;border-radius:50%;border:0;background:#ef4444;color:#fff;font-size:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:.28;transition:opacity .15s',
+            onclick: (event: any) => { event.stopPropagation(); deletePremiumStep(ordinal); },
+          }, [icon('fa-xmark')]) : null,
         ]);
       }),
-      h('div', { style: 'margin-top:6px;border:1.5px dashed #cbd5e1;border-radius:9px;padding:8px;font-size:11px;font-weight:600;color:#94a3b8;background:#f8fafc;text-align:center' }, 'Template steps fixed'),
-      h('div', { style: 'margin-top:10px;background:#f8fafc;border-radius:8px;padding:7px;text-align:center;font-size:10px;color:#94a3b8;font-weight:600' }, total + ' fields across ' + details.length + ' steps'),
+      h('button', { type: 'button', style: 'display:flex;align-items:center;gap:6px;width:100%;border:1.5px dashed #cbd5e1;border-radius:9px;padding:8px;font-size:12px;font-weight:600;color:#64748b;background:none;cursor:pointer;margin-top:4px', onclick: addPremiumStep }, [icon('fa-plus'), document.createTextNode(' ' + wt('steps.add', 'Add Step'))]),
+      h('div', { style: 'margin-top:10px;background:#f8fafc;border-radius:8px;padding:7px;text-align:center;font-size:10px;color:#94a3b8;font-weight:600' }, wt('steps.summary', '{fields} fields across {steps} steps', { fields: total, steps: steps.length })),
     ]);
 
     const editor = h('div', { style: 'flex:1;min-width:0;background:#fff;border-radius:11px;padding:13px;box-shadow:0 1px 3px rgba(15,23,42,.05)' }, [
       h('div', { style: 'display:flex;align-items:center;gap:8px;margin-bottom:12px' }, [
         h('span', { style: 'width:20px;height:20px;border-radius:50%;background:#6366f1;color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center' }, String(activePremiumStepOrdinal)),
-        h('input', { class: 'mfw-in', style: 'height:28px;border:0;font-weight:700;font-size:14px;padding:0;flex:1', value: activeDetail.navLabel || '', oninput: onStepDetailInput(activeIndex, 'navLabel', activeDetail.title || ('Step ' + activePremiumStepOrdinal)) }),
+        h('input', { class: 'mfw-in', style: 'height:28px;border:0;font-weight:700;font-size:14px;padding:0;flex:1', value: activeDetail.navLabel || '', oninput: onStepDetailInput(activeIndex, 'navLabel', activeDetail.title || wt('steps.step_default', 'Step {n}', { n: activePremiumStepOrdinal })) }),
       ]),
       h('div', { class: 'mfw-step-detail-grid' }, [
         h('label', null, [h('span', null, 'Step subtitle'), h('input', { class: 'mfw-in', value: activeDetail.navSubtitle || '', oninput: (e: any) => setStepDetail(activeIndex, 'navSubtitle', e.target.value) })]),
         h('label', null, [h('span', null, 'Content heading'), h('input', { class: 'mfw-in', value: activeDetail.title || '', oninput: (e: any) => setStepDetail(activeIndex, 'title', e.target.value) })]),
         h('label', null, [h('span', null, 'Intro text'), h('input', { class: 'mfw-in', value: activeDetail.description || '', oninput: (e: any) => setStepDetail(activeIndex, 'description', e.target.value) })]),
       ]),
-      premiumFieldListEl(stepFields, activePremiumStepOrdinal, activeStruct ? activeStruct.step : activeDetail.step, 'No fields on ' + (activeDetail.navLabel || activeDetail.title || ('Step ' + activePremiumStepOrdinal))),
+      premiumFieldListEl(stepFields, activePremiumStepOrdinal, 'No fields on ' + (activeDetail.navLabel || activeDetail.title || wt('steps.step_default', 'Step {n}', { n: activePremiumStepOrdinal }))),
     ]);
 
     const orphan = fields.filter(f => ownField(f) && f.__step == null);
     const orphanCard = orphan.length
       ? h('div', { class: 'mfw-card', style: 'margin-top:12px;background:#fff' }, [
           h('div', { style: 'font-weight:700;font-size:13px;margin-bottom:8px' }, 'Other fields'),
-          premiumFieldListEl(orphan, null, null, 'No unassigned fields'),
+          premiumFieldListEl(orphan, null, 'No unassigned fields'),
         ])
       : null;
 
@@ -240,7 +291,7 @@ function premiumFieldsEditor(data: WizardData, set: SetFn): HTMLElement {
       h('span', { class: 'mfw-badge', style: 'color:#7c3aed;background:#7c3aed1a;margin-top:2px' }, 'Premium'),
     ]),
     h('div', { class: 'mfw-card', style: 'background:#fafbfc;margin-bottom:12px' }, [
-      premiumFieldListEl(fields.filter(ownField), null, null, 'No fields yet - click a type above to add'),
+      premiumFieldListEl(fields.filter(ownField), null, 'No fields yet - click a type above to add'),
     ]),
     h('div', { style: 'display:flex;align-items:flex-start;gap:10px;border:1.5px dashed #ddd6fe;border-radius:12px;background:#faf5ff;padding:11px 13px;font-size:12px;color:#6b21a8;line-height:1.5' }, [
       h('span', { style: 'color:#7c3aed;margin-top:1px' }, [icon('fa-circle-info')]),

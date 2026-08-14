@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using MegaForm.Core.Interfaces;
 using MegaForm.Core.Models;
+using MegaForm.Core.Services.TypedSubmission;
 using Newtonsoft.Json.Linq;
 
 namespace MegaForm.Core.Services
@@ -14,10 +15,12 @@ namespace MegaForm.Core.Services
     public class PermissionService
     {
         private readonly IPhase2Repository _repo;
+        private readonly SubmissionDataResolver _dataResolver;
 
-        public PermissionService(IPhase2Repository repo)
+        public PermissionService(IPhase2Repository repo, SubmissionDataResolver dataResolver = null)
         {
             _repo = repo;
+            _dataResolver = dataResolver;
         }
 
         public bool CanView(int formId, UserContext user)
@@ -259,15 +262,18 @@ namespace MegaForm.Core.Services
                 .ToList();
         }
 
-        private static bool ScopeMatchesTeam(SubmissionInfo submission, UserContext user, string scope)
+        private bool ScopeMatchesTeam(SubmissionInfo submission, UserContext user, string scope)
         {
             if (submission == null || user == null || user.Roles == null || user.Roles.Count == 0
-                || string.IsNullOrWhiteSpace(submission.DataJson))
+                || (string.IsNullOrWhiteSpace(submission.DataJson) && _dataResolver == null))
                 return false;
 
             try
             {
-                var data = JObject.Parse(submission.DataJson);
+                var resolved = _dataResolver?.GetTypedFirstData(submission.SubmissionId, submission.DataJson);
+                var data = resolved != null
+                    ? JObject.FromObject(resolved)
+                    : JObject.Parse(submission.DataJson);
                 var field = scope.StartsWith("team:", StringComparison.OrdinalIgnoreCase)
                     ? scope.Substring(5).Trim()
                     : string.Empty;

@@ -7,5 +7,6 @@ namespace MegaForm.Umbraco.ViewModels
         public string ViewType { get; set; }
         public bool IsAdmin { get; set; }
         public string ConfigJson { get; set; }
+        public string MemberPrefillJson { get; set; } = "{}";
     }
 }

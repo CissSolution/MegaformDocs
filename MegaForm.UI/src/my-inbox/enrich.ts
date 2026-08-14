@@ -7,7 +7,7 @@
 import type { SubmissionDetailInfo, SubmissionFieldSnapshot } from '@core/types';
 import type { WorkflowInboxTaskAction } from '../workflow-inbox/types';
 import type { InboxField, InboxAttachment, InboxHistoryItem } from './types';
-import { actionTypeToHistoryType } from './types';
+import { actionTypeToHistoryType, parseServerDate } from './types';
 
 export interface EnrichedDetail {
   fields: InboxField[];
@@ -69,10 +69,25 @@ export function inferFieldType(label: string, value: string, snapType?: string):
 
 // Skip snapshots that are not real "answers" (file uploads → attachments; layout/
 // presentational widgets carry no value).
+// [DetailShowsEveryAnswer v20260726] The submission detail must mirror the FORM, not just the
+// non-empty answers. Two filters used to eat real fields:
+//   • `signature` / `image` were type-skipped even though the renderer has an <img> branch for
+//     exactly those — a signed form showed no signature (owner report).
+//   • any blank answer disappeared, so an optional field left empty looked like it was never on
+//     the form (EuroYouth: Year of birth / Language level / Motivation all vanished).
+// The server already builds one snapshot per schema field (MegaFormUtils.BuildSubmissionSnapshots
+// skips only Html/Section/Captcha), so keeping everything here is what makes the panel complete.
+// Layout-only types stay out — they carry no answer — and file/upload stay out because they have
+// their own Attachments block below the grid (rendering them twice was never the intent).
+const LAYOUT_ONLY_FIELD = /^(html|htmlblock|heading|divider|section|spacer|paragraph_static|captcha|pagebreak)$/;
+const ATTACHMENT_FIELD = /^(file|fileupload|upload|files)$/;
+
 function isSkippableField(snapType: string, value: string): boolean {
   const st = (snapType || '').toLowerCase();
-  if (!value.trim()) return true;
-  if (/file|upload|signature|html|heading|divider|section|image|spacer|paragraph_static|captcha/.test(st)) return true;
+  if (LAYOUT_ONLY_FIELD.test(st)) return true;
+  if (ATTACHMENT_FIELD.test(st)) return true;
+  // An unknown/blank type with no value is junk (legacy rows), not an unanswered field.
+  if (!st && !value.trim()) return true;
   return false;
 }
 
@@ -85,7 +100,19 @@ export function mapFields(detail: SubmissionDetailInfo): InboxField[] {
   const seen = new Set<string>();
   for (const s of snaps) {
     const label = (s.label || s.key || '').trim();
-    const value = (s.displayValue != null && s.displayValue !== '') ? String(s.displayValue) : str(s.value);
+    const rawValue = str(s.value);
+    const display = (s.displayValue != null && s.displayValue !== '') ? String(s.displayValue) : '';
+    // [DetailShowsEveryAnswer v20260726] Signature/Image DisplayValue is a DELIBERATE placeholder
+    // ("[signature]", see MegaFormUtils.ToDisplayString) so CSV / e-mail / summary columns never
+    // carry a base64 blob. The detail panel wants the real pixels — take the RAW value for those,
+    // otherwise <img src="[signature]"> renders as a broken image.
+    const snapType = String(s.type || '').toLowerCase();
+    const wantsRawPixels = /^(signature|image)$/.test(snapType) && /^(data:|https?:)/i.test(rawValue);
+    // [GridRowsInDetail v20260726] Same deal for line-item grids: DescribeGridValue (Core) returns
+    // just "3 rows" so lists/CSV/e-mail stay short. The detail panel is the one place that must show
+    // WHAT the rows were, and the raw value is the JSON array the grid submitted.
+    const wantsRawRows = /^(datagrid|gridrepeater|datarepeater)$/.test(snapType) && /^\s*\[/.test(rawValue);
+    const value = (wantsRawPixels || wantsRawRows) ? rawValue : (display || rawValue);
     if (!label) continue;
     if (isSkippableField(String(s.type || ''), value)) continue;
     const dedupKey = String(s.key || label).trim().toLowerCase();
@@ -128,7 +155,7 @@ const ACTION_VERB: Record<number, string> = {
 
 function fmtStamp(iso: string): string {
   if (!iso) return '—';
-  const d = new Date(iso);
+  const d = parseServerDate(iso);
   if (Number.isNaN(d.getTime())) return '—';
   try {
     return d.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
@@ -141,7 +168,7 @@ export function mapHistory(actions: WorkflowInboxTaskAction[]): InboxHistoryItem
   const list = Array.isArray(actions) ? actions : [];
   return list
     .slice()
-    .sort((a, b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime())
+    .sort((a, b) => (a.createdAt ? parseServerDate(a.createdAt).getTime() : 0) - (b.createdAt ? parseServerDate(b.createdAt).getTime() : 0))
     .map((h, i) => {
       const verb = ACTION_VERB[h.actionType] || 'Action';
       const action = h.outcome ? `${verb} (${h.outcome})` : verb;

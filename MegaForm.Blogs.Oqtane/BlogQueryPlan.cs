@@ -42,6 +42,19 @@ namespace MegaForm.Blogs.Client
             return state;
         }
 
+        /// <summary>
+        /// Read a positive record id from the query string. Anything else — absent, negative,
+        /// not a number, padded past a plausible length — reads as 0, which every caller treats
+        /// as "no record selected" rather than as record zero.
+        /// </summary>
+        public static int ReadId(string uri, string key)
+        {
+            var raw = Read(uri, key, 12);
+            if (raw.Length == 0) return 0;
+            return int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out var id) && id > 0
+                ? id : 0;
+        }
+
         public static string Read(string uri, string key, int maxLength)
         {
             if (string.IsNullOrEmpty(uri) || string.IsNullOrEmpty(key)) return "";

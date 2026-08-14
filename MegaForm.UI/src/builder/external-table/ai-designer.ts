@@ -15,6 +15,10 @@
  * Badge: ExternalAiDesigner v20260711-P2
  */
 
+// [i18n 2026-07-13] Progress strings go through wt(key, EnglishFallback) — English
+// default, translations in the i18n catalog (RULE: no hard-coded Vietnamese).
+import { wt } from '../designer-i18n';
+
 const BADGE = 'ExternalAiDesigner v20260711-P2';
 const MAX_ATTEMPTS = 3;
 
@@ -122,11 +126,11 @@ export async function designWithAi(
   const ai = (window as any).MF_AI;
   const rejections: string[][] = [];
 
-  step('Đang dò bảng và đóng gói dữ kiện cho AI…');
+  step(wt('atbe.step_probing', 'Probing the table and packing facts for the AI…'));
   const envelope = await getEnvelope(connectionKey, schema, table);
 
   if (!ai || typeof ai.chat !== 'function') {
-    step('Chưa cấu hình AI — dùng bản máy sinh.');
+    step(wt('atbe.step_no_ai', 'AI is not configured — using the machine-generated version.'));
     const res = await bindDeterministic(connectionKey, schema, table);
     return { formId: res.formId, fields: res.fields, source: 'deterministic', attempts: 0, rejections, questions: [] };
   }
@@ -135,7 +139,7 @@ export async function designWithAi(
   let questions: string[] = [];
 
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-    step(`AI đang thiết kế (lần ${attempt}/${MAX_ATTEMPTS})…`);
+    step(wt('atbe.step_designing', 'AI is designing (attempt {n}/{max})…').replace('{n}', String(attempt)).replace('{max}', String(MAX_ATTEMPTS)));
 
     const user = corrections
       ? `${JSON.stringify(envelope)}\n\nYour previous answer was rejected by the validator:\n${corrections}\nReturn a corrected blueprint. Fix exactly these problems and change nothing else.`
@@ -153,7 +157,7 @@ export async function designWithAi(
 
     questions = Array.isArray(blueprint.questionsForAdmin) ? blueprint.questionsForAdmin : [];
 
-    step('Máy đang chấm bản thiết kế…');
+    step(wt('atbe.step_scoring', 'The machine is scoring the design…'));
     const res = await apply({ connectionKey, schema, table, formId: 0, title: blueprint.formTitle, blueprint });
 
     if (res.status === 200) {
@@ -164,7 +168,7 @@ export async function designWithAi(
       const msgs = res.json.errors.map((e: any) => `- [${e.code}] ${e.message}`);
       rejections.push(msgs);
       corrections = msgs.join('\n');
-      step(`Bị máy trả lại ${msgs.length} lỗi — AI sẽ tự sửa.`);
+      step(wt('atbe.step_rejected', 'The machine returned {n} error(s) — the AI will fix them.').replace('{n}', String(msgs.length)));
       continue;
     }
 
@@ -173,7 +177,7 @@ export async function designWithAi(
 
   // Three rejected attempts. The deterministic schema always maps to real columns, so it is the one
   // thing we can still ship honestly.
-  step('AI không đạt sau 3 lần — dùng bản máy sinh (luôn khớp cột thật).');
+  step(wt('atbe.step_ai_failed', 'AI failed after {max} attempts — using the machine-generated version (always matches the real columns).').replace('{max}', String(MAX_ATTEMPTS)));
   const res = await bindDeterministic(connectionKey, schema, table);
   return { formId: res.formId, fields: res.fields, source: 'deterministic', attempts: MAX_ATTEMPTS, rejections, questions };
 }

@@ -1,0 +1,68 @@
+@page "/admin-dashboard"
+@model MegaForm.Samples.CorporateWeb.Pages.AdminDashboardModel
+@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<section class="content-page admin-dashboard">
+    <div class="container">
+        <h1>MegaForm admin dashboard</h1>
+        <p class="lead">
+            This page is part of the host website. It reads live stats from MegaForm
+            services and links to the full MegaForm admin console.
+        </p>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-value">@Model.PublishedFormCount</span>
+                <span class="stat-label">Published forms</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value">@Model.TotalSubmissionCount</span>
+                <span class="stat-label">Submissions</span>
+            </div>
+        </div>
+
+        <div class="dashboard-actions">
+            <a class="btn btn-primary" href="/admin" target="_blank">
+                Open MegaForm admin console
+            </a>
+            @if (Model.FirstFormId > 0)
+            {
+                <a class="btn btn-secondary" href="/f/@Model.FirstFormId" target="_blank">
+                    Preview public contact form
+                </a>
+            }
+            <a class="btn btn-secondary" href="/Contact">
+                Back to contact page
+            </a>
+        </div>
+
+        @if (Model.Forms.Any())
+        {
+            <h2>Forms</h2>
+            <div class="form-list">
+                @foreach (var form in Model.Forms)
+                {
+                    <div class="form-list-item">
+                        <div>
+                            <strong>@form.Title</strong>
+                            <span class="badge">@form.Status</span>
+                        </div>
+                        <div class="form-actions">
+                            <a class="btn btn-sm" href="/f/@form.FormId" target="_blank">Preview</a>
+                            <a class="btn btn-sm" href="/admin?formId=@form.FormId" target="_blank">Edit</a>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="no-form">
+                <p>No published forms were found. The seeder may still be running.</p>
+                <a class="btn btn-secondary" href="/admin" target="_blank">Open MegaForm admin</a>
+            </div>
+        }
+    </div>
+</section>

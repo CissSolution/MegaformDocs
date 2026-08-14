@@ -187,9 +187,13 @@ namespace MegaForm.WebApi
                     message = "Table " + targetSchema + "." + targetTable + " created successfully."
                 });
             }
+            // [Rule10 2026-07-27] Admin-only, but the provider message still names the database and
+            // the app-pool login on a connection failure. Log it; tell the caller only that the
+            // statement was rejected by the database.
             catch (Exception ex)
             {
-                return Request.CreateResponse(HttpStatusCode.BadRequest, new { error = "SQL error: " + ex.Message });
+                try { DotNetNuke.Services.Exceptions.Exceptions.LogException(ex); } catch { }
+                return Request.CreateResponse(HttpStatusCode.BadRequest, new { error = "the database rejected this CREATE TABLE statement" });
             }
         }
 
@@ -268,7 +272,11 @@ namespace MegaForm.WebApi
                           AND TABLE_NAME NOT LIKE 'Vocabular%'
                           AND TABLE_NAME NOT LIKE 'Webhook[_]%'
                           AND TABLE_NAME NOT LIKE 'Workflow[_]%'
-                          AND TABLE_NAME NOT LIKE 'MF[_]%'           -- MegaForm's own tables
+                          -- [InternalTableList v20260726] MegaForm's own tables, listed EXPLICITLY.
+                          -- The old `NOT LIKE 'MF[_]%'` treated the prefix as ownership and silently
+                          -- ate admin data tables named MF_* (owner report: MF_Form10_Applications,
+                          -- 402 rows, invisible in the Database tab and in every build-from-table flow).
+                          AND TABLE_NAME NOT IN (" + MegaForm.Core.Services.Subform.MegaFormInternalTables.SqlNameList() + @")
                           AND TABLE_NAME NOT IN ('Files','FileVersions','Items','OutputCache','Packages','SecureContent','SiteGroups')";
                     cmd.CommandText = @"
                         SELECT TABLE_SCHEMA, TABLE_NAME
@@ -292,9 +300,12 @@ namespace MegaForm.WebApi
                     return Request.CreateResponse(HttpStatusCode.OK, new { tables = list, showAll = showAll == 1 });
                 }
             }
+            // [Rule10 2026-07-27] Never echo the provider exception: it leaks the database name and
+            // the app-pool identity (e.g. Cannot open database "X" … Login failed for 'IIS APPPOOL\Y').
             catch (Exception ex)
             {
-                return Request.CreateResponse(HttpStatusCode.InternalServerError, new { error = ex.Message });
+                try { DotNetNuke.Services.Exceptions.Exceptions.LogException(ex); } catch { }
+                return Request.CreateResponse(HttpStatusCode.InternalServerError, new { error = "could not list tables" });
             }
         }
 
@@ -340,9 +351,11 @@ namespace MegaForm.WebApi
                     return Request.CreateResponse(HttpStatusCode.OK, new { table = tableName, columns = cols });
                 }
             }
+            // [Rule10 2026-07-27] see GetTables — provider messages leak DB name + app-pool identity.
             catch (Exception ex)
             {
-                return Request.CreateResponse(HttpStatusCode.InternalServerError, new { error = ex.Message });
+                try { DotNetNuke.Services.Exceptions.Exceptions.LogException(ex); } catch { }
+                return Request.CreateResponse(HttpStatusCode.InternalServerError, new { error = "could not read columns" });
             }
         }
 
@@ -365,9 +378,18 @@ namespace MegaForm.WebApi
                     Formatted = value.ToString(System.Globalization.CultureInfo.InvariantCulture)
                 });
             }
+            // [Rule10 2026-07-27] The evaluator's own InvalidOperationException describes the
+            // *designer's formula* (Unknown function, Mismatched parens, …) and carries no server
+            // state, so it stays — it is the only useful feedback while authoring a formula.
+            // Anything else is unexpected and must not reach the client (this action is anonymous).
+            catch (InvalidOperationException ioe)
+            {
+                return Request.CreateResponse(HttpStatusCode.OK, new SubformComputeResult { Error = ioe.Message });
+            }
             catch (Exception ex)
             {
-                return Request.CreateResponse(HttpStatusCode.OK, new SubformComputeResult { Error = ex.Message });
+                try { DotNetNuke.Services.Exceptions.Exceptions.LogException(ex); } catch { }
+                return Request.CreateResponse(HttpStatusCode.OK, new SubformComputeResult { Error = "formula could not be evaluated" });
             }
         }
 
@@ -406,9 +428,11 @@ namespace MegaForm.WebApi
                     }
                 }
             }
+            // [Rule10 2026-07-27] see GetTables — provider messages leak DB name + app-pool identity.
             catch (Exception ex)
             {
-                return Request.CreateResponse(HttpStatusCode.InternalServerError, new { error = ex.Message });
+                try { DotNetNuke.Services.Exceptions.Exceptions.LogException(ex); } catch { }
+                return Request.CreateResponse(HttpStatusCode.InternalServerError, new { error = "could not read rows" });
             }
         }
 

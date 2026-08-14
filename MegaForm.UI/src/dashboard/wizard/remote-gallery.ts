@@ -82,7 +82,7 @@ let _cache: RemoteListResult | null = null;
 export async function loadRemoteTemplates(force?: boolean): Promise<RemoteListResult> {
   if (_cache && !force) return _cache;
   try {
-    const r = await fetch(apiUrl('RemoteGalleryList'), { method: 'GET', credentials: 'same-origin', headers: authHeaders(false) });
+    const r = await fetch(apiUrl('RemoteGalleryList', force ? 'refresh=true' : ''), { method: 'GET', credentials: 'same-origin', headers: authHeaders(false) });
     // 402 = a server old enough to gate the whole listing. Newer servers return the catalog
     // with trial:true so a trial install can still browse it.
     if (r.status === 402) { _cache = { ok: false, trial: true, templates: [] }; return _cache; }

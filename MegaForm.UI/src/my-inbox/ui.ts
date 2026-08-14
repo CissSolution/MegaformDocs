@@ -1,6 +1,7 @@
 // Small DOM + formatting helpers for the My Inbox board (kept local so the module
 // is a self-contained subproject). Mirrors the helper style used by SubmissionsShell.
 import { t as i18nT } from '@i18n';
+import { parseServerDate } from './types';
 
 /** Translate with an English fallback (en-US value baked in → never blanks/breaks). */
 export function T(key: string, fallback: string, params?: Record<string, string | number>): string {
@@ -223,7 +224,7 @@ export function ic(name: string, size = 16): string {
 // ── Date / status formatting ────────────────────────────────────────────────
 export function relativeTime(iso?: string | null): string {
   if (!iso) return '—';
-  const d = new Date(iso);
+  const d = parseServerDate(iso);
   const t = d.getTime();
   if (Number.isNaN(t)) return '—';
   const diff = Date.now() - t;
@@ -239,7 +240,7 @@ export function relativeTime(iso?: string | null): string {
 
 export function dueLabel(iso?: string | null): { text: string; overdue: boolean } {
   if (!iso) return { text: '—', overdue: false };
-  const d = new Date(iso);
+  const d = parseServerDate(iso);
   const t = d.getTime();
   if (Number.isNaN(t)) return { text: '—', overdue: false };
   const diff = t - Date.now();

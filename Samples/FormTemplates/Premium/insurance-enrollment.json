@@ -1,0 +1,297 @@
+{
+  "title": "Insurance Enrollment",
+  "slug": "insurance-enrollment",
+  "description": "A steel-blue insurance enrollment form with coverage options, dependent table, policy/payment and signature.",
+  "category": "Premium",
+  "theme": "custom",
+  "fields": [
+    {
+      "key": "insured_name",
+      "type": "Text",
+      "label": "Proposed insured's name",
+      "placeholder": "Please use capital letters",
+      "required": true
+    },
+    {
+      "key": "birth_date",
+      "type": "Date",
+      "label": "Birth date",
+      "required": true
+    },
+    {
+      "key": "address",
+      "type": "Text",
+      "label": "Address",
+      "placeholder": "Street, city, state",
+      "required": false
+    },
+    {
+      "key": "phone_number",
+      "type": "Phone",
+      "label": "Phone number",
+      "placeholder": "+1 (555) 000-0000",
+      "required": false
+    },
+    {
+      "key": "email_address",
+      "type": "Email",
+      "label": "Email address",
+      "placeholder": "name@example.com",
+      "required": true
+    },
+    {
+      "key": "id_number",
+      "type": "Text",
+      "label": "ID number",
+      "placeholder": "Policyholder ID",
+      "required": false
+    },
+    {
+      "key": "occupation",
+      "type": "Text",
+      "label": "Occupation",
+      "placeholder": "Occupation",
+      "required": false
+    },
+    {
+      "key": "gender",
+      "type": "Radio",
+      "label": "Gender",
+      "required": false,
+      "options": [
+        {
+          "value": "male",
+          "label": "Male"
+        },
+        {
+          "value": "female",
+          "label": "Female"
+        }
+      ],
+      "optionColumns": 2,
+      "properties": {
+        "optionColumns": 2
+      },
+      "Properties": {
+        "optionColumns": 2
+      }
+    },
+    {
+      "key": "status",
+      "type": "Radio",
+      "label": "Status",
+      "required": false,
+      "options": [
+        {
+          "value": "single",
+          "label": "Single"
+        },
+        {
+          "value": "married",
+          "label": "Married"
+        },
+        {
+          "value": "divorced",
+          "label": "Divorced"
+        },
+        {
+          "value": "others",
+          "label": "Others"
+        }
+      ],
+      "optionColumns": 4,
+      "properties": {
+        "optionColumns": 4
+      },
+      "Properties": {
+        "optionColumns": 4
+      }
+    },
+    {
+      "key": "coverage_type",
+      "type": "Cards",
+      "label": "Type of Health Coverage",
+      "required": true,
+      "options": [
+        {
+          "value": "employee",
+          "label": "Employee",
+          "icon": "briefcase",
+          "description": "Primary applicant coverage."
+        },
+        {
+          "value": "spouse",
+          "label": "Spouse",
+          "icon": "heart",
+          "description": "Coverage for spouse or partner."
+        },
+        {
+          "value": "children",
+          "label": "Children",
+          "icon": "users",
+          "description": "Coverage for eligible dependents."
+        }
+      ],
+      "optionDisplay": "cards",
+      "optionColumns": 3,
+      "allowOptionHtml": false,
+      "properties": {
+        "optionDisplay": "cards",
+        "optionColumns": 3
+      },
+      "Properties": {
+        "optionDisplay": "cards",
+        "optionColumns": 3
+      }
+    },
+    {
+      "key": "dependents",
+      "type": "DataGrid",
+      "label": "Dependents proposed for coverage",
+      "defaultValue": "[{\"name\":\"\",\"ssn\":\"\",\"relationship\":\"\",\"birth_date\":\"\",\"age\":\"\",\"sex\":\"\"},{\"name\":\"\",\"ssn\":\"\",\"relationship\":\"\",\"birth_date\":\"\",\"age\":\"\",\"sex\":\"\"},{\"name\":\"\",\"ssn\":\"\",\"relationship\":\"\",\"birth_date\":\"\",\"age\":\"\",\"sex\":\"\"}]",
+      "widgetProps": {
+        "editMode": "inline",
+        "displayTemplate": "grid",
+        "allowAdd": true,
+        "allowDelete": true,
+        "stickyHeader": false,
+        "rowHeight": "compact",
+        "minRows": 0,
+        "maxRows": 8,
+        "emptyMessage": "Add dependents covered by this policy.",
+        "columns": [
+          {
+            "key": "name",
+            "label": "Name",
+            "type": "text",
+            "placeholder": "Dependent name",
+            "width": "minmax(160px,1.25fr)"
+          },
+          {
+            "key": "ssn",
+            "label": "SSN No.",
+            "type": "text",
+            "placeholder": "000-00-0000",
+            "width": "minmax(130px,1fr)"
+          },
+          {
+            "key": "relationship",
+            "label": "Relationship",
+            "type": "text",
+            "placeholder": "Child / spouse",
+            "width": "minmax(130px,1fr)"
+          },
+          {
+            "key": "birth_date",
+            "label": "Birth Date",
+            "type": "date",
+            "width": "minmax(130px,1fr)"
+          },
+          {
+            "key": "age",
+            "label": "Age",
+            "type": "number",
+            "decimals": 0,
+            "width": "minmax(56px,.55fr)"
+          },
+          {
+            "key": "sex",
+            "label": "Sex",
+            "type": "select",
+            "width": "minmax(70px,.65fr)",
+            "options": [
+              {
+                "label": "Male",
+                "value": "male"
+              },
+              {
+                "label": "Female",
+                "value": "female"
+              },
+              {
+                "label": "Other",
+                "value": "other"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "key": "annual_premium",
+      "type": "Text",
+      "label": "Annual premium",
+      "placeholder": "$0.00",
+      "required": false
+    },
+    {
+      "key": "units",
+      "type": "Text",
+      "label": "Units",
+      "placeholder": "0",
+      "required": false
+    },
+    {
+      "key": "payment_mode",
+      "type": "Radio",
+      "label": "Payment mode",
+      "required": false,
+      "options": [
+        {
+          "value": "annual",
+          "label": "Annual"
+        },
+        {
+          "value": "semi_annual",
+          "label": "Semi-Annual"
+        },
+        {
+          "value": "monthly_pat",
+          "label": "Monthly PAT"
+        }
+      ],
+      "optionColumns": 3,
+      "properties": {
+        "optionColumns": 3
+      },
+      "Properties": {
+        "optionColumns": 3
+      }
+    },
+    {
+      "key": "cash_application",
+      "type": "Text",
+      "label": "Cash with application",
+      "placeholder": "$0.00",
+      "required": false
+    },
+    {
+      "key": "signature",
+      "type": "Text",
+      "label": "Signature",
+      "placeholder": "Type full legal name",
+      "required": true
+    }
+  ],
+  "settings": {
+    "theme": "custom",
+    "customHtml": "\n<div class=\"mfp-mock11 mfp-insurance-enrollment\">\n  <article class=\"ie-card\">\n    <header class=\"ie-head\">\n      <a class=\"ie-back\" href=\"/\">&larr; Back to forms</a>\n      <div class=\"ie-head-row\">\n        <div><p class=\"ie-brand\">Secure Life</p><h1>Insurance Enrollment</h1><p class=\"ie-sub\">Individual policy application / Page 1 of 1</p></div>\n        <div class=\"ie-seal\"><i class=\"fa-solid fa-shield-halved\"></i></div>\n      </div>\n    </header>\n    <section class=\"ie-body\">\n      <div class=\"ie-section\"><h2>A. General Questions</h2><div class=\"ie-grid\">\n        <label><span>Proposed insured's name *</span>{{field:insured_name}}</label>\n        <label><span>Birth date *</span>{{field:birth_date}}</label>\n        <label class=\"ie-span\"><span>Address</span>{{field:address}}</label>\n        <label><span>Phone number</span>{{field:phone_number}}</label>\n        <label><span>Email address *</span>{{field:email_address}}</label>\n        <label><span>ID number</span>{{field:id_number}}</label>\n        <label><span>Occupation</span>{{field:occupation}}</label>\n        <label><span>Gender</span>{{field:gender}}</label>\n        <label><span>Status</span>{{field:status}}</label>\n      </div></div>\n      <div class=\"ie-section\"><h2>B. Type of Health Coverage</h2><label class=\"ie-full\">{{field:coverage_type}}</label>\n        <p class=\"ie-table-title\">Dependents proposed for coverage</p>\n        <div class=\"ie-dependents\">{{field:dependents}}</div>\n      </div>\n      <div class=\"ie-section\"><h2>C. Policy / Payment / Signature</h2><div class=\"ie-grid\">\n        <label><span>Annual premium</span>{{field:annual_premium}}</label>\n        <label><span>Units</span>{{field:units}}</label>\n        <label class=\"ie-span\"><span>Payment mode</span>{{field:payment_mode}}</label>\n        <label><span>Cash with application</span>{{field:cash_application}}</label>\n        <label><span>Signature *</span>{{field:signature}}</label>\n      </div><p class=\"ie-terms\">Terms &amp; Conditions: I certify the answers are true and complete to the best of my knowledge.</p></div>\n      <button type=\"submit\" class=\"ie-submit\">Submit application</button>\n    </section>\n  </article>\n</div>",
+    "customCss": "@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css');\n\n.mfp-mock11.mfp-mock11{position:relative!important;left:50%!important;right:50%!important;width:100vw!important;max-width:100vw!important;margin-left:-50vw!important;margin-right:-50vw!important}\n.mfp-mock11 .mf-field-group{margin:0!important;min-width:0!important;width:100%!important}\n.mfp-mock11 .mf-field-label{display:none!important}\n.mfp-mock11 label{line-height:1.2!important}\n.mfp-mock11 input[type='text'],.mfp-mock11 input[type='email'],.mfp-mock11 input[type='tel'],.mfp-mock11 input[type='number'],.mfp-mock11 input[type='date'],.mfp-mock11 select,.mfp-mock11 textarea,.mfp-mock11 .mf-input,.mfp-mock11 .mf-select,.mfp-mock11 .mf-textarea{box-sizing:border-box!important;width:100%!important;max-width:none!important;margin:0!important;box-shadow:none!important;outline:0!important;line-height:1.2!important}\n.mfp-mock11 .mf-option-group{flex-direction:row!important}\n.mfp-mock11 .mf-field-error:empty{display:none!important}\n.mfp-mock11 button[type='submit']{appearance:none;-webkit-appearance:none;cursor:pointer}\n\n.mfp-insurance-enrollment{background:#e6f1f9!important;color:#263e4c!important;font-family:Inter,Geist,system-ui,sans-serif!important;width:100%!important;max-width:none!important;margin:0 auto!important;padding:24px 0 32px!important}\n.mfp-insurance-enrollment *{box-sizing:border-box}\n.mfp-insurance-enrollment .ie-card{width:min(100%,1024px);margin:0 auto;background:#fff;border-radius:0;box-shadow:0 24px 70px rgba(32,52,67,.18);overflow:hidden}\n.mfp-insurance-enrollment .ie-head{background:#e6f1f9;border-bottom:8px solid #1b668a;padding:20px 24px 18px}\n.mfp-insurance-enrollment .ie-back{display:inline-block;margin-bottom:16px;color:#285b70;text-decoration:none;font-size:12px;font-weight:700}\n.mfp-insurance-enrollment .ie-head-row{display:flex;align-items:center;justify-content:space-between;gap:24px}\n.mfp-insurance-enrollment .ie-brand{margin:0 0 6px!important;text-transform:uppercase;letter-spacing:.18em!important;font-size:11px!important;line-height:16.5px!important;font-weight:700!important;color:#164f73!important}\n.mfp-insurance-enrollment h1{margin:0!important;color:#16476b!important;font-size:30px!important;line-height:36px!important;font-weight:700!important;letter-spacing:0!important;font-family:Inter,Geist,system-ui,sans-serif!important}\n.mfp-insurance-enrollment .ie-sub{margin:8px 0 0!important;color:#486b7d!important;font-size:14px!important;line-height:20px!important;font-weight:400!important}\n.mfp-insurance-enrollment .ie-seal{display:grid;place-items:center;width:58px;height:58px;border-radius:999px;background:#d7e8f1;color:#164f73;font-size:27px}\n.mfp-insurance-enrollment .ie-body{padding:22px 32px 32px;font-size:11px;color:#263e4c}\n.mfp-insurance-enrollment .ie-section{margin:0 0 24px}\n.mfp-insurance-enrollment .ie-section h2{margin:0 0 12px!important;background:#6d91a9;color:#fff!important;padding:7px 12px;font-size:14px!important;line-height:20px!important;font-weight:700!important}\n.mfp-insurance-enrollment .ie-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 18px}\n.mfp-insurance-enrollment .ie-span{grid-column:1/-1}\n.mfp-insurance-enrollment .ie-grid>label>span,.mfp-insurance-enrollment .ie-full>span{display:block;margin:0 0 5px;color:#526f84;font-size:11px;font-weight:400;line-height:16.5px}\n.mfp-insurance-enrollment input,.mfp-insurance-enrollment select,.mfp-insurance-enrollment textarea,.mfp-insurance-enrollment .mf-input,.mfp-insurance-enrollment .mf-select{height:34px!important;border:0!important;border-bottom:1px solid #7895a5!important;border-radius:0!important;background:#f7fbfd!important;color:#263e4c!important;padding:6px 8px!important;font:400 11px/16.5px Inter,Geist,system-ui,sans-serif!important}\n.mfp-insurance-enrollment ::placeholder{color:#8da3af!important;opacity:1}\n.mfp-insurance-enrollment .mf-option-group{display:flex!important;flex-wrap:wrap!important;gap:10px!important;margin:0!important}\n.mfp-insurance-enrollment .mf-option-item{display:flex!important;align-items:center!important;gap:7px!important;width:auto!important;flex:0 0 auto!important;margin:0!important;font-size:12px!important;color:#263e4c!important}\n.mfp-insurance-enrollment .mf-option-control{width:14px!important;height:14px!important;min-height:14px!important;margin:0!important;accent-color:#0c9fe3}\n.mfp-insurance-enrollment .mf-option-group--cards{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:12px!important}\n.mfp-insurance-enrollment .mf-option-group--cards .mf-option-control{position:absolute!important;opacity:0!important}\n.mfp-insurance-enrollment .mf-option-group--cards .mf-option-ui{display:flex!important;align-items:flex-start!important;gap:10px!important;min-height:78px!important;border:2px solid #b5d9e9!important;border-radius:6px!important;background:#fff!important;padding:12px!important;color:#263e4c!important}\n.mfp-insurance-enrollment .mf-option-group--cards .mf-option-control:checked+.mf-option-ui{border-color:#0c9fe3!important;background:#eaf8ff!important}\n.mfp-insurance-enrollment .mf-option-icon{display:grid!important;place-items:center!important;width:30px!important;height:30px!important;border-radius:8px!important;background:#dff0f8!important;color:#164f73!important}\n.mfp-insurance-enrollment .mf-option-label{font-size:13px!important;font-weight:800!important;color:#263e4c!important}\n.mfp-insurance-enrollment .mf-option-desc{display:block!important;margin-top:3px!important;font-size:11px!important;line-height:15px!important;color:#5c7180!important}\n.mfp-insurance-enrollment .mf-option-check,.mfp-insurance-enrollment .mf-option-badge{display:none!important}\n.mfp-insurance-enrollment .ie-table-title{margin:18px 0 8px!important;font-size:11px!important;line-height:16.5px!important;font-weight:700!important;text-transform:uppercase;letter-spacing:.06em!important;color:#263e4c!important}\n.mfp-insurance-enrollment .ie-dependents .mf-field-group{margin:0!important}\n.mfp-insurance-enrollment .ie-dependents .mf-field-label{display:none!important}\n.mfp-insurance-enrollment .ie-dependents .mfw-dgrid{border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;overflow:visible!important;margin:0!important;max-height:none!important;font-family:Inter,Geist,system-ui,sans-serif!important}\n.mfp-insurance-enrollment .ie-dependents .mfw-dgrid-toolbar{display:flex!important;justify-content:flex-end!important;align-items:center!important;position:static!important;padding:0 0 6px!important;border:0!important;background:transparent!important}\n.mfp-insurance-enrollment .ie-dependents .mfw-dgrid-title{display:none!important}\n.mfp-insurance-enrollment .ie-dependents .mfw-dgrid-add{height:24px!important;padding:0 9px!important;border:1px solid #0c9fe3!important;border-radius:4px!important;background:#eaf8ff!important;color:#164f73!important;font:700 11px/22px Inter,Geist,system-ui,sans-serif!important}\n.mfp-insurance-enrollment .ie-dependents .mfw-dgrid-grid{display:grid!important;border-left:1px solid #0c9fe3!important;border-top:1px solid #0c9fe3!important;width:100%!important;overflow:visible!important;background:#fff!important}\n.mfp-insurance-enrollment .ie-dependents .mfw-dgrid-head{display:contents!important}\n.mfp-insurance-enrollment .ie-dependents .mfw-dgrid-cell{min-width:0!important;min-height:32px!important;padding:4px 6px!important;border-right:1px solid #b5d9e9!important;border-bottom:1px solid #b5d9e9!important;background:#fff!important;font:400 11px/16.5px Inter,Geist,system-ui,sans-serif!important;color:#263e4c!important;overflow:hidden!important}\n.mfp-insurance-enrollment .ie-dependents .mfw-dgrid-head .mfw-dgrid-cell{position:static!important;top:auto!important;z-index:auto!important;min-height:32px!important;padding:7px!important;background:#eaf8ff!important;color:#164f73!important;font:400 11px/16.5px Inter,Geist,system-ui,sans-serif!important;text-transform:none!important;letter-spacing:0!important}\n.mfp-insurance-enrollment .ie-dependents .mfw-dgrid-input{width:100%!important;height:24px!important;min-height:24px!important;padding:2px 0!important;border:0!important;border-radius:0!important;background:transparent!important;color:#263e4c!important;font:400 11px/16.5px Inter,Geist,system-ui,sans-serif!important;outline:0!important}\n.mfp-insurance-enrollment .ie-dependents .mfw-dgrid-input:focus{outline:1px solid #0c9fe3!important;outline-offset:0!important;background:#fff!important}\n.mfp-insurance-enrollment .ie-dependents .mfw-dgrid-input.is-number{text-align:left!important}\n.mfp-insurance-enrollment .ie-dependents .mfw-dgrid-del{width:24px!important;height:24px!important;padding:0!important;border:0!important;border-radius:4px!important;background:transparent!important;color:#6d91a9!important;font-size:14px!important;line-height:24px!important;opacity:.72!important}\n.mfp-insurance-enrollment .ie-dependents .mfw-dgrid-del:hover{background:#eaf8ff!important;color:#164f73!important;opacity:1!important}\n.mfp-insurance-enrollment .ie-dependents .mfw-dgrid-empty{grid-column:1/-1!important;min-height:32px!important;padding:8px!important;border-right:1px solid #b5d9e9!important;border-bottom:1px solid #b5d9e9!important;background:#fff!important;color:#6d91a9!important;font:400 11px/16.5px Inter,Geist,system-ui,sans-serif!important}\n.mfp-insurance-enrollment .ie-dependents .mfw-dgrid-foot{display:none!important}\n.mfp-insurance-enrollment .ie-terms{margin:16px 0 0!important;color:#486b7d!important;font-size:11px!important;line-height:17px!important;font-weight:400!important}\n.mfp-insurance-enrollment .ie-submit{width:100%!important;min-height:44px!important;border:0!important;border-radius:0!important;background:#164f73!important;color:#fff!important;font-size:13px!important;font-weight:700!important}\n@media(max-width:720px){.mfp-insurance-enrollment .ie-grid,.mfp-insurance-enrollment .mf-option-group--cards{grid-template-columns:1fr!important}.mfp-insurance-enrollment .ie-dependents{overflow-x:auto!important}.mfp-insurance-enrollment .ie-dependents .mfw-dgrid{min-width:780px!important}.mfp-insurance-enrollment .ie-body{padding:18px}.mfp-insurance-enrollment h1{font-size:27px}}",
+    "submitButtonText": "Submit application",
+    "successMessage": "Enrollment received. Your secure policy application has been submitted.",
+    "hideHeader": true,
+    "templateSlug": "insurance-enrollment",
+    "postSubmitExperience": {
+      "mode": "confirmation",
+      "title": "Form received",
+      "message": "Enrollment received. Your secure policy application has been submitted.",
+      "fillAgainLabel": "Submit another",
+      "doneLabel": "Done"
+    },
+    "templateGuideSlug": "tpl-insurance-enrollment"
+  },
+  "submitButtonText": "Submit application",
+  "successMessage": "Enrollment received. Your secure policy application has been submitted.",
+  "customHtml": "\n<div class=\"mfp-mock11 mfp-insurance-enrollment\">\n  <article class=\"ie-card\">\n    <header class=\"ie-head\">\n      <a class=\"ie-back\" href=\"/\">&larr; Back to forms</a>\n      <div class=\"ie-head-row\">\n        <div><p class=\"ie-brand\">Secure Life</p><h1>Insurance Enrollment</h1><p class=\"ie-sub\">Individual policy application / Page 1 of 1</p></div>\n        <div class=\"ie-seal\"><i class=\"fa-solid fa-shield-halved\"></i></div>\n      </div>\n    </header>\n    <section class=\"ie-body\">\n      <div class=\"ie-section\"><h2>A. General Questions</h2><div class=\"ie-grid\">\n        <label><span>Proposed insured's name *</span>{{field:insured_name}}</label>\n        <label><span>Birth date *</span>{{field:birth_date}}</label>\n        <label class=\"ie-span\"><span>Address</span>{{field:address}}</label>\n        <label><span>Phone number</span>{{field:phone_number}}</label>\n        <label><span>Email address *</span>{{field:email_address}}</label>\n        <label><span>ID number</span>{{field:id_number}}</label>\n        <label><span>Occupation</span>{{field:occupation}}</label>\n        <label><span>Gender</span>{{field:gender}}</label>\n        <label><span>Status</span>{{field:status}}</label>\n      </div></div>\n      <div class=\"ie-section\"><h2>B. Type of Health Coverage</h2><label class=\"ie-full\">{{field:coverage_type}}</label>\n        <p class=\"ie-table-title\">Dependents proposed for coverage</p>\n        <div class=\"ie-dependents\">{{field:dependents}}</div>\n      </div>\n      <div class=\"ie-section\"><h2>C. Policy / Payment / Signature</h2><div class=\"ie-grid\">\n        <label><span>Annual premium</span>{{field:annual_premium}}</label>\n        <label><span>Units</span>{{field:units}}</label>\n        <label class=\"ie-span\"><span>Payment mode</span>{{field:payment_mode}}</label>\n        <label><span>Cash with application</span>{{field:cash_application}}</label>\n        <label><span>Signature *</span>{{field:signature}}</label>\n      </div><p class=\"ie-terms\">Terms &amp; Conditions: I certify the answers are true and complete to the best of my knowledge.</p></div>\n      <button type=\"submit\" class=\"ie-submit\">Submit application</button>\n    </section>\n  </article>\n</div>",
+  "customCss": "@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css');\n\n.mfp-mock11.mfp-mock11{position:relative!important;left:50%!important;right:50%!important;width:100vw!important;max-width:100vw!important;margin-left:-50vw!important;margin-right:-50vw!important}\n.mfp-mock11 .mf-field-group{margin:0!important;min-width:0!important;width:100%!important}\n.mfp-mock11 .mf-field-label{display:none!important}\n.mfp-mock11 label{line-height:1.2!important}\n.mfp-mock11 input[type='text'],.mfp-mock11 input[type='email'],.mfp-mock11 input[type='tel'],.mfp-mock11 input[type='number'],.mfp-mock11 input[type='date'],.mfp-mock11 select,.mfp-mock11 textarea,.mfp-mock11 .mf-input,.mfp-mock11 .mf-select,.mfp-mock11 .mf-textarea{box-sizing:border-box!important;width:100%!important;max-width:none!important;margin:0!important;box-shadow:none!important;outline:0!important;line-height:1.2!important}\n.mfp-mock11 .mf-option-group{flex-direction:row!important}\n.mfp-mock11 .mf-field-error:empty{display:none!important}\n.mfp-mock11 button[type='submit']{appearance:none;-webkit-appearance:none;cursor:pointer}\n\n.mfp-insurance-enrollment{background:#e6f1f9!important;color:#263e4c!important;font-family:Inter,Geist,system-ui,sans-serif!important;width:100%!important;max-width:none!important;margin:0 auto!important;padding:24px 0 32px!important}\n.mfp-insurance-enrollment *{box-sizing:border-box}\n.mfp-insurance-enrollment .ie-card{width:min(100%,1024px);margin:0 auto;background:#fff;border-radius:0;box-shadow:0 24px 70px rgba(32,52,67,.18);overflow:hidden}\n.mfp-insurance-enrollment .ie-head{background:#e6f1f9;border-bottom:8px solid #1b668a;padding:20px 24px 18px}\n.mfp-insurance-enrollment .ie-back{display:inline-block;margin-bottom:16px;color:#285b70;text-decoration:none;font-size:12px;font-weight:700}\n.mfp-insurance-enrollment .ie-head-row{display:flex;align-items:center;justify-content:space-between;gap:24px}\n.mfp-insurance-enrollment .ie-brand{margin:0 0 6px!important;text-transform:uppercase;letter-spacing:.18em!important;font-size:11px!important;line-height:16.5px!important;font-weight:700!important;color:#164f73!important}\n.mfp-insurance-enrollment h1{margin:0!important;color:#16476b!important;font-size:30px!important;line-height:36px!important;font-weight:700!important;letter-spacing:0!important;font-family:Inter,Geist,system-ui,sans-serif!important}\n.mfp-insurance-enrollment .ie-sub{margin:8px 0 0!important;color:#486b7d!important;font-size:14px!important;line-height:20px!important;font-weight:400!important}\n.mfp-insurance-enrollment .ie-seal{display:grid;place-items:center;width:58px;height:58px;border-radius:999px;background:#d7e8f1;color:#164f73;font-size:27px}\n.mfp-insurance-enrollment .ie-body{padding:22px 32px 32px;font-size:11px;color:#263e4c}\n.mfp-insurance-enrollment .ie-section{margin:0 0 24px}\n.mfp-insurance-enrollment .ie-section h2{margin:0 0 12px!important;background:#6d91a9;color:#fff!important;padding:7px 12px;font-size:14px!important;line-height:20px!important;font-weight:700!important}\n.mfp-insurance-enrollment .ie-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 18px}\n.mfp-insurance-enrollment .ie-span{grid-column:1/-1}\n.mfp-insurance-enrollment .ie-grid>label>span,.mfp-insurance-enrollment .ie-full>span{display:block;margin:0 0 5px;color:#526f84;font-size:11px;font-weight:400;line-height:16.5px}\n.mfp-insurance-enrollment input,.mfp-insurance-enrollment select,.mfp-insurance-enrollment textarea,.mfp-insurance-enrollment .mf-input,.mfp-insurance-enrollment .mf-select{height:34px!important;border:0!important;border-bottom:1px solid #7895a5!important;border-radius:0!important;background:#f7fbfd!important;color:#263e4c!important;padding:6px 8px!important;font:400 11px/16.5px Inter,Geist,system-ui,sans-serif!important}\n.mfp-insurance-enrollment ::placeholder{color:#8da3af!important;opacity:1}\n.mfp-insurance-enrollment .mf-option-group{display:flex!important;flex-wrap:wrap!important;gap:10px!important;margin:0!important}\n.mfp-insurance-enrollment .mf-option-item{display:flex!important;align-items:center!important;gap:7px!important;width:auto!important;flex:0 0 auto!important;margin:0!important;font-size:12px!important;color:#263e4c!important}\n.mfp-insurance-enrollment .mf-option-control{width:14px!important;height:14px!important;min-height:14px!important;margin:0!important;accent-color:#0c9fe3}\n.mfp-insurance-enrollment .mf-option-group--cards{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:12px!important}\n.mfp-insurance-enrollment .mf-option-group--cards .mf-option-control{position:absolute!important;opacity:0!important}\n.mfp-insurance-enrollment .mf-option-group--cards .mf-option-ui{display:flex!important;align-items:flex-start!important;gap:10px!important;min-height:78px!important;border:2px solid #b5d9e9!important;border-radius:6px!important;background:#fff!important;padding:12px!important;color:#263e4c!important}\n.mfp-insurance-enrollment .mf-option-group--cards .mf-option-control:checked+.mf-option-ui{border-color:#0c9fe3!important;background:#eaf8ff!important}\n.mfp-insurance-enrollment .mf-option-icon{display:grid!important;place-items:center!important;width:30px!important;height:30px!important;border-radius:8px!important;background:#dff0f8!important;color:#164f73!important}\n.mfp-insurance-enrollment .mf-option-label{font-size:13px!important;font-weight:800!important;color:#263e4c!important}\n.mfp-insurance-enrollment .mf-option-desc{display:block!important;margin-top:3px!important;font-size:11px!important;line-height:15px!important;color:#5c7180!important}\n.mfp-insurance-enrollment .mf-option-check,.mfp-insurance-enrollment .mf-option-badge{display:none!important}\n.mfp-insurance-enrollment .ie-table-title{margin:18px 0 8px!important;font-size:11px!important;line-height:16.5px!important;font-weight:700!important;text-transform:uppercase;letter-spacing:.06em!important;color:#263e4c!important}\n.mfp-insurance-enrollment .ie-dependents .mf-field-group{margin:0!important}\n.mfp-insurance-enrollment .ie-dependents .mf-field-label{display:none!important}\n.mfp-insurance-enrollment .ie-dependents .mfw-dgrid{border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;overflow:visible!important;margin:0!important;max-height:none!important;font-family:Inter,Geist,system-ui,sans-serif!important}\n.mfp-insurance-enrollment .ie-dependents .mfw-dgrid-toolbar{display:flex!important;justify-content:flex-end!important;align-items:center!important;position:static!important;padding:0 0 6px!important;border:0!important;background:transparent!important}\n.mfp-insurance-enrollment .ie-dependents .mfw-dgrid-title{display:none!important}\n.mfp-insurance-enrollment .ie-dependents .mfw-dgrid-add{height:24px!important;padding:0 9px!important;border:1px solid #0c9fe3!important;border-radius:4px!important;background:#eaf8ff!important;color:#164f73!important;font:700 11px/22px Inter,Geist,system-ui,sans-serif!important}\n.mfp-insurance-enrollment .ie-dependents .mfw-dgrid-grid{display:grid!important;border-left:1px solid #0c9fe3!important;border-top:1px solid #0c9fe3!important;width:100%!important;overflow:visible!important;background:#fff!important}\n.mfp-insurance-enrollment .ie-dependents .mfw-dgrid-head{display:contents!important}\n.mfp-insurance-enrollment .ie-dependents .mfw-dgrid-cell{min-width:0!important;min-height:32px!important;padding:4px 6px!important;border-right:1px solid #b5d9e9!important;border-bottom:1px solid #b5d9e9!important;background:#fff!important;font:400 11px/16.5px Inter,Geist,system-ui,sans-serif!important;color:#263e4c!important;overflow:hidden!important}\n.mfp-insurance-enrollment .ie-dependents .mfw-dgrid-head .mfw-dgrid-cell{position:static!important;top:auto!important;z-index:auto!important;min-height:32px!important;padding:7px!important;background:#eaf8ff!important;color:#164f73!important;font:400 11px/16.5px Inter,Geist,system-ui,sans-serif!important;text-transform:none!important;letter-spacing:0!important}\n.mfp-insurance-enrollment .ie-dependents .mfw-dgrid-input{width:100%!important;height:24px!important;min-height:24px!important;padding:2px 0!important;border:0!important;border-radius:0!important;background:transparent!important;color:#263e4c!important;font:400 11px/16.5px Inter,Geist,system-ui,sans-serif!important;outline:0!important}\n.mfp-insurance-enrollment .ie-dependents .mfw-dgrid-input:focus{outline:1px solid #0c9fe3!important;outline-offset:0!important;background:#fff!important}\n.mfp-insurance-enrollment .ie-dependents .mfw-dgrid-input.is-number{text-align:left!important}\n.mfp-insurance-enrollment .ie-dependents .mfw-dgrid-del{width:24px!important;height:24px!important;padding:0!important;border:0!important;border-radius:4px!important;background:transparent!important;color:#6d91a9!important;font-size:14px!important;line-height:24px!important;opacity:.72!important}\n.mfp-insurance-enrollment .ie-dependents .mfw-dgrid-del:hover{background:#eaf8ff!important;color:#164f73!important;opacity:1!important}\n.mfp-insurance-enrollment .ie-dependents .mfw-dgrid-empty{grid-column:1/-1!important;min-height:32px!important;padding:8px!important;border-right:1px solid #b5d9e9!important;border-bottom:1px solid #b5d9e9!important;background:#fff!important;color:#6d91a9!important;font:400 11px/16.5px Inter,Geist,system-ui,sans-serif!important}\n.mfp-insurance-enrollment .ie-dependents .mfw-dgrid-foot{display:none!important}\n.mfp-insurance-enrollment .ie-terms{margin:16px 0 0!important;color:#486b7d!important;font-size:11px!important;line-height:17px!important;font-weight:400!important}\n.mfp-insurance-enrollment .ie-submit{width:100%!important;min-height:44px!important;border:0!important;border-radius:0!important;background:#164f73!important;color:#fff!important;font-size:13px!important;font-weight:700!important}\n@media(max-width:720px){.mfp-insurance-enrollment .ie-grid,.mfp-insurance-enrollment .mf-option-group--cards{grid-template-columns:1fr!important}.mfp-insurance-enrollment .ie-dependents{overflow-x:auto!important}.mfp-insurance-enrollment .ie-dependents .mfw-dgrid{min-width:780px!important}.mfp-insurance-enrollment .ie-body{padding:18px}.mfp-insurance-enrollment h1{font-size:27px}}"
+}

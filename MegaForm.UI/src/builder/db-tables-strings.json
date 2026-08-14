@@ -24,6 +24,12 @@
   "buttonClearSelectedTitle": "Remove all tables from the working set.",
   "buttonAddedOk": "✓ Added",
   "buttonAddFailed": "Failed",
+  "groupMine": "Your tables",
+  "groupMegaForm": "MegaForm system",
+  "groupPlatform": "Site platform",
+  "groupMineEmpty": "No tables of your own on this connection yet — the groups below hold MegaForm's and the site's own plumbing.",
+  "groupShowMore": "Show {n} more of {total}",
+  "groupCollapseHint": "Click to expand or collapse",
   "errorLoadFailed": "Failed to load tables: ",
   "errorConnectionHint": "Check that DashboardDatabase connection is configured in Host Settings → MegaForm.",
   "errorBuilderNotReady": "Builder not ready"

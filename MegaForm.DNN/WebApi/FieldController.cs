@@ -66,7 +66,7 @@ namespace MegaForm.WebApi
                 var formRepo = DnnServiceLocator.Instance.FormRepo;
                 var submissionRepo = DnnServiceLocator.Instance.SubmissionRepo;
                 var defaultConn = hostLookup("Database_ConnectionAlias", "DashboardDatabase");
-                var svc = new MegaForm.Core.Services.FieldOptionsService(registry, formRepo, submissionRepo, defaultConn);
+                var svc = new MegaForm.Core.Services.FieldOptionsService(registry, formRepo, submissionRepo, defaultConn, DnnServiceLocator.Instance.DataResolver);
 
                 // [v20260531-DataGridSqlCols] Optional ?columnKey=X — when set,
                 // routes to GetColumnOptions which reads widgetProps.columns[X]

@@ -1,0 +1,40 @@
+@page
+@model MegaForm.Samples.CorporateWeb.Pages.ServicesModel
+@{
+    ViewData["Title"] = "Services";
+}
+
+<section class="content-page">
+    <div class="container">
+        <h1>Services</h1>
+        <p class="lead">
+            A corporate website often needs many forms: contact, support, registration,
+            feedback, and more. MegaForm lets you host all of them inside the same
+            ASP.NET Core application.
+        </p>
+
+        <div class="service-grid">
+            <div class="service-card">
+                <h3>Contact forms</h3>
+                <p>Capture leads and inquiries with validation, file uploads, and conditional fields.</p>
+            </div>
+            <div class="service-card">
+                <h3>Support tickets</h3>
+                <p>Route requests by category and priority using MegaForm rules and workflows.</p>
+            </div>
+            <div class="service-card">
+                <h3>Event registration</h3>
+                <p>Build multi-step registration forms with payment and confirmation emails.</p>
+            </div>
+            <div class="service-card">
+                <h3>Surveys &amp; feedback</h3>
+                <p>Collect structured feedback and export submissions or build custom reports.</p>
+            </div>
+        </div>
+
+        <div class="cta-row">
+            <a class="btn btn-primary" href="/Contact">Request a demo</a>
+            <a class="btn btn-secondary" href="/admin-dashboard">See the dashboard</a>
+        </div>
+    </div>
+</section>

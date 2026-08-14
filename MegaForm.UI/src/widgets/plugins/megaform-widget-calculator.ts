@@ -67,7 +67,10 @@ var MegaCalc;
             return "\u2014"; // em dash
         var n = Number(num).toFixed(decimals);
         var parts = n.split(".");
-        if (format === "vi-VN" || format === "de-DE") {
+        // "vi-VN" is no longer offered in the picker (see numberFormat below) but is still
+        // accepted so forms saved before 2026-08-13 keep their dot-grouped format instead of
+        // silently falling through to the US style.
+        if (format === "de-DE" || format === "vi-VN") {
             parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
             return parts.length > 1 ? parts[0] + "," + parts[1] : parts[0];
         }
@@ -808,11 +811,11 @@ var MegaCalc;
             h += selRow("displayMode", "Display", MegaCalc.normalizeDisplayMode(wp.displayMode), [
                 { v: "hidden", l: "Hidden \u2014 runs silently (default)" },
                 { v: "input", l: "Read-only field (matches your inputs)" },
-                { v: "inline", l: "Inline text (Total: 1,500,000 \u0111)" },
+                { v: "inline", l: "Inline text (Total: 1,500.00)" },
                 { v: "callout", l: "Summary box" }
             ]);
             h += selRow("numberFormat", "Number Format", wp.numberFormat, [
-                { v: "en-US", l: "1,234.56 (US)" }, { v: "de-DE", l: "1.234,56 (EU)" }, { v: "vi-VN", l: "1.234,56 (VN)" }
+                { v: "en-US", l: "1,234.56 (US)" }, { v: "de-DE", l: "1.234,56 (EU)" }
             ]);
             h += chkRow("showBreakdown", "Show Debug Breakdown", wp.showBreakdown);
             // B. Variables

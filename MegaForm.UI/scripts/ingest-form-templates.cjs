@@ -1,4 +1,9 @@
 /**
+ * LEGACY [SqlMerge 2026-08-14] — writes a 2.0 MB .sql file that NOTHING runs; see the
+ * note in gen-ai-kb-seed.cjs. The live path for AI knowledge is
+ * MegaForm.Core\Seed\ai-knowledge-seed.json (merged at runtime by DnnKbSeeder), and
+ * templates themselves ship via Samples\FormTemplates + the gallery.
+ *
  * Ingest the 181 production form templates from
  *   E:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MEGAFORM TEMPLATES\
  *     DefaultTemplates - Deployed\<category>\*.json

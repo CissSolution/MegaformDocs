@@ -3,7 +3,7 @@
 import { WizardData, WizardField, themeMeta, fontStack, roundnessPx } from './types';
 import { catalogLabel, catalogPreview } from './field-catalog';
 import { h, icon } from './ui';
-import { fieldStepMap } from '@shared/custom-html-insert';
+import { listSteps } from '@shared/form-steps';
 import { premiumStepDetailsFor } from './premium-steps';
 
 function fieldPreview(f: WizardField, radius: number): HTMLElement {
@@ -56,13 +56,12 @@ function inputBox(ph: string, radius: number, caret?: boolean): HTMLElement {
 
 function premiumPreview(data: WizardData): HTMLElement {
   const t = data.templateRecord || {};
-  const html = String((t.settings && t.settings.customHtml) || '');
   const details = premiumStepDetailsFor(t, data.premiumStepDetails);
-  const stepMap = fieldStepMap(html);
   const fields = Array.isArray(data.premiumFields) ? data.premiumFields : (Array.isArray(t.fields) ? t.fields : []);
   const ownField = (f: any) => f && f.type !== 'Section' && f.type !== 'Hidden';
+  const steps = listSteps(fields);
   const fieldCount = fields.filter(ownField).length || t.fieldCount || 0;
-  const firstFields = fields.filter((f: any) => ownField(f) && ((f.__step != null ? f.__step : stepMap[String(f.key)]?.ordinal) || 1) === 1).slice(0, 7);
+  const firstFields = (steps[0]?.fields || fields).filter(ownField).slice(0, 7);
   const first = details[0] || { navLabel: 'Step 1', navSubtitle: '', title: data.formName || t.title || 'Premium form', description: '' };
   const access = data.accessLevel === 'authenticated' ? 'Members' : data.accessLevel === 'restricted' ? 'Invite' : 'Public';
   return h('div', null, [

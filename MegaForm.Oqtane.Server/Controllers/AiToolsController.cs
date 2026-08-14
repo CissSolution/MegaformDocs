@@ -32,13 +32,18 @@ namespace MegaForm.Oqtane.Server.Controllers
         private readonly MegaForm.Core.Interfaces.IConnectionRegistry _connectionRegistry;
         private readonly MegaForm.Core.Interfaces.IFormRepository _formRepo;
         private readonly IWebHostEnvironment _env;
+        private readonly Microsoft.Extensions.Configuration.IConfiguration _config;
 
-        public AiToolsController(IAiKnowledgeService svc, MegaForm.Core.Interfaces.IConnectionRegistry connectionRegistry, MegaForm.Core.Interfaces.IFormRepository formRepo, IWebHostEnvironment env, ILogManager logger, IHttpContextAccessor accessor) : base(logger, accessor)
+        private readonly global::Oqtane.Repository.ISettingRepository _settingRepo;
+
+        public AiToolsController(IAiKnowledgeService svc, MegaForm.Core.Interfaces.IConnectionRegistry connectionRegistry, MegaForm.Core.Interfaces.IFormRepository formRepo, IWebHostEnvironment env, Microsoft.Extensions.Configuration.IConfiguration config, ILogManager logger, IHttpContextAccessor accessor, global::Oqtane.Repository.ISettingRepository settingRepo = null) : base(logger, accessor)
         {
             _svc = svc;
             _connectionRegistry = connectionRegistry;
             _formRepo = formRepo;
             _env = env;
+            _config = config;
+            _settingRepo = settingRepo;
         }
 
         // [P0-2] Resolve the DashboardDatabase connection the same way SubformController
@@ -48,6 +53,72 @@ namespace MegaForm.Oqtane.Server.Controllers
             var conn = _connectionRegistry.GetConnection("DashboardDatabase");
             conn.Open();
             return conn;
+        }
+
+        // [AiDbPicker v20260713] Connections the AI Database tab may browse BESIDES the
+        // current/dashboard database. Same server-side allow-list the ATBE popup uses
+        // (MegaForm:ExternalTables:AllowedConnections) — a key the operator never listed
+        // can never be opened, whatever the client sends (SECURITY rule 1). The implicit
+        // "DashboardDatabase" default is excluded: it IS the current-database option.
+        private System.Collections.Generic.List<string> AllowedExternalConnections()
+        {
+            var configured = Microsoft.Extensions.Configuration.ConfigurationBinder
+                .Get<string[]>(_config.GetSection("MegaForm:ExternalTables:AllowedConnections"));
+            var list = (configured ?? new string[0])
+                .Where(k => !string.IsNullOrWhiteSpace(k)
+                            && !string.Equals(k, "DashboardDatabase", StringComparison.OrdinalIgnoreCase))
+                .Select(k => k.Trim())
+                .ToList();
+            // [NamedConnections v20260717-01] Admin-saved connections (Database Settings popup →
+            // Saved connections, site setting MegaForm_NamedConnections) join the allow-list:
+            // saving one is itself admin-gated, so it carries appsettings-level trust. This is
+            // what makes a UI-added connection show up in the builder's databaseInsert picker.
+            try
+            {
+                var sid = SiteId;
+                if (sid <= 0)
+                {
+                    // AuthEntityId(Site)=-1 trap (no entity context on the XHR) — resolve through
+                    // the tenant alias, the same seam the runtime registry uses.
+                    var tenants = HttpContext?.RequestServices?.GetService(typeof(global::Oqtane.Infrastructure.ITenantManager))
+                        as global::Oqtane.Infrastructure.ITenantManager;
+                    var alias = tenants?.GetAlias();
+                    if (alias != null && alias.SiteId > 0) sid = alias.SiteId;
+                }
+                if (_settingRepo != null && sid > 0)
+                {
+                    var all = _settingRepo.GetSettings(EntityNames.Site, sid);
+                    var json = all?.FirstOrDefault(s => string.Equals(s.SettingName,
+                        MegaForm.Core.Services.NamedConnectionCatalog.SettingKey, StringComparison.OrdinalIgnoreCase))?.SettingValue;
+                    foreach (var name in MegaForm.Core.Services.NamedConnectionCatalog.Names(json))
+                        if (!string.Equals(name, "DashboardDatabase", StringComparison.OrdinalIgnoreCase)
+                            && !list.Any(k => string.Equals(k, name, StringComparison.OrdinalIgnoreCase)))
+                            list.Add(name);
+                }
+            }
+            catch { /* fail-soft: the config list still applies */ }
+            return list;
+        }
+
+        // Empty/"DashboardDatabase" → current behavior; anything else must pass the allow-list.
+        private System.Data.Common.DbConnection OpenAiConnection(string connectionKey)
+        {
+            if (string.IsNullOrWhiteSpace(connectionKey)
+                || string.Equals(connectionKey.Trim(), "DashboardDatabase", StringComparison.OrdinalIgnoreCase))
+                return OpenDashboardConnection();
+            var key = AllowedExternalConnections()
+                .FirstOrDefault(k => string.Equals(k, connectionKey.Trim(), StringComparison.OrdinalIgnoreCase));
+            if (key == null) throw new UnauthorizedAccessException("connection not allowed");
+            var conn = _connectionRegistry.GetConnection(key);
+            conn.Open();
+            return conn;
+        }
+
+        [HttpGet("SqlConnections")]
+        public IActionResult SqlConnections()
+        {
+            if (!IsAdmin) return Forbid();
+            return Ok(new { connections = AllowedExternalConnections() });
         }
 
         private int SiteId => AuthEntityId(EntityNames.Site);
@@ -64,13 +135,15 @@ namespace MegaForm.Oqtane.Server.Controllers
         // [P0-2] SQL schema tools — parity with DNN so the AI can read REAL tables/
         // columns before generating SQL-bound forms. Provider-aware via SqlSchemaReader
         // (works on SQLite/Postgres/MySQL/MSSQL). Admin-only.
+        // [AiDbPicker v20260713] Optional connectionKey → browse an allow-listed
+        // Settings connection instead of the current/dashboard database.
         [HttpGet("SqlTables")]
-        public IActionResult SqlTables(string search = null, int top = 200)
+        public IActionResult SqlTables(string search = null, int top = 200, string connectionKey = null)
         {
             if (!IsAdmin) return Forbid();
             try
             {
-                using var conn = OpenDashboardConnection();
+                using var conn = OpenAiConnection(connectionKey);
                 var all = MegaForm.Core.Services.Subform.SqlSchemaReader.ListTables(conn);
                 System.Collections.Generic.IEnumerable<MegaForm.Core.Services.Subform.SubformTableInfo> q = all;
                 if (!string.IsNullOrWhiteSpace(search))
@@ -79,23 +152,138 @@ namespace MegaForm.Oqtane.Server.Controllers
                             .Select(t => new { schema = t.Schema, name = t.Name }).ToList();
                 return Ok(new { count = list.Count, tables = list });
             }
-            catch (Exception ex) { return StatusCode(500, new { error = ex.Message }); }
+            catch (UnauthorizedAccessException) { return BadRequest(new { error = "connection not allowed" }); }
+            catch (Exception ex)
+            {
+                // Rule 10: a SQL error names servers/logins — log it, never echo it.
+                _logger.Log(LogLevel.Error, this, LogFunction.Read, ex, "AiTools.SqlTables failed for {Key}", connectionKey ?? "DashboardDatabase");
+                return StatusCode(500, new { error = "could not list tables — check the connection in Settings and the server log" });
+            }
         }
 
         [HttpGet("SqlColumns")]
-        public IActionResult SqlColumns(string table)
+        public IActionResult SqlColumns(string table, string connectionKey = null)
         {
             if (!IsAdmin) return Forbid();
             if (string.IsNullOrWhiteSpace(table)) return BadRequest(new { error = "table required" });
             if (table.IndexOfAny(new[] { ';', '\'', '"', '[', ']' }) >= 0) return BadRequest(new { error = "invalid table" });
             try
             {
-                using var conn = OpenDashboardConnection();
+                using var conn = OpenAiConnection(connectionKey);
                 var cols = MegaForm.Core.Services.Subform.SqlSchemaReader.ListColumns(conn, table)
                     .Select(c => new { name = c.Name, dataType = c.DataType, nullable = c.Nullable, isPrimary = c.IsPrimary, uiType = c.UiType }).ToList();
                 return Ok(new { table, count = cols.Count, columns = cols });
             }
-            catch (Exception ex) { return StatusCode(500, new { error = ex.Message }); }
+            catch (UnauthorizedAccessException) { return BadRequest(new { error = "connection not allowed" }); }
+            catch (Exception ex)
+            {
+                _logger.Log(LogLevel.Error, this, LogFunction.Read, ex, "AiTools.SqlColumns failed for {Table}", table);
+                return StatusCode(500, new { error = "could not read columns — check the connection in Settings and the server log" });
+            }
+        }
+
+        // ─────────────────────────────────────────────────────────────────
+        //  [SourcePicker v20260715] CustomTableRows — read LIVE rows from the SQL
+        //  table a form mirrors via settings.databaseInsert (parity with the DNN
+        //  endpoint the submission dashboard's source picker calls). The default
+        //  submission grid reads MF_Submissions JSON; this returns the ACTUAL table
+        //  rows so the dashboard can switch source JSON⇄SQL.
+        //
+        //  GET /api/AiTools/CustomTableRows?formId=N&page=1&pageSize=50
+        //  → { tableName, schemaName, idColumn, columns:[{name,type}], rows:[[…]], total, page, pageSize }
+        //
+        //  Security: admin-only; the connectionKey is resolved through OpenAiConnection,
+        //  so a key the operator never allow-listed (MegaForm:ExternalTables:AllowedConnections)
+        //  can never be opened whatever the form stores (SECURITY rule 1). Identifiers are
+        //  regex-validated before splicing. Read-only + server-paginated (bounded-read §11).
+        // ─────────────────────────────────────────────────────────────────
+        [HttpGet("CustomTableRows")]
+        public IActionResult CustomTableRows(int formId, int page = 1, int pageSize = 50)
+        {
+            if (!IsAdmin) return Forbid();
+            if (formId <= 0) return BadRequest(new { error = "formId required" });
+
+            var form = _formRepo.GetForm(formId);
+            if (form == null) return NotFound(new { error = "form not found" });
+
+            string insertSql = null;
+            string connectionKey = "DashboardDatabase";
+            try
+            {
+                if (!string.IsNullOrWhiteSpace(form.SettingsJson))
+                {
+                    var s = Newtonsoft.Json.Linq.JObject.Parse(form.SettingsJson);
+                    var di = s["databaseInsert"] ?? s["DatabaseInsert"];
+                    if (di != null)
+                    {
+                        var enabled = (bool?)(di["enabled"] ?? di["Enabled"]) ?? false;
+                        if (!enabled) return NotFound(new { error = "form has no database INSERT enabled — JSON submissions only", hint = "Enable Settings → Database section" });
+                        insertSql = (string)(di["insertSql"] ?? di["InsertSql"]);
+                        connectionKey = (string)(di["connectionKey"] ?? di["ConnectionKey"]) ?? connectionKey;
+                    }
+                }
+            }
+            catch { return StatusCode(500, new { error = "form settings could not be read" }); }
+            if (string.IsNullOrWhiteSpace(insertSql))
+                return NotFound(new { error = "form is not bound to a custom DB table" });
+
+            var m = System.Text.RegularExpressions.Regex.Match(insertSql,
+                @"INSERT\s+INTO\s+\[?(\w+)\]?(?:\.\[?(\w+)\]?)?", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            if (!m.Success) return BadRequest(new { error = "could not parse table from insertSql" });
+            var schemaName = m.Groups[2].Success ? m.Groups[1].Value : "dbo";
+            var tableName = m.Groups[2].Success ? m.Groups[2].Value : m.Groups[1].Value;
+            if (!System.Text.RegularExpressions.Regex.IsMatch(schemaName, @"^\w+$") ||
+                !System.Text.RegularExpressions.Regex.IsMatch(tableName, @"^\w+$"))
+                return BadRequest(new { error = "invalid identifier" });
+
+            page = Math.Max(1, page);
+            pageSize = Math.Max(1, Math.Min(pageSize, 200));   // bounded-read §11
+
+            try
+            {
+                using var conn = OpenAiConnection(connectionKey);
+                int total = 0;
+                using (var c = conn.CreateCommand())
+                {
+                    c.CommandText = "SELECT COUNT(*) FROM [" + schemaName + "].[" + tableName + "]";
+                    c.CommandTimeout = 15;
+                    var o = c.ExecuteScalar();
+                    total = o == null || o == DBNull.Value ? 0 : Convert.ToInt32(o);
+                }
+                using var cmd = conn.CreateCommand();
+                cmd.CommandText = "SELECT * FROM [" + schemaName + "].[" + tableName + "] ORDER BY 1 DESC OFFSET " + ((page - 1) * pageSize) + " ROWS FETCH NEXT " + pageSize + " ROWS ONLY";
+                cmd.CommandTimeout = 30;
+                using var r = cmd.ExecuteReader();
+                var cols = new System.Collections.Generic.List<object>();
+                for (int i = 0; i < r.FieldCount; i++)
+                    cols.Add(new { name = r.GetName(i), type = r.GetDataTypeName(i) });
+                var rows = new System.Collections.Generic.List<object[]>();
+                while (r.Read())
+                {
+                    var row = new object[r.FieldCount];
+                    for (int i = 0; i < r.FieldCount; i++)
+                        row[i] = r.IsDBNull(i) ? null : r.GetValue(i);
+                    rows.Add(row);
+                }
+                return Ok(new
+                {
+                    tableName,
+                    schemaName,
+                    idColumn = r.FieldCount > 0 ? r.GetName(0) : "Id",
+                    columns = cols,
+                    rows,
+                    total,
+                    page,
+                    pageSize,
+                    source = "custom-db-live",
+                });
+            }
+            catch (UnauthorizedAccessException) { return BadRequest(new { error = "connection not allowed" }); }
+            catch (Exception ex)
+            {
+                _logger.Log(LogLevel.Error, this, LogFunction.Read, ex, "AiTools.CustomTableRows failed for form {FormId}", formId);
+                return StatusCode(500, new { error = "could not read the table — check the connection in Settings and the server log" });
+            }
         }
 
         // ─────────────────────────────────────────────────────────────────

@@ -13,7 +13,7 @@ MegaForm.UI/
     ├── ja-JP.json         ← Nhật
     ├── ko-KR.json         ← Hàn
     ├── zh-CN.json         ← Trung (giản thể)
-    └── vi-VN.json         ← Việt
+    └── ur-PK.json         ← Urdu (RTL)
 ```
 
 ## Nguyên tắc thiết kế

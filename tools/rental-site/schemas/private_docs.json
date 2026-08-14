@@ -1,0 +1,154 @@
+{
+  "version": "1.0",
+  "fields": [
+    {
+      "key": "tenant_code",
+      "type": "Text",
+      "label": "Tenant code (Mã khách thuê)",
+      "order": 1,
+      "required": true,
+      "pageIndex": 0,
+      "placeholder": "KT-0001",
+      "helpText": "FOREIGN KEY. Must repeat the parent tenant record's Tenant code exactly. This form is the private half of the tenant file — the security boundary is the form itself.",
+      "validation": {
+        "minLength": 2,
+        "maxLength": 40,
+        "pattern": "^[A-Z0-9][A-Z0-9_.-]{1,39}$",
+        "patternMessage": "Must match an existing tenant code, e.g. KT-0001."
+      }
+    },
+    {
+      "key": "national_id",
+      "type": "Text",
+      "label": "National ID number (Số CCCD / CMND)",
+      "order": 2,
+      "required": true,
+      "pageIndex": 0,
+      "placeholder": "DEMO-000000001",
+      "helpText": "DEMO DATASET ONLY. The pattern forces a DEMO- prefix so the value can never collide with a real Vietnamese 12-digit citizen ID. Never type a real number here.",
+      "validation": {
+        "minLength": 14,
+        "maxLength": 14,
+        "pattern": "^DEMO-[0-9]{9}$",
+        "patternMessage": "Demo IDs only: DEMO- followed by exactly 9 digits, e.g. DEMO-000000001."
+      }
+    },
+    {
+      "key": "id_card_photo",
+      "type": "File",
+      "label": "ID card photo (Ảnh CCCD / CMND)",
+      "order": 3,
+      "required": false,
+      "pageIndex": 0,
+      "fileSettings": {
+        "maxSizeMB": 8,
+        "allowedExtensions": [
+          ".jpg",
+          ".jpeg",
+          ".png",
+          ".webp",
+          ".pdf"
+        ],
+        "maxFiles": 2
+      },
+      "helpText": "Front and back. Fictional sample images only."
+    },
+    {
+      "key": "signed_contract_photo",
+      "type": "File",
+      "label": "Signed contract scan (Ảnh hợp đồng đã ký)",
+      "order": 4,
+      "required": false,
+      "pageIndex": 0,
+      "fileSettings": {
+        "maxSizeMB": 15,
+        "allowedExtensions": [
+          ".jpg",
+          ".jpeg",
+          ".png",
+          ".webp",
+          ".pdf"
+        ],
+        "maxFiles": 4
+      }
+    },
+    {
+      "key": "movein_condition_photos",
+      "type": "File",
+      "label": "Move-in equipment condition photos (Ảnh hiện trạng thiết bị lúc nhận phòng)",
+      "order": 5,
+      "required": false,
+      "pageIndex": 0,
+      "fileSettings": {
+        "maxSizeMB": 8,
+        "allowedExtensions": [
+          ".jpg",
+          ".jpeg",
+          ".png",
+          ".webp",
+          ".pdf"
+        ],
+        "maxFiles": 12
+      },
+      "helpText": "Up to 12 images. maxFiles is set in the schema JSON directly because the builder's File Settings panel does not write it back."
+    },
+    {
+      "key": "movein_checklist_note",
+      "type": "Textarea",
+      "label": "Move-in checklist note (Biên bản bàn giao - ghi chú)",
+      "order": 6,
+      "required": false,
+      "pageIndex": 0,
+      "rows": 6,
+      "validation": {
+        "maxLength": 4000
+      }
+    },
+    {
+      "key": "demo_marker",
+      "type": "Hidden",
+      "label": "Demo marker (Dấu dữ liệu demo)",
+      "order": 7,
+      "required": false,
+      "pageIndex": 0,
+      "defaultValue": "DEMO-RENTAL-2026",
+      "helpText": "Seed marker. All rows carrying DEMO-RENTAL-2026 are fictional demo data and can be bulk-deleted."
+    }
+  ],
+  "pages": null,
+  "settings": {
+    "multiPage": false,
+    "layoutMode": "flow",
+    "displayOnly": false,
+    "hideHeader": false,
+    "showProgressBar": false,
+    "showPageTitles": false,
+    "honeypotFieldName": "__mf_hp",
+    "rateLimitWindowMinutes": 1,
+    "rateLimitMaxPerWindow": 2000,
+    "enableAnalytics": false,
+    "labelPosition": "top",
+    "formWidth": "100%",
+    "submitButtonText": "Save private documents (Lưu hồ sơ riêng)",
+    "theme": "default",
+    "defaultLanguage": "en",
+    "supportedLanguages": [
+      "en",
+      "vi-VN"
+    ],
+    "postSubmitExperience": {
+      "enabled": true,
+      "mode": "rich",
+      "title": "Saved",
+      "message": "The record has been saved.",
+      "showSubmissionId": true,
+      "submissionIdLabel": "Record ID",
+      "showAnswerSummary": false,
+      "allowFillAgain": true,
+      "fillAgainLabel": "Add another record",
+      "reviewBeforeSubmit": false,
+      "buttons": []
+    }
+  },
+  "customScripts": {}
+}

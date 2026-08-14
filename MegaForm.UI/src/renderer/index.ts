@@ -348,8 +348,13 @@ function applyDisplayStyleClasses(wrapper: HTMLElement, settings: any): void {
 function applyFormPresentationSettings(settings: any): void {
   const wrapper = document.getElementById(`mf-form-wrapper-${config.formId}`);
   const hideHeaderFlag = settings?.hideHeader === true || settings?.HideHeader === true;
+  const inheritTypeFlag = settings?.inheritPageTypography === true
+    || settings?.InheritPageTypography === true;
   if (wrapper) {
     wrapper.classList.toggle('mf-hide-header', !!hideHeaderFlag);
+    // SSR already receives this class from ThemeFirstPaintCssService. Keep the non-SSR,
+    // builder-preview and legacy host paths in sync instead of relying on a server first paint.
+    wrapper.classList.toggle('mf-inherit-type', !!inheritTypeFlag);
     applyDisplayStyleClasses(wrapper, settings);
   }
 

@@ -1,0 +1,203 @@
+{
+  "title": "Elderly Care Donation",
+  "slug": "elderly-care-donation",
+  "description": "A premium indigo donation form with dashed dividers, logo seal, donation amount, payment method and frequency.",
+  "category": "Premium",
+  "theme": "custom",
+  "fields": [
+    {
+      "key": "donor_name",
+      "type": "Text",
+      "label": "Name",
+      "placeholder": "Your full name",
+      "required": true
+    },
+    {
+      "key": "address",
+      "type": "Text",
+      "label": "Address",
+      "placeholder": "Street, city, state",
+      "required": true
+    },
+    {
+      "key": "email_address",
+      "type": "Email",
+      "label": "Email Address",
+      "placeholder": "you@example.com",
+      "required": true
+    },
+    {
+      "key": "contact_number",
+      "type": "Phone",
+      "label": "Contact Number",
+      "placeholder": "+1 (555) 000-0000",
+      "required": true
+    },
+    {
+      "key": "donation_amount",
+      "type": "Radio",
+      "label": "Donation Amount",
+      "required": true,
+      "options": [
+        {
+          "value": "20",
+          "label": "$20 - Support daily care for elderly person"
+        },
+        {
+          "value": "50",
+          "label": "$50 - Provide health supplies"
+        },
+        {
+          "value": "100",
+          "label": "$100 - Fund a month of caregiving"
+        },
+        {
+          "value": "other",
+          "label": "Other"
+        }
+      ],
+      "optionColumns": 1,
+      "properties": {
+        "optionColumns": 1
+      },
+      "Properties": {
+        "optionColumns": 1
+      }
+    },
+    {
+      "key": "payment_method",
+      "type": "Radio",
+      "label": "Payment Method",
+      "required": true,
+      "options": [
+        {
+          "0": "Credit/Debit Card",
+          "1": "Paypal",
+          "2": "Bank Transfer",
+          "3": "Other",
+          "value": "credit_debit_card",
+          "label": "Credit/Debit Card"
+        },
+        {
+          "0": "Credit/Debit Card",
+          "1": "Paypal",
+          "2": "Bank Transfer",
+          "3": "Other",
+          "value": 1,
+          "label": "Paypal"
+        },
+        {
+          "0": "Credit/Debit Card",
+          "1": "Paypal",
+          "2": "Bank Transfer",
+          "3": "Other",
+          "value": 2,
+          "label": "Bank Transfer"
+        },
+        {
+          "0": "Credit/Debit Card",
+          "1": "Paypal",
+          "2": "Bank Transfer",
+          "3": "Other",
+          "value": 3,
+          "label": "Other"
+        }
+      ],
+      "optionColumns": 2,
+      "properties": {
+        "optionColumns": 2
+      },
+      "Properties": {
+        "optionColumns": 2
+      }
+    },
+    {
+      "key": "frequency",
+      "type": "Radio",
+      "label": "Donation Frequency",
+      "required": true,
+      "options": [
+        {
+          "0": "Once",
+          "1": "Weekly",
+          "2": "Monthly",
+          "3": "Quarterly",
+          "4": "Other",
+          "value": "once",
+          "label": "Once"
+        },
+        {
+          "0": "Once",
+          "1": "Weekly",
+          "2": "Monthly",
+          "3": "Quarterly",
+          "4": "Other",
+          "value": 1,
+          "label": "Weekly"
+        },
+        {
+          "0": "Once",
+          "1": "Weekly",
+          "2": "Monthly",
+          "3": "Quarterly",
+          "4": "Other",
+          "value": 2,
+          "label": "Monthly"
+        },
+        {
+          "0": "Once",
+          "1": "Weekly",
+          "2": "Monthly",
+          "3": "Quarterly",
+          "4": "Other",
+          "value": 3,
+          "label": "Quarterly"
+        },
+        {
+          "0": "Once",
+          "1": "Weekly",
+          "2": "Monthly",
+          "3": "Quarterly",
+          "4": "Other",
+          "value": 4,
+          "label": "Other"
+        }
+      ],
+      "optionColumns": 5,
+      "properties": {
+        "optionColumns": 5
+      },
+      "Properties": {
+        "optionColumns": 5
+      }
+    },
+    {
+      "key": "comments",
+      "type": "Textarea",
+      "label": "Additional comments",
+      "placeholder": "Leave a message for the care team.",
+      "required": false
+    }
+  ],
+  "settings": {
+    "theme": "custom",
+    "customHtml": "\n<div class=\"mfp-mock11 mfp-elderly-care-donation\">\n  <article class=\"ed-card\"><a class=\"ed-back\" href=\"/\">&larr; Back to forms</a><div class=\"ed-logo\">Your<br>Logo<br>Here</div>\n    <header><div class=\"ed-icon\"><i class=\"fa-solid fa-hand-holding-heart\"></i></div><h1>Elderly Care and Support Donation Form</h1><p>Your gift helps provide comfort, safety and daily support for seniors in our care.</p></header>\n    <section class=\"ed-section\"><h2>Donor Information</h2><div class=\"ed-grid\"><label><span>Name *</span>{{field:donor_name}}</label><label><span>Address *</span>{{field:address}}</label><label><span>Email Address *</span>{{field:email_address}}</label><label><span>Contact Number *</span>{{field:contact_number}}</label></div></section>\n    <section class=\"ed-section\"><h2>Donation Details</h2><label><span>Donation Amount *</span>{{field:donation_amount}}</label><label><span>Payment Method *</span>{{field:payment_method}}</label><label><span>Donation Frequency *</span>{{field:frequency}}</label><label><span>Additional comments</span>{{field:comments}}</label></section>\n    <button type=\"submit\" class=\"ed-submit\">Thank you for your compassion; your support enhances seniors' lives.</button>\n  </article>\n</div>",
+    "customCss": "@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css');\n\n.mfp-mock11.mfp-mock11{position:relative!important;left:50%!important;right:50%!important;width:100vw!important;max-width:100vw!important;margin-left:-50vw!important;margin-right:-50vw!important}\n.mfp-mock11 .mf-field-group{margin:0!important;min-width:0!important;width:100%!important}\n.mfp-mock11 .mf-field-label{display:none!important}\n.mfp-mock11 label{line-height:1.2!important}\n.mfp-mock11 input[type='text'],.mfp-mock11 input[type='email'],.mfp-mock11 input[type='tel'],.mfp-mock11 input[type='number'],.mfp-mock11 input[type='date'],.mfp-mock11 select,.mfp-mock11 textarea,.mfp-mock11 .mf-input,.mfp-mock11 .mf-select,.mfp-mock11 .mf-textarea{box-sizing:border-box!important;width:100%!important;max-width:none!important;margin:0!important;box-shadow:none!important;outline:0!important;line-height:1.2!important}\n.mfp-mock11 .mf-option-group{flex-direction:row!important}\n.mfp-mock11 .mf-field-error:empty{display:none!important}\n.mfp-mock11 button[type='submit']{appearance:none;-webkit-appearance:none;cursor:pointer}\n\n.mfp-elderly-care-donation{background:#f6f6fb!important;color:#171767!important;font-family:Inter,Geist,system-ui,sans-serif!important;width:100%!important;max-width:none!important;padding:28px 0!important}\n.mfp-elderly-care-donation *{box-sizing:border-box}\n.mfp-elderly-care-donation .ed-card{position:relative;width:min(100%,760px);margin:0 auto;background:#fff;border:1px solid #e4e4ee;padding:28px 40px 38px;box-shadow:0 24px 60px rgba(23,23,103,.09)}\n.mfp-elderly-care-donation .ed-back{display:inline-block;margin-bottom:20px;color:#171767;text-decoration:none;font:700 12px Arial,Helvetica,sans-serif}\n.mfp-elderly-care-donation .ed-logo{position:absolute;right:38px;top:34px;display:grid;place-items:center;width:82px;height:82px;border:1px solid #d3c7b7;border-radius:999px;background:#f5eee3;color:#7777a7;text-align:center;text-transform:uppercase;font:800 9px/12px Arial,Helvetica,sans-serif;letter-spacing:.08em}\n.mfp-elderly-care-donation header{text-align:center;border-bottom:1px dashed #7777a7;padding:0 96px 22px;margin-bottom:24px}\n.mfp-elderly-care-donation .ed-icon{display:grid;place-items:center;width:44px;height:44px;margin:0 auto 14px;border-radius:999px;background:#eeeeff;color:#171767;font-size:20px}\n.mfp-elderly-care-donation h1{margin:0!important;color:#171767!important;font-size:30px!important;line-height:37.5px!important;font-weight:700!important;letter-spacing:0!important;font-family:Inter,Geist,system-ui,sans-serif!important}\n.mfp-elderly-care-donation header p{margin:12px auto 0!important;padding-top:14px;border-top:1px dashed #7777a7;color:#171767!important;font-size:12px!important;line-height:16px!important;font-weight:400!important}\n.mfp-elderly-care-donation .ed-section{border-bottom:1px dashed #7777a7;padding:0 0 22px;margin:0 0 24px}\n.mfp-elderly-care-donation h2{margin:0 0 15px;color:#171767;font-size:15px;line-height:20px;font-weight:700}\n.mfp-elderly-care-donation .ed-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 18px}\n.mfp-elderly-care-donation label{display:block;margin:0 0 16px}\n.mfp-elderly-care-donation .ed-grid>label>span,.mfp-elderly-care-donation .ed-section>label>span{display:block;margin:0 0 7px;color:#171767;font:400 12px/16px Inter,Geist,system-ui,sans-serif}\n.mfp-elderly-care-donation input,.mfp-elderly-care-donation select,.mfp-elderly-care-donation textarea,.mfp-elderly-care-donation .mf-input,.mfp-elderly-care-donation .mf-select,.mfp-elderly-care-donation .mf-textarea{border:1px solid #dadaea!important;border-radius:0!important;background:#fff!important;color:#171767!important;padding:10px 12px!important;font:500 12px/16px Inter,Geist,system-ui,sans-serif!important}\n.mfp-elderly-care-donation textarea,.mfp-elderly-care-donation .mf-textarea{min-height:104px!important}\n.mfp-elderly-care-donation .mf-option-group{display:flex!important;flex-wrap:wrap!important;gap:10px 18px!important;margin:0!important}\n.mfp-elderly-care-donation .mf-option-item{display:flex!important;align-items:flex-start!important;gap:8px!important;width:max-content!important;max-width:100%!important;flex:0 0 auto!important;margin:0!important;color:#171767!important;font:700 12px Inter,Geist,system-ui,sans-serif!important}\n.mfp-elderly-care-donation .mf-option-group:not(.mf-option-group--cols){display:flex!important;flex-wrap:wrap!important;gap:9px 18px!important}\n.mfp-elderly-care-donation .mf-option-control{width:15px!important;height:15px!important;min-height:15px!important;margin:1px 0 0!important;accent-color:#171767}\n.mfp-elderly-care-donation .ed-submit{width:100%!important;min-height:50px!important;border:0!important;border-radius:0!important;background:#11116d!important;color:#fff!important;padding:12px 18px!important;font:600 12px/16px Inter,Geist,system-ui,sans-serif!important}\n@media(max-width:720px){.mfp-elderly-care-donation{padding:12px}.mfp-elderly-care-donation .ed-card{padding:24px 20px}.mfp-elderly-care-donation header{padding-right:0;padding-left:0}.mfp-elderly-care-donation .ed-logo{position:static;margin:0 auto 16px}.mfp-elderly-care-donation .ed-grid{grid-template-columns:1fr}.mfp-elderly-care-donation h1{font-size:25px}}",
+    "submitButtonText": "Send donation pledge",
+    "successMessage": "Thank you for caring. Your donation pledge has been received.",
+    "hideHeader": true,
+    "templateSlug": "elderly-care-donation",
+    "postSubmitExperience": {
+      "mode": "confirmation",
+      "title": "Form received",
+      "message": "Thank you for caring. Your donation pledge has been received.",
+      "fillAgainLabel": "Submit another",
+      "doneLabel": "Done"
+    },
+    "templateGuideSlug": "tpl-elderly-care-donation"
+  },
+  "submitButtonText": "Send donation pledge",
+  "successMessage": "Thank you for caring. Your donation pledge has been received.",
+  "customHtml": "\n<div class=\"mfp-mock11 mfp-elderly-care-donation\">\n  <article class=\"ed-card\"><a class=\"ed-back\" href=\"/\">&larr; Back to forms</a><div class=\"ed-logo\">Your<br>Logo<br>Here</div>\n    <header><div class=\"ed-icon\"><i class=\"fa-solid fa-hand-holding-heart\"></i></div><h1>Elderly Care and Support Donation Form</h1><p>Your gift helps provide comfort, safety and daily support for seniors in our care.</p></header>\n    <section class=\"ed-section\"><h2>Donor Information</h2><div class=\"ed-grid\"><label><span>Name *</span>{{field:donor_name}}</label><label><span>Address *</span>{{field:address}}</label><label><span>Email Address *</span>{{field:email_address}}</label><label><span>Contact Number *</span>{{field:contact_number}}</label></div></section>\n    <section class=\"ed-section\"><h2>Donation Details</h2><label><span>Donation Amount *</span>{{field:donation_amount}}</label><label><span>Payment Method *</span>{{field:payment_method}}</label><label><span>Donation Frequency *</span>{{field:frequency}}</label><label><span>Additional comments</span>{{field:comments}}</label></section>\n    <button type=\"submit\" class=\"ed-submit\">Thank you for your compassion; your support enhances seniors' lives.</button>\n  </article>\n</div>",
+  "customCss": "@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css');\n\n.mfp-mock11.mfp-mock11{position:relative!important;left:50%!important;right:50%!important;width:100vw!important;max-width:100vw!important;margin-left:-50vw!important;margin-right:-50vw!important}\n.mfp-mock11 .mf-field-group{margin:0!important;min-width:0!important;width:100%!important}\n.mfp-mock11 .mf-field-label{display:none!important}\n.mfp-mock11 label{line-height:1.2!important}\n.mfp-mock11 input[type='text'],.mfp-mock11 input[type='email'],.mfp-mock11 input[type='tel'],.mfp-mock11 input[type='number'],.mfp-mock11 input[type='date'],.mfp-mock11 select,.mfp-mock11 textarea,.mfp-mock11 .mf-input,.mfp-mock11 .mf-select,.mfp-mock11 .mf-textarea{box-sizing:border-box!important;width:100%!important;max-width:none!important;margin:0!important;box-shadow:none!important;outline:0!important;line-height:1.2!important}\n.mfp-mock11 .mf-option-group{flex-direction:row!important}\n.mfp-mock11 .mf-field-error:empty{display:none!important}\n.mfp-mock11 button[type='submit']{appearance:none;-webkit-appearance:none;cursor:pointer}\n\n.mfp-elderly-care-donation{background:#f6f6fb!important;color:#171767!important;font-family:Inter,Geist,system-ui,sans-serif!important;width:100%!important;max-width:none!important;padding:28px 0!important}\n.mfp-elderly-care-donation *{box-sizing:border-box}\n.mfp-elderly-care-donation .ed-card{position:relative;width:min(100%,760px);margin:0 auto;background:#fff;border:1px solid #e4e4ee;padding:28px 40px 38px;box-shadow:0 24px 60px rgba(23,23,103,.09)}\n.mfp-elderly-care-donation .ed-back{display:inline-block;margin-bottom:20px;color:#171767;text-decoration:none;font:700 12px Arial,Helvetica,sans-serif}\n.mfp-elderly-care-donation .ed-logo{position:absolute;right:38px;top:34px;display:grid;place-items:center;width:82px;height:82px;border:1px solid #d3c7b7;border-radius:999px;background:#f5eee3;color:#7777a7;text-align:center;text-transform:uppercase;font:800 9px/12px Arial,Helvetica,sans-serif;letter-spacing:.08em}\n.mfp-elderly-care-donation header{text-align:center;border-bottom:1px dashed #7777a7;padding:0 96px 22px;margin-bottom:24px}\n.mfp-elderly-care-donation .ed-icon{display:grid;place-items:center;width:44px;height:44px;margin:0 auto 14px;border-radius:999px;background:#eeeeff;color:#171767;font-size:20px}\n.mfp-elderly-care-donation h1{margin:0!important;color:#171767!important;font-size:30px!important;line-height:37.5px!important;font-weight:700!important;letter-spacing:0!important;font-family:Inter,Geist,system-ui,sans-serif!important}\n.mfp-elderly-care-donation header p{margin:12px auto 0!important;padding-top:14px;border-top:1px dashed #7777a7;color:#171767!important;font-size:12px!important;line-height:16px!important;font-weight:400!important}\n.mfp-elderly-care-donation .ed-section{border-bottom:1px dashed #7777a7;padding:0 0 22px;margin:0 0 24px}\n.mfp-elderly-care-donation h2{margin:0 0 15px;color:#171767;font-size:15px;line-height:20px;font-weight:700}\n.mfp-elderly-care-donation .ed-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 18px}\n.mfp-elderly-care-donation label{display:block;margin:0 0 16px}\n.mfp-elderly-care-donation .ed-grid>label>span,.mfp-elderly-care-donation .ed-section>label>span{display:block;margin:0 0 7px;color:#171767;font:400 12px/16px Inter,Geist,system-ui,sans-serif}\n.mfp-elderly-care-donation input,.mfp-elderly-care-donation select,.mfp-elderly-care-donation textarea,.mfp-elderly-care-donation .mf-input,.mfp-elderly-care-donation .mf-select,.mfp-elderly-care-donation .mf-textarea{border:1px solid #dadaea!important;border-radius:0!important;background:#fff!important;color:#171767!important;padding:10px 12px!important;font:500 12px/16px Inter,Geist,system-ui,sans-serif!important}\n.mfp-elderly-care-donation textarea,.mfp-elderly-care-donation .mf-textarea{min-height:104px!important}\n.mfp-elderly-care-donation .mf-option-group{display:flex!important;flex-wrap:wrap!important;gap:10px 18px!important;margin:0!important}\n.mfp-elderly-care-donation .mf-option-item{display:flex!important;align-items:flex-start!important;gap:8px!important;width:max-content!important;max-width:100%!important;flex:0 0 auto!important;margin:0!important;color:#171767!important;font:700 12px Inter,Geist,system-ui,sans-serif!important}\n.mfp-elderly-care-donation .mf-option-group:not(.mf-option-group--cols){display:flex!important;flex-wrap:wrap!important;gap:9px 18px!important}\n.mfp-elderly-care-donation .mf-option-control{width:15px!important;height:15px!important;min-height:15px!important;margin:1px 0 0!important;accent-color:#171767}\n.mfp-elderly-care-donation .ed-submit{width:100%!important;min-height:50px!important;border:0!important;border-radius:0!important;background:#11116d!important;color:#fff!important;padding:12px 18px!important;font:600 12px/16px Inter,Geist,system-ui,sans-serif!important}\n@media(max-width:720px){.mfp-elderly-care-donation{padding:12px}.mfp-elderly-care-donation .ed-card{padding:24px 20px}.mfp-elderly-care-donation header{padding-right:0;padding-left:0}.mfp-elderly-care-donation .ed-logo{position:static;margin:0 auto 16px}.mfp-elderly-care-donation .ed-grid{grid-template-columns:1fr}.mfp-elderly-care-donation h1{font-size:25px}}"
+}

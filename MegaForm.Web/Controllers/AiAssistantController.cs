@@ -35,9 +35,9 @@ namespace MegaForm.Web.Controllers
             {
                 var webRoot = _env?.WebRootPath ?? string.Empty;
                 var contentRoot = _env?.ContentRootPath ?? string.Empty;
-                return AiFeatureGate.IsEnabled(webRoot, contentRoot);
+                return AiFeatureGate.IsAvailable(webRoot, contentRoot);
             }
-            catch { return AiFeatureGate.IsEnabled(); }
+            catch { return AiFeatureGate.IsAvailable(); }
         }
 
         [HttpGet("DefaultConfig")]
@@ -48,6 +48,12 @@ namespace MegaForm.Web.Controllers
             var provider = _settings.GetSetting(0, AiSettingKeys.Provider, localAi ? "megaform-local" : "openai");
             var baseUrl = _settings.GetSetting(0, AiSettingKeys.BaseUrl, localAi ? "/api/MegaFormAi" : "https://api.openai.com/v1");
             var model = _settings.GetSetting(0, AiSettingKeys.Model, localAi ? "megaform-local-kb" : "gpt-4o");
+            // [AiConfigCoherence v20260812] Parity with Oqtane: a stored provider/baseUrl pair that
+            // cannot serve each other (e.g. provider=openai still pointing at the built-in KB mock
+            // "/api/MegaFormAi") is healed here, so a site already in that state recovers without
+            // the admin re-saving. A deliberately typed custom endpoint is left alone.
+            MegaForm.Core.Services.AiAssistant.AiProviderEndpoints.Coerce(provider, ref baseUrl, ref model);
+
             var enabledRaw = _settings.GetSetting(0, AiSettingKeys.Enabled, string.Empty);
             bool enabled = !string.IsNullOrEmpty(enabledRaw)
                 ? string.Equals(enabledRaw, "true", StringComparison.OrdinalIgnoreCase)
@@ -67,9 +73,16 @@ namespace MegaForm.Web.Controllers
         public IActionResult SaveDefaultConfig([FromBody] AiClientDefaultConfig config)
         {
             if (config == null) return BadRequest(new { error = "body required" });
-            _settings.SetSetting(0, AiSettingKeys.Provider, config.Provider ?? "openai");
-            _settings.SetSetting(0, AiSettingKeys.BaseUrl, config.BaseUrl ?? string.Empty);
-            _settings.SetSetting(0, AiSettingKeys.Model, config.Model ?? string.Empty);
+            // [AiConfigCoherence v20260812] Parity with Oqtane — never persist a provider/endpoint
+            // pair that cannot serve a request.
+            var provider = config.Provider ?? "openai";
+            var baseUrl = config.BaseUrl ?? string.Empty;
+            var model = config.Model ?? string.Empty;
+            MegaForm.Core.Services.AiAssistant.AiProviderEndpoints.Coerce(provider, ref baseUrl, ref model);
+
+            _settings.SetSetting(0, AiSettingKeys.Provider, provider);
+            _settings.SetSetting(0, AiSettingKeys.BaseUrl, baseUrl);
+            _settings.SetSetting(0, AiSettingKeys.Model, model);
             _settings.SetSetting(0, AiSettingKeys.Enabled, config.Enabled ? "true" : "false");
             _settings.SetSetting(0, AiSettingKeys.ApiKey, config.ApiKey ?? string.Empty);
             return Ok(new { ok = true });

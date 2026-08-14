@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk.Razor">
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <RootNamespace>MegaForm.Umbraco</RootNamespace>
     <AssemblyName>MegaForm.Umbraco</AssemblyName>
     <Version>1.5.0</Version>
@@ -24,8 +24,8 @@
     <RepositoryType>git</RepositoryType>
     <PackageIcon>icon.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageTags>umbraco;umbraco-marketplace;form-builder;forms;workflow;submissions;bellissima;umbraco14;umbraco15;umbraco16</PackageTags>
-    <PackageReleaseNotes>MegaForm 1.5 for Umbraco 14+ (Bellissima). Adds native Bellissima property editor and content-app integration, Marketplace-ready packaging, and backoffice section/tree permissions.</PackageReleaseNotes>
+    <PackageTags>umbraco;umbraco-marketplace;form-builder;forms;workflow;submissions;bellissima;umbraco17</PackageTags>
+    <PackageReleaseNotes>MegaForm 1.5 for Umbraco 17 LTS (Bellissima). Adds native Bellissima property editor and content-app integration, Marketplace-ready packaging, and backoffice section/tree permissions.</PackageReleaseNotes>
     <NoWarn>$(NoWarn);NU5104</NoWarn>
   </PropertyGroup>
 
@@ -40,13 +40,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Umbraco 14+ (Bellissima) -->
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.11" />
-    <PackageReference Include="Umbraco.Cms.Web.Common" Version="14.*" />
-    <PackageReference Include="Umbraco.Cms.Core" Version="14.*" />
-    <PackageReference Include="Umbraco.Cms.Infrastructure" Version="14.*" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.11" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.11" />
+    <!-- Umbraco 17 LTS (Bellissima) -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.8" />
+    <PackageReference Include="Umbraco.Cms.Web.Common" Version="17.6.1" />
+    <PackageReference Include="Umbraco.Cms.Core" Version="17.6.1" />
+    <PackageReference Include="Umbraco.Cms.Infrastructure" Version="17.6.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.8" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.8" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 

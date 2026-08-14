@@ -24,6 +24,7 @@ import { buildDetailPanel, type BoardContext } from './view';
 import { adaptTask, type InboxTaskItem, type InboxTab, type ReplyMode, type InboxTaskStatus } from './types';
 import { buildEnrichedDetail } from './enrich';
 import { T } from './ui';
+import { setSubmissionPrintBase } from './print-link';
 
 export interface StandaloneDetailOptions {
   config: WorkflowInboxConfig;       // apiBase / submissionsApiBase / moduleId / tabId
@@ -95,6 +96,7 @@ export function mountTaskDetail(container: HTMLElement, opts: StandaloneDetailOp
   ensureInboxCss();
   const api: WorkflowInboxApi = createWorkflowInboxApi(opts.config);
   const base = opts.config.submissionsApiBase || '/api/MegaForm/';
+  setSubmissionPrintBase(base); // [SubmissionPrint v20260713] Print button in the action bar
   const toast = opts.toast || (() => { /* no-op */ });
 
   // ── local state ──

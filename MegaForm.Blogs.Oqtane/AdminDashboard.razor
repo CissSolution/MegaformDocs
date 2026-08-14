@@ -62,13 +62,25 @@ else
             </div>
         </section>
 
+        @* Every tile here goes where it says it goes. Three of them used to be placeholders —
+           "Analytics" opened the public blog, "Authors" opened the kanban board, "Settings"
+           reloaded the console — and a tile that lies costs more trust than a missing tile. The
+           two screens that do not exist yet (analytics, an author manager) are simply not here;
+           module configuration lives in Oqtane's own action menu, which no in-module link can
+           open, so it is named in Admin Sections instead of faked as a tile. *@
         <section class="mfba-quick" aria-label="Quick access">
             <a href="@(AdminBaseUrl + "?view=new")"><span class="mfba-quick-ico mfba-bg-blue">@BlogData.Icon("plus")</span><strong>New Post</strong><small>Create a new article</small></a>
             <a href="@(AdminBaseUrl + "?view=comments")"><span class="mfba-quick-ico mfba-bg-violet">@BlogData.Icon("message-circle")</span><strong>Comments</strong><small>@_pending.Count pending review</small></a>
             <a href="@(AdminBaseUrl + "?view=editorial")"><span class="mfba-quick-ico mfba-bg-amber">@BlogData.Icon("layout")</span><strong>Editorial</strong><small>Kanban board</small></a>
-            <a href="@BlogUrl"><span class="mfba-quick-ico mfba-bg-emerald">@BlogData.Icon("bar-chart")</span><strong>Analytics</strong><small>View performance</small></a>
-            <a href="@(AdminBaseUrl + "?view=editorial")"><span class="mfba-quick-ico mfba-bg-pink">@BlogData.Icon("users")</span><strong>Authors</strong><small>@_authors.Count contributors</small></a>
-            <a href="@AdminBaseUrl"><span class="mfba-quick-ico mfba-bg-slate">@BlogData.Icon("settings")</span><strong>Settings</strong><small>Blog configuration</small></a>
+            @if (_latestId > 0)
+            {
+                <a href="@(AdminBaseUrl + "?view=edit&id=" + _latestId.ToString(CultureInfo.InvariantCulture))"><span class="mfba-quick-ico mfba-bg-emerald">@BlogData.Icon("pencil")</span><strong>Edit latest</strong><small class="mfba-clamp1">@_latestTitle</small></a>
+            }
+            <a href="@(AdminBaseUrl + "?view=editorial")"><span class="mfba-quick-ico mfba-bg-pink">@BlogData.Icon("users")</span><strong>Authors</strong><small>Filter the board by author (@_authors.Count)</small></a>
+            @if (HasPublicPage)
+            {
+                <a href="@BlogUrl" target="_blank" rel="noopener"><span class="mfba-quick-ico mfba-bg-slate">@BlogData.Icon("rss")</span><strong>View the blog</strong><small>Open the public page</small></a>
+            }
         </section>
 
         <div class="mfba-grid">
@@ -91,6 +103,9 @@ else
                             var key = BlogData.StatusKey(post);
                             var avatar = BlogData.Text(post, "author_avatar_url", "");
                             var views = BlogData.Num(post, "view_count");
+                            var editUrl = AdminBaseUrl + "?view=edit&id="
+                                + post.SubmissionId.ToString(CultureInfo.InvariantCulture);
+                            var publicUrl = PublicUrl(BlogData.Text(post, "slug", ""));
                             <div class="mfba-trow">
                                 <div class="mfba-post">
                                     @if (!string.IsNullOrWhiteSpace(avatar))
@@ -102,7 +117,9 @@ else
                                         <span class="mfba-avatar">@BlogData.Initials(BlogData.Text(post, "author_name", "MegaForm"))</span>
                                     }
                                     <div style="min-width:0">
-                                        <p class="mfba-post-title mfba-clamp1">@BlogData.Text(post, "title", "Untitled story")</p>
+                                        @* The title is the obvious thing to click, so it opens the
+                                           editor rather than being inert text next to icons. *@
+                                        <a class="mfba-post-title mfba-clamp1" href="@editUrl">@BlogData.Text(post, "title", "Untitled story")</a>
                                         <div class="mfba-post-meta">
                                             <span>@BlogData.Text(post, "author_name", "MegaForm Editorial")</span>
                                             <span class="sep">·</span>
@@ -114,8 +131,17 @@ else
                                 </div>
                                 <span class="mfba-pill mfba-st-@key">@BlogData.StatusLabel(key)</span>
                                 <span class="mfba-views">@BlogData.Icon("eye", "mfba-icon mfba-icon-md")@(views > 0 ? BlogData.Compact(views) : "—")</span>
+                                @* Two buttons, not three: the Actions column is 76px and an icon
+                                   button is 28px + 4px gap, so a third would overflow the row —
+                                   and an overflowing row is how this console grew a second
+                                   horizontal scroller last time. The editorial board is still one
+                                   click away from the panel header. *@
                                 <div class="mfba-actions">
-                                    <a class="mfba-iconbtn" href="@(AdminBaseUrl + "?view=editorial")" title="Open in the editorial board">@BlogData.Icon("layout", "mfba-icon mfba-icon-md")</a>
+                                    <a class="mfba-iconbtn" href="@editUrl" title="Edit this post">@BlogData.Icon("pencil", "mfba-icon mfba-icon-md")</a>
+                                    @if (publicUrl.Length > 0)
+                                    {
+                                        <a class="mfba-iconbtn" href="@publicUrl" target="_blank" rel="noopener" title="Preview the post">@BlogData.Icon("eye", "mfba-icon mfba-icon-md")</a>
+                                    }
                                 </div>
                             </div>
                         }
@@ -234,8 +260,25 @@ else
                             }
                         </a>
                         <a href="@(AdminBaseUrl + "?view=editorial")">@BlogData.Icon("layout")<span>Editorial Kanban</span>@BlogData.Icon("arrow-right", "mfba-icon mfba-icon-md")</a>
-                        <a href="@BlogUrl">@BlogData.Icon("rss")<span>Blog Home</span>@BlogData.Icon("arrow-right", "mfba-icon mfba-icon-md")</a>
+                        @if (HasPublicPage)
+                        {
+                            <a href="@BlogUrl" target="_blank" rel="noopener">@BlogData.Icon("rss")<span>Blog Home</span>@BlogData.Icon("arrow-right", "mfba-icon mfba-icon-md")</a>
+                        }
                     </div>
+                    @* Module configuration is an Oqtane surface, not ours: it opens from the
+                       module's own action menu on this page. Saying so beats a tile that
+                       pretends to link to it. *@
+                    <p class="mfba-stat-sub" style="padding:0 20px 16px">
+                        Which posts this instance shows, and where a post opens, are in
+                        <strong>Module Settings</strong> — the module action menu on this page.
+                        @if (!HasPublicPage)
+                        {
+                            <text>
+                                Set <strong>Public blog page</strong> there to turn on the
+                                “view the post” links.
+                            </text>
+                        }
+                    </p>
                 </section>
 
                 @if (_scanTruncated)
@@ -255,7 +298,29 @@ else
     /// <summary>Which MegaForm app to manage. Follows the instance's AppKey setting.</summary>
     [Parameter] public string AppKey { get; set; } = BlogData.AppKey;
 
+    /// <summary>Slug -&gt; reader-facing URL, supplied by the host. Null means no preview links.</summary>
+    [Parameter] public Func<string, string> PostUrl { get; set; }
+
     private const int ScanCap = 60;
+
+    private int _latestId;
+    private string _latestTitle = "";
+
+    private string PublicUrl(string slug)
+    {
+        if (PostUrl == null || string.IsNullOrWhiteSpace(slug)) return "";
+        try { return PostUrl(slug) ?? ""; }
+        catch (Exception) { return ""; }
+    }
+
+    /// <summary>
+    /// False while the console has no public surface to point at — an inline console on its own
+    /// page, with Public blog page unset, resolves the "blog" to itself. Linking there would be
+    /// the same broken promise as the placeholder tiles this screen just lost.
+    /// </summary>
+    private bool HasPublicPage
+        => !string.IsNullOrWhiteSpace(BlogUrl)
+           && !string.Equals(BlogUrl, AdminBaseUrl, StringComparison.OrdinalIgnoreCase);
 
     private bool _loading = true;
     private string _error;
@@ -309,6 +374,9 @@ else
                 .Where(a => !string.IsNullOrWhiteSpace(a))
                 .Distinct(StringComparer.OrdinalIgnoreCase).ToList();
             _recent = _posts.OrderByDescending(p => p.SubmittedOnUtc).Take(5).ToList();
+            var latest = _recent.FirstOrDefault();
+            _latestId = latest?.SubmissionId ?? 0;
+            _latestTitle = latest == null ? "" : BlogData.Text(latest, "title", "Untitled story");
             _top = _posts.OrderByDescending(p => BlogData.Num(p, "view_count")).Take(5).ToList();
             _topMax = _top.Count == 0 ? 0 : Math.Max(1, BlogData.Num(_top[0], "view_count"));
 
@@ -335,9 +403,10 @@ else
             BuildFeed();
             _error = null;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            _error = "The editorial console could not load: " + ex.Message;
+            // No exception text on screen, even for an editor. CLAUDE.md §10.
+            _error = "The editorial console could not load. The site log has the details.";
         }
         finally
         {
@@ -401,9 +470,9 @@ else
             _message = "Comment moved to " + BlogData.ModerationLabel(next).ToLowerInvariant() + ".";
             await LoadAsync();
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            _error = "The moderation action failed: " + ex.Message;
+            _error = "The moderation action failed. The site log has the details.";
         }
     }
 }

@@ -79,6 +79,16 @@ namespace MegaForm.WebApi
             catch { return null; }
         }
 
+        /// <summary>[KbPerTemplate v20260812] Where a downloaded design guide has to land: the
+        /// exact folder AiToolsController.ResolveKnowledgeBody reads guide_file from
+        /// (AiToolsController.cs:169). A guide written anywhere else resolves to
+        /// "[guide_file not found: …]" and the AI treats that string as the design contract.</summary>
+        private static string ResolveGuidesRoot()
+        {
+            try { return System.Web.Hosting.HostingEnvironment.MapPath("~/DesktopModules/MegaForm/Resources/TemplateGuides"); }
+            catch { return null; }
+        }
+
         [HttpGet]
         [ActionName("RemoteGalleryList")]
         public async System.Threading.Tasks.Task<HttpResponseMessage> RemoteGalleryList(bool refresh = false)
@@ -184,13 +194,35 @@ namespace MegaForm.WebApi
                 // failed bundle must not fail the whole install — report it instead.
                 var assets = await svc.InstallAssetsAsync(fetch.Info, ResolveImageRoot());
 
+                // [KbPerTemplate v20260812] The template's AI knowledge travels WITH it instead of
+                // being frozen into the package. Best-effort like artwork — the template is already
+                // usable — but NEVER silent: `knowledge` carries the reason, and the builder shows
+                // it. The failure this replaces was invisible for a year: a premium design would
+                // install and the assistant would then edit its shell with no design contract, with
+                // nothing anywhere saying why.
+                var knowledge = await svc.InstallKnowledgeAsync(
+                    fetch.Info, ResolveGuidesRoot(), new MegaForm.DNN.Services.DnnAiKnowledgeService(),
+                    UserInfo != null && UserInfo.UserID > 0 ? (int?)UserInfo.UserID : null);
+                if (!knowledge.Installed && !knowledge.NotPublished)
+                {
+                    DotNetNuke.Instrumentation.LoggerSource.Instance.GetLogger(typeof(BuilderTemplatesController))
+                        .Warn("MegaForm gallery: template '" + fetch.Slug + "' installed WITHOUT its AI knowledge — " + knowledge.Message);
+                }
+
                 return Request.CreateResponse(HttpStatusCode.OK, new
                 {
                     success = true,
                     slug = fetch.Slug,
                     template = record,
                     assetsInstalled = assets.FilesWritten,
-                    assetsError = assets.Success ? null : assets.Error
+                    assetsError = assets.Success ? null : assets.Error,
+                    knowledgeInstalled = knowledge.Installed,
+                    knowledgeEntries = knowledge.Entries,
+                    knowledgeGuides = knowledge.GuideFiles,
+                    // null when there is simply nothing published for this template, so the client
+                    // can tell "no knowledge exists yet" apart from "knowledge failed to install".
+                    knowledgeError = knowledge.Installed || knowledge.NotPublished ? null : knowledge.Message,
+                    knowledgeMessage = knowledge.Message
                 });
             }
             catch (Exception ex)

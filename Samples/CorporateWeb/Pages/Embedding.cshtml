@@ -1,0 +1,127 @@
+@page "/embedding"
+@model MegaForm.Samples.CorporateWeb.Pages.EmbeddingModel
+@{
+    ViewData["Title"] = "Embedding Guide";
+}
+
+<section class="content-page embedding-guide">
+    <div class="container">
+        <h1>Embed MegaForm into any page</h1>
+        <p class="lead">
+            MegaForm is designed to live inside your pages, not replace them. Below are the
+            four most common ways to embed a form into a corporate site, landing page, contact page,
+            or support portal. All examples use the same published form.
+        </p>
+
+        <div class="cta-row">
+            <a class="btn btn-primary" href="/Contact">View contact page</a>
+            <a class="btn btn-secondary" href="/LandingWithForm">View landing page</a>
+            <a class="btn btn-secondary" href="/Support">View support page</a>
+        </div>
+
+        <h2>1. Razor TagHelper (recommended)</h2>
+        <p>
+            The <code>&lt;megaform&gt;</code> TagHelper is the cleanest option for ASP.NET Core Razor Pages
+            or MVC views. Add the helper once in <code>_ViewImports.cshtml</code>, then drop the tag anywhere.
+        </p>
+        <div class="code-block">
+            <pre><code>&lt;!-- _ViewImports.cshtml --&gt;
+@@addTagHelper *, MegaForm.AspNetCore.Component
+
+&lt;!-- Any .cshtml page --&gt;
+&lt;megaform form-id="@Model.FormId" mode="embed" min-height="720" theme="corporate" radius="12"&gt;&lt;/megaform&gt;</code></pre>
+        </div>
+        <p>
+            Useful attributes: <code>mode</code> (embed, iframe, link), <code>theme</code>,
+            <code>min-height</code>, <code>radius</code>, <code>auto-resize</code>, <code>server-url</code>.
+        </p>
+
+        <h2>2. HtmlHelper extension</h2>
+        <p>
+            If you prefer C# syntax or need to build options at runtime, use the HtmlHelper extension.
+        </p>
+        <div class="code-block">
+            <pre><code>@@using MegaForm.AspNetCore.Component
+
+@@await Html.MegaFormAsync(Model.FormId, new MegaFormRenderOptions
+{
+    Mode = MegaFormRenderMode.Embed,
+    MinHeight = "720",
+    Theme = "corporate",
+    Radius = "12"
+})</code></pre>
+        </div>
+
+        <h2>3. Plain HTML / external CMS</h2>
+        <p>
+            For static sites, WordPress, Drupal, or any HTML page, copy the embed script. Replace
+            <code>https://your-server.com</code> with the URL of your MegaForm host.
+        </p>
+        <div class="code-block">
+            <pre><code>&lt;div id="contact-form"&gt;&lt;/div&gt;
+&lt;script src="https://your-server.com/megaform/js/megaform-embed.js"
+        data-form-id="@Model.FormId"
+        data-server="https://your-server.com"
+        data-theme="corporate"
+        data-min-height="720"&gt;
+&lt;/script&gt;</code></pre>
+        </div>
+        <p>
+            The script creates an auto-resizing iframe and listens for <code>mf:resize</code> messages
+            from the form page. No host CSS conflicts with the form.
+        </p>
+
+        <h2>4. Manual iframe</h2>
+        <p>
+            Use an iframe when you want maximum isolation or your CMS only allows raw HTML snippets.
+        </p>
+        <div class="code-block">
+            <pre><code>&lt;iframe src="https://your-server.com/f/@Model.FormId/embed?theme=corporate"
+        width="100%" height="720" frameborder="0"
+        style="border:none;background:transparent;"&gt;
+&lt;/iframe&gt;</code></pre>
+        </div>
+        <p>
+            When <code>auto-resize</code> is handled by the embed script (method 3), the form tells the
+            parent how tall it is. With a manual iframe, pick a sensible default height and let users scroll.
+        </p>
+
+        <h2>5. Link mode</h2>
+        <p>
+            Sometimes you only need a button or link that opens the standalone public form.
+        </p>
+        <div class="code-block">
+            <pre><code>&lt;megaform form-id="@Model.FormId" mode="link" class="btn btn-primary"&gt;
+    Open support form
+&lt;/megaform&gt;</code></pre>
+        </div>
+
+        <h2>Live demo</h2>
+        <p>
+            The form below is rendered with the TagHelper from method 1. It is not a separate page — it is
+            embedded into this guide page exactly like the snippets above.
+        </p>
+
+        @if (Model.FormId > 0)
+        {
+            <div class="live-form-demo">
+                <megaform form-id="@Model.FormId" mode="embed" min-height="720" theme="corporate" radius="12"></megaform>
+            </div>
+        }
+        else
+        {
+            <div class="no-form">
+                <p>No published MegaForm was found. Make sure the app has finished starting.</p>
+                <a class="btn btn-secondary" href="/admin" target="_blank">Open MegaForm admin</a>
+            </div>
+        }
+
+        <h2>Where to go next</h2>
+        <div class="cta-row">
+            <a class="btn btn-primary" href="/Contact">Contact page sample</a>
+            <a class="btn btn-secondary" href="/LandingWithForm">Landing page sample</a>
+            <a class="btn btn-secondary" href="/Support">Support page sample</a>
+            <a class="btn btn-secondary" href="/admin-dashboard">Admin dashboard</a>
+        </div>
+    </div>
+</section>

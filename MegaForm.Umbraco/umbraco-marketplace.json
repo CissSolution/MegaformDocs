@@ -1,0 +1,43 @@
+{
+  "$schema": "https://marketplace.umbraco.com/umbraco-marketplace-schema.json",
+  "Title": "MegaForm for Umbraco",
+  "Description": "Cross-platform, AI-assisted form builder for Umbraco 14+. Build multi-step forms with conditional logic, payment widgets, workflows, and submissions — all schema-driven and headless-friendly.",
+  "Category": "Editor Tools",
+  "AlternateCategory": "Developer Tools",
+  "PackageType": "Package",
+  "LicenseTypes": [ "Free" ],
+  "Tags": [
+    "form builder",
+    "forms",
+    "survey",
+    "workflow",
+    "submissions",
+    "ai",
+    "multi-step",
+    "headless",
+    "bellissima",
+    "umbraco 14",
+    "umbraco 15",
+    "umbraco 16"
+  ],
+  "AuthorDetails": {
+    "Name": "MegaForm Team",
+    "Url": "https://github.com/CissSolution/MegaformDocs",
+    "SyncContributorsFromRepository": true
+  },
+  "DocumentationUrl": "https://github.com/CissSolution/MegaformDocs#readme",
+  "IssueTrackerUrl": "https://github.com/CissSolution/MegaformDocs/issues",
+  "DiscussionForumUrl": "https://github.com/CissSolution/MegaformDocs/discussions",
+  "Screenshots": [
+    {
+      "ImageUrl": "https://raw.githubusercontent.com/CissSolution/MegaformDocs/main/Docs/docfx/images/oq-erp-dashboard.png",
+      "Caption": "MegaForm dashboard inside the Umbraco backoffice"
+    },
+    {
+      "ImageUrl": "https://raw.githubusercontent.com/CissSolution/MegaformDocs/main/Docs/docfx/images/oq-erp-report.png",
+      "Caption": "MegaForm submissions report"
+    }
+  ],
+  "VideoUrl": "",
+  "VersionDependencyMode": "Default"
+}

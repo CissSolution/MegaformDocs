@@ -1,0 +1,299 @@
+{
+  "version": "1.0",
+  "slug": "corporate-registration-blue",
+  "title": "Registration Form — Corporate Blue",
+  "description": "Corporate membership registration: a white card with blue triangle accents, an applicant avatar beside the form title, a company lockup and date on the right, then three captioned sections of boxed fields with gender pills and a gradient CTA. Transcribed from the corporate-registration mock.",
+  "category": "registration",
+  "categories": [
+    "registration",
+    "premium",
+    "corporate"
+  ],
+  "icon": "user-plus",
+  "submitButtonText": "Submit Registration",
+  "successMessage": "Registration received.",
+  "settings": {
+    "theme": "custom",
+    "multiPage": false,
+    "showProgressBar": false,
+    "customContent": {
+      "membership_type": "Membership Type",
+      "registration_form": "Registration Form",
+      "your_company": "YOUR COMPANY",
+      "tagline_goes_here": "TAGLINE GOES HERE",
+      "date": "Date",
+      "personal_information": "Personal Information",
+      "full_name": "Full Name *",
+      "date_of_birth": "Date of Birth *",
+      "gender": "Gender *",
+      "contact_and_address": "Contact & Address",
+      "address": "Address",
+      "phone": "Phone",
+      "membership_type_2": "Membership Type *",
+      "service_information": "Service Information",
+      "service_required": "Service Required",
+      "please_review_the_answers_above_before_submitting_by": "Please review the answers above before submitting. By clicking submit you confirm that all provided information is accurate and complete.",
+      "submit_registration": "Submit Registration",
+      "member_photo": "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs="
+    },
+    "customScripts": {},
+    "customHtml": "<div class='mfp mfp-crg mfp-native-generated' data-mf-flexgrid=\"locked\" style=\"background:transparent!important;border:0!important;border-radius:0!important;padding:0!important;box-shadow:none!important\"><div class='crg-page'><div class='crg-shell'><div class='crg-card'><div class='crg-tri-a' role='presentation'></div><div class='crg-tri-b' role='presentation'></div><div class='crg-head'><div class='crg-who'><div class='crg-avatar' role='presentation'><img class='crg-content-image' src='{{content:member_photo}}' alt='' aria-hidden='true'></div><div class='crg-who-t'><div class='crg-kicker'>{{content:membership_type}}</div><div class='crg-h1'>{{content:registration_form}}</div></div></div><div class='crg-co'><div class='crg-co-row'><span class='crg-co-mark'><i class='crg-co-dia'></i></span><span class='crg-co-n'>{{content:your_company}}</span></div><div class='crg-co-tag'>{{content:tagline_goes_here}}</div><div class='crg-co-date'><label class='crg-field'><span class='crg-label'>{{content:date}}</span>{{field:reg_date}}</label></div></div></div><div class='crg-body'><div class='crg-cap'><span class='crg-cap-t'>{{content:personal_information}}</span><i class='crg-hair'></i></div><div class='crg-grid2'><label class='crg-field'><span class='crg-label'>{{content:full_name}}</span>{{field:full_name}}</label><label class='crg-field'><span class='crg-label'>{{content:date_of_birth}}</span>{{field:dob}}</label><label class='crg-field crg-span2'><span class='crg-label'>{{content:gender}}</span>{{field:gender}}</label></div><div class='crg-cap'><span class='crg-cap-t'>{{content:contact_and_address}}</span><i class='crg-hair'></i></div><div class='crg-grid2'><label class='crg-field crg-span2'><span class='crg-label'>{{content:address}}</span>{{field:address}}</label><label class='crg-field'><span class='crg-label'>{{content:phone}}</span>{{field:phone}}</label><label class='crg-field'><span class='crg-label'>{{content:membership_type_2}}</span>{{field:membership_type}}</label></div><div class='crg-cap'><span class='crg-cap-t'>{{content:service_information}}</span><i class='crg-hair'></i></div><div class='crg-grid2 crg-grid-last'><label class='crg-field'><span class='crg-label'>{{content:service_required}}</span>{{field:service}}</label></div><p class='crg-note'>{{content:please_review_the_answers_above_before_submitting_by}}</p><div class='crg-cta'><button class='crg-submit' type='submit'>{{content:submit_registration}}<span class='crg-chk' aria-hidden='true'></span></button></div></div></div></div></div></div>",
+    "customCss": "@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Bricolage+Grotesque:wght@600;700;800&display=swap');\n.mfp.mfp-crg.mfp-native-generated {--crg-primary:#1B4F8C;--crg-accent:#0F3564;--crg-surface:var(--mf-page-surface,var(--mf-preset-surface,#FFFFFF));--crg-text:var(--mf-page-text,var(--mf-preset-text,#1A1F2B));--crg-muted:var(--mf-page-muted,var(--mf-preset-muted,#6B7280));--crg-border:var(--mf-page-border,var(--mf-preset-border,#DDE3EC));--crg-on-primary:var(--mf-preset-on-primary,#FFFFFF);--crg-deco:#EAF1FA;--crg-page:#F4F6F9;--crg-fill:#F4F6F9;--crg-fill-strong:color-mix(in srgb, var(--crg-text) 9%, var(--crg-surface));--crg-soft:color-mix(in srgb, var(--crg-primary) 12%, var(--crg-surface));--crg-hairline:color-mix(in srgb, var(--crg-text) 12%, var(--crg-surface));}.mfp.mfp-crg.mfp-native-generated {background:transparent!important;border:0!important;padding:0!important;font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif}.mfp.mfp-crg.mfp-native-generated {--crg-primary:var(--mf-page-primary,var(--mf-preset-primary,#1B4F8C));--crg-accent:var(--mf-page-accent,var(--mf-preset-accent,#0F3564));--crg-surface:var(--mf-page-surface,var(--mf-preset-surface,#FFFFFF));--crg-text:var(--mf-page-text,var(--mf-preset-text,#1A1F2B));--crg-border:var(--mf-page-border,var(--mf-preset-border,#DDE3EC));--crg-on-primary:var(--mf-page-on-primary,var(--mf-preset-on-primary,#FFFFFF));--crg-page:var(--mf-preset-bg,#F4F6F9);}@container (max-width:520px){.mfp.mfp-crg.mfp-native-generated [class*=\"-grid\"],.mfp.mfp-crg.mfp-native-generated [class*=\"-meta\"],.mfp.mfp-crg.mfp-native-generated [class*=\"-scores\"],.mfp.mfp-crg.mfp-native-generated [class*=\"-charts\"],.mfp.mfp-crg.mfp-native-generated [class*=\"-cols\"]{grid-template-columns:1fr!important}.mfp.mfp-crg.mfp-native-generated [class*=\"-body\"],.mfp.mfp-crg.mfp-native-generated [class*=\"-split\"],.mfp.mfp-crg.mfp-native-generated [class*=\"-foot\"],.mfp.mfp-crg.mfp-native-generated [class*=\"-head\"],.mfp.mfp-crg.mfp-native-generated [class*=\"-row\"]{flex-wrap:wrap!important}.mfp.mfp-crg.mfp-native-generated [class*=\"-aside\"],.mfp.mfp-crg.mfp-native-generated [class*=\"-side\"]{flex:1 1 100%!important;width:100%!important;max-width:none!important}}.mfp.mfp-crg.mfp-native-generated  img{max-width:100%!important;height:auto}.mfp.mfp-crg.mfp-native-generated {overflow-wrap:break-word}\n\n/* The wrapper itself: strip the host's card, but NOT its width. Layout > Max width in the module\n   settings (480/640/768/960/Full) is a max-width on THIS element, and the previous version of this\n   rule overrode it with max-width:none!important - so picking 960 did nothing at all. */\n.mf-form-wrapper:has(.mfp-crg){background:transparent!important;border:0!important;\n  border-radius:0!important;box-shadow:none!important;padding:0!important}\n/* The boxes INSIDE it have their own measures, and those are what squeezed the design. */\n.mf-form-wrapper:has(.mfp-crg) > .mf-form-inner,\n.mf-form-wrapper:has(.mfp-crg) .mf-form,\n.mf-form-wrapper:has(.mfp-crg) .mf-fields-container{background:transparent!important;\n  border:0!important;border-radius:0!important;box-shadow:none!important;padding:0!important;\n  margin:0!important;max-width:none!important;width:100%!important}\n\n.mfp.mfp-crg.mfp-native-generated {container-type:inline-size;font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif!important;color:#1A1F2B}\n.mfp.mfp-crg.mfp-native-generated .crg-page{padding:40px 0;background:#F4F6F9}\n.mfp.mfp-crg.mfp-native-generated .crg-shell{max-width:768px;margin:0 auto;padding:0 16px}\n.mfp.mfp-crg.mfp-native-generated .crg-back{font-size:16px;line-height:24px}\n.mfp.mfp-crg.mfp-native-generated .crg-back-link{display:inline-flex;align-items:center;gap:6px;margin-bottom:24px;font-size:12px;\n  line-height:16px;font-weight:500;color:#6B7280}\n.mfp.mfp-crg.mfp-native-generated .crg-back-ico{display:block;flex:0 0 14px;width:14px;height:14px;\n  background:url(\"data:image/svg+xml,%3Csvg xmlns='http:%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M19 12H5'%2F%3E%3Cpath d='m12 19-7-7 7-7'%2F%3E%3C%2Fsvg%3E\") center/14px 14px no-repeat}\n.mfp.mfp-crg.mfp-native-generated .crg-card{position:relative;overflow:hidden;border:1px solid #DDE3EC;border-radius:16px;\n  background:#fff;box-shadow:0 1px 2px 0 rgba(0,0,0,.05)}\n/* Two crisp layered wedges complete the rounded corner without an encoded SVG seam. */\n.mfp.mfp-crg.mfp-native-generated .crg-tri-a{position:absolute;left:0;top:0;width:112px;height:68px;pointer-events:none;\n  background:#1B4F8C;clip-path:polygon(0 0,100% 0,0 100%);opacity:.92}\n.mfp.mfp-crg.mfp-native-generated .crg-tri-a::after{content:'';position:absolute;left:0;top:0;width:62px;height:36px;\n  background:#EAF1FA;clip-path:polygon(0 0,100% 0,0 100%)}\n.mfp.mfp-crg.mfp-native-generated .crg-tri-b{position:absolute;left:0;bottom:0;width:160px;height:64px;pointer-events:none;\n  background:rgba(27,79,140,.12);clip-path:polygon(0 100%,56% 100%,0 0)}\n\n/* header ----------------------------------------------------------------- */\n.mfp.mfp-crg.mfp-native-generated .crg-head{position:relative;display:flex;align-items:flex-start;justify-content:space-between;\n  gap:24px;padding:40px 32px 24px}\n@container (min-width:640px){.mfp.mfp-crg.mfp-native-generated .crg-head{padding:40px 40px 24px}}\n.mfp.mfp-crg.mfp-native-generated .crg-who{display:flex;align-items:center;gap:16px}\n.mfp.mfp-crg.mfp-native-generated .crg-avatar{flex:0 0 64px;width:64px;height:64px;border:4px solid #EAF1FA;border-radius:999px;\n  position:relative;overflow:hidden;\n  background-image:url('/DesktopModules/MegaForm/Assets/img/corporate-registration-blue/registration-avatar.png'),url('/Modules/MegaForm/img/corporate-registration-blue/registration-avatar.png');\n  background-size:cover;background-position:50% 50%}\n.mfp.mfp-crg.mfp-native-generated img.crg-content-image{position:absolute!important;inset:0!important;display:block!important;\n  width:100%!important;height:100%!important;object-fit:cover!important;object-position:50% 50%!important;\n  border:0!important;border-radius:999px!important;pointer-events:none!important}\n.mfp.mfp-crg.mfp-native-generated .crg-kicker{font-size:11px;line-height:1.5;font-weight:600;letter-spacing:.1em;\n  text-transform:uppercase;color:#1B4F8C}\n.mfp.mfp-crg.mfp-native-generated .crg-h1{font-family:'Bricolage Grotesque','Inter',system-ui,-apple-system,'Segoe UI',sans-serif!important;font-size:24px;line-height:32px;\n  font-weight:700;color:#1A1F2B}\n.mfp.mfp-crg.mfp-native-generated .crg-co{text-align:right}\n.mfp.mfp-crg.mfp-native-generated .crg-co-row{display:flex;align-items:center;justify-content:flex-end;gap:8px}\n.mfp.mfp-crg.mfp-native-generated .crg-co-mark{display:flex;align-items:center;justify-content:center;width:28px;height:28px;\n  border-radius:4px;background:#1B4F8C}\n.mfp.mfp-crg.mfp-native-generated .crg-co-dia{display:block;width:12px;height:12px;transform:rotate(45deg);background:#fff}\n.mfp.mfp-crg.mfp-native-generated .crg-co-n{font-family:'Bricolage Grotesque','Inter',system-ui,-apple-system,'Segoe UI',sans-serif!important;font-size:14px;line-height:20px;\n  font-weight:700;letter-spacing:.025em;color:#1A1F2B}\n.mfp.mfp-crg.mfp-native-generated .crg-co-tag{margin-top:2px;font-size:10px;line-height:15px;font-weight:400;\n  letter-spacing:.1em;color:#6B7280}\n.mfp.mfp-crg.mfp-native-generated .crg-co-date{margin-top:12px}\n/* The header column is shrink-to-fit, so in the mock its width comes from the ONE thing with an\n   intrinsic size: Chrome renders a native date input 156px wide at this padding/font (w-40 loses\n   to w-full, both are on the element). Our renderer emits a text input, whose intrinsic width is\n   different, so state that 156 outright or the whole right column lands 4px off. */\n.mfp.mfp-crg.mfp-native-generated .crg-co-date .mf-input[class]{width:100%!important;min-width:156px}\n\n/* body ------------------------------------------------------------------- */\n.mfp.mfp-crg.mfp-native-generated .crg-body{position:relative;padding:32px}\n@container (min-width:640px){.mfp.mfp-crg.mfp-native-generated .crg-body{padding:32px 40px}}\n.mfp.mfp-crg.mfp-native-generated .crg-cap{display:flex;align-items:center;gap:12px;margin-bottom:16px}\n.mfp.mfp-crg.mfp-native-generated .crg-cap-t{font-size:11px;line-height:1.5;font-weight:700;letter-spacing:.1em;\n  text-transform:uppercase;color:#1B4F8C}\n.mfp.mfp-crg.mfp-native-generated .crg-hair{flex:1 1 0;height:1px;display:block;background:#DDE3EC}\n.mfp.mfp-crg.mfp-native-generated .crg-grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:32px}\n.mfp.mfp-crg.mfp-native-generated .crg-grid-last{margin-bottom:8px}\n.mfp.mfp-crg.mfp-native-generated .crg-span2{grid-column:1/-1}\n.mfp.mfp-crg.mfp-native-generated .crg-field{display:block;margin:0}\n.mfp.mfp-crg.mfp-native-generated .crg-label{display:block;margin:0 0 6px;font-size:12px;line-height:18px;font-weight:600;\n  letter-spacing:.025em;text-transform:uppercase;color:#6B7280}\n.mfp.mfp-crg.mfp-native-generated p.crg-note{margin:24px 0 0!important;font-size:11px!important;line-height:1.625!important;\n  font-weight:400!important;color:#6B7280!important}\n\n/* megaform sets font-family on label/input/select/textarea with !important, so an authored\n   <span> inside a <label> inherits the HOST typeface no matter what the shell root declares.\n   Element selectors are (0,3,1) here - above megaform, below every authored class rule - and\n   <i> is left alone so Font Awesome keeps its own family. */\n.mfp.mfp-crg.mfp-native-generated label,.mfp.mfp-crg.mfp-native-generated span,.mfp.mfp-crg.mfp-native-generated p,.mfp.mfp-crg.mfp-native-generated div,.mfp.mfp-crg.mfp-native-generated ul,.mfp.mfp-crg.mfp-native-generated li,.mfp.mfp-crg.mfp-native-generated h1,.mfp.mfp-crg.mfp-native-generated h2,.mfp.mfp-crg.mfp-native-generated h3,.mfp.mfp-crg.mfp-native-generated button{font-family:inherit!important}\n.mfp.mfp-crg.mfp-native-generated .mf-field-label{display:none!important}\n/* A wizard's page-break Section renders a visible heading the mock has no room for - it exists to\n   split the pages, not to be seen. */\n.mfp.mfp-crg.mfp-native-generated .mf-section-break,.mfp.mfp-crg.mfp-native-generated .mf-section-title{display:none!important}\n.mfp.mfp-crg.mfp-native-generated .mf-field-group{margin:0!important;width:100%}\n.mfp.mfp-crg.mfp-native-generated .mf-form-title,.mfp.mfp-crg.mfp-native-generated .mf-form-description,.mfp.mfp-crg.mfp-native-generated .mf-form-actions{display:none!important}\n.mfp.mfp-crg.mfp-native-generated .mf-option-item{margin:0!important}\n/* megaform gives every option chip a 36px floor and paints .mf-option-icon as a rounded tile. */\n.mfp.mfp-crg.mfp-native-generated .mf-option-group--chips .mf-option-check,\n.mfp.mfp-crg.mfp-native-generated .mf-option-group--cards .mf-option-check{display:none!important}\n.mfp.mfp-crg.mfp-native-generated .mf-option-group--chips .mf-option-ui{min-height:0!important;height:auto!important}\n.mfp.mfp-crg.mfp-native-generated .mf-option-group--cards .mf-option-copy{display:block;width:100%}\n\n\n.mfp.mfp-crg.mfp-native-generated .mf-input[class],.mfp.mfp-crg.mfp-native-generated .mf-select[class]{width:100%!important;box-sizing:border-box!important;\n  border:1px solid #DDE3EC!important;border-radius:8px!important;background:#FFFFFF!important;\n  padding:10px 14px!important;min-height:0!important;height:auto!important;\n  color:rgb(8,12,15)!important;font-family:inherit!important;font-size:14px!important;\n  line-height:20px!important;font-weight:400!important;box-shadow:none!important}\n.mfp.mfp-crg.mfp-native-generated .mf-input[class]:focus,.mfp.mfp-crg.mfp-native-generated .mf-select[class]:focus{border-color:#1B4F8C!important;\n  box-shadow:none!important;outline:none!important}\n.mfp.mfp-crg.mfp-native-generated .mf-input[class]::placeholder,.mfp.mfp-crg.mfp-native-generated .mf-textarea[class]::placeholder{color:#94A3B8!important;opacity:1}\n.mfp.mfp-crg.mfp-native-generated .mf-select[class]:invalid,\n.mfp.mfp-crg.mfp-native-generated .mf-select[class]:has(option[value=\"\"]:checked){color:#94A3B8!important}\n\n/* Date renders as a composite button in both products. Pin its paper chrome too; otherwise the\n   host's dark button rule survives even when ordinary inputs have been corrected. */\n.mfp.mfp-crg.mfp-native-generated .crg-field .mf-cal[class]{width:100%!important;box-sizing:border-box!important;\n  border:1px solid #DDE3EC!important;border-radius:8px!important;background:#FFFFFF!important;\n  min-height:42px!important;color:rgb(8,12,15)!important;box-shadow:none!important}\n\n/* gender pills ----------------------------------------------------------- */\n.mfp.mfp-crg.mfp-native-generated .mf-option-group--chips{display:flex;flex-wrap:wrap;gap:8px}\n.mfp.mfp-crg.mfp-native-generated .mf-option-group--chips .mf-option-ui{display:block;gap:0;padding:6px 16px;\n  border:1px solid #DDE3EC;border-radius:9999px;background:#fff;color:#6B7280;font-size:12px;\n  line-height:16px;font-weight:600;text-align:center;cursor:pointer;transition:all .15s ease}\n.mfp.mfp-crg.mfp-native-generated .mf-option-group--chips .mf-option-label{font-size:12px;line-height:16px;font-weight:600;\n  color:inherit}\n.mfp.mfp-crg.mfp-native-generated .mf-option-group--chips .mf-option-item.is-selected .mf-option-ui,\n.mfp.mfp-crg.mfp-native-generated .mf-option-group--chips input:checked+.mf-option-ui{background:#1B4F8C;border-color:#1B4F8C;\n  color:#fff}\n\n/* Date controls. The mock uses a NATIVE date input; our renderer swaps in a button plus a popover,\n   so restate what the native control gives the mock for free: ink-coloured text set in 4px from\n   the padding edge, and a 10x12 black indicator whose right edge sits 20px off the border.\n   Both rules must outrank megaform's own .mf-cal.is-empty and .mf-cal .mf-date-icon. */\n.mfp.mfp-crg.mfp-native-generated .crg-field .mf-cal.is-empty .mf-cal-value,.mfp.mfp-crg.mfp-native-generated .crg-field .mf-cal-value{\n  color:rgb(8,12,15)!important;padding-left:4px;padding-right:24px}\n.mfp.mfp-crg.mfp-native-generated .crg-field .mf-cal .mf-date-icon{position:absolute!important;right:20px!important;\n  width:10px!important;height:12px!important;flex:0 0 10px!important;color:#000!important}\n.mfp.mfp-crg.mfp-native-generated .crg-field .mf-cal .mf-date-icon svg{width:10px!important;height:12px!important;\n  stroke-width:2!important}\n\n/* CTA -------------------------------------------------------------------- */\n.mfp.mfp-crg.mfp-native-generated .crg-cta{display:flex;justify-content:flex-end;margin-top:32px}\n.mfp.mfp-crg.mfp-native-generated button.crg-submit[type=\"submit\"]{display:inline-flex;align-items:center;gap:6px;\n  width:auto!important;padding:10px 24px!important;border:0!important;border-radius:8px!important;\n  background:linear-gradient(135deg,#1B4F8C,#0F3564)!important;color:#fff!important;\n  font-family:inherit!important;font-size:14px!important;line-height:20px!important;\n  font-weight:600!important;letter-spacing:normal!important;text-transform:none!important;\n  cursor:pointer!important;box-shadow:none!important}\n/* the mock fades a blocked CTA to 40% */\n.mfp.mfp-crg.mfp-native-generated button.crg-submit .crg-chk{display:block;flex:0 0 16px;width:16px;height:16px;\n  background:url(\"data:image/svg+xml,%3Csvg xmlns='http:%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'%2F%3E%3C%2Fsvg%3E\") center/16px 16px no-repeat}\n.mfp.mfp-crg.mfp-native-generated button.crg-submit.mf-nav-blocked,.mfp.mfp-crg.mfp-native-generated button.crg-submit[disabled]{opacity:.4!important;\n  background:linear-gradient(135deg,#1B4F8C,#0F3564)!important;cursor:not-allowed!important}\n\n/* The source mock has no mobile header treatment and clips its company/date column at 390px.\n   MegaForm must remain usable in narrower CMS panes, including Oqtane's 230px home column. */\n@container (max-width:520px){\n.mfp.mfp-crg.mfp-native-generated .crg-tri-a{width:84px;height:52px}\n.mfp.mfp-crg.mfp-native-generated .crg-tri-a::after{width:46px;height:28px}\n.mfp.mfp-crg.mfp-native-generated .crg-head{flex-direction:column!important;align-items:stretch!important;gap:20px!important;\n  padding:32px 20px 22px!important}\n.mfp.mfp-crg.mfp-native-generated .crg-who{min-width:0;gap:12px}\n.mfp.mfp-crg.mfp-native-generated .crg-avatar{flex-basis:56px;width:56px;height:56px}\n.mfp.mfp-crg.mfp-native-generated .crg-who-t{min-width:0}\n.mfp.mfp-crg.mfp-native-generated .crg-h1{font-size:22px;line-height:28px;overflow-wrap:normal}\n.mfp.mfp-crg.mfp-native-generated .crg-co{width:100%;text-align:left}\n.mfp.mfp-crg.mfp-native-generated .crg-co-row{justify-content:flex-start}\n.mfp.mfp-crg.mfp-native-generated .crg-co-date{width:100%;margin-top:14px}\n.mfp.mfp-crg.mfp-native-generated .crg-co-date .mf-input[class],.mfp.mfp-crg.mfp-native-generated .crg-co-date .mf-cal[class]{width:100%!important;\n  min-width:0!important}\n.mfp.mfp-crg.mfp-native-generated .crg-body{padding:26px 20px!important}\n.mfp.mfp-crg.mfp-native-generated .crg-grid2{grid-template-columns:minmax(0,1fr)!important;gap:18px;margin-bottom:28px}\n.mfp.mfp-crg.mfp-native-generated .crg-span2{grid-column:auto}\n.mfp.mfp-crg.mfp-native-generated .crg-cap{gap:8px}\n.mfp.mfp-crg.mfp-native-generated .crg-cap-t{max-width:calc(100% - 20px)}\n.mfp.mfp-crg.mfp-native-generated .crg-cta{margin-top:28px}\n.mfp.mfp-crg.mfp-native-generated button.crg-submit[type=\"submit\"]{justify-content:center;width:100%!important;padding-left:14px!important;\n  padding-right:14px!important}\n}\n.mfp.mfp-crg.mfp-native-generated .crg-page{padding:0!important;background:transparent!important;min-height:0!important}.mfp.mfp-crg.mfp-native-generated .crg-shell,.mfp.mfp-crg.mfp-native-generated .crg-wrap{max-width:none!important;margin:0!important}.mfp.mfp-crg.mfp-native-generated .crg-grid,.mfp.mfp-crg.mfp-native-generated .crg-main,.mfp.mfp-crg.mfp-native-generated .crg-hero-in,.mfp.mfp-crg.mfp-native-generated .crg-card{max-width:none!important;margin-left:0!important;margin-right:0!important}",
+    "themeSelector": false,
+    "premiumGeneratedShell": true,
+    "gateNavigationUntilValid": true,
+    "postSubmitExperience": {
+      "enabled": true,
+      "mode": "rich",
+      "title": "Registration received",
+      "message": "Thank you, {{field:full_name}}. Your {{field:membership_type}} registration has been received.",
+      "showSubmissionId": true,
+      "submissionIdLabel": "Reference:",
+      "showAnswerSummary": false,
+      "allowFillAgain": true,
+      "fillAgainLabel": "Submit another",
+      "doneLabel": "Done"
+    },
+    "themeCompatibility": {
+      "policy": "hybrid",
+      "supportsPageColors": false,
+      "supportsPageTypography": true,
+      "supportsDarkHost": true,
+      "prefixes": [
+        "crg"
+      ],
+      "immutable": [
+        "primary",
+        "accent",
+        "deco"
+      ]
+    }
+  },
+  "fields": [
+    {
+      "placeholder": "mm/dd/yyyy",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "reg_date",
+      "type": "Date",
+      "label": "Date",
+      "required": false
+    },
+    {
+      "placeholder": "Jane Carter",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "full_name",
+      "type": "Text",
+      "label": "Full Name *",
+      "required": true
+    },
+    {
+      "placeholder": "mm/dd/yyyy",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "dob",
+      "type": "Date",
+      "label": "Date of Birth *",
+      "required": true
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Male",
+          "value": "Male"
+        },
+        {
+          "label": "Female",
+          "value": "Female"
+        },
+        {
+          "label": "Other",
+          "value": "Other"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "chips"
+      },
+      "key": "gender",
+      "type": "Radio",
+      "label": "Gender *",
+      "required": true,
+      "optionDisplay": "chips",
+      "choiceDisplay": "chips",
+      "optionVariant": "chips",
+      "widgetProps": {
+        "optionDisplay": "chips"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "123 Market Street, Suite 400",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "address",
+      "type": "Text",
+      "label": "Address",
+      "required": false
+    },
+    {
+      "placeholder": "+1 (555) 000-0000",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "phone",
+      "type": "Text",
+      "label": "Phone",
+      "required": false
+    },
+    {
+      "placeholder": "Select type",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Standard",
+          "value": "Standard"
+        },
+        {
+          "label": "Premium",
+          "value": "Premium"
+        },
+        {
+          "label": "VIP",
+          "value": "VIP"
+        },
+        {
+          "label": "Corporate",
+          "value": "Corporate"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "dropdown"
+      },
+      "key": "membership_type",
+      "type": "Select",
+      "label": "Membership Type *",
+      "required": true,
+      "optionDisplay": "dropdown",
+      "choiceDisplay": "dropdown",
+      "optionVariant": "dropdown",
+      "widgetProps": {
+        "optionDisplay": "dropdown"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "Select service",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Consultation",
+          "value": "Consultation"
+        },
+        {
+          "label": "Design Service",
+          "value": "Design Service"
+        },
+        {
+          "label": "Full Membership",
+          "value": "Full Membership"
+        },
+        {
+          "label": "Event Access",
+          "value": "Event Access"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "dropdown"
+      },
+      "key": "service",
+      "type": "Select",
+      "label": "Service Required",
+      "required": false,
+      "optionDisplay": "dropdown",
+      "choiceDisplay": "dropdown",
+      "optionVariant": "dropdown",
+      "widgetProps": {
+        "optionDisplay": "dropdown"
+      },
+      "allowOptionHtml": true
+    }
+  ],
+  "rules": [],
+  "workflow": {
+    "notifications": []
+  }
+}

@@ -1,0 +1,270 @@
+{
+  "version": "1.0",
+  "slug": "massage-bodychart-terracotta",
+  "title": "Massage Session Plan & Body Chart",
+  "description": "A spa session plan: cream card with a gold logo ring, two body outlines to mark discomfort, underlined questions with pill answers for massage type and pressure, the consent paragraph, and a signature line beside today's date. Transcribed from the massage-bodychart mock.",
+  "category": "health",
+  "categories": [
+    "health",
+    "premium",
+    "wellness"
+  ],
+  "icon": "clipboard-list",
+  "submitButtonText": "Submit & Sign",
+  "successMessage": "Session plan saved.",
+  "settings": {
+    "theme": "custom",
+    "multiPage": false,
+    "showProgressBar": false,
+    "customContent": {
+      "your_logo_here": "Your Logo Here",
+      "session_plan_and_body_chart": "Session Plan & Body Chart",
+      "please_circle_areas_of_discomfort_and_answer_the_que": "Please circle areas of discomfort and answer the questions below.",
+      "front": "Front",
+      "back": "Back",
+      "what_area_would_you_like_to_focus_on_today": "What area would you like to focus on today?",
+      "what_type_of_massage_are_you_seeking_today": "What type of massage are you seeking today? *",
+      "what_pressure_do_you_prefer": "What pressure do you prefer? *",
+      "any_areas_you_would_not_like_massaged": "Any areas you would NOT like massaged? *",
+      "if_yes_please_explain": "If yes, please explain",
+      "what_are_your_goals_for_this_treatment_session": "What are your goals for this treatment session?",
+      "i_agree_that_the_above_information_is_accurate_to_th": "I agree that the above information is accurate to the best of my knowledge and give permission to be massaged today. I understand that massage therapy is for the purpose of stress reduction, relief from muscular tension or spasm, or for increasing circulation. I understand that the massage therapist does not diagnose illness, disease, or any other physical or mental disorder.",
+      "signature": "Signature *",
+      "date": "Date",
+      "submit_and_sign": "Submit & Sign"
+    },
+    "customScripts": {
+      "mbc_today": "(function(){\n  var root = (typeof __mfCurrentScriptRoot !== 'undefined' && __mfCurrentScriptRoot) || document;\n  var scope = (root && root.closest) ? (root.closest('.mfp') || document) : document;\n  var n = scope.querySelector('[data-mbc=\"today\"]');\n  if (n) n.textContent = new Date().toLocaleDateString();\n})();"
+    },
+    "customHtml": "<div class='mfp mfp-mbc mfp-native-generated' data-mf-flexgrid=\"locked\" style=\"background:transparent!important;border:0!important;border-radius:0!important;padding:0!important;box-shadow:none!important\"><div class='mbc-page'><div class='mbc-shell'><div class='mbc-card'><div class='mbc-logo'><span class='mbc-logo-ring'><span class='mbc-logo-ico' aria-hidden='true'></span></span><span class='mbc-logo-t'>{{content:your_logo_here}}</span></div><h1 class='mbc-h1'>{{content:session_plan_and_body_chart}}</h1><p class='mbc-lede'>{{content:please_circle_areas_of_discomfort_and_answer_the_que}}</p><div class='mbc-rule'></div><div class='mbc-charts'><div class='mbc-chart'><span class='mbc-body' aria-hidden='true'></span><span class='mbc-chart-t'>{{content:front}}</span></div><div class='mbc-chart'><span class='mbc-body' aria-hidden='true'></span><span class='mbc-chart-t'>{{content:back}}</span></div></div><div class='mbc-stack'><div><label class='mbc-field'><span class='mbc-label'>{{content:what_area_would_you_like_to_focus_on_today}}</span>{{field:focus_area}}</label></div><div><label class='mbc-field'><span class='mbc-label'>{{content:what_type_of_massage_are_you_seeking_today}}</span>{{field:massage_type}}</label></div><div><label class='mbc-field'><span class='mbc-label'>{{content:what_pressure_do_you_prefer}}</span>{{field:pressure}}</label></div><div class='mbc-split'><div class='mbc-split-a'><label class='mbc-field'><span class='mbc-label'>{{content:any_areas_you_would_not_like_massaged}}</span>{{field:avoid_areas}}</label></div><div class='mbc-split-b'><label class='mbc-field'><span class='mbc-label'>{{content:if_yes_please_explain}}</span>{{field:avoid_explain}}</label></div></div><div><label class='mbc-field'><span class='mbc-label'>{{content:what_are_your_goals_for_this_treatment_session}}</span>{{field:goals}}</label></div><p class='mbc-consent'>{{content:i_agree_that_the_above_information_is_accurate_to_th}}</p><div class='mbc-sign'><div class='mbc-sign-a'><div class='mbc-field'><span class='mbc-label'>{{content:signature}}</span>{{field:signature}}</div></div><div class='mbc-sign-b'>{{content:date}}<div class='mbc-sign-d' data-mbc='today'></div></div></div></div><div class='mbc-cta'><button class='mbc-submit' type='submit'>{{content:submit_and_sign}}<span class='mbc-chk' aria-hidden='true'></span></button></div>{{script:mbc_today}}</div></div></div></div>",
+    "customCss": "@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600;1,700&display=swap');\n.mfp.mfp-mbc.mfp-native-generated {--mbc-primary:#8C5333;--mbc-accent:#B9714A;--mbc-surface:var(--mf-page-surface,var(--mf-preset-surface,#FFFDF8));--mbc-text:var(--mf-page-text,var(--mf-preset-text,#3A342C));--mbc-muted:var(--mf-page-muted,var(--mf-preset-muted,#8A8070));--mbc-border:var(--mf-page-border,var(--mf-preset-border,#E4D9C4));--mbc-on-primary:var(--mf-preset-on-primary,#FFFFFF);--mbc-deco:#C9A24B;--mbc-page:#F7F1E6;--mbc-fill:#F7F1E6;--mbc-fill-strong:color-mix(in srgb, var(--mbc-text) 9%, var(--mbc-surface));--mbc-soft:color-mix(in srgb, var(--mbc-primary) 12%, var(--mbc-surface));--mbc-hairline:color-mix(in srgb, var(--mbc-text) 12%, var(--mbc-surface));}.mfp.mfp-mbc.mfp-native-generated {background:transparent!important;border:0!important;padding:0!important;font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif}.mfp.mfp-mbc.mfp-native-generated {--mbc-primary:var(--mf-page-primary,var(--mf-preset-primary,#8C5333));--mbc-accent:var(--mf-page-accent,var(--mf-preset-accent,#B9714A));--mbc-surface:var(--mf-page-surface,var(--mf-preset-surface,#FFFDF8));--mbc-text:var(--mf-page-text,var(--mf-preset-text,#3A342C));--mbc-border:var(--mf-page-border,var(--mf-preset-border,#E4D9C4));--mbc-on-primary:var(--mf-page-on-primary,var(--mf-preset-on-primary,#FFFFFF));--mbc-page:var(--mf-preset-bg,#F7F1E6);}@container (max-width:520px){.mfp.mfp-mbc.mfp-native-generated [class*=\"-grid\"],.mfp.mfp-mbc.mfp-native-generated [class*=\"-meta\"],.mfp.mfp-mbc.mfp-native-generated [class*=\"-scores\"],.mfp.mfp-mbc.mfp-native-generated [class*=\"-charts\"],.mfp.mfp-mbc.mfp-native-generated [class*=\"-cols\"]{grid-template-columns:1fr!important}.mfp.mfp-mbc.mfp-native-generated [class*=\"-body\"],.mfp.mfp-mbc.mfp-native-generated [class*=\"-split\"],.mfp.mfp-mbc.mfp-native-generated [class*=\"-foot\"],.mfp.mfp-mbc.mfp-native-generated [class*=\"-head\"],.mfp.mfp-mbc.mfp-native-generated [class*=\"-row\"]{flex-wrap:wrap!important}.mfp.mfp-mbc.mfp-native-generated [class*=\"-aside\"],.mfp.mfp-mbc.mfp-native-generated [class*=\"-side\"]{flex:1 1 100%!important;width:100%!important;max-width:none!important}}.mfp.mfp-mbc.mfp-native-generated  img{max-width:100%!important;height:auto}.mfp.mfp-mbc.mfp-native-generated {overflow-wrap:break-word}\n\n/* The wrapper itself: strip the host's card, but NOT its width. Layout > Max width in the module\n   settings (480/640/768/960/Full) is a max-width on THIS element, and the previous version of this\n   rule overrode it with max-width:none!important - so picking 960 did nothing at all. */\n.mf-form-wrapper:has(.mfp-mbc){background:transparent!important;border:0!important;\n  border-radius:0!important;box-shadow:none!important;padding:0!important}\n/* The boxes INSIDE it have their own measures, and those are what squeezed the design. */\n.mf-form-wrapper:has(.mfp-mbc) > .mf-form-inner,\n.mf-form-wrapper:has(.mfp-mbc) .mf-form,\n.mf-form-wrapper:has(.mfp-mbc) .mf-fields-container{background:transparent!important;\n  border:0!important;border-radius:0!important;box-shadow:none!important;padding:0!important;\n  margin:0!important;max-width:none!important;width:100%!important}\n\n.mfp.mfp-mbc.mfp-native-generated {container-type:inline-size;font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif!important;color:var(--mbc-text)}\n.mfp.mfp-mbc.mfp-native-generated .mbc-page{padding:40px 0;background:var(--mbc-page)}\n.mfp.mfp-mbc.mfp-native-generated .mbc-shell{max-width:768px;margin:0 auto;padding:0 16px}\n\n.mfp.mfp-mbc.mfp-native-generated .mbc-card{position:relative;padding:32px;border:1px solid var(--mbc-border);border-radius:16px;\n  background:var(--mbc-surface);box-shadow:0 1px 2px 0 rgba(0,0,0,.05)}\n@container (min-width:640px){.mfp.mfp-mbc.mfp-native-generated .mbc-card{padding:48px}}\n.mfp.mfp-mbc.mfp-native-generated .mbc-logo{position:absolute;right:32px;top:32px;display:flex;flex-direction:column;\n  align-items:center;gap:4px;text-align:center}\n@container (min-width:640px){.mfp.mfp-mbc.mfp-native-generated .mbc-logo{right:48px;top:40px}}\n.mfp.mfp-mbc.mfp-native-generated .mbc-logo-ring{display:flex;align-items:center;justify-content:center;width:64px;height:64px;\n  border:1.5px solid #C9A24B;border-radius:9999px}\n.mfp.mfp-mbc.mfp-native-generated .mbc-logo-ico{display:block;width:24px;height:24px;\n  background:url(\"data:image/svg+xml,%3Csvg xmlns='http:%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox='0 0 24 24' fill='none' stroke='%23C9A24B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E %3Cpath d='M12 5a3 3 0 1 1 3 3m-3-3a3 3 0 1 0-3 3m3-3v1M9 8a3 3 0 1 0 3 3M9 8h1m5 0a3 3 0 1 1-3 3m3-3h-1m-2 3v-1'%2F%3E %3Ccircle cx='12' cy='8' r='2'%2F%3E%3Cpath d='M12 10v12'%2F%3E %3Cpath d='M12 22c4.2 0 7-1.667 7-5-4.2 0-7 1.667-7 5Z'%2F%3E %3Cpath d='M12 22c-4.2 0-7-1.667-7-5 4.2 0 7 1.667 7 5Z'%2F%3E%3C%2Fsvg%3E\") center/24px 24px no-repeat}\n.mfp.mfp-mbc.mfp-native-generated .mbc-logo-t{font-size:9px;line-height:1.5;font-weight:600;letter-spacing:.1em;\n  text-transform:uppercase;color:#8A8070}\n.mfp.mfp-mbc.mfp-native-generated .mbc-rule{margin-top:16px;height:1px;width:100%;background:var(--mbc-border)}\n.mfp.mfp-mbc.mfp-native-generated .mbc-field{display:block;margin:0}\n.mfp.mfp-mbc.mfp-native-generated .mbc-label{display:block;margin:0 0 4px;font-size:12px;line-height:1.5;font-weight:500;\n  color:#8A8070}\n\n/* underline controls ------------------------------------------------------ */\n.mfp.mfp-mbc.mfp-native-generated .mf-input[class],.mfp.mfp-mbc.mfp-native-generated .mf-select[class],.mfp.mfp-mbc.mfp-native-generated .mf-textarea[class]{width:100%!important;\n  box-sizing:border-box!important;border:0!important;border-bottom:1px solid var(--mbc-border)!important;\n  border-radius:0!important;background:transparent!important;padding:0 0 6px!important;\n  min-height:0!important;height:auto!important;color:var(--mbc-text)!important;font-family:inherit!important;\n  font-size:14px!important;line-height:20px!important;font-weight:400!important;\n  box-shadow:none!important}\n.mfp.mfp-mbc.mfp-native-generated .mf-input[class]:focus,.mfp.mfp-mbc.mfp-native-generated .mf-select[class]:focus,.mfp.mfp-mbc.mfp-native-generated .mf-textarea[class]:focus{\n  border-bottom-width:2px!important;outline:none!important;box-shadow:none!important}\n.mfp.mfp-mbc.mfp-native-generated .mf-input[class]::placeholder,.mfp.mfp-mbc.mfp-native-generated .mf-textarea[class]::placeholder{color:#BDB29A!important;\n  opacity:1}\n.mfp.mfp-mbc.mfp-native-generated .mf-textarea[class]{resize:none!important}\n/* The mock's controls are INLINE-BLOCK inside a 16px/24px block, so each sits on a line box whose\n   strut pushes it 3px below the label; megaform makes them block and closed that gap, walking\n   every row under the date 5px up the card. Both halves matter - inline-block with the wrong\n   line-height moves it the other way. */\n.mfp.mfp-mbc.mfp-native-generated .mf-field-group,.mfp.mfp-mbc.mfp-native-generated .mf-date-input-wrap{font-size:16px!important;line-height:24px!important}\n.mfp.mfp-mbc.mfp-native-generated .mf-input[class],.mfp.mfp-mbc.mfp-native-generated .mf-select[class],.mfp.mfp-mbc.mfp-native-generated .mf-textarea[class],.mfp.mfp-mbc.mfp-native-generated .mf-cal-trigger[class]{\n  display:inline-block!important;vertical-align:baseline!important}\n/* the mock's date field is native: ink text, black indicator, no button chrome */\n.mfp.mfp-mbc.mfp-native-generated .mbc-field .mf-cal.is-empty .mf-cal-value,.mfp.mfp-mbc.mfp-native-generated .mbc-field .mf-cal-value{\n  color:rgb(8,12,15)!important;padding-left:0;padding-right:24px}\n.mfp.mfp-mbc.mfp-native-generated .mbc-field .mf-cal .mf-date-icon{position:absolute!important;right:2px!important;\n  width:10px!important;height:12px!important;flex:0 0 10px!important;color:#000!important}\n.mfp.mfp-mbc.mfp-native-generated .mbc-field .mf-cal .mf-date-icon svg{width:10px!important;height:12px!important;\n  stroke-width:2!important}\n\n/* pill chips -------------------------------------------------------------- */\n.mfp.mfp-mbc.mfp-native-generated .mf-option-group--chips{display:flex;flex-wrap:wrap;gap:8px}\n.mfp.mfp-mbc.mfp-native-generated .mf-option-group--chips .mf-option-ui{display:block;gap:0;padding:6px 16px;\n  border:1px solid var(--mbc-border);border-radius:9999px;background:transparent;color:#8A8070;\n  font-size:12px;line-height:16px;font-weight:600;text-align:center;cursor:pointer;\n  transition:all .15s ease}\n.mfp.mfp-mbc.mfp-native-generated .mf-option-group--chips .mf-option-label{font-size:12px;line-height:16px;font-weight:600;\n  color:inherit}\n.mfp.mfp-mbc.mfp-native-generated .mf-option-group--chips .mf-option-item.is-selected .mf-option-ui,\n.mfp.mfp-mbc.mfp-native-generated .mf-option-group--chips input:checked+.mf-option-ui{background:var(--mbc-primary);border-color:var(--mbc-primary);\n  color:#fff}\n\n.mfp.mfp-mbc.mfp-native-generated h1.mbc-h1{margin:0!important;font-family:'Playfair Display',Georgia,'Times New Roman',serif!important;font-size:24px!important;\n  line-height:32px!important;font-weight:700!important;color:var(--mbc-primary)!important}\n@container (min-width:640px){.mfp.mfp-mbc.mfp-native-generated h1.mbc-h1{font-size:30px!important;line-height:36px!important}}\n.mfp.mfp-mbc.mfp-native-generated p.mbc-lede{margin:8px 0 0!important;font-size:14px!important;line-height:20px!important;\n  font-weight:400!important;color:#8A8070!important}\n.mfp.mfp-mbc.mfp-native-generated .mbc-charts{display:flex;justify-content:center;gap:64px;margin-top:32px}\n.mfp.mfp-mbc.mfp-native-generated .mbc-chart{display:flex;flex-direction:column;align-items:center;gap:8px}\n.mfp.mfp-mbc.mfp-native-generated .mbc-body{display:block;width:90px;height:200px;background:url(\"data:image/svg+xml,%3Csvg xmlns='http:%2F%2Fwww.w3.org%2F2000%2Fsvg' width='90' height='200' viewBox='0 0 90 200' fill='none'%3E %3Cellipse cx='45' cy='20' rx='14' ry='16' stroke='%23B9714A' stroke-width='1.5'%2F%3E %3Cpath d='M45 36 L45 60 M31 44 Q22 50 20 80 M59 44 Q68 50 70 80 M45 60 Q30 64 28 100 Q27 130 32 160 L38 196 M45 60 Q60 64 62 100 Q63 130 58 160 L52 196 M28 100 L20 80 M62 100 L70 80' stroke='%23B9714A' stroke-width='1.5' fill='none' stroke-linecap='round'%2F%3E %3Cpath d='M45 60 Q45 90 45 130' stroke='%23B9714A' stroke-width='1' stroke-dasharray='2 3'%2F%3E %3C%2Fsvg%3E\") center/90px 200px no-repeat}\n.mfp.mfp-mbc.mfp-native-generated .mbc-chart-t{font-size:11px;line-height:1.5;font-weight:600;letter-spacing:.1em;\n  text-transform:uppercase;color:#8A8070}\n.mfp.mfp-mbc.mfp-native-generated .mbc-stack{display:flex;flex-direction:column;gap:24px;margin-top:40px}\n.mfp.mfp-mbc.mfp-native-generated .mbc-split{display:flex;flex-direction:column;gap:12px}\n@container (min-width:640px){.mfp.mfp-mbc.mfp-native-generated .mbc-split{flex-direction:row;align-items:flex-start;gap:24px}\n.mfp.mfp-mbc.mfp-native-generated .mbc-split-a{width:50%}.mfp.mfp-mbc.mfp-native-generated .mbc-split-b{flex:1 1 0}}\n.mfp.mfp-mbc.mfp-native-generated p.mbc-consent{margin:0!important;font-size:11px!important;line-height:1.625!important;\n  font-weight:400!important;color:#8A8070!important}\n.mfp.mfp-mbc.mfp-native-generated .mbc-sign{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;\n  padding-top:16px}\n.mfp.mfp-mbc.mfp-native-generated .mbc-sign-a{flex:1 1 0}\n.mfp.mfp-mbc.mfp-native-generated .mbc-sign-b{flex:0 0 auto;text-align:right;font-size:12px;line-height:1.5;font-weight:400;\n  color:#8A8070}\n.mfp.mfp-mbc.mfp-native-generated .mbc-sign-d{font-weight:500;color:var(--mbc-text)}\n.mfp.mfp-mbc.mfp-native-generated .mbc-sign-a .mf-signature-field{display:flex;flex-direction:column;width:100%}\n.mfp.mfp-mbc.mfp-native-generated .mbc-sign-a .mf-signature-canvas-wrap{overflow:hidden;min-height:88px;border:0;\n  border-bottom:1px solid var(--mbc-accent);border-radius:0;background:transparent}\n.mfp.mfp-mbc.mfp-native-generated .mbc-sign-a canvas.mf-signature-canvas{display:block;width:100%;height:88px;\n  border:0;border-radius:0;background:transparent;touch-action:none}\n.mfp.mfp-mbc.mfp-native-generated .mbc-sign-a .mf-signature-placeholder{color:#8A8070;font-size:12px}\n.mfp.mfp-mbc.mfp-native-generated .mbc-sign-a .mf-signature-actions{display:flex;justify-content:flex-end;gap:6px;margin-top:5px}\n.mfp.mfp-mbc.mfp-native-generated .mbc-sign-a .mf-sig-clear,.mfp.mfp-mbc.mfp-native-generated .mbc-sign-a .mf-sig-undo{min-height:28px;padding:4px 8px;\n  border:1px solid var(--mbc-border);border-radius:9999px;background:var(--mbc-surface);color:#8A8070;\n  font:500 11px/18px 'Inter',system-ui,sans-serif;text-transform:none;box-shadow:none}\n\n/* megaform sets font-family on label/input/select/textarea with !important, so an authored\n   <span> inside a <label> inherits the HOST typeface no matter what the shell root declares.\n   Element selectors are (0,3,1) here - above megaform, below every authored class rule - and\n   <i> is left alone so Font Awesome keeps its own family. */\n.mfp.mfp-mbc.mfp-native-generated label,.mfp.mfp-mbc.mfp-native-generated span,.mfp.mfp-mbc.mfp-native-generated p,.mfp.mfp-mbc.mfp-native-generated div,.mfp.mfp-mbc.mfp-native-generated ul,.mfp.mfp-mbc.mfp-native-generated li,.mfp.mfp-mbc.mfp-native-generated h1,.mfp.mfp-mbc.mfp-native-generated h2,.mfp.mfp-mbc.mfp-native-generated h3,.mfp.mfp-mbc.mfp-native-generated button{font-family:inherit!important}\n.mfp.mfp-mbc.mfp-native-generated .mf-field-label{display:none!important}\n/* A wizard's page-break Section renders a visible heading the mock has no room for - it exists to\n   split the pages, not to be seen. */\n.mfp.mfp-mbc.mfp-native-generated .mf-section-break,.mfp.mfp-mbc.mfp-native-generated .mf-section-title{display:none!important}\n.mfp.mfp-mbc.mfp-native-generated .mf-field-group{margin:0!important;width:100%}\n.mfp.mfp-mbc.mfp-native-generated .mf-form-title,.mfp.mfp-mbc.mfp-native-generated .mf-form-description,.mfp.mfp-mbc.mfp-native-generated .mf-form-actions{display:none!important}\n.mfp.mfp-mbc.mfp-native-generated .mf-option-item{margin:0!important}\n/* megaform gives every option chip a 36px floor and paints .mf-option-icon as a rounded tile. */\n.mfp.mfp-mbc.mfp-native-generated .mf-option-group--chips .mf-option-check,\n.mfp.mfp-mbc.mfp-native-generated .mf-option-group--cards .mf-option-check{display:none!important}\n.mfp.mfp-mbc.mfp-native-generated .mf-option-group--chips .mf-option-ui{min-height:0!important;height:auto!important}\n.mfp.mfp-mbc.mfp-native-generated .mf-option-group--cards .mf-option-copy{display:block;width:100%}\n\n/* the yes/no row is the ONE chip set the mock pads 4px instead of 6px */\n.mfp.mfp-mbc.mfp-native-generated .mbc-split-a .mf-option-group--chips .mf-option-ui{padding:4px 16px}\n\n/* CTA -------------------------------------------------------------------- */\n.mfp.mfp-mbc.mfp-native-generated .mbc-cta{display:flex;justify-content:flex-end;margin-top:40px}\n.mfp.mfp-mbc.mfp-native-generated button.mbc-submit[type=\"submit\"]{display:inline-flex;align-items:center;gap:6px;\n  width:auto!important;padding:10px 28px!important;border:0!important;\n  border-radius:9999px!important;background:linear-gradient(135deg,var(--mbc-accent),var(--mbc-primary))!important;\n  color:#fff!important;font-family:inherit!important;font-size:14px!important;\n  line-height:20px!important;font-weight:600!important;letter-spacing:normal!important;\n  text-transform:none!important;cursor:pointer!important;box-shadow:none!important}\n.mfp.mfp-mbc.mfp-native-generated button.mbc-submit .mbc-chk{display:block;flex:0 0 16px;width:16px;height:16px;\n  background:url(\"data:image/svg+xml,%3Csvg xmlns='http:%2F%2Fwww.w3.org%2F2000%2Fsvg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'%2F%3E%3C%2Fsvg%3E\") center/16px 16px no-repeat}\n.mfp.mfp-mbc.mfp-native-generated button.mbc-submit.mf-nav-blocked,.mfp.mfp-mbc.mfp-native-generated button.mbc-submit[disabled]{opacity:.4!important;\n  background:linear-gradient(135deg,var(--mbc-accent),var(--mbc-primary))!important;cursor:not-allowed!important}\n.mfp.mfp-mbc.mfp-native-generated .mbc-page{padding:0!important;background:transparent!important;min-height:0!important}.mfp.mfp-mbc.mfp-native-generated .mbc-shell,.mfp.mfp-mbc.mfp-native-generated .mbc-wrap{max-width:none!important;margin:0!important}.mfp.mfp-mbc.mfp-native-generated .mbc-grid,.mfp.mfp-mbc.mfp-native-generated .mbc-main,.mfp.mfp-mbc.mfp-native-generated .mbc-hero-in,.mfp.mfp-mbc.mfp-native-generated .mbc-card{max-width:none!important;margin-left:0!important;margin-right:0!important}",
+    "themeSelector": false,
+    "premiumGeneratedShell": true,
+    "gateNavigationUntilValid": true,
+    "postSubmitExperience": {
+      "enabled": true,
+      "mode": "rich",
+      "title": "Session plan saved",
+      "message": "Signed by {{field:signature}}. Your therapist will review this before your treatment begins.",
+      "showSubmissionId": true,
+      "submissionIdLabel": "Reference:",
+      "showAnswerSummary": false,
+      "allowFillAgain": true,
+      "fillAgainLabel": "Submit another",
+      "doneLabel": "Done"
+    },
+    "themeCompatibility": {
+      "policy": "hybrid",
+      "supportsPageColors": false,
+      "supportsPageTypography": true,
+      "supportsDarkHost": true,
+      "prefixes": [
+        "mbc"
+      ],
+      "immutable": [
+        "primary",
+        "accent",
+        "deco"
+      ]
+    }
+  },
+  "fields": [
+    {
+      "placeholder": "e.g. lower back and shoulders",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "focus_area",
+      "type": "Textarea",
+      "label": "What area would you like to focus on today?",
+      "required": false
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Swedish / Relaxation",
+          "value": "Swedish / Relaxation"
+        },
+        {
+          "label": "Therapeutic / Deep Tissue",
+          "value": "Therapeutic / Deep Tissue"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "chips"
+      },
+      "key": "massage_type",
+      "type": "Radio",
+      "label": "What type of massage are you seeking today? *",
+      "required": true,
+      "optionDisplay": "chips",
+      "choiceDisplay": "chips",
+      "optionVariant": "chips",
+      "widgetProps": {
+        "optionDisplay": "chips"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Light",
+          "value": "Light"
+        },
+        {
+          "label": "Medium",
+          "value": "Medium"
+        },
+        {
+          "label": "Deep",
+          "value": "Deep"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "chips"
+      },
+      "key": "pressure",
+      "type": "Radio",
+      "label": "What pressure do you prefer? *",
+      "required": true,
+      "optionDisplay": "chips",
+      "choiceDisplay": "chips",
+      "optionVariant": "chips",
+      "widgetProps": {
+        "optionDisplay": "chips"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Yes",
+          "value": "Yes"
+        },
+        {
+          "label": "No",
+          "value": "No"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "chips"
+      },
+      "key": "avoid_areas",
+      "type": "Radio",
+      "label": "Any areas you would NOT like massaged? *",
+      "required": true,
+      "optionDisplay": "chips",
+      "choiceDisplay": "chips",
+      "optionVariant": "chips",
+      "widgetProps": {
+        "optionDisplay": "chips"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "e.g. recent knee surgery",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "avoid_explain",
+      "type": "Text",
+      "label": "If yes, please explain",
+      "required": false
+    },
+    {
+      "placeholder": "e.g. reduce tension and improve mobility",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "goals",
+      "type": "Textarea",
+      "label": "What are your goals for this treatment session?",
+      "required": false
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "signature",
+      "type": "Signature",
+      "label": "Signature *",
+      "required": true,
+      "widgetProps": {
+        "height": 88,
+        "placeholderText": "Sign here",
+        "clearText": "Clear",
+        "undoText": "Undo"
+      }
+    }
+  ],
+  "rules": [],
+  "workflow": {
+    "notifications": []
+  }
+}

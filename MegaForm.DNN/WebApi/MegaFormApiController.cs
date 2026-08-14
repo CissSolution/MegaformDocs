@@ -37,6 +37,15 @@ namespace MegaForm.WebApi
     {
         public void RegisterRoutes(IMapRoute mapRouteManager)
         {
+            // Same-origin relay for the keyless Ollama provider. This explicit route must precede
+            // the generic {controller}/{action}/{id} route because it has two trailing segments.
+            mapRouteManager.MapHttpRoute(
+                moduleFolderName: "MegaForm",
+                routeName: "MegaFormAiOllamaProxyChat",
+                url: "AiAssistant/OllamaProxy/chat/completions",
+                defaults: new { controller = "AiAssistant", action = "OllamaProxyChat" },
+                namespaces: new[] { "MegaForm.WebApi" }
+            );
             // Explicit routes for Upload/File (form submission uploads — AllowAnonymous)
             mapRouteManager.MapHttpRoute(
                 moduleFolderName: "MegaForm",
@@ -774,6 +783,38 @@ namespace MegaForm.WebApi
                 // CLI tools) so every persisted SchemaJson has a connection key when
                 // optionsSource=sql. Mirrors MegaForm.UI/src/builder/core.ts.
                 form.SchemaJson = NormalizeSchemaSqlConnDefault(form.SchemaJson);
+            }
+
+            // [AfterSubmitScript v20260813-01] The C# hook is host-only and never travels through
+            // this endpoint. Whatever the caller posted for settings.afterSubmitScript is discarded
+            // and the server's stored copy is put back, so an ordinary form save cannot introduce a
+            // script, edit one, or switch one off — not even by hand-crafting the payload. The only
+            // way in is FormScriptController, which checks IsSuperUser and writes the approval hash
+            // that AfterSubmitScriptGuard.IsRunnable demands at submit time.
+            if (form.FormId > 0)
+            {
+                var storedForm = FormRepository.GetForm(form.FormId);
+                if (storedForm != null)
+                {
+                    string preservedSchema, preservedSettings;
+                    MegaForm.Core.Services.AfterSubmitScriptStore.PreserveOnSave(
+                        form.SchemaJson, form.SettingsJson,
+                        storedForm.SchemaJson, storedForm.SettingsJson,
+                        out preservedSchema, out preservedSettings);
+                    form.SchemaJson = preservedSchema;
+                    form.SettingsJson = preservedSettings;
+                }
+            }
+            else
+            {
+                // A brand-new form cannot arrive with an approved script: there is no stored copy
+                // to preserve, so strip whatever came in. This is the import/template path.
+                string strippedSchema, strippedSettings;
+                MegaForm.Core.Services.AfterSubmitScriptStore.Write(
+                    form.SchemaJson, form.SettingsJson, null,
+                    out strippedSchema, out strippedSettings);
+                form.SchemaJson = strippedSchema;
+                form.SettingsJson = strippedSettings;
             }
 
             int formId = FormRepository.SaveForm(form);
@@ -2190,7 +2231,7 @@ VALUES
             var formsRepo = new DnnFormRepository();
             // The locator repo is the ExternalSubmissionRepository decorator — required for the
             // source routing above. For an ordinary form with source=auto it is a pure passthrough.
-            var service = new SubmissionQueryService(DnnServiceLocator.Instance.SubmissionRepo, formsRepo, new DnnFileRepository());
+            var service = new SubmissionQueryService(DnnServiceLocator.Instance.SubmissionRepo, formsRepo, new DnnFileRepository(), DnnServiceLocator.Instance.TypedStore);
             var hasBoundQuery = !string.IsNullOrWhiteSpace(queryKey);
             bool ownerOnlyScope = !isAdmin && !isPublicListView
                 && actor != null && actor.IsAuthenticated
@@ -2237,7 +2278,7 @@ VALUES
                     FormId = item.FormId,
                     UserId = item.UserId,
                     Status = item.Status,
-                    DataJson = item.DataJson
+                    DataJson = JsonConvert.SerializeObject(item.Data ?? new Dictionary<string, object>())
                 }, actor)).ToList();
                 var visibleTotal = visible.Count;
                 if (scopedPrefetch)
@@ -2278,7 +2319,7 @@ VALUES
                     }
                     if (schemas.TryGetValue(item.FormId, out var schema))
                     {
-                        var summary = MegaFormUtils.BuildSubmissionSummary(schema, item.DataJson ?? "{}", 200);
+                        var summary = MegaFormUtils.BuildSubmissionSummary(schema, JsonConvert.SerializeObject(item.Data ?? new Dictionary<string, object>()), 200);
                         if (!string.IsNullOrWhiteSpace(summary))
                             item.SummaryText = summary;
                     }
@@ -2291,7 +2332,21 @@ VALUES
             // and whether TotalCount is a floor rather than a fact (bounded count guard).
             return Request.CreateResponse(HttpStatusCode.OK, new
             {
-                items = result.Items,
+                items = (result.Items ?? new List<SubmissionListItem>()).Select(item => new
+                {
+                    item.SubmissionId,
+                    item.FormId,
+                    item.FormTitle,
+                    item.Status,
+                    item.IsSpam,
+                    item.SpamScore,
+                    item.SubmittedOnUtc,
+                    item.ReadOnUtc,
+                    item.UserId,
+                    item.IpAddress,
+                    item.SummaryText,
+                    data = item.Data ?? new Dictionary<string, object>()
+                }).ToList(),
                 totalCount = result.TotalCount,
                 pageIndex = result.PageIndex,
                 pageSize = result.PageSize,
@@ -2472,9 +2527,9 @@ VALUES
 
         private static JObject SubmissionData(SubmissionListItem item)
         {
-            if (item == null || string.IsNullOrWhiteSpace(item.DataJson))
+            if (item == null || item.Data == null || item.Data.Count == 0)
                 return new JObject();
-            try { return JObject.Parse(item.DataJson); }
+            try { return JObject.FromObject(item.Data); }
             catch { return new JObject(); }
         }
 
@@ -2523,7 +2578,7 @@ VALUES
         {
             // [SourcePickerDNN v20260717-01] Locator repo = ExternalSubmissionRepository decorator:
             // an ATBE anchor id resolves to the LIVE customer row; ordinary ids pass straight through.
-            var service = new SubmissionQueryService(DnnServiceLocator.Instance.SubmissionRepo, new DnnFormRepository(), new DnnFileRepository());
+            var service = new SubmissionQueryService(DnnServiceLocator.Instance.SubmissionRepo, new DnnFormRepository(), new DnnFileRepository(), DnnServiceLocator.Instance.TypedStore);
             var detail = service.GetDetail(submissionId);
             if (detail == null) return Request.CreateResponse(HttpStatusCode.NotFound);
             var actor = CurrentSubmissionUser;
@@ -2540,14 +2595,6 @@ VALUES
             // The detail-shell Data tab reads values keyed by field KEY (not
             // label), so also return `data` = parsed DataJson dictionary so the
             // shell can populate the editable inputs.
-            Dictionary<string, object> parsedData = null;
-            try
-            {
-                if (!string.IsNullOrWhiteSpace(detail.Submission?.DataJson))
-                    parsedData = JsonConvert.DeserializeObject<Dictionary<string, object>>(detail.Submission.DataJson);
-            }
-            catch { /* leave null on parse failure */ }
-
             return Request.CreateResponse(HttpStatusCode.OK, new
             {
                 submission = detail.Submission,
@@ -2555,7 +2602,7 @@ VALUES
                 schema = detail.Schema,
                 files = detail.Files,
                 values = detail.FlattenedValues,
-                data = parsedData ?? new Dictionary<string, object>(),
+                data = detail.Data ?? new Dictionary<string, object>(),
                 fieldSnapshots = detail.FieldSnapshots,
                 hasSnapshot = detail.HasSnapshot,
                 workflowDetail = detail.WorkflowDetail
@@ -2571,7 +2618,7 @@ VALUES
         public HttpResponseMessage Print(int submissionId)
         {
             // [SourcePickerDNN v20260717-01] Same decorator as Get — anchors print live data.
-            var service = new SubmissionQueryService(DnnServiceLocator.Instance.SubmissionRepo, new DnnFormRepository(), new DnnFileRepository());
+            var service = new SubmissionQueryService(DnnServiceLocator.Instance.SubmissionRepo, new DnnFormRepository(), new DnnFileRepository(), DnnServiceLocator.Instance.TypedStore);
             var detail = service.GetDetail(submissionId);
             if (detail == null) return Request.CreateResponse(HttpStatusCode.NotFound);
             var actor = CurrentSubmissionUser;

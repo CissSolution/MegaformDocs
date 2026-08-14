@@ -1,0 +1,665 @@
+@namespace MegaForm.Blogs.Client
+@inject MegaForm.Sdk.IMegaFormClient Mega
+
+@* MegaForm Blogs - edit an existing post.
+
+   The gap this closes: until now the console could CREATE a post and MOVE it between statuses,
+   and nothing else. A post saved with the wrong content_type, category or slug could not be
+   repaired at all — the only remedy was to write it again. See
+   CLAUDE_HANDOFF_20260730d, §2.
+
+   Two things make this screen different from AdminNewPost rather than a copy of it:
+
+   1. It renders EVERY editable field on the posts form, not just the required ones plus a
+      shortlist. Create keeps a short form on purpose; repair cannot, because the field that
+      needs fixing is by definition the one create did not offer.
+
+   2. It writes with Records.PatchRecordAsync, which merges over the record's existing typed
+      data — so fields this screen never renders (post_uid, the counters) survive untouched —
+      and which updates MF_Submissions.Status in the same operation whenever `status` is in the
+      patch. That is publish gate 2, closed for free on every save. AdminNewPost has to patch
+      the status back over itself after SubmitAsync to get the same effect.
+
+   The gate strip above the form exists because "Published but invisible" cost a whole session
+   to diagnose: it shows the three independent gates a post must clear, and flags the one
+   failure mode - typed status and master status disagreeing - that no other screen reveals. *@
+
+<section class="mfba-panel mfba-newpost">
+    <header class="mfba-panel-head">
+        <h2>@(IsNews ? "Edit article" : "Edit post")</h2>
+        <a class="mfba-panel-link" href="@(AdminBaseUrl + "?view=editorial")">Back to the board</a>
+    </header>
+
+    @if (_loading)
+    {
+        <div class="mfba-note">Loading the post…</div>
+    }
+    else if (_error != null)
+    {
+        <div class="mfba-note mfba-note-error">
+            <strong>@_error</strong>
+            <div class="mfba-newpost-actions">
+                <a class="mfba-btn-outline" href="@(AdminBaseUrl + "?view=editorial")">Back to the board</a>
+            </div>
+        </div>
+    }
+    else
+    {
+        @if (_message != null)
+        {
+            <div class="mfba-note @(_saved ? "mfba-note-ok" : "mfba-note-error")">
+                <strong>@_message</strong>
+                @if (_saved)
+                {
+                    <div class="mfba-newpost-actions">
+                        @if (PublicUrl.Length > 0)
+                        {
+                            <a class="mfba-btn" href="@PublicUrl" target="_blank" rel="noopener">View the post</a>
+                        }
+                        <a class="mfba-btn-outline" href="@(AdminBaseUrl + "?view=editorial")">Back to the board</a>
+                    </div>
+                }
+            </div>
+        }
+
+        @* The three gates, in the order a post has to clear them. Gate 2 is the one that used to
+           fail silently: SubmitAsync writes the typed field only, so a post created as published
+           could sit at in_review in the master column and never reach a public listing. *@
+        <div class="mfba-gates" aria-label="Publishing gates">
+            <div class="mfba-gate @(TypedStatus == "published" ? "on" : "")">
+                <span class="mfba-gate-n">1</span>
+                <div>
+                    <strong>Status</strong>
+                    <small>@BlogData.StatusLabel(TypedStatus)</small>
+                </div>
+            </div>
+            <div class="mfba-gate @(GatesAgree ? "on" : "warn")">
+                <span class="mfba-gate-n">2</span>
+                <div>
+                    <strong>Master column</strong>
+                    <small>@(_transport.Length == 0 ? "not set" : BlogData.StatusLabel(_transport))</small>
+                </div>
+            </div>
+            <div class="mfba-gate on">
+                <span class="mfba-gate-n">3</span>
+                <div>
+                    <strong>Content type</strong>
+                    <small>@(Value("content_type").Length == 0 ? "not set" : Value("content_type"))</small>
+                </div>
+            </div>
+        </div>
+
+        @* post_uid is the join key the read counter and the comment threads hang off, and the
+           server-side generator hands the same value to every post created through the console.
+           A duplicate is silent and its symptom is bizarre — several posts reporting one
+           another's read counts — so it is called out here, where a post gets repaired. *@
+        @if (_uidClash)
+        {
+            <div class="mfba-note mfba-note-error">
+                <strong>This post shares its ID with another post.</strong>
+                <span>
+                    <code>@_postUid</code> is used by more than one post. Read counts are
+                    totalled per ID, so every post sharing it reports the same number. Giving this
+                    post its own ID fixes that; it does not change the post's URL.
+                </span>
+                <div class="mfba-newpost-actions">
+                    <button type="button" class="mfba-btn" disabled="@_saving" @onclick="RepairUidAsync">
+                        Give this post its own ID
+                    </button>
+                </div>
+            </div>
+        }
+
+        @if (!GatesAgree)
+        {
+            <div class="mfba-note mfba-note-error">
+                <strong>This post is @BlogData.StatusLabel(TypedStatus) here but @BlogData.StatusLabel(_transport) to every public listing.</strong>
+                <span>The two statuses disagree. Saving this screen writes both, which repairs it.</span>
+            </div>
+        }
+        else if (TypedStatus == "published")
+        {
+            <div class="mfba-note">
+                <span>
+                    Published, and visible to any instance whose filters this post matches. A News
+                    instance shows <code>content_type = News</code> only; a Blog instance shows
+                    everything published.
+                </span>
+            </div>
+        }
+
+        <div class="mfba-newform">
+            @foreach (var field in _fields)
+            {
+                <div class="mfba-fld @(IsWide(field) ? "mfba-fld-wide" : "")">
+                    <label for="@("mfb-edit-" + field.Key)">
+                        @field.Label
+                        @if (field.Required)
+                        {
+                            <span class="mfba-req" aria-hidden="true">*</span>
+                        }
+                    </label>
+
+                    @if (HasOptions(field))
+                    {
+                        <select id="@("mfb-edit-" + field.Key)" value="@Value(field.Key)"
+                                @onchange="e => Set(field.Key, e.Value?.ToString())">
+                            <option value="">— choose —</option>
+                            @foreach (var option in field.Options)
+                            {
+                                <option value="@option.Value">@(string.IsNullOrWhiteSpace(option.Label) ? option.Value : option.Label)</option>
+                            }
+                            @* A stored value the schema no longer offers must stay selectable, or
+                               opening this screen and pressing Save would quietly erase it. *@
+                            @if (IsOrphanValue(field))
+                            {
+                                <option value="@Value(field.Key)">@Value(field.Key) (not in the current list)</option>
+                            }
+                        </select>
+                    }
+                    else if (IsMultiline(field))
+                    {
+                        <textarea id="@("mfb-edit-" + field.Key)" rows="@(field.Type == "RichText" ? 16 : 3)"
+                                  value="@Value(field.Key)"
+                                  @onchange="e => Set(field.Key, e.Value?.ToString())"></textarea>
+                    }
+                    else
+                    {
+                        <input id="@("mfb-edit-" + field.Key)" type="@InputType(field)"
+                               value="@Value(field.Key)"
+                               @onchange="e => Set(field.Key, e.Value?.ToString())" />
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(field.HelpText))
+                    {
+                        <small class="mfba-hint">@field.HelpText</small>
+                    }
+                    @if (_fieldErrors.ContainsKey(field.Key))
+                    {
+                        <small class="mfba-err">@_fieldErrors[field.Key]</small>
+                    }
+                </div>
+            }
+        </div>
+
+        <footer class="mfba-newform-foot">
+            <button type="button" class="mfba-btn" disabled="@_saving" @onclick="SaveAsync">
+                @(_saving ? "Saving…" : "Save changes")
+            </button>
+            <a class="mfba-btn-outline" href="@(AdminBaseUrl + "?view=editorial")">Cancel</a>
+            @if (PublicUrl.Length > 0)
+            {
+                <a class="mfba-panel-link" href="@PublicUrl" target="_blank" rel="noopener">
+                    @BlogData.Icon("eye", "mfba-icon mfba-icon-md") Preview
+                </a>
+            }
+            <span class="mfba-hint">Post #@SubmissionId</span>
+        </footer>
+    }
+</section>
+
+@code {
+    [Parameter] public MegaFormScope Scope { get; set; }
+    [Parameter] public string AdminBaseUrl { get; set; }
+    [Parameter] public string AppKey { get; set; } = BlogData.AppKey;
+    [Parameter] public bool IsNews { get; set; }
+
+    /// <summary>Which post to edit. Comes from ?id= on the console URL.</summary>
+    [Parameter] public int SubmissionId { get; set; }
+
+    /// <summary>
+    /// Builds the reader-facing URL for a slug. Supplied by the host because only it knows the
+    /// site's page list and this instance's slug convention. Null means "no public link".
+    /// </summary>
+    [Parameter] public Func<string, string> PostUrl { get; set; }
+
+    /// <summary>Server-generated or owned by another screen; never editable here.</summary>
+    private static readonly string[] NeverOffer =
+    {
+        "post_uid", "view_count", "unique_readers", "comment_count", "like_count",
+        "share_count", "recent_order"
+    };
+
+    private bool _loading = true;
+    private bool _saving;
+    private bool _saved;
+    private string _error;
+    private string _message;
+    private int _formId;
+    private int _loadedId = -1;
+    private string _transport = "";
+    private string _publicUrl = "";
+    private bool _uidClash;
+
+    /// <summary>Held separately: post_uid is never rendered as a field, but it must be shown.</summary>
+    private string _postUid = "";
+
+    private List<FormFieldInfo> _fields = new List<FormFieldInfo>();
+    private readonly Dictionary<string, string> _form =
+        new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, string> _original =
+        new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, string> _fieldErrors =
+        new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>Gate 1: the typed status field, which is what the kanban board moves.</summary>
+    private string TypedStatus
+    {
+        get
+        {
+            var value = Value("status").Trim().ToLowerInvariant().Replace(' ', '_');
+            return value.Length == 0 ? "draft" : value;
+        }
+    }
+
+    /// <summary>
+    /// Gate 2 agreeing with gate 1. They diverge when a record was written by SubmitAsync
+    /// without the reconcile patch — submission 107 is the reference case.
+    /// </summary>
+    private bool GatesAgree
+        => string.Equals(_transport, TypedStatus, StringComparison.OrdinalIgnoreCase);
+
+    private string PublicUrl => _publicUrl;
+
+    // The console can be re-rendered with a different ?id= without the component being
+    // recreated, so reload on parameter change rather than on first init only.
+    protected override async Task OnParametersSetAsync()
+    {
+        if (_loadedId == SubmissionId) return;
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        try
+        {
+            _loading = true;
+            _loadedId = SubmissionId;
+            _message = null;
+            _saved = false;
+            _fieldErrors.Clear();
+
+            if (SubmissionId <= 0)
+            {
+                _error = "No post was selected to edit.";
+                return;
+            }
+
+            // The named query result carries the posts form id. It is also the ownership gate
+            // below: a record from any other form is refused, so an arbitrary ?id= cannot be
+            // used to read or rewrite an unrelated submission through this screen.
+            var probe = await Mega.Queries.ExecuteAsync(AppKey, BlogData.PostsQuery,
+                new AppQueryRequest { Page = 1, PageSize = 1 }, Scope);
+            _formId = probe?.FormId ?? 0;
+            if (_formId <= 0)
+            {
+                _error = "The posts form for this app could not be found.";
+                return;
+            }
+
+            var record = await Mega.Records.GetRecordAsync(SubmissionId, Scope);
+            if (record == null)
+            {
+                _error = "That post no longer exists.";
+                return;
+            }
+            if (record.FormId != _formId)
+            {
+                _error = "That post does not belong to the Blog application.";
+                return;
+            }
+
+            var form = await Mega.Forms.GetFormAsync(_formId, Scope);
+            if (form == null)
+            {
+                _error = "The posts form could not be read.";
+                return;
+            }
+
+            // Everything editable, in the form's own order. Create filters this list down to the
+            // required fields plus a shortlist; repair must not, or the field that needs fixing
+            // is exactly the one that is missing.
+            var schema = Mega.Schema.ParseForm(form);
+            _fields = schema.Fields
+                .Where(f => f != null
+                            && !string.IsNullOrWhiteSpace(f.Key)
+                            && f.IsInputField
+                            && !f.Hidden
+                            && !f.ReadOnly
+                            && !NeverOffer.Contains(f.Key, StringComparer.OrdinalIgnoreCase))
+                .OrderBy(f => f.Order)
+                .ToList();
+
+            Seed(record);
+            _uidClash = await BlogData.IsPostUidTakenByAnotherAsync(
+                Mega, Scope, AppKey, _postUid, SubmissionId);
+            _error = null;
+        }
+        catch (Exception)
+        {
+            _error = "The post could not be opened. The site log has the details.";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    /// <summary>
+    /// Copy the record's typed values into the editor, formatted for the control that will show
+    /// them. This is not cosmetic: a Date stored as a DateTime renders as "30/07/2026 00:00:00",
+    /// which an &lt;input type="date"&gt; rejects — the control would come up blank and the next
+    /// save would clear a date the author never touched.
+    /// </summary>
+    private void Seed(AppRecordDto record)
+    {
+        _form.Clear();
+        _original.Clear();
+        _transport = (record.Status ?? "").Trim().ToLowerInvariant().Replace(' ', '_');
+        _postUid = BlogData.Text(record, "post_uid", "").Trim();
+
+        foreach (var field in _fields)
+        {
+            var raw = BlogData.Text(record, field.Key, "");
+            var value = FormatForInput(field, raw);
+            _form[field.Key] = value;
+            _original[field.Key] = value;
+        }
+
+        _publicUrl = BuildPublicUrl();
+    }
+
+    private string BuildPublicUrl()
+    {
+        var slug = Value("slug").Trim();
+        if (PostUrl == null || slug.Length == 0) return "";
+        try { return PostUrl(slug) ?? ""; }
+        catch (Exception) { return ""; }
+    }
+
+    private string FormatForInput(FormFieldInfo field, string raw)
+    {
+        var text = (raw ?? "").Trim();
+        if (text.Length == 0) return "";
+        if (HasOptions(field) || IsMultiline(field)) return text;
+
+        switch (field.Type)
+        {
+            case "Date":
+                return TryDate(text, out var date)
+                    ? date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) : text;
+            case "DateTime":
+                return TryDate(text, out var stamp)
+                    ? stamp.ToString("yyyy-MM-ddTHH:mm", CultureInfo.InvariantCulture) : text;
+            case "Number":
+            case "Currency":
+                return decimal.TryParse(text, NumberStyles.Any, CultureInfo.InvariantCulture, out var number)
+                    ? number.ToString(CultureInfo.InvariantCulture)
+                    : (decimal.TryParse(text, NumberStyles.Any, CultureInfo.CurrentCulture, out var local)
+                        ? local.ToString(CultureInfo.InvariantCulture) : text);
+            default:
+                return text;
+        }
+    }
+
+    private static bool TryDate(string text, out DateTime value)
+    {
+        if (DateTime.TryParse(text, CultureInfo.InvariantCulture,
+                DateTimeStyles.AdjustToUniversal | DateTimeStyles.AllowWhiteSpaces, out value))
+            return true;
+        return DateTime.TryParse(text, CultureInfo.CurrentCulture, DateTimeStyles.AllowWhiteSpaces, out value);
+    }
+
+    // ---- binding -----------------------------------------------------------------------------
+
+    private string Value(string key)
+        => _form.TryGetValue(key, out var value) ? value : "";
+
+    private void Set(string key, string value)
+    {
+        _form[key] = value ?? "";
+        _fieldErrors.Remove(key);
+
+        // Same convention the create screen and the seeded rows use.
+        if (string.Equals(key, "category", StringComparison.OrdinalIgnoreCase)
+            && _form.ContainsKey("category_uid"))
+            _form["category_uid"] = CategoryUid(value);
+
+        if (string.Equals(key, "slug", StringComparison.OrdinalIgnoreCase))
+            _publicUrl = BuildPublicUrl();
+    }
+
+    private static bool HasOptions(FormFieldInfo field)
+        => field.Options != null && field.Options.Count > 0;
+
+    private static bool IsMultiline(FormFieldInfo field)
+        => field.Type == "Textarea" || field.Type == "RichText";
+
+    private static bool IsWide(FormFieldInfo field)
+        => IsMultiline(field) || field.Key == "title";
+
+    /// <summary>A stored select value that is not among the schema's current options.</summary>
+    private bool IsOrphanValue(FormFieldInfo field)
+    {
+        var current = Value(field.Key);
+        return current.Length > 0
+               && !field.Options.Any(o => string.Equals(o.Value, current, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static string InputType(FormFieldInfo field)
+    {
+        switch (field.Type)
+        {
+            case "Email": return "email";
+            case "Date": return "date";
+            case "DateTime": return "datetime-local";
+            case "Number":
+            case "Currency": return "number";
+            case "Url": return "url";
+            default: return "text";
+        }
+    }
+
+    // ---- save --------------------------------------------------------------------------------
+
+    private async Task SaveAsync()
+    {
+        if (_saving) return;
+        _saving = true;
+        _message = null;
+        _saved = false;
+        _fieldErrors.Clear();
+
+        try
+        {
+            foreach (var field in _fields.Where(f => f.Required))
+            {
+                if (Value(field.Key).Trim().Length == 0)
+                    _fieldErrors[field.Key] = "Required.";
+            }
+            if (_fieldErrors.Count > 0)
+            {
+                _message = "Fill in the highlighted fields.";
+                return;
+            }
+
+            if (_form.ContainsKey("slug"))
+            {
+                var desired = Value("slug").Trim();
+                if (desired.Length == 0) desired = Value("title");
+
+                // public-posts is queried BY slug, so two posts sharing one makes the detail page
+                // ambiguous. Claim a free variant, ignoring this post's own row.
+                var slug = await ClaimSlugAsync(desired);
+                if (slug == null)
+                {
+                    _message = "That slug is already taken and a free variant could not be found.";
+                    _fieldErrors["slug"] = "Already in use.";
+                    return;
+                }
+                _form["slug"] = slug;
+            }
+
+            if (_form.ContainsKey("category_uid") && Value("category_uid").Length == 0)
+                _form["category_uid"] = CategoryUid(Value("category"));
+
+            // Send a field when it has a value, and when it has been deliberately CLEARED — an
+            // empty string is how a typed field is emptied (the normalizer writes no row for it).
+            // Fields this screen does not render are simply absent, and PatchRecordAsync merges
+            // over the record's existing data, so they keep whatever they already had.
+            var patch = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+            foreach (var field in _fields)
+            {
+                var value = Value(field.Key).Trim();
+                var before = _original.TryGetValue(field.Key, out var was) ? was : "";
+                if (value.Length == 0 && before.Length == 0) continue;
+                patch[field.Key] = value;
+            }
+            if (_form.ContainsKey("category_uid") && !patch.ContainsKey("category_uid"))
+                patch["category_uid"] = Value("category_uid").Trim();
+
+            if (patch.Count == 0)
+            {
+                _message = "Nothing to save.";
+                return;
+            }
+
+            // PatchRecordAsync updates MF_Submissions.Status in the same operation whenever
+            // `status` is present — which it always is here, because status is a rendered field.
+            // That is publish gate 2, closed on every save rather than only on create.
+            var updated = await Mega.Records.PatchRecordAsync(SubmissionId, patch, Scope);
+            if (updated == null)
+            {
+                _message = "The post could not be saved — it may have been deleted.";
+                return;
+            }
+
+            Seed(updated);
+            _saved = true;
+            _message = (IsNews ? "Article" : "Post") + " saved.";
+        }
+        catch (Exception)
+        {
+            _message = "The post could not be saved. The site log has the details.";
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    /// <summary>
+    /// Give this post an ID nothing else is using.
+    ///
+    /// Deliberately a separate, explicit action rather than something the save does quietly:
+    /// post_uid is what reader-events and comments are keyed to, so changing it moves this post's
+    /// history. For a post that is SHARING an id that history is wrong anyway — the counts it shows
+    /// belong to somebody else — so the repair is a net gain. It is never offered for a post whose
+    /// id is already unique.
+    /// </summary>
+    private async Task RepairUidAsync()
+    {
+        if (_saving) return;
+        _saving = true;
+        _message = null;
+        _saved = false;
+
+        try
+        {
+            var replacement = BlogData.DerivePostUid(SubmissionId);
+            var updated = await Mega.Records.PatchRecordAsync(SubmissionId,
+                new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["post_uid"] = replacement
+                }, Scope);
+
+            if (updated == null)
+            {
+                _message = "The ID could not be changed — the post may have been deleted.";
+                return;
+            }
+
+            Seed(updated);
+            _uidClash = await BlogData.IsPostUidTakenByAnotherAsync(
+                Mega, Scope, AppKey, _postUid, SubmissionId);
+            _saved = true;
+            _message = "This post now has its own ID (" + _postUid + "). Its read count will be "
+                     + "its own from the next rollup.";
+        }
+        catch (Exception)
+        {
+            _message = "The ID could not be changed. The site log has the details.";
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    /// <summary>
+    /// A slug no OTHER post is using, trying -2, -3, … Returns null when even the variants are
+    /// taken. Unlike the create screen this ignores the post being edited, so re-saving without
+    /// touching the slug does not rename it.
+    /// </summary>
+    private async Task<string> ClaimSlugAsync(string desired)
+    {
+        var root = Slugify(desired);
+        if (root.Length == 0) root = "post";
+
+        for (var attempt = 0; attempt < 25; attempt++)
+        {
+            var candidate = attempt == 0
+                ? root
+                : root + "-" + (attempt + 1).ToString(CultureInfo.InvariantCulture);
+            if (!await SlugTakenByAnotherAsync(candidate)) return candidate;
+        }
+        return null;
+    }
+
+    private async Task<bool> SlugTakenByAnotherAsync(string slug)
+    {
+        var request = new AppQueryRequest { Page = 1, PageSize = 5 };
+        request.Parameters["slug"] = slug;
+        // all-posts carries no status filter, so drafts and archived posts count as taken too.
+        var existing = await Mega.Queries.ExecuteAsync(AppKey, BlogData.PostsQuery, request, Scope);
+        var items = existing?.Items;
+        if (items == null || items.Count == 0) return false;
+        return items.Any(r => r.SubmissionId != SubmissionId);
+    }
+
+    private static string Slugify(string value)
+    {
+        var text = (value ?? "").Trim().ToLowerInvariant();
+        if (text.Length == 0) return "";
+        var builder = new System.Text.StringBuilder(text.Length);
+        var lastDash = false;
+        foreach (var ch in text)
+        {
+            if (char.IsLetterOrDigit(ch) && ch < 128)
+            {
+                builder.Append(ch);
+                lastDash = false;
+            }
+            else if (!lastDash && builder.Length > 0)
+            {
+                builder.Append('-');
+                lastDash = true;
+            }
+        }
+        var slug = builder.ToString().Trim('-');
+        return slug.Length > 120 ? slug.Substring(0, 120).Trim('-') : slug;
+    }
+
+    /// <summary>Matches the seeded convention: Design -> CAT-DESIGN, AI/ML -> CAT-AIML.</summary>
+    private static string CategoryUid(string category)
+    {
+        var text = (category ?? "").Trim().ToUpperInvariant();
+        if (text.Length == 0) return "";
+        var builder = new System.Text.StringBuilder(text.Length + 4);
+        foreach (var ch in text)
+        {
+            if (char.IsLetterOrDigit(ch) && ch < 128) builder.Append(ch);
+        }
+        return builder.Length == 0 ? "" : "CAT-" + builder.ToString();
+    }
+}

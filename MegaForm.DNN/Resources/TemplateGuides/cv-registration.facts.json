@@ -192,7 +192,7 @@
       "type": "Select",
       "label": "Duration (months)",
       "display": "choice",
-      "optionCount": 6,
+      "optionCount": 5,
       "step": null,
       "placeholder": "{{field:duration}}",
       "inCustomHtml": true,
@@ -201,13 +201,13 @@
     {
       "key": "start_month",
       "type": "Select",
-      "label": "Preferred start month",
+      "label": "Start month",
       "display": "choice",
       "optionCount": 12,
       "step": null,
       "placeholder": "{{field:start_month}}",
       "inCustomHtml": true,
-      "required": true
+      "required": false
     },
     {
       "key": "language_level",
@@ -233,19 +233,19 @@
     },
     {
       "key": "accommodation",
-      "type": "Radio",
-      "label": "Accommodation preference",
-      "display": "chips",
+      "type": "Select",
+      "label": "Accommodation",
+      "display": "choice",
       "optionCount": 4,
       "step": null,
       "placeholder": "{{field:accommodation}}",
       "inCustomHtml": true,
-      "required": true
+      "required": false
     },
     {
       "key": "scholarship",
       "type": "Checkbox",
-      "label": "Mobility grant",
+      "label": "Scholarship application",
       "display": "choice",
       "optionCount": 1,
       "step": null,
@@ -309,17 +309,9 @@
       "required": false
     }
   ],
-  "chipFields": [
-    "accommodation"
-  ],
+  "chipFields": [],
   "cardFields": [],
-  "chipSelectors": [
-    ".mfp-cv-registration .mfp-chip .mf-option-group",
-    ".mfp-cv-registration .mfp-chip .mf-option-item",
-    ".mfp-cv-registration .mfp-chip .mf-option-control",
-    ".mfp-cv-registration .mfp-chip .mf-option-ui",
-    ".mfp-cv-registration .mfp-chip .mf-option-label"
-  ],
+  "chipSelectors": [],
   "cardSelectors": [],
   "colorVars": {
     "--cvx-ink": "#2b2b2b",
@@ -337,11 +329,8 @@
   "formTokens": [],
   "shellTexts": [
     "Photo",
-    "Contact",
-    "Profile",
-    "Programme",
-    "Declaration",
     "&#9742;",
+    "Contact",
     "&#9733;",
     "Skills",
     "List your top skills",
@@ -350,21 +339,23 @@
     "&#9786;",
     "Personal Info",
     "&#9635;",
+    "Programme",
     "&#9998;",
     "Profile / Motivation",
     "&#10003;",
+    "Declaration",
     "&#8592; Back",
     "Submit Application &#8594;"
   ],
-  "cssClassCount": 47,
+  "cssClassCount": 48,
   "cssClasses": [
     "mfp",
     "mfp-cv-registration",
+    "mf-form-wrapper",
+    "mf-form-inner",
     "mfp-stage",
     "mfp-paper",
-    "mfp-scroll-nav",
     "mfp-body",
-    "mfp-section",
     "mfp-section-head",
     "mfp-section-icon",
     "mfp-row",
@@ -384,6 +375,7 @@
     "mf-option-ui",
     "mf-option-label",
     "mfp-check",
+    "mfp-consent-check",
     "mfp-actions",
     "mfp-btn",
     "mfp-hidden",
@@ -391,10 +383,10 @@
     "mf-form-description",
     "mf-success-message",
     "mf-form-actions",
-    "mf-form-wrapper",
-    "mf-form-inner",
-    "aperture-header",
-    "DnnModule",
+    "mf-custom-shell-mode",
+    "mf-custom-html-mode",
+    "mf-form",
+    "mf-fields-container",
     "mfp-header",
     "mfp-name",
     "mfp-job",
@@ -409,9 +401,9 @@
   "missingFieldPlaceholders": [],
   "orphanFieldPlaceholders": [],
   "hashes": {
-    "customCssSha256": "649fd402d5ac5529e16f44b584daa441e16eb706d02c6e691b5548d34e42745f",
-    "customHtmlSha256": "83d821fad522ef08abca6ef662cb5ae2688a77b23072b2b1e0a2b2b7a1c79d22",
-    "shellSha256": "47d657e9c90372594c66c5b4fc7d22d0ec9c70338e575c0815b5c9795ad7b26c"
+    "customCssSha256": "325fdeb30280ed100bbe9e00b2b4efeb019323e6369a2886502e0ae7ab42d411",
+    "customHtmlSha256": "38fbc9bd4bf06a77d86c912ed8444bf864fe8dacf908bb798796f36b976e6d8a",
+    "shellSha256": "3bdce11a53c47cb69046724a074b96b66042dc5bc56499c18ba1bbbd18eb7702"
   },
   "counts": {
     "fields": 27,

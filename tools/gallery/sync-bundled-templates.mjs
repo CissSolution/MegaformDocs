@@ -24,7 +24,7 @@ import { fileURLToPath } from 'node:url';
 const CHECK = process.argv.includes('--check');
 const REPO_ROOT = resolve(join(dirname(fileURLToPath(import.meta.url)), '..', '..'));
 const QUICKSTART = join(REPO_ROOT, 'Samples', 'FormTemplates', 'QuickStart');
-const PREMIUM_SRC = join(REPO_ROOT, 'Samples', 'FormTemplates', 'Premium', 'DONEE');
+const PREMIUM_SRC = join(REPO_ROOT, 'Samples', 'FormTemplates', 'Premium', 'GALLERY-PUBLISHED');
 const EXCLUDE_JSON = join(REPO_ROOT, 'tools', 'gallery', 'gallery-exclude.json');
 const OQTANE_OUT = join(REPO_ROOT, 'MegaForm.Oqtane.Server', 'wwwroot', 'Modules', 'MegaForm', 'Templates');
 

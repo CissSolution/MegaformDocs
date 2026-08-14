@@ -64,10 +64,39 @@ const rules = sqlcmdJson(`
 `);
 console.log('  ' + rules.length + ' rules');
 
+// ── [KbPerTemplate v20260812] keep gallery-served knowledge OUT of the seed ──
+// This script re-exports from a live DNN database, which still holds every row it ever
+// received — including the template knowledge that now travels with the template from the
+// gallery. Without this filter the next export silently puts it all back, and the package
+// quietly regains ~1.2 MB of rows that are supposed to be downloaded, not shipped.
+// The rule is the same one tools/gallery/strip-seed-kb.mjs applies; kbSlugs is generated
+// by tools/gallery/build-gallery.mjs from what it actually published.
+const EXCLUDE = path.resolve(__dirname, '../../tools/gallery/gallery-exclude.json');
+let dropped = 0;
+let keptEntries = entries;
+if (fs.existsSync(EXCLUDE)) {
+  const kbSlugs = (JSON.parse(fs.readFileSync(EXCLUDE, 'utf8')).kbSlugs || []).map((s) => String(s).toLowerCase());
+  const served = new Set(kbSlugs.filter((s) => s.startsWith('gallery-')).map((s) => s.slice('gallery-'.length)));
+  const wanted = new Set(kbSlugs);
+  keptEntries = entries.filter((e) => {
+    const slug = String(e.Slug || '').toLowerCase();
+    const kind = String(e.Kind || '');
+    if (kind !== 'form_template' && kind !== 'template_guide') return true;
+    if (wanted.has(slug)) return false;
+    if (kind === 'form_template' && slug.startsWith('tpl-') && served.has(slug.slice(4))) return false;
+    return true;
+  });
+  dropped = entries.length - keptEntries.length;
+  console.log('  ' + dropped + ' entries excluded — served by the gallery per template');
+} else {
+  console.log('  ! gallery-exclude.json not found — exporting EVERYTHING, including knowledge '
+    + 'that is supposed to ship from the gallery. Run tools/gallery/build-gallery.mjs first.');
+}
+
 const payload = {
   exportedOnUtc: new Date().toISOString(),
   schemaVersion: 1,
-  entries,
+  entries: keptEntries,
   templates,
   rules,
 };

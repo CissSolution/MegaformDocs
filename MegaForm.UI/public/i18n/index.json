@@ -170,12 +170,6 @@
       "bundled": false
     },
     {
-      "code": "ru-RU",
-      "name": "Russian",
-      "nativeName": "Русский",
-      "bundled": false
-    },
-    {
       "code": "sk-SK",
       "name": "Slovak",
       "nativeName": "Slovenčina",
@@ -218,10 +212,11 @@
       "bundled": false
     },
     {
-      "code": "vi-VN",
-      "name": "Vietnamese",
-      "nativeName": "Tiếng Việt",
-      "bundled": false
+      "code": "ur-PK",
+      "name": "Urdu",
+      "nativeName": "اردو",
+      "bundled": false,
+      "rtl": true
     },
     {
       "code": "zh-CN",

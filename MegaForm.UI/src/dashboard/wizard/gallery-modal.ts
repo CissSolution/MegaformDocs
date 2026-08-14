@@ -13,6 +13,8 @@ import { WizardTemplate, templatesState, loadTemplates, resetTemplates, wizardTe
 import { RemoteTemplate, loadRemoteTemplates, loadRemoteTemplateDoc, installRemoteTemplate, resetRemoteCache } from './remote-gallery';
 import { buildTemplateThumbnail, openTemplatePreview, ensurePreviewCss, fitThumbFrames } from './gallery-preview';
 
+const GALLERY_PAGE_SIZE = 12;
+
 // Saturated card-thumbnail gradients per category (mirrors the builder gallery) — the
 // translucent live-thumbnail skeleton reads cleanly over a saturated backdrop.
 const THUMB_GRADIENTS: Record<string, string> = {
@@ -71,6 +73,10 @@ function ensureGalleryCss(): void {
   .mfwg-import{display:inline-flex;align-items:center;gap:8px;height:38px;padding:0 16px;border:1px dashed #c7d2fe;border-radius:10px;background:#fff;color:#4338ca;font-weight:700;font-size:13px;cursor:pointer}
   .mfwg-import:hover{background:#eef2ff}
   .mfwg-ft .mfwg-hint{font-size:12px;color:#94a3b8}
+  .mfwg-pager{margin-left:auto;display:flex;align-items:center;gap:7px;white-space:nowrap}
+  .mfwg-pager span{min-width:96px;text-align:right;color:#64748b;font-size:11px;font-weight:600}
+  .mfwg-pager button{width:32px;height:32px;padding:0;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#475569;cursor:pointer}
+  .mfwg-pager button:disabled{opacity:.38;cursor:not-allowed}
   /* [GalleryRepo v20260724] source switch (Installed | Online gallery) */
   .mfwg-sources{padding-bottom:0;border-bottom:0;gap:8px}
   .mfwg-source{display:inline-flex;align-items:center;gap:7px;padding:6px 15px;font-weight:700}
@@ -117,6 +123,7 @@ export function openWizardGallery(onPick: (t: WizardTemplate) => void, onImport:
   // online catalog. Sharing the grid means the online source inherits category chips,
   // search, live thumbnails and the preview modal instead of being a bare list.
   let source: 'installed' | 'online' = 'installed';
+  let pageIndex = 0;
   let remote: RemoteTemplate[] = [];
   let remoteState: 'idle' | 'loading' | 'ok' | 'trial' | 'error' = 'idle';
   let remoteOffline = false;
@@ -128,6 +135,7 @@ export function openWizardGallery(onPick: (t: WizardTemplate) => void, onImport:
   const grid = h('div', { class: 'mfwg-grid' });
   const cats = h('div', { class: 'mfwg-cats' });
   const sourceTabs = h('div', { class: 'mfwg-cats mfwg-sources' });
+  const pageBar = h('div', { class: 'mfwg-pager', 'data-page-size': String(GALLERY_PAGE_SIZE) });
   const searchInput = h('input', { type: 'text', placeholder: wt('wiz.gallery.search_ph', 'Search templates…'), 'aria-label': wt('wiz.gallery.search_ph', 'Search templates…') }) as HTMLInputElement;
 
   const ov = h('div', { class: 'mfwg-ov', id: 'mfw-gallery-ov' }, [
@@ -144,6 +152,7 @@ export function openWizardGallery(onPick: (t: WizardTemplate) => void, onImport:
       h('div', { class: 'mfwg-ft' }, [
         h('button', { class: 'mfwg-import', onclick: () => openImportJson((t) => { close(); onImport(t); }) }, [icon('fa-file-arrow-up'), document.createTextNode(wt('wiz.gallery.import', 'Import JSON'))]),
         h('span', { class: 'mfwg-hint' }, wt('wiz.gallery.import_hint', 'Upload a MegaForm export (.json) to start from it, or pick a template above.')),
+        pageBar,
       ]),
     ]),
   ]);
@@ -159,7 +168,7 @@ export function openWizardGallery(onPick: (t: WizardTemplate) => void, onImport:
         class: 'mfwg-cat mfwg-source' + (source === key ? ' on' : ''),
         onclick: () => {
           if (source === key) return;
-          source = key; activeCat = 'all';
+          source = key; activeCat = 'all'; pageIndex = 0;
           renderSources(); renderCats(); renderGrid();
           if (key === 'online' && remoteState === 'idle') fetchRemote();
         },
@@ -177,7 +186,7 @@ export function openWizardGallery(onPick: (t: WizardTemplate) => void, onImport:
 
   function fetchRemote(): void {
     remoteState = 'loading'; renderGrid();
-    loadRemoteTemplates().then((res) => {
+    loadRemoteTemplates(true).then((res) => {
       if (!res.ok && res.trial) { remoteState = 'trial'; }   // legacy server: whole listing gated
       else if (!res.ok) { remoteState = 'error'; }
       else { remoteState = 'ok'; remote = res.templates; remoteOffline = !!res.offline; remoteBrowseOnly = !!res.trial; }
@@ -191,7 +200,7 @@ export function openWizardGallery(onPick: (t: WizardTemplate) => void, onImport:
       : Array.from(new Set(templatesState().list.map((t) => (t.category || 'general').toLowerCase())));
     cats.innerHTML = '';
     ['all', ...uniq.sort()].forEach((c) => {
-      cats.appendChild(h('button', { class: 'mfwg-cat' + (activeCat === c ? ' on' : ''), onclick: () => { activeCat = c; renderCats(); renderGrid(); } }, c === 'all' ? wt('wiz.gallery.all', 'All templates') : catLabel(c)));
+      cats.appendChild(h('button', { class: 'mfwg-cat' + (activeCat === c ? ' on' : ''), onclick: () => { activeCat = c; pageIndex = 0; renderCats(); renderGrid(); } }, c === 'all' ? wt('wiz.gallery.all', 'All templates') : catLabel(c)));
     });
   }
 
@@ -295,6 +304,16 @@ export function openWizardGallery(onPick: (t: WizardTemplate) => void, onImport:
   function renderGrid(): void {
     const st = templatesState();
     grid.innerHTML = '';
+    pageBar.innerHTML = '';
+
+    const renderPager = (total: number): void => {
+      const pages = Math.max(1, Math.ceil(total / GALLERY_PAGE_SIZE));
+      pageIndex = Math.min(Math.max(0, pageIndex), pages - 1);
+      const go = (next: number): void => { pageIndex = next; renderGrid(); };
+      pageBar.appendChild(h('span', null, wt('form.page_of', 'Page {current} of {total}', { current: pageIndex + 1, total: pages })));
+      pageBar.appendChild(h('button', { type: 'button', disabled: pageIndex === 0 ? '' : null, title: wt('form.previous', 'Previous'), 'aria-label': wt('form.previous', 'Previous'), onclick: () => go(pageIndex - 1) }, [icon('fa-chevron-left')]));
+      pageBar.appendChild(h('button', { type: 'button', disabled: pageIndex >= pages - 1 ? '' : null, title: wt('form.next', 'Next'), 'aria-label': wt('form.next', 'Next'), onclick: () => go(pageIndex + 1) }, [icon('fa-chevron-right')]));
+    };
 
     if (source === 'online') {
       const note = (msg: string, spin?: boolean) => grid.appendChild(h('div', { class: 'mfwg-empty' }, spin ? [icon('fa-spinner fa-spin'), document.createTextNode(' ' + msg)] : msg));
@@ -309,7 +328,8 @@ export function openWizardGallery(onPick: (t: WizardTemplate) => void, onImport:
         return true;
       });
       if (!ritems.length) { note(wt('wiz.gallery.no_match', 'No templates match your search.')); return; }
-      ritems.forEach((t) => grid.appendChild(renderOnlineCard(t)));
+      renderPager(ritems.length);
+      ritems.slice(pageIndex * GALLERY_PAGE_SIZE, (pageIndex + 1) * GALLERY_PAGE_SIZE).forEach((t) => grid.appendChild(renderOnlineCard(t)));
       return;
     }
 
@@ -322,8 +342,9 @@ export function openWizardGallery(onPick: (t: WizardTemplate) => void, onImport:
       return true;
     });
     if (!items.length) { grid.appendChild(h('div', { class: 'mfwg-empty' }, wt('wiz.gallery.no_match', 'No templates match your search.'))); return; }
+    renderPager(items.length);
     const previewLabel = wt('wiz.gallery.preview', 'Preview');
-    items.forEach((t) => {
+    items.slice(pageIndex * GALLERY_PAGE_SIZE, (pageIndex + 1) * GALLERY_PAGE_SIZE).forEach((t) => {
       // [TrialTighten v20260706] Premium templates are locked in trial: dim + lock badge, and clicking
       // opens the Upgrade CTA instead of applying/previewing the template.
       const locked = isTrialMode() && (t as any).isPremium;
@@ -364,7 +385,7 @@ export function openWizardGallery(onPick: (t: WizardTemplate) => void, onImport:
     fitThumbFrames(grid);
   }
 
-  searchInput.addEventListener('input', () => { query = searchInput.value; renderGrid(); });
+  searchInput.addEventListener('input', () => { query = searchInput.value; pageIndex = 0; renderGrid(); });
   document.body.appendChild(ov);
   renderSources(); renderCats(); renderGrid();
   // Ensure the catalog is loading; repaint when it lands.

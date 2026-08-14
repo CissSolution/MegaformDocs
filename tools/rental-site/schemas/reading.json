@@ -1,0 +1,221 @@
+{
+  "version": "1.0",
+  "fields": [
+    {
+      "key": "room_code",
+      "type": "Text",
+      "label": "Room code (Mã phòng)",
+      "order": 1,
+      "required": true,
+      "pageIndex": 0,
+      "placeholder": "TB01-0203",
+      "helpText": "FOREIGN KEY. Must repeat the parent room record's Room code exactly.",
+      "validation": {
+        "minLength": 2,
+        "maxLength": 40,
+        "pattern": "^[A-Z0-9][A-Z0-9_.-]{1,39}$",
+        "patternMessage": "Must match an existing room code, e.g. TB01-0203."
+      }
+    },
+    {
+      "key": "reading_month",
+      "type": "Date",
+      "label": "Reading month (Tháng chốt chỉ số)",
+      "order": 2,
+      "required": true,
+      "pageIndex": 0,
+      "helpText": "Use the first day of the billing month, e.g. 2026-07-01."
+    },
+    {
+      "key": "period",
+      "type": "Number",
+      "label": "Period YYYYMM (Kỳ, dạng YYYYMM)",
+      "order": 3,
+      "required": true,
+      "pageIndex": 0,
+      "placeholder": "202607",
+      "helpText": "Sortable numeric month, e.g. 202607. Required because the relation reader orders children by when the row was TYPED, not by the month it belongs to.",
+      "validation": {
+        "min": 200001,
+        "max": 209912
+      }
+    },
+    {
+      "key": "elec_previous",
+      "type": "Number",
+      "label": "Electricity previous reading (Chỉ số điện cũ)",
+      "order": 4,
+      "required": true,
+      "pageIndex": 0,
+      "validation": {
+        "min": 0,
+        "max": 1000000
+      }
+    },
+    {
+      "key": "elec_current",
+      "type": "Number",
+      "label": "Electricity current reading (Chỉ số điện mới)",
+      "order": 5,
+      "required": true,
+      "pageIndex": 0,
+      "validation": {
+        "min": 0,
+        "max": 1000000
+      }
+    },
+    {
+      "key": "elec_unit_price",
+      "type": "Number",
+      "label": "Electricity unit price, VND/kWh (Đơn giá điện, VNĐ/kWh)",
+      "order": 6,
+      "required": false,
+      "pageIndex": 0,
+      "defaultValue": "3500",
+      "validation": {
+        "min": 0,
+        "max": 100000
+      }
+    },
+    {
+      "key": "water_previous",
+      "type": "Number",
+      "label": "Water previous reading (Chỉ số nước cũ)",
+      "order": 7,
+      "required": true,
+      "pageIndex": 0,
+      "validation": {
+        "min": 0,
+        "max": 1000000
+      }
+    },
+    {
+      "key": "water_current",
+      "type": "Number",
+      "label": "Water current reading (Chỉ số nước mới)",
+      "order": 8,
+      "required": true,
+      "pageIndex": 0,
+      "validation": {
+        "min": 0,
+        "max": 1000000
+      }
+    },
+    {
+      "key": "water_unit_price",
+      "type": "Number",
+      "label": "Water unit price, VND/m3 (Đơn giá nước, VNĐ/m³)",
+      "order": 9,
+      "required": false,
+      "pageIndex": 0,
+      "defaultValue": "15000",
+      "validation": {
+        "min": 0,
+        "max": 200000
+      }
+    },
+    {
+      "key": "other_charges",
+      "type": "Number",
+      "label": "Other charges, VND (Chi phí khác, VNĐ)",
+      "order": 10,
+      "required": false,
+      "pageIndex": 0,
+      "defaultValue": "0",
+      "validation": {
+        "min": 0,
+        "max": 100000000
+      }
+    },
+    {
+      "key": "total_amount",
+      "type": "Number",
+      "label": "Total amount, VND (Tổng tiền, VNĐ)",
+      "order": 11,
+      "required": true,
+      "pageIndex": 0,
+      "helpText": "Denormalised total so the month can be filtered and summed without recomputing.",
+      "validation": {
+        "min": 0,
+        "max": 500000000
+      }
+    },
+    {
+      "key": "paid",
+      "type": "Select",
+      "label": "Paid (Đã thanh toán)",
+      "order": 12,
+      "required": false,
+      "pageIndex": 0,
+      "options": [
+        {
+          "label": "Yes (Có)",
+          "value": "yes"
+        },
+        {
+          "label": "No (Không)",
+          "value": "no"
+        }
+      ],
+      "defaultValue": "no"
+    },
+    {
+      "key": "note",
+      "type": "Textarea",
+      "label": "Note (Ghi chú)",
+      "order": 13,
+      "required": false,
+      "pageIndex": 0,
+      "rows": 4,
+      "validation": {
+        "maxLength": 2000
+      }
+    },
+    {
+      "key": "demo_marker",
+      "type": "Hidden",
+      "label": "Demo marker (Dấu dữ liệu demo)",
+      "order": 14,
+      "required": false,
+      "pageIndex": 0,
+      "defaultValue": "DEMO-RENTAL-2026",
+      "helpText": "Seed marker. All rows carrying DEMO-RENTAL-2026 are fictional demo data and can be bulk-deleted."
+    }
+  ],
+  "pages": null,
+  "settings": {
+    "multiPage": false,
+    "layoutMode": "flow",
+    "displayOnly": false,
+    "hideHeader": false,
+    "showProgressBar": false,
+    "showPageTitles": false,
+    "honeypotFieldName": "__mf_hp",
+    "rateLimitWindowMinutes": 1,
+    "rateLimitMaxPerWindow": 2000,
+    "enableAnalytics": false,
+    "labelPosition": "top",
+    "formWidth": "100%",
+    "submitButtonText": "Save reading (Lưu chỉ số)",
+    "theme": "default",
+    "defaultLanguage": "en",
+    "supportedLanguages": [
+      "en",
+      "vi-VN"
+    ],
+    "postSubmitExperience": {
+      "enabled": true,
+      "mode": "rich",
+      "title": "Saved",
+      "message": "The record has been saved.",
+      "showSubmissionId": true,
+      "submissionIdLabel": "Record ID",
+      "showAnswerSummary": false,
+      "allowFillAgain": true,
+      "fillAgainLabel": "Add another record",
+      "reviewBeforeSubmit": false,
+      "buttons": []
+    }
+  },
+  "customScripts": {}
+}

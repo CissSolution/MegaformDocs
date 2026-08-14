@@ -654,6 +654,26 @@ namespace MegaForm.Core.Models
         /// </summary>
         [JsonProperty("cloudStorage")]
         public FormCloudStorageSettings CloudStorage { get; set; }
+
+        /// <summary>
+        /// [AfterSubmitScript v20260813-01] Optional C# hook that runs after the submission
+        /// is committed. Host/superuser authoring only, and inert without a matching approval
+        /// record — see MegaForm.Core.Services.AfterSubmitScriptGuard for why the approval
+        /// lives in the data rather than only in the endpoint. Server-only block: stripped
+        /// from public schema payloads by FormSchemaSensitivePropertyStripper, because the
+        /// source is server code and must never reach a public form's HTML.
+        /// </summary>
+        [JsonProperty("afterSubmitScript")]
+        public FormAfterSubmitScriptSettings AfterSubmitScript { get; set; }
+
+        /// <summary>
+        /// [Automation v2 20260813-01] Per-stage automation scripts (PreValidate / PreInsert /
+        /// PostCommit / AsyncWorker). Same host-only authoring and same approval-hash rule as
+        /// <see cref="AfterSubmitScript"/>, which remains as the PostCommit alias for forms
+        /// configured before the stages existed. Server-only: stripped from public payloads.
+        /// </summary>
+        [JsonProperty("automation")]
+        public FormAutomationSettings Automation { get; set; }
     }
 
     /// <summary>

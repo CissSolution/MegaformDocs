@@ -1,0 +1,221 @@
+{
+  "version": "1.0",
+  "slug": "verdant-member-registration",
+  "title": "Verdant Member Registration",
+  "description": "Botanical three-step member registration with profile, preferences, consent, and review.",
+  "category": "registration",
+  "categories": [
+    "registration",
+    "premium"
+  ],
+  "icon": "user-plus",
+  "theme": "system",
+  "templateGuideSlug": "tpl-verdant-member-registration",
+  "submitButtonText": "Create profile",
+  "successMessage": "Welcome to Verdant. Your member profile has been created.",
+  "fields": [
+    {
+      "key": "step_details",
+      "type": "Section",
+      "label": "Your details",
+      "pageBreak": true,
+      "stepLabel": "Details",
+      "stepSubtitle": "Step 1 of 3",
+      "heading": "Tell us about you",
+      "intro": "Fill in your basic details to get started.",
+      "properties": {
+        "pageBreak": false,
+        "premiumNativeStep": true,
+        "generatedPremiumStep": true,
+        "premiumStepIndex": 1,
+        "legacyDataStep": 0
+      }
+    },
+    {
+      "key": "first_name",
+      "type": "Text",
+      "label": "First name",
+      "placeholder": "Emma",
+      "required": true
+    },
+    {
+      "key": "last_name",
+      "type": "Text",
+      "label": "Last name",
+      "placeholder": "Clarke",
+      "required": true
+    },
+    {
+      "key": "email",
+      "type": "Email",
+      "label": "Email",
+      "placeholder": "you@example.com",
+      "required": true
+    },
+    {
+      "key": "company",
+      "type": "Text",
+      "label": "Company (optional)",
+      "placeholder": "Your company"
+    },
+    {
+      "key": "step_preferences",
+      "type": "Section",
+      "label": "Preferences",
+      "pageBreak": true,
+      "stepLabel": "Preferences",
+      "stepSubtitle": "Step 2 of 3",
+      "heading": "Your preferences",
+      "intro": "Tell us how to tailor your member experience.",
+      "properties": {
+        "pageBreak": true,
+        "premiumNativeStep": true,
+        "generatedPremiumStep": true,
+        "premiumStepIndex": 2,
+        "legacyDataStep": 1
+      }
+    },
+    {
+      "key": "phone",
+      "type": "Phone",
+      "label": "Phone",
+      "placeholder": "+1 (555) 000-0000",
+      "required": true
+    },
+    {
+      "key": "member_role",
+      "type": "Select",
+      "label": "Member role",
+      "required": true,
+      "options": [
+        {
+          "label": "Individual",
+          "value": "individual"
+        },
+        {
+          "label": "Team lead",
+          "value": "team-lead"
+        },
+        {
+          "label": "Organization admin",
+          "value": "organization-admin"
+        }
+      ]
+    },
+    {
+      "key": "preferred_contact",
+      "type": "Radio",
+      "label": "Preferred contact",
+      "required": true,
+      "options": [
+        {
+          "label": "Email",
+          "value": "email"
+        },
+        {
+          "label": "Phone",
+          "value": "phone"
+        },
+        {
+          "label": "Either",
+          "value": "either"
+        }
+      ],
+      "optionDisplay": "chips",
+      "choiceDisplay": "chips",
+      "optionVariant": "chips",
+      "optionColumns": 3,
+      "properties": {
+        "optionDisplay": "chips",
+        "optionColumns": 3
+      },
+      "widgetProps": {
+        "optionDisplay": "chips",
+        "optionColumns": 3
+      }
+    },
+    {
+      "key": "community_updates",
+      "type": "Checkbox",
+      "label": "Community updates",
+      "options": [
+        {
+          "label": "Send me occasional community and product updates",
+          "value": "yes"
+        }
+      ]
+    },
+    {
+      "key": "agree_terms",
+      "type": "Checkbox",
+      "label": "Terms and privacy",
+      "required": true,
+      "options": [
+        {
+          "label": "I agree to the Terms of Service and Privacy Policy",
+          "value": "accepted"
+        }
+      ]
+    },
+    {
+      "key": "step_review",
+      "type": "Section",
+      "label": "Review",
+      "pageBreak": true,
+      "stepLabel": "Review",
+      "stepSubtitle": "Step 3 of 3",
+      "heading": "You're all set",
+      "intro": "Confirm your registration.",
+      "properties": {
+        "pageBreak": true,
+        "premiumNativeStep": true,
+        "generatedPremiumStep": true,
+        "premiumStepIndex": 3,
+        "legacyDataStep": 2
+      }
+    },
+    {
+      "key": "utm_source",
+      "type": "Hidden",
+      "label": "UTM source"
+    },
+    {
+      "key": "utm_campaign",
+      "type": "Hidden",
+      "label": "UTM campaign"
+    }
+  ],
+  "settings": {
+    "multiPage": true,
+    "premiumNativePageBreak": true,
+    "premiumGeneratedShell": true,
+    "premiumNativeMigrationBadge": "form-builder-controls-10/verdant-registration",
+    "showProgressBar": true,
+    "themeSelector": {
+      "enabled": false
+    },
+    "customHtml": "<div class=\"mfp mfp-verdant-member-registration mfp-native-generated\" data-mf-flexgrid=\"locked\">\n  <div class=\"mfp-stage\">\n    <div class=\"mfp-card\">\n      <aside class=\"mfp-hero\">\n        <div class=\"mfp-hero-image\" role=\"img\" aria-label=\"Every great journey begins with a single step forward.\"></div>\n        <div class=\"mfp-hero-overlay\"></div>\n        <div class=\"mfp-brand\"><span class=\"mfp-brand-mark\">V</span><span class=\"mfp-brand-name\">VERDANT</span></div>\n        <div class=\"mfp-hero-copy\">\n          <h2 class=\"mfp-hero-title\">Every great journey begins with a single step forward.</h2>\n          <p class=\"mfp-hero-sub\">Join a community built for growth.</p>\n          <div class=\"mfp-hero-rule\" aria-hidden=\"true\"></div>\n        </div>\n      </aside>\n      <section class=\"mfp-form-pane\">\n        <span class=\"mfp-back-label\" aria-hidden=\"true\">&#8592; Back to Forms</span>\n        <nav aria-label=\"Registration progress\">\n          <ol class=\"mfp-progress-steps\">\n            <li class=\"mfp-progress-step is-active\" data-step=\"0\" data-mf-native-step=\"0\"><span>1</span></li>\n            <li class=\"mfp-progress-step\" data-step=\"1\" data-mf-native-step=\"1\"><span>2</span></li>\n            <li class=\"mfp-progress-step\" data-step=\"2\" data-mf-native-step=\"2\"><span>3</span></li>\n          </ol>\n        </nav>\n        <div class=\"mfp-progress-bar\" role=\"progressbar\" aria-valuemin=\"1\" aria-valuemax=\"3\" aria-valuenow=\"1\"><span class=\"mfp-progress-fill\"></span></div>\n        <section class=\"mfp-page mfp-step is-active\" data-step=\"0\" data-mf-native-page=\"0\">\n          <header class=\"mfp-page-head\">\n            <p class=\"mfp-eyebrow\">Create profile &#8212; Step 1 of 3</p>\n            <h1 class=\"mfp-form-title\">Tell us about you</h1>\n            <p class=\"mfp-form-subtitle\">Fill in your basic details to get started.</p>\n          </header>\n          <div class=\"mfp-stack\">\n            <div class=\"mfp-field-row\"><div>{{field:first_name}}</div><div>{{field:last_name}}</div></div>\n            {{field:email}}\n            {{field:company}}\n          </div>\n          <div class=\"mfp-actions\"><button type=\"button\" class=\"mfp-btn mfp-btn-primary mfp-btn-next\" data-mfp-next data-mf-native-next>Continue <span aria-hidden=\"true\">&#8594;</span></button></div>\n        </section>\n        <section class=\"mfp-page mfp-step\" data-step=\"1\" data-mf-native-page=\"1\">\n          <header class=\"mfp-page-head\">\n            <p class=\"mfp-eyebrow\">Create profile &#8212; Step 2 of 3</p>\n            <h2 class=\"mfp-form-title\">Your preferences</h2>\n            <p class=\"mfp-form-subtitle\">Tell us how to tailor your member experience.</p>\n          </header>\n          <div class=\"mfp-stack\">\n            <div class=\"mfp-field-row\"><div>{{field:phone}}</div><div>{{field:member_role}}</div></div>\n            <div class=\"mfp-chip-field\">{{field:preferred_contact}}</div>\n            <div class=\"mfp-check-field\">{{field:community_updates}}</div>\n            <div class=\"mfp-check-field\">{{field:agree_terms}}</div>\n          </div>\n          <div class=\"mfp-actions\">\n            <button type=\"button\" class=\"mfp-btn mfp-btn-secondary mfp-btn-back\" data-mfp-back data-mf-native-back>&#8592; Back</button>\n            <button type=\"button\" class=\"mfp-btn mfp-btn-primary mfp-btn-next\" data-mfp-next data-mf-native-next>Review <span aria-hidden=\"true\">&#8594;</span></button>\n          </div>\n        </section>\n        <section class=\"mfp-page mfp-step\" data-step=\"2\" data-mf-native-page=\"2\">\n          <header class=\"mfp-page-head\">\n            <p class=\"mfp-eyebrow\">Create profile &#8212; Step 3 of 3</p>\n            <h2 class=\"mfp-form-title\">You're all set</h2>\n            <p class=\"mfp-form-subtitle\">Confirm your registration and begin your Verdant journey.</p>\n          </header>\n          <div class=\"mfp-review-card\">\n            <h3>Ready to grow with us?</h3>\n            <p>Your profile details and communication preferences are ready to submit. You can return to the previous step if anything needs changing.</p>\n          </div>\n          <div class=\"mfp-hidden-fields\">{{field:utm_source}}{{field:utm_campaign}}</div>\n          <div class=\"mfp-actions\">\n            <button type=\"button\" class=\"mfp-btn mfp-btn-secondary mfp-btn-back\" data-mfp-back data-mf-native-back>&#8592; Back</button>\n            <button type=\"submit\" class=\"mfp-btn mfp-btn-primary mfp-btn-submit\" data-mf-native-submit>Create profile <span aria-hidden=\"true\">&#8594;</span></button>\n          </div>\n        </section>\n        <p class=\"mfp-footnote\">Already a member? Sign in through your site's secure login.</p>\n      </section>\n    </div>\n  </div>\n</div>",
+    "customCss": "/* MegaForm Gen-3 split-photo shell. Scope: .mfp.mfp-verdant-member-registration */\n.mfp.mfp-verdant-member-registration{\n  --vd-bg:#0d1a12;\n  --vd-card:var(--mf-page-surface,var(--mf-preset-surface,#f9f6f0));\n  --vd-ink:var(--mf-page-text,var(--mf-preset-text,#1a2018));\n  --vd-heading:var(--mf-page-heading,var(--mf-preset-text,#1a2018));\n  --vd-muted:var(--mf-page-muted,color-mix(in srgb,var(--vd-ink) 58%,transparent));\n  --vd-line:var(--mf-page-border,var(--mf-preset-border,#e2ddd4));\n  --vd-input:var(--mf-page-input-bg,var(--mf-preset-surface,#ffffff));\n  --vd-primary:var(--mf-page-primary,var(--mf-preset-primary,#3d7a4a));\n  --vd-primary-hover:color-mix(in srgb,var(--vd-primary) 82%,#000000);\n  --vd-soft:color-mix(in srgb,var(--vd-primary) 10%,var(--vd-card));\n  --vd-on-primary:var(--mf-preset-on-primary,#ffffff);\n  --vd-error:#c0392b;\n  --vd-font:var(--mf-page-font-family,Inter,system-ui,-apple-system,\"Segoe UI\",Roboto,sans-serif);\n  --vd-display:Georgia,\"Times New Roman\",serif;\n  width:100%;\n  max-width:1152px;\n  margin:0 auto;\n  color:var(--vd-ink);\n  font-family:var(--vd-font);\n}\n.mfp.mfp-verdant-member-registration,.mfp.mfp-verdant-member-registration *,.mfp.mfp-verdant-member-registration *::before,.mfp.mfp-verdant-member-registration *::after{box-sizing:border-box}\n.mfp-verdant-member-registration .mfp-stage{width:100%;padding:32px;border-radius:24px;background:var(--vd-bg)}\n.mfp-verdant-member-registration .mfp-card{\n  display:grid;\n  grid-template-columns:minmax(280px,5fr) minmax(430px,7fr);\n  width:min(100%,896px);\n  min-height:650px;\n  margin:0 auto;\n  overflow:hidden;\n  border:1px solid color-mix(in srgb,var(--vd-line) 62%,transparent);\n  border-radius:24px;\n  background:var(--vd-card);\n  box-shadow:0 32px 80px rgba(0,0,0,.48);\n}\n.mfp-verdant-member-registration .mfp-hero{position:relative;min-height:100%;overflow:hidden;color:#ffffff}\n.mfp-verdant-member-registration .mfp-hero-image{\n  position:absolute;\n  inset:0;\n  background-image:url('/Modules/MegaForm/img/verdant-member-registration/hero.jpg');\n  background-position:center;\n  background-size:cover;\n}\n.DnnModule .mfp-verdant-member-registration .mfp-hero-image{background-image:url('/DesktopModules/MegaForm/Assets/img/verdant-member-registration/hero.jpg')}\n.mfp-verdant-member-registration .mfp-hero-overlay{\n  position:absolute;\n  inset:0;\n  background:linear-gradient(160deg,rgba(10,10,10,.68) 0%,rgba(10,10,10,.20) 54%,color-mix(in srgb,var(--vd-primary) 18%,transparent) 100%);\n}\n.mfp-verdant-member-registration .mfp-brand{position:absolute;z-index:2;top:32px;left:32px;display:flex;align-items:center;gap:10px}\n.mfp-verdant-member-registration .mfp-brand-mark{\n  display:grid;\n  place-items:center;\n  width:32px;\n  height:32px;\n  border-radius:8px;\n  background:var(--vd-primary);\n  color:#ffffff;\n  font-size:14px;\n  font-weight:800;\n}\n.mfp-verdant-member-registration .mfp-brand-name{color:#ffffff;font-size:13px;font-weight:800;letter-spacing:.16em}\n.mfp-verdant-member-registration .mfp-hero-copy{position:absolute;z-index:2;right:0;bottom:0;left:0;padding:40px}\n.mfp-verdant-member-registration .mfp-hero-title{\n  max-width:13ch;\n  margin:0;\n  color:#ffffff;\n  font-family:var(--vd-display);\n  font-size:clamp(26px,3vw,34px);\n  font-weight:700;\n  line-height:1.22;\n}\n.mfp-verdant-member-registration .mfp-hero-sub{margin:14px 0 0;color:rgba(255,255,255,.72);font-size:14px;line-height:1.55}\n.mfp-verdant-member-registration .mfp-hero-rule{width:40px;height:2px;margin-top:20px;border-radius:999px;background:var(--vd-primary)}\n.mfp-verdant-member-registration .mfp-form-pane{display:flex;min-width:0;flex-direction:column;justify-content:center;padding:44px 48px;background:var(--vd-card)}\n.mfp-verdant-member-registration .mfp-back-label{display:inline-flex;align-items:center;gap:7px;margin:0 0 28px;color:var(--vd-muted);font-size:12px;font-weight:600}\n.mfp-verdant-member-registration .mfp-eyebrow{margin:0 0 7px;color:var(--vd-primary);font-size:10px;font-weight:800;letter-spacing:.34em;text-transform:uppercase}\n.mfp-verdant-member-registration .mfp-form-title{margin:0;color:var(--vd-heading);font-family:var(--vd-display);font-size:clamp(32px,4vw,42px);font-weight:700;line-height:1.08}\n.mfp-verdant-member-registration .mfp-form-subtitle{max-width:46ch;margin:10px 0 28px;color:var(--vd-muted);font-size:14px;line-height:1.6}\n.mfp-verdant-member-registration .mfp-stack{display:grid;gap:16px}\n.mfp-verdant-member-registration .mfp-field-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}\n.mfp-verdant-member-registration .mf-field-group{min-width:0;margin:0}\n.mfp-verdant-member-registration .mf-field-label{display:block;margin:0 0 7px;color:var(--vd-heading);font-size:12px;font-weight:800;letter-spacing:.035em;text-transform:uppercase}\n.mfp-verdant-member-registration .mf-required{color:var(--vd-error)}\n.mfp-verdant-member-registration .mf-input,.mfp-verdant-member-registration .mf-select,.mfp-verdant-member-registration .mf-textarea,\n.mfp-verdant-member-registration input:not([type='checkbox']):not([type='radio']),.mfp-verdant-member-registration select,.mfp-verdant-member-registration textarea{\n  width:100%!important;\n  min-height:46px!important;\n  padding:11px 15px!important;\n  border:1px solid var(--vd-line)!important;\n  border-radius:12px!important;\n  outline:0!important;\n  background:var(--vd-input)!important;\n  color:var(--vd-ink)!important;\n  box-shadow:none!important;\n  font:inherit!important;\n  font-size:14px!important;\n  transition:border-color .16s ease,box-shadow .16s ease!important;\n}\n.mfp-verdant-member-registration .mf-textarea,.mfp-verdant-member-registration textarea{min-height:106px!important;resize:vertical!important}\n.mfp-verdant-member-registration .mf-input:focus,.mfp-verdant-member-registration .mf-select:focus,.mfp-verdant-member-registration .mf-textarea:focus,\n.mfp-verdant-member-registration input:focus,.mfp-verdant-member-registration select:focus,.mfp-verdant-member-registration textarea:focus{\n  border-color:var(--vd-primary)!important;\n  box-shadow:0 0 0 3px color-mix(in srgb,var(--vd-primary) 16%,transparent)!important;\n}\n.mfp-verdant-member-registration input::placeholder,.mfp-verdant-member-registration textarea::placeholder{color:color-mix(in srgb,var(--vd-muted) 56%,transparent)}\n.mfp-verdant-member-registration .mf-field-help,.mfp-verdant-member-registration .mf-field-error{margin-top:5px;font-size:12px;line-height:1.4}\n.mfp-verdant-member-registration .mf-field-error{color:var(--vd-error)}\n.mfp-verdant-member-registration .mfp-chip-field .mf-option-group{display:flex!important;flex-wrap:wrap!important;gap:8px!important;grid-template-columns:none!important}\n.mfp-verdant-member-registration .mfp-chip-field .mf-option-item{display:inline-flex!important;width:auto!important;margin:0!important;padding:0!important}\n.mfp-verdant-member-registration .mfp-chip-field .mf-option-control{position:absolute!important;width:1px!important;height:1px!important;opacity:0!important;clip-path:inset(50%)!important}\n.mfp-verdant-member-registration .mfp-chip-field .mf-option-ui{\n  display:inline-flex!important;\n  align-items:center!important;\n  min-height:32px!important;\n  padding:7px 13px!important;\n  border:1px solid var(--vd-line)!important;\n  border-radius:999px!important;\n  background:var(--vd-input)!important;\n  color:var(--vd-muted)!important;\n  box-shadow:none!important;\n  transition:all .16s ease!important;\n}\n.mfp-verdant-member-registration .mfp-chip-field .mf-option-label{color:inherit!important;font-size:12px!important;font-weight:600!important}\n.mfp-verdant-member-registration .mfp-chip-field .mf-option-control:checked + .mf-option-ui{border-color:var(--vd-primary)!important;background:var(--vd-soft)!important;color:var(--vd-primary)!important}\n.mfp-verdant-member-registration .mfp-chip-field .mf-option-control:focus-visible + .mf-option-ui{outline:2px solid var(--vd-primary)!important;outline-offset:2px!important}\n.mfp-verdant-member-registration .mfp-check-field .mf-option-group{display:block!important}\n.mfp-verdant-member-registration .mfp-check-field .mf-option-item{display:flex!important;align-items:flex-start!important;gap:10px!important;margin:0!important;padding:0!important}\n.mfp-verdant-member-registration .mfp-check-field .mf-option-control{position:static!important;width:17px!important;height:17px!important;margin:3px 0 0!important;accent-color:var(--vd-primary)!important;opacity:1!important}\n.mfp-verdant-member-registration .mfp-check-field .mf-option-ui{display:block!important;padding:0!important;border:0!important;background:transparent!important;color:var(--vd-muted)!important}\n.mfp-verdant-member-registration .mfp-check-field .mf-option-label{color:inherit!important;font-size:14px!important;line-height:1.55!important}\n.mfp-verdant-member-registration .mfp-actions{display:flex;align-items:center;gap:12px;margin-top:22px}\n.mfp-verdant-member-registration .mfp-btn{\n  display:inline-flex;\n  min-height:48px;\n  align-items:center;\n  justify-content:center;\n  gap:10px;\n  border:1px solid transparent;\n  border-radius:12px;\n  padding:12px 22px;\n  font:inherit;\n  font-size:14px;\n  font-weight:800;\n  text-decoration:none;\n  cursor:pointer;\n  transition:transform .12s ease,background .16s ease,border-color .16s ease,opacity .16s ease;\n}\n.mfp-verdant-member-registration .mfp-btn:hover{transform:translateY(-1px)}\n.mfp-verdant-member-registration .mfp-btn-primary{flex:1;background:var(--vd-ink);color:var(--vd-on-primary)}\n.mfp-verdant-member-registration .mfp-btn-primary:hover{background:color-mix(in srgb,var(--vd-ink) 86%,var(--vd-primary))}\n.mfp-verdant-member-registration .mfp-btn-secondary{border-color:var(--vd-line);background:transparent;color:var(--vd-muted)}\n.mfp-verdant-member-registration .mfp-divider{display:flex;align-items:center;gap:12px;margin:18px 0;color:var(--vd-muted);font-size:12px}\n.mfp-verdant-member-registration .mfp-divider::before,.mfp-verdant-member-registration .mfp-divider::after{content:\"\";height:1px;flex:1;background:var(--vd-line)}\n.mfp-verdant-member-registration .mfp-provider-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}\n.mfp-verdant-member-registration .mfp-provider{border-color:var(--vd-line);background:transparent;color:var(--vd-ink)}\n.mfp-verdant-member-registration .mfp-provider:hover{border-color:var(--vd-primary);color:var(--vd-primary)}\n.mfp-verdant-member-registration .mfp-footnote{margin:24px 0 0;text-align:center;color:var(--vd-muted);font-size:14px}\n.mfp-verdant-member-registration .mfp-footnote a{color:var(--vd-primary);font-weight:800;text-decoration:none}\n.mfp-verdant-member-registration .mfp-hidden-fields{display:none!important}\n.mfp-verdant-member-registration .mf-form-title,.mfp-verdant-member-registration .mf-form-description,.mfp-verdant-member-registration .mf-success-message,.mfp-verdant-member-registration .mf-form-actions{display:none!important}\n.mf-form-wrapper:has(.mfp-verdant-member-registration)>.mf-form-inner{width:100%!important;max-width:1152px!important}\n.mf-form-wrapper:has(.mfp-verdant-member-registration) .mf-form-actions{display:none!important}\n@media(max-width:760px){\n  .mfp-verdant-member-registration .mfp-stage{padding:14px}\n  .mfp-verdant-member-registration .mfp-card{grid-template-columns:1fr;min-height:0;border-radius:20px}\n  .mfp-verdant-member-registration .mfp-hero{min-height:190px}\n  .mfp-verdant-member-registration .mfp-brand{top:20px;left:20px}\n  .mfp-verdant-member-registration .mfp-hero-copy{display:none}\n  .mfp-verdant-member-registration .mfp-form-pane{padding:28px 24px 32px}\n  .mfp-verdant-member-registration .mfp-back-label{margin-bottom:22px}\n}\n@media(max-width:520px){\n  .mfp-verdant-member-registration .mfp-stage{padding:0;border-radius:20px}\n  .mfp-verdant-member-registration .mfp-field-row,.mfp-verdant-member-registration .mfp-provider-row{grid-template-columns:1fr}\n  .mfp-verdant-member-registration .mfp-form-pane{padding:26px 20px 30px}\n  .mfp-verdant-member-registration .mfp-form-title{font-size:32px}\n  .mfp-verdant-member-registration .mfp-actions{align-items:stretch;flex-direction:column-reverse}\n  .mfp-verdant-member-registration .mfp-btn{width:100%}\n}\n\n.mfp-verdant-member-registration .mfp-progress-steps{display:flex;align-items:center;margin:0 0 28px;padding:0;list-style:none}\n.mfp-verdant-member-registration .mfp-progress-step{position:relative;display:flex;flex:1;align-items:center}\n.mfp-verdant-member-registration .mfp-progress-step:last-child{flex:0}\n.mfp-verdant-member-registration .mfp-progress-step::after{content:\"\";height:2px;flex:1;margin:0 7px;background:var(--vd-line)}\n.mfp-verdant-member-registration .mfp-progress-step:last-child::after{display:none}\n.mfp-verdant-member-registration .mfp-progress-step span{display:grid;width:28px;height:28px;place-items:center;border-radius:999px;background:var(--vd-line);color:var(--vd-muted);font-size:12px;font-weight:800}\n.mfp-verdant-member-registration .mfp-progress-step.is-active span,.mfp-verdant-member-registration .mfp-progress-step.is-done span{background:var(--vd-primary);color:var(--vd-on-primary)}\n.mfp-verdant-member-registration .mfp-progress-step.is-done::after{background:var(--vd-primary)}\n.mfp-verdant-member-registration .mfp-page{display:none!important}\n.mfp-verdant-member-registration .mfp-page.is-active{display:block!important}\n.mfp-verdant-member-registration .mfp-page-head{margin-bottom:24px}\n.mfp-verdant-member-registration .mfp-page-head .mfp-form-subtitle{margin-bottom:0}\n.mfp-verdant-member-registration .mfp-review-card{padding:24px;border:1px solid var(--vd-line);border-radius:16px;background:var(--vd-soft)}\n.mfp-verdant-member-registration .mfp-review-card h3{margin:0;color:var(--vd-heading);font-family:var(--vd-display);font-size:24px}\n.mfp-verdant-member-registration .mfp-review-card p{margin:8px 0 0;color:var(--vd-muted);font-size:14px;line-height:1.6}\n",
+    "customScripts": {},
+    "themeCompatibility": {
+      "policy": "hybrid",
+      "supportsPageColors": true,
+      "supportsPageTypography": true,
+      "supportsDarkHost": true,
+      "prefixes": [
+        "vd"
+      ],
+      "immutable": [
+        "verdant botanical hero image",
+        "forest-green stage",
+        "white hero typography",
+        "--vd-error semantic red #c0392b"
+      ]
+    }
+  },
+  "rules": [],
+  "workflow": {
+    "notifications": []
+  },
+  "manifestVersion": 2
+}

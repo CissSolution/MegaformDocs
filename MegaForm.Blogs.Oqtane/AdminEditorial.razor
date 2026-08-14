@@ -72,11 +72,31 @@ else
                             var author = BlogData.Text(post, "author_name", "MegaForm Editorial");
                             <article class="mfba-kcard @(_dragging == id ? "drag" : "")" draggable="true"
                                      @ondragstart="() => _dragging = id" @ondragend="() => _dragging = 0">
+                                @{
+                                    var slug = BlogData.Text(post, "slug", "");
+                                    var publicUrl = PublicUrl(slug);
+                                }
                                 <div class="mfba-kcard-top">
                                     <div>
                                         @BlogData.Icon("grip", "mfba-icon mfba-icon-md")
                                         <span class="mfba-pdot @BlogData.PriorityClass(post)"
                                               title="@BlogData.Text(post, "editorial_priority", "Normal") priority"></span>
+                                    </div>
+                                    @* draggable="false" on both: an anchor is natively draggable, and
+                                       without this, grabbing one starts a LINK drag instead of the
+                                       card drag the board listens for. *@
+                                    <div class="mfba-kacts">
+                                        <a class="mfba-iconbtn" draggable="false" title="Edit this post"
+                                           href="@(AdminBaseUrl + "?view=edit&id=" + id.ToString(CultureInfo.InvariantCulture))">
+                                            @BlogData.Icon("pencil", "mfba-icon mfba-icon-md")
+                                        </a>
+                                        @if (publicUrl.Length > 0)
+                                        {
+                                            <a class="mfba-iconbtn" draggable="false" title="Preview the post"
+                                               href="@publicUrl" target="_blank" rel="noopener">
+                                                @BlogData.Icon("eye", "mfba-icon mfba-icon-md")
+                                            </a>
+                                        }
                                     </div>
                                 </div>
                                 @if (!string.IsNullOrWhiteSpace(image))
@@ -143,6 +163,16 @@ else
     /// <summary>Which MegaForm app to manage. Follows the instance's AppKey setting.</summary>
     [Parameter] public string AppKey { get; set; } = BlogData.AppKey;
 
+    /// <summary>Slug -&gt; reader-facing URL, supplied by the host. Null means no preview links.</summary>
+    [Parameter] public Func<string, string> PostUrl { get; set; }
+
+    private string PublicUrl(string slug)
+    {
+        if (PostUrl == null || string.IsNullOrWhiteSpace(slug)) return "";
+        try { return PostUrl(slug) ?? ""; }
+        catch (Exception) { return ""; }
+    }
+
     private bool _loading = true;
     private string _error;
     private string _message;
@@ -174,9 +204,11 @@ else
                 .Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(a => a).ToList();
             _error = null;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            _error = "The editorial board could not load: " + ex.Message;
+            // Never echo exception text, even to an editor: the message can carry SQL and
+            // connection detail. CLAUDE.md §10.
+            _error = "The editorial board could not load. The site log has the details.";
         }
         finally
         {
@@ -225,9 +257,9 @@ else
                 : "Moved #" + submissionId + " to " + BlogData.ColumnLabel(status).ToLowerInvariant() + ".";
             await LoadAsync();
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            _error = "The move failed: " + ex.Message;
+            _error = "The move failed. The site log has the details.";
         }
     }
 }

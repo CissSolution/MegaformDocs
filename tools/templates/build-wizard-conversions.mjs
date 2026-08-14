@@ -25,6 +25,8 @@
  * Run:  node tools/templates/build-wizard-conversions.mjs [--only slug] [--check]
  */
 
+import { resolve } from 'path';
+import { fileURLToPath } from 'url';
 import {
   field, choiceField, writeTemplates, SERIF, SANS,
 } from './build-euroyouth-skins.mjs';
@@ -46,7 +48,7 @@ import {
  * Driven off the rail's is-active class (a MutationObserver) so it follows the renderer's idea of
  * the current step instead of keeping a second copy of it.
  */
-function wizardPagesScript() {
+export function wizardPagesScript() {
   return `(function(){
   var root = (typeof __mfCurrentScriptRoot !== 'undefined' && __mfCurrentScriptRoot) || document;
   var scope = (root && root.closest) ? (root.closest('.mfp') || document) : document;
@@ -78,7 +80,7 @@ function wizardPagesScript() {
 }
 
 /** Mirrors every value into [data-mf-echo="KEY"]. Used by the confirm step of all four. */
-function recapScript() {
+export function recapScript() {
   return `(function(){
   var root = (typeof __mfCurrentScriptRoot !== 'undefined' && __mfCurrentScriptRoot) || document;
   var scope = (root && root.closest) ? (root.closest('.mfp') || document) : document;
@@ -120,7 +122,7 @@ function recapScript() {
  * Live invoice totals. Subtotal comes from the DataGrid's totalField (it already sums qty*price),
  * tax and discount from live percent inputs.
  */
-function invoiceTotalsScript(currency) {
+export function invoiceTotalsScript(currency) {
   return `(function(){
   var root = (typeof __mfCurrentScriptRoot !== 'undefined' && __mfCurrentScriptRoot) || document;
   var scope = (root && root.closest) ? (root.closest('.mfp') || document) : document;
@@ -184,7 +186,7 @@ const TOTALS_CSS = (p) => `
 `;
 
 /** The line-items grid + its total sink. Lifted from the shipped invoice templates. */
-function itemsFields(rows, { label = 'Description', currencyLabel = 'Rate' } = {}) {
+export function itemsFields(rows, { label = 'Description', currencyLabel = 'Rate' } = {}) {
   return [
     field('items', 'DataGrid', 'Line items', {
       defaultValue: JSON.stringify(rows),
@@ -337,50 +339,11 @@ const ROWS_CODEXO = [
 ];
 
 const SPECS = [
-  invoiceSpec({
-    slug: 'invoice-request-navy-orange', prefix: 'ivn',
-    title: 'Invoice Request — Navy & Orange',
-    description: 'Four-step invoice wizard in navy and orange: parties, line items with a live sub-total / discount / tax / total, payment method, then a curated review step that lists back only the fields the design chose.',
-    submitLabel: 'Create Invoice', successTitle: 'Invoice created',
-    currency: '$', invoiceNo: 'INV-001', rows: ROWS_FORM,
-    displayFontStack: SANS,
-    palette: {
-      primary: '#E87C1E', accent: '#0F1B35', surface: '#FFFFFF', text: '#1A1A2E',
-      muted: '#6B7280', border: '#E0E0E8', onPrimary: '#FFFFFF', deco: '#D4A82A',
-      page: '#F0F1F5', inputBg: '#F8F8FB',
-    },
-    hero: {
-      background: 'linear-gradient(135deg,#0F1B35 0%,#1A2F5A 100%)',
-      padding: '34px 30px 28px',
-      emblemIcon: 'fa-file-invoice',
-      eyebrow: 'Your Logo · Slogan', display: 'INVOICE', displaySize: '40px', displayWeight: 900,
-      displayTracking: '.06em', subtitle: 'Prepared for your records',
-      onHero: '#FFFFFF', onHeroMuted: 'rgba(255,255,255,.66)', onHeroSoft: 'rgba(255,255,255,.86)',
-    },
-    strips: [{ kind: 'tagline', text: 'Bill to · Items · Payment · Confirm' }],
-  }),
-  invoiceSpec({
-    slug: 'invoice-spinera-blue', prefix: 'isp',
-    title: 'Invoice — Spinera Blue',
-    description: 'Four-step invoice wizard in Spinera blue: parties, line items with live totals, bank and terms, then a curated review step. Currency is a field, so the summary relabels with it.',
-    submitLabel: 'Send Invoice', successTitle: 'Invoice sent',
-    currency: '$', invoiceNo: 'INV-2025-001', rows: ROWS_SPINERA,
-    toPlaceholder: 'Spinera Group', fromPlaceholder: 'My Company',
-    palette: {
-      primary: '#1E5DB5', accent: '#0B1F4B', surface: '#FFFFFF', text: '#1A1A2E',
-      muted: '#6B7280', border: '#D1D9E8', onPrimary: '#FFFFFF', deco: '#2975D0',
-      page: '#F0F3FA', inputBg: '#F5F7FC',
-    },
-    hero: {
-      background: 'linear-gradient(135deg,#0B1F4B 0%,#1A3570 55%,#1E5DB5 100%)',
-      padding: '36px 30px 30px',
-      emblemIcon: 'fa-receipt',
-      eyebrow: 'Spinera Group', display: 'Invoice', displaySize: '42px', displayWeight: 800,
-      hairlineWord: 'due on receipt', subtitle: 'Thank you for your business',
-      onHero: '#FFFFFF', onHeroMuted: 'rgba(232,240,251,.7)', onHeroSoft: 'rgba(255,255,255,.88)',
-    },
-    strips: [{ kind: 'tagline', text: 'Design · Web · Social' }],
-  }),
+  // invoice-request-navy-orange MOVED to build-exact-conversions.mjs on 2026-08-08: its mock is a
+  // 768px card with a navy masthead cut by an orange diagonal and a full-width 4-tab step strip.
+  // invoice-spinera-blue MOVED to build-exact-conversions.mjs on 2026-08-08: an 896px card whose
+  // masthead is a document header (navy edge stripe, red-underlined wordmark, live To/From
+  // address blocks) over a currency band, and underline-only fields.
   invoiceSpec({
     slug: 'invoice-codexo-cyan', prefix: 'icx',
     title: 'Invoice — Codexo Design Studio',
@@ -406,118 +369,25 @@ const SPECS = [
   }),
 
   // ── golden-pro: 3-step agent registration with a review & sign step ─────────
-  {
-    slug: 'golden-pro-agent-registration',
-    title: 'Golden Pro — Real Estate Agent Registration',
-    description: 'Three-step gold and olive agent registration: personal details, agency and licence, then a review-and-sign step that lists back only the fields the design chose. Continue and Submit stay locked until each step is valid.',
-    category: 'registration',
-    categories: ['registration', 'premium', 'real-estate'],
-    icon: 'building',
-    prefix: 'gpr',
-    fontStack: SANS,
-    displayFontStack: SERIF,
-    submitLabel: 'Complete Registration',
-    successMessage: 'Registration complete.',
-    successTitle: 'Registration complete',
-    successBody: 'Welcome {{field:first_name}}. Your Golden Pro registration for {{field:agency}} is complete; the agreement has gone to {{field:email}}.',
-    palette: {
-      primary: '#C9A84C', accent: '#4A5E3A', surface: '#FFFFFF', text: '#1C1C1C',
-      muted: '#6B7280', border: '#D4C89A', onPrimary: '#1C1C1C', deco: '#9B7B2A',
-      page: '#F9F6EE', inputBg: '#FDFBF5',
-    },
-    hero: {
-      background: 'linear-gradient(150deg,#4A5E3A 0%,#2f3d25 55%,#1C1C1C 100%)',
-      padding: '40px 30px 32px',
-      emblemIcon: 'fa-building',
-      eyebrow: 'Golden Pro · Real Estate', display: 'Agent Registration', displayItalic: true,
-      displaySize: '40px', hairlineWord: 'premium partner',
-      subtitle: 'Your Area Managing Director',
-      onHero: '#F5E9C4', onHeroMuted: 'rgba(245,233,196,.66)', onHeroSoft: 'rgba(255,255,255,.88)',
-    },
-    strips: [{ kind: 'tagline', text: 'Premium Real Estate Partner' }],
-    inputVariant: 'boxed',
-    sectionCaptionStyle: 'rule',
-    cardMaxWidth: '760px',
-    cardRadius: '6px',
-    submitRadius: '4px',
-    captions: {},
-    optionColumns: { member_type: 3 },
-    extraCss: TOTALS_CSS('gpr'),
-    customScripts: { wizard_pages: wizardPagesScript(), agent_recap: recapScript() },
-    wizard: {
-      nextLabel: 'Continue',
-      backLabel: 'Back',
-      steps: [
-        { num: '01', label: 'Personal', sub: 'Basic info' },
-        { num: '02', label: 'Agency', sub: 'Work details' },
-        { num: '03', label: 'Confirm', sub: 'Review & sign' },
-      ],
-    },
-    body: { omit: OMIT_ALL },
-    extraFields: [
-      field('first_name', 'Text', 'First Name', { required: true, placeholder: 'Alex' }),
-      field('last_name', 'Text', 'Last Name', { required: true, placeholder: 'Morgan' }),
-      field('email', 'Email', 'Email Address', { required: true, placeholder: 'alex@agency.com' }),
-      field('phone', 'Phone', 'Phone Number', { placeholder: '(555) 010-2233' }),
-      field('address', 'Text', 'Street Address', { placeholder: '123 Main Street' }),
-      field('city', 'Text', 'City', { placeholder: 'Portland' }),
-      choiceField('country', 'Select', 'Country',
-        ['United States', 'Canada', 'United Kingdom', 'Australia', 'Other'], 'dropdown', null,
-        { required: true, placeholder: 'Select country' }),
-      choiceField('member_type', 'Radio', 'Membership Type', [
-        { label: 'Agent', value: 'agent', description: 'Individual licence' },
-        { label: 'Broker', value: 'broker', description: 'Manages agents' },
-        { label: 'Team Lead', value: 'team', description: 'Runs a team' },
-      ], 'cards', 3, { required: true }),
-      field('agency', 'Text', 'Agency / Brokerage', { required: true, placeholder: 'Golden Pro Realty' }),
-      field('license_no', 'Text', 'Licence number', { required: true, placeholder: 'RE-2026-00841' }),
-      choiceField('experience', 'Select', 'Years in real estate',
-        ['Less than 1', '1–3', '3–5', '5–10', '10+'], 'dropdown', null, { required: true, placeholder: 'Select…' }),
-      field('start_date', 'Date', 'Preferred start date'),
-      field('referral', 'Text', 'Referred by', { placeholder: 'Name or office' }),
-      choiceField('newsletter', 'Checkbox', 'Newsletter',
-        [{ label: 'Send me market reports and listings', value: 'yes' }], 'list'),
-      choiceField('terms', 'Checkbox', 'Signature',
-        [{ label: 'I have read the partner agreement and sign it electronically', value: 'yes' }],
-        'list', null, { required: true }),
-    ],
-    sections: () => [
-      {
-        step: 0, caption: 'Personal',
-        grid: [['First Name *', 'first_name'], ['Last Name *', 'last_name'],
-          ['Email Address *', 'email'], ['Phone Number', 'phone'],
-          ['Street Address', 'address'], ['City', 'city']],
-        slots: [['Country *', 'country']],
-      },
-      { step: 1, caption: 'Membership', slots: [['Membership Type *', 'member_type']] },
-      {
-        step: 1, caption: 'Agency',
-        grid: [['Agency / Brokerage *', 'agency'], ['Licence number *', 'license_no'],
-          ['Years in real estate *', 'experience'], ['Preferred start date', 'start_date'],
-          ['Referred by', 'referral']],
-      },
-      {
-        step: 2, caption: 'Review & Sign',
-        html: `<div class='gpr-rc'>`
-          + recapRow('gpr', 'Name', 'first_name')
-          + recapRow('gpr', 'Email', 'email')
-          + recapRow('gpr', 'Phone', 'phone')
-          + recapRow('gpr', 'Membership', 'member_type')
-          + recapRow('gpr', 'Agency', 'agency')
-          + recapRow('gpr', 'Licence', 'license_no')
-          + recapRow('gpr', 'Experience', 'experience')
-          + `</div>`
-          + `<p class='gpr-note'>Only the fields this design chose are listed, in this order.</p>`,
-      },
-      { step: 2, script: 'agent_recap' },
-      { step: 2, consent: [['Newsletter', 'newsletter'], ['Signature', 'terms']] },
-    ],
-  },
+  // golden-pro-agent-registration MOVED to build-exact-conversions.mjs on 2026-08-08: its mock
+  // is a 1024px document block with a masthead, gold stripes and a 256px olive sidebar carrying
+  // the agent photograph and a VERTICAL stepper - not the horizontal rail this file builds.
 ];
 
-const args = process.argv.slice(2);
-const only = args.includes('--only') ? args[args.indexOf('--only') + 1] : null;
-const checkOnly = args.includes('--check');
-const r = writeTemplates(SPECS, { only, checkOnly });
-console.log(`\n${checkOnly ? 'checked' : 'wrote'} ${checkOnly ? r.total : r.wrote} template(s), ${r.failed} failure(s)`);
-process.exit(r.failed ? 1 : 0);
+// The main block only runs when this file IS the entry point. build-exact-conversions.mjs imports
+// wizardPagesScript from here, and an import that also rewrote three templates - and then called
+// process.exit, killing the importer before it wrote anything - is exactly the trap the
+// build-euroyouth-skins.mjs guard already avoids.
+const isMain = (() => {
+  try { return resolve(process.argv[1] || '') === fileURLToPath(import.meta.url); }
+  catch { return false; }
+})();
+
+if (isMain) {
+  const args = process.argv.slice(2);
+  const only = args.includes('--only') ? args[args.indexOf('--only') + 1] : null;
+  const checkOnly = args.includes('--check');
+  const r = writeTemplates(SPECS, { only, checkOnly });
+  console.log(`\n${checkOnly ? 'checked' : 'wrote'} ${checkOnly ? r.total : r.wrote} template(s), ${r.failed} failure(s)`);
+  process.exit(r.failed ? 1 : 0);
+}

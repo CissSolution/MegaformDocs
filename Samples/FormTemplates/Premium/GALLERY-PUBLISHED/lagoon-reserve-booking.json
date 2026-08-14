@@ -1,0 +1,760 @@
+{
+  "version": "1.0",
+  "slug": "lagoon-reserve-booking",
+  "title": "Reserve Your Perfect Stay",
+  "description": "Hotel reservation: a photographic hero with a rating pill, six sections of underlined fields, three stacked room cards with price and occupancy meters, amenity pills and a sticky sidebar carrying the booking summary, room popularity and what is included. Transcribed from the hotel-booking mock.",
+  "category": "booking",
+  "categories": [
+    "booking",
+    "premium",
+    "hospitality"
+  ],
+  "icon": "bed",
+  "submitButtonText": "Confirm Reservation",
+  "successMessage": "Reservation received. A confirmation is on its way.",
+  "settings": {
+    "theme": "custom",
+    "multiPage": false,
+    "showProgressBar": false,
+    "customContent": {
+      "text_4_9_2_457_reviews": "4.9 · 2,457 reviews",
+      "convenience_and_luxury": "Convenience & Luxury",
+      "reserve_your_perfect_stay": "Reserve Your Perfect Stay",
+      "guest_details": "Guest Details",
+      "first_name": "First name *",
+      "last_name": "Last name *",
+      "email": "Email *",
+      "phone": "Phone",
+      "year_of_birth": "Year of birth",
+      "country": "Country *",
+      "stay_details": "Stay Details",
+      "check_in_date": "Check-in date *",
+      "check_out_date": "Check-out date *",
+      "number_of_guests": "Number of guests",
+      "preferred_start_month": "Preferred start month",
+      "choose_your_room": "Choose Your Room",
+      "preferred_amenities": "Preferred Amenities",
+      "programme_and_language": "Programme & Language",
+      "programme_track": "Programme track",
+      "duration": "Duration",
+      "language_level": "Language level",
+      "special_requests": "Special Requests",
+      "notes_for_the_concierge_optional": "Notes for the concierge (optional)",
+      "confirm_reservation": "Confirm Reservation",
+      "booking_summary": "Booking Summary",
+      "no_room_selected_yet": "No room selected yet",
+      "room_popularity": "Room Popularity",
+      "standard_room": "Standard Room",
+      "text_82": "82%",
+      "family_suite": "Family Suite",
+      "text_75": "75%",
+      "royal_suite": "Royal Suite",
+      "text_68": "68%",
+      "positive_reviews": "Positive Reviews",
+      "text_92": "92%",
+      "included": "Included",
+      "wi_fi": "Wi-Fi",
+      "dining": "Dining",
+      "spa": "Spa",
+      "parking": "Parking",
+      "butler": "Butler",
+      "turndown": "Turndown",
+      "hero_image": "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs="
+    },
+    "customScripts": {
+      "booking_summary": "(function(){\n  var root = (typeof __mfCurrentScriptRoot !== 'undefined' && __mfCurrentScriptRoot) || document;\n  var scope = (root && root.closest) ? (root.closest('.mfp') || document) : document;\n  var ROOM = {\n    standard: { name: 'Standard Room', price: '$180' },\n    family:   { name: 'Family Suite',  price: '$320' },\n    royal:    { name: 'Royal Suite',   price: '$1,200' }\n  };\n  function val(k){\n    var els = scope.querySelectorAll('[name=\"' + k + '\"]');\n    if (!els.length) return '';\n    var f = els[0];\n    if (f.type === 'radio' || f.type === 'checkbox') {\n      for (var i = 0; i < els.length; i++) if (els[i].checked) return els[i].value;\n      return '';\n    }\n    if (f.tagName === 'SELECT') { var o = f.options[f.selectedIndex]; return o ? o.value : ''; }\n    return String(f.value || '');\n  }\n  function esc(t){ return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }\n  function row(l, v){ return '<div class=\"lgn-srow\"><span class=\"lgn-sl\">' + esc(l)\n    + '</span><span class=\"lgn-sv\">' + esc(v) + '</span></div>'; }\n  function paint(){\n    var host = scope.querySelector('[data-mf-echo=\"summary\"]');\n    if (!host) return;\n    var r = ROOM[val('room_type')];\n    if (!r) {\n      host.className = 'lgn-panel-empty';\n      host.textContent = 'No room selected yet';\n      return;\n    }\n    var ci = val('check_in'), co = val('check_out'), g = val('guests');\n    host.className = 'lgn-panel-body';\n    host.innerHTML = '<div class=\"lgn-shead\"><span class=\"lgn-sname\">' + esc(r.name)\n      + '</span><span class=\"lgn-sprice\">' + esc(r.price) + '<span class=\"lgn-sper\">/night</span></span></div>'\n      + '<div class=\"lgn-shr\"></div>'\n      + (ci ? row('Check-in', ci) : '') + (co ? row('Check-out', co) : '') + (g ? row('Guests', g) : '');\n  }\n  scope.addEventListener('input', paint, true);\n  scope.addEventListener('change', paint, true);\n  paint();\n})();"
+    },
+    "customHtml": "<div class='mfp mfp-lgn mfp-native-generated' data-mf-flexgrid=\"locked\" style=\"background:transparent!important;border:0!important;border-radius:0!important;padding:0!important;box-shadow:none!important\"><div class='lgn-page'><div class='lgn-hero'><img class='lgn-content-image' src='{{content:hero_image}}' alt='' aria-hidden='true'><div class='lgn-hero-scrim' role='presentation'></div><div class='lgn-rating'><i class='fa fa-star'></i>{{content:text_4_9_2_457_reviews}}</div><div class='lgn-hero-copy'><p class='lgn-hero-eyebrow'>{{content:convenience_and_luxury}}</p><h1 class='lgn-hero-h'>{{content:reserve_your_perfect_stay}}</h1></div></div><div class='lgn-shell'><div class='lgn-grid'><div class='lgn-left'><div class='lgn-sec'><div class='lgn-sec-h'><span class='lgn-sec-i'><i class='fa fa-users'></i></span><h2 class='lgn-sec-t'>{{content:guest_details}}</h2></div><div class='lgn-grid2'><label class='lgn-field'><span class='lgn-label'>{{content:first_name}}</span>{{field:first_name}}</label><label class='lgn-field'><span class='lgn-label'>{{content:last_name}}</span>{{field:last_name}}</label><label class='lgn-field'><span class='lgn-label'>{{content:email}}</span>{{field:email}}</label><label class='lgn-field'><span class='lgn-label'>{{content:phone}}</span>{{field:phone}}</label><label class='lgn-field'><span class='lgn-label'>{{content:year_of_birth}}</span>{{field:birth_year}}</label><label class='lgn-field'><span class='lgn-label'>{{content:country}}</span>{{field:country}}</label></div></div><div class='lgn-sec'><div class='lgn-sec-h'><span class='lgn-sec-i'><i class='fa fa-bed'></i></span><h2 class='lgn-sec-t'>{{content:stay_details}}</h2></div><div class='lgn-grid2'><label class='lgn-field'><span class='lgn-label'>{{content:check_in_date}}</span>{{field:check_in}}</label><label class='lgn-field'><span class='lgn-label'>{{content:check_out_date}}</span>{{field:check_out}}</label><label class='lgn-field'><span class='lgn-label'>{{content:number_of_guests}}</span>{{field:guests}}</label><label class='lgn-field'><span class='lgn-label'>{{content:preferred_start_month}}</span>{{field:start_month}}</label></div></div><div class='lgn-sec'><div class='lgn-sec-h'><span class='lgn-sec-i'><i class='fa fa-star'></i></span><h2 class='lgn-sec-t'>{{content:choose_your_room}}</h2></div><div class='lgn-rooms'>{{field:room_type}}</div></div><div class='lgn-sec'><div class='lgn-sec-h'><span class='lgn-sec-i'><i class='fa fa-cutlery'></i></span><h2 class='lgn-sec-t'>{{content:preferred_amenities}}</h2></div><div class='lgn-chips'>{{field:interests}}</div></div><div class='lgn-sec'><div class='lgn-sec-h'><span class='lgn-sec-i'><i class='fa fa-map-marker'></i></span><h2 class='lgn-sec-t'>{{content:programme_and_language}}</h2></div><div class='lgn-grid2'><label class='lgn-field'><span class='lgn-label'>{{content:programme_track}}</span>{{field:programme}}</label><label class='lgn-field'><span class='lgn-label'>{{content:duration}}</span>{{field:duration}}</label><label class='lgn-field lgn-span2'><span class='lgn-label'>{{content:language_level}}</span>{{field:language_level}}</label></div></div><div class='lgn-sec'><div class='lgn-sec-h'><span class='lgn-sec-i'><i class='fa fa-wifi'></i></span><h2 class='lgn-sec-t'>{{content:special_requests}}</h2></div><div class='lgn-ta'><label class='lgn-field'><span class='lgn-label'>{{content:notes_for_the_concierge_optional}}</span>{{field:requests}}</label></div></div><div class='lgn-terms'>{{field:newsletter}}{{field:terms}}</div><button class='lgn-submit' type='submit'>{{content:confirm_reservation}}</button></div><aside class='lgn-side'><div class='lgn-side-in'><div class='lgn-panel'><div class='lgn-panel-h'>{{content:booking_summary}}</div><div class='lgn-panel-empty' data-mf-echo='summary'>{{content:no_room_selected_yet}}</div></div><div class='lgn-panel2'><p class='lgn-cap'>{{content:room_popularity}}</p><div class='lgn-pop'><div class='lgn-pop-r'><span class='lgn-pop-n'>{{content:standard_room}}</span><span class='lgn-pop-p'>{{content:text_82}}</span></div><div class='lgn-pop-bar'><span class='lgn-pop-f lgn-bar-82'></span></div></div><div class='lgn-pop'><div class='lgn-pop-r'><span class='lgn-pop-n'>{{content:family_suite}}</span><span class='lgn-pop-p'>{{content:text_75}}</span></div><div class='lgn-pop-bar'><span class='lgn-pop-f lgn-bar-75'></span></div></div><div class='lgn-pop'><div class='lgn-pop-r'><span class='lgn-pop-n'>{{content:royal_suite}}</span><span class='lgn-pop-p'>{{content:text_68}}</span></div><div class='lgn-pop-bar'><span class='lgn-pop-f lgn-bar-68'></span></div></div><div class='lgn-pos'><span class='lgn-pos-l'>{{content:positive_reviews}}</span><span class='lgn-pos-v'>{{content:text_92}}</span></div></div><div class='lgn-panel3'><p class='lgn-cap lgn-cap-mb'>{{content:included}}</p><div class='lgn-inc-grid'><div class='lgn-inc'><i class='fa fa-wifi'></i><span class='lgn-inc-l'>{{content:wi_fi}}</span></div><div class='lgn-inc'><i class='fa fa-cutlery'></i><span class='lgn-inc-l'>{{content:dining}}</span></div><div class='lgn-inc'><i class='fa fa-tint'></i><span class='lgn-inc-l'>{{content:spa}}</span></div><div class='lgn-inc'><i class='fa fa-car'></i><span class='lgn-inc-l'>{{content:parking}}</span></div><div class='lgn-inc'><i class='fa fa-star'></i><span class='lgn-inc-l'>{{content:butler}}</span></div><div class='lgn-inc'><i class='fa fa-bed'></i><span class='lgn-inc-l'>{{content:turndown}}</span></div></div></div>{{script:booking_summary}}</div></aside></div></div></div></div>",
+    "customCss": "@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Cormorant+Garamond:wght@400;500;600;700&display=swap');\n.mfp.mfp-lgn.mfp-native-generated {--lgn-primary:#C8962C;--lgn-accent:#6B1E2E;--lgn-surface:var(--mf-page-surface,var(--mf-preset-surface,#FFFFFF));--lgn-text:var(--mf-page-text,var(--mf-preset-text,#1C1C1C));--lgn-muted:var(--mf-page-muted,var(--mf-preset-muted,#9A8C7E));--lgn-border:var(--mf-page-border,var(--mf-preset-border,#EDE8E0));--lgn-on-primary:var(--mf-preset-on-primary,#FFFFFF);--lgn-deco:#F0D898;--lgn-page:#FDF8F0;--lgn-fill:#FDF8F0;--lgn-fill-strong:color-mix(in srgb, var(--lgn-text) 9%, var(--lgn-surface));--lgn-soft:color-mix(in srgb, var(--lgn-primary) 12%, var(--lgn-surface));--lgn-hairline:color-mix(in srgb, var(--lgn-text) 12%, var(--lgn-surface));}.mfp.mfp-lgn.mfp-native-generated {background:transparent!important;border:0!important;padding:0!important;font-family:'DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif}.mfp.mfp-lgn.mfp-native-generated {--lgn-primary:var(--mf-page-primary,var(--mf-preset-primary,#C8962C));--lgn-accent:var(--mf-page-accent,var(--mf-preset-accent,#6B1E2E));--lgn-surface:var(--mf-page-surface,var(--mf-preset-surface,#FFFFFF));--lgn-text:var(--mf-page-text,var(--mf-preset-text,#1C1C1C));--lgn-border:var(--mf-page-border,var(--mf-preset-border,#EDE8E0));--lgn-on-primary:var(--mf-page-on-primary,var(--mf-preset-on-primary,#FFFFFF));--lgn-page:var(--mf-preset-bg,#FDF8F0);}@container (max-width:520px){.mfp.mfp-lgn.mfp-native-generated [class*=\"-grid\"],.mfp.mfp-lgn.mfp-native-generated [class*=\"-meta\"],.mfp.mfp-lgn.mfp-native-generated [class*=\"-scores\"],.mfp.mfp-lgn.mfp-native-generated [class*=\"-charts\"],.mfp.mfp-lgn.mfp-native-generated [class*=\"-cols\"]{grid-template-columns:1fr!important}.mfp.mfp-lgn.mfp-native-generated [class*=\"-body\"],.mfp.mfp-lgn.mfp-native-generated [class*=\"-split\"],.mfp.mfp-lgn.mfp-native-generated [class*=\"-foot\"],.mfp.mfp-lgn.mfp-native-generated [class*=\"-head\"],.mfp.mfp-lgn.mfp-native-generated [class*=\"-row\"]{flex-wrap:wrap!important}.mfp.mfp-lgn.mfp-native-generated [class*=\"-aside\"],.mfp.mfp-lgn.mfp-native-generated [class*=\"-side\"]{flex:1 1 100%!important;width:100%!important;max-width:none!important}}.mfp.mfp-lgn.mfp-native-generated  img{max-width:100%!important;height:auto}.mfp.mfp-lgn.mfp-native-generated {overflow-wrap:break-word}\n.mfp.mfp-lgn.mfp-native-generated {container-type:inline-size;font-family:'DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif!important;color:var(--lgn-text)}\n.mfp.mfp-lgn.mfp-native-generated .lgn-page{background:var(--lgn-page)}\n\n/* hero ------------------------------------------------------------------- */\n.mfp.mfp-lgn.mfp-native-generated .lgn-hero{position:relative;overflow:hidden;height:288px;\n  background-image:url('/DesktopModules/MegaForm/Assets/img/lagoon-reserve-booking/hotel-room-hero.png'),url('/Modules/MegaForm/img/lagoon-reserve-booking/hotel-room-hero.png');\n  background-size:cover;background-position:50% 50%}\n.mfp.mfp-lgn.mfp-native-generated img.lgn-content-image{position:absolute!important;inset:0!important;display:block!important;\n  width:100%!important;height:100%!important;object-fit:cover!important;object-position:50% 50%!important;\n  border:0!important;border-radius:0!important;pointer-events:none!important}\n.mfp.mfp-lgn.mfp-native-generated .lgn-hero-scrim{position:absolute;inset:0;\n  background:linear-gradient(to bottom,rgba(28,28,28,.15),rgba(107,30,46,.75))}\n.mfp.mfp-lgn.mfp-native-generated .lgn-hero-copy{position:absolute;left:0;right:0;bottom:0;padding:0 48px 28px}\n.mfp.mfp-lgn.mfp-native-generated p.lgn-hero-eyebrow{margin:0!important;font-size:12px!important;line-height:16px!important;\n  font-weight:600!important;letter-spacing:.1em!important;text-transform:uppercase!important;\n  color:#F0D898!important}\n.mfp.mfp-lgn.mfp-native-generated h1.lgn-hero-h{margin:0!important;font-family:'Cormorant Garamond',Georgia,'Times New Roman',serif!important;font-size:36px!important;\n  line-height:1.25!important;font-weight:600!important;color:#fff!important}\n.mfp.mfp-lgn.mfp-native-generated .lgn-rating{position:absolute;top:20px;right:20px;display:inline-flex;align-items:center;gap:6px;\n  padding:6px 12px;border-radius:999px;background:rgba(200,150,44,.9);color:#fff;font-size:12px;\n  line-height:16px;font-weight:600}\n.mfp.mfp-lgn.mfp-native-generated .lgn-rating i{font-size:14px;line-height:14px}\n\n/* page grid -------------------------------------------------------------- */\n.mfp.mfp-lgn.mfp-native-generated .lgn-shell{max-width:896px;margin:0 auto;padding:40px 16px}\n@container (min-width:640px){.mfp.mfp-lgn.mfp-native-generated .lgn-shell{padding:40px 32px}}\n.mfp.mfp-lgn.mfp-native-generated .lgn-grid{display:grid;grid-template-columns:1fr;gap:32px;align-items:start}\n/* The mock switches to two columns at the lg VIEWPORT, where its card is 896px - so 896 is the\n   width at which this design actually has room for 1fr + 300px, and a container query is on the\n   PANE. At 1024 the sidebar vanished in every pane between 896 and 1024, including the harness's\n   normalised one, which read as 12 lines of missing copy. */\n@container (min-width:896px){.mfp.mfp-lgn.mfp-native-generated .lgn-grid{grid-template-columns:1fr 300px}}\n.mfp.mfp-lgn.mfp-native-generated .lgn-left{display:flex;flex-direction:column;gap:40px}\n.mfp.mfp-lgn.mfp-native-generated .lgn-sec-h{display:flex;align-items:center;gap:10px;padding-bottom:10px;\n  border-bottom:1px solid var(--lgn-border)}\n.mfp.mfp-lgn.mfp-native-generated .lgn-sec-i{display:flex;align-items:center;justify-content:center;flex:0 0 28px;width:28px;\n  height:28px;border-radius:8px;background:var(--lgn-primary);color:#fff;font-size:16px;line-height:16px}\n.mfp.mfp-lgn.mfp-native-generated h2.lgn-sec-t{margin:0!important;font-family:'Cormorant Garamond',Georgia,'Times New Roman',serif!important;font-size:20px!important;\n  line-height:28px!important;font-weight:600!important;letter-spacing:.025em!important;\n  color:var(--lgn-text)!important}\n.mfp.mfp-lgn.mfp-native-generated .lgn-grid2{display:grid;grid-template-columns:1fr 1fr;column-gap:24px;row-gap:20px;\n  margin-top:20px}\n.mfp.mfp-lgn.mfp-native-generated .lgn-span2{grid-column:1/-1}\n.mfp.mfp-lgn.mfp-native-generated .lgn-field{display:block;margin:0}\n@container (max-width:520px){\n  .mfp.mfp-lgn.mfp-native-generated .lgn-grid2{width:calc(100% - 16px)}\n  .mfp.mfp-lgn.mfp-native-generated .lgn-ta{width:calc(100% - 16px)!important}\n  .mfp.mfp-lgn.mfp-native-generated .lgn-grid2>*,.mfp.mfp-lgn.mfp-native-generated .lgn-field,.mfp.mfp-lgn.mfp-native-generated .lgn-field .mf-field-group,.mfp.mfp-lgn.mfp-native-generated .lgn-field .mf-cal{\n    min-width:0;max-width:100%;box-sizing:border-box}\n}\n.mfp.mfp-lgn.mfp-native-generated .lgn-label{display:block;margin:0 0 4px;font-size:11px;line-height:16px;font-weight:600;\n  letter-spacing:.1em;text-transform:uppercase;color:#9A8C7E}\n.mfp.mfp-lgn.mfp-native-generated .lgn-rooms{margin-top:12px}\n.mfp.mfp-lgn.mfp-native-generated .lgn-chips{margin-top:16px}\n.mfp.mfp-lgn.mfp-native-generated .lgn-ta{margin-top:16px}\n\n/* megaform sets font-family on label/input/select/textarea with !important, so an authored\n   <span> inside a <label> inherits the HOST typeface no matter what the shell root declares.\n   Element selectors are (0,3,1) here - above megaform, below every authored class rule - and\n   <i> is left alone so Font Awesome keeps its own family. */\n.mfp.mfp-lgn.mfp-native-generated label,.mfp.mfp-lgn.mfp-native-generated span,.mfp.mfp-lgn.mfp-native-generated p,.mfp.mfp-lgn.mfp-native-generated div,.mfp.mfp-lgn.mfp-native-generated ul,.mfp.mfp-lgn.mfp-native-generated li,.mfp.mfp-lgn.mfp-native-generated h1,.mfp.mfp-lgn.mfp-native-generated h2,.mfp.mfp-lgn.mfp-native-generated h3,.mfp.mfp-lgn.mfp-native-generated button{font-family:inherit!important}\n.mfp.mfp-lgn.mfp-native-generated .mf-field-label{display:none!important}\n/* A wizard's page-break Section renders a visible heading the mock has no room for - it exists to\n   split the pages, not to be seen. */\n.mfp.mfp-lgn.mfp-native-generated .mf-section-break,.mfp.mfp-lgn.mfp-native-generated .mf-section-title{display:none!important}\n.mfp.mfp-lgn.mfp-native-generated .mf-field-group{margin:0!important;width:100%}\n.mfp.mfp-lgn.mfp-native-generated .mf-form-title,.mfp.mfp-lgn.mfp-native-generated .mf-form-description,.mfp.mfp-lgn.mfp-native-generated .mf-form-actions{display:none!important}\n.mfp.mfp-lgn.mfp-native-generated .mf-option-item{margin:0!important}\n/* megaform gives every option chip a 36px floor and paints .mf-option-icon as a rounded tile. */\n.mfp.mfp-lgn.mfp-native-generated .mf-option-group--chips .mf-option-check,\n.mfp.mfp-lgn.mfp-native-generated .mf-option-group--cards .mf-option-check{display:none!important}\n.mfp.mfp-lgn.mfp-native-generated .mf-option-group--chips .mf-option-ui{min-height:0!important;height:auto!important}\n.mfp.mfp-lgn.mfp-native-generated .mf-option-group--cards .mf-option-copy{display:block;width:100%}\n\n\n.mfp.mfp-lgn.mfp-native-generated .mf-input[class],.mfp.mfp-lgn.mfp-native-generated .mf-select[class]{width:100%!important;box-sizing:border-box!important;\n  border:0!important;border-bottom:2px solid var(--lgn-border)!important;border-radius:0!important;\n  background:transparent!important;padding:10px 0!important;min-height:0!important;\n  height:auto!important;color:var(--lgn-text)!important;font-family:inherit!important;\n  font-size:15px!important;line-height:24px!important;font-weight:400!important;\n  box-shadow:none!important;appearance:none!important;-webkit-appearance:none!important}\n.mfp.mfp-lgn.mfp-native-generated .mf-input[class]:focus,.mfp.mfp-lgn.mfp-native-generated .mf-select[class]:focus{border-bottom-color:var(--lgn-primary)!important;\n  box-shadow:none!important;outline:none!important}\n.mfp.mfp-lgn.mfp-native-generated .mf-input[class]::placeholder,.mfp.mfp-lgn.mfp-native-generated .mf-textarea[class]::placeholder{color:#9A8C7E!important;opacity:1}\n/* :invalid only fires on a REQUIRED select; :has() covers the optional ones too. */\n\n\n.mfp.mfp-lgn.mfp-native-generated .mf-textarea[class]{width:100%!important;box-sizing:border-box!important;border:0!important;\n  border-bottom:2px solid var(--lgn-border)!important;border-radius:0!important;background:transparent!important;\n  padding:10px 0!important;min-height:112px!important;height:112px!important;resize:none!important;\n  color:var(--lgn-text)!important;font-family:inherit!important;font-size:15px!important;\n  line-height:24px!important;box-shadow:none!important}\n\n/* room cards ------------------------------------------------------------- */\n.mfp.mfp-lgn.mfp-native-generated .mf-option-group--cards{display:flex!important;flex-direction:column!important;gap:12px!important}\n.mfp.mfp-lgn.mfp-native-generated .mf-option-group--cards .mf-option-ui{position:relative;display:flex;align-items:flex-start;\n  gap:16px;width:100%;box-sizing:border-box;padding:16px 16px 47px;border:2px solid var(--lgn-border);\n  border-radius:16px;background:#fff;cursor:pointer;transition:all .15s ease}\n.mfp.mfp-lgn.mfp-native-generated .mf-option-group--cards .mf-option-icon{display:flex!important;align-items:center!important;\n  justify-content:center!important;flex:0 0 48px!important;width:48px!important;height:48px!important;\n  margin:0!important;padding:0!important;border:0!important;border-radius:12px!important;\n  background:var(--lgn-page)!important;color:var(--lgn-primary)!important;font-size:20px!important;\n  line-height:20px!important}\n.mfp.mfp-lgn.mfp-native-generated .mf-option-group--cards .mf-option-copy{display:block;flex:1 1 auto;min-width:0;\n  padding-right:65px}\n.mfp.mfp-lgn.mfp-native-generated .mf-option-group--cards .mf-option-item:nth-child(2) .mf-option-copy{padding-right:69px}\n.mfp.mfp-lgn.mfp-native-generated .mf-option-group--cards .mf-option-item:nth-child(3) .mf-option-copy{padding-right:82px}\n.mfp.mfp-lgn.mfp-native-generated .mf-option-group--cards .mf-option-label{display:flex;align-items:center;\n  justify-content:space-between;font-size:15px;line-height:24px;font-weight:600;color:var(--lgn-text)}\n.mfp.mfp-lgn.mfp-native-generated .mf-option-group--cards .mf-option-desc{display:block;margin-top:2px;font-size:14px;\n  line-height:20px;font-weight:400;color:#9A8C7E}\n.mfp.mfp-lgn.mfp-native-generated .lgn-size{padding:2px 8px;border-radius:999px;background:var(--lgn-page);color:#9A8C7E;font-size:12px;\n  line-height:16px;font-weight:600}\n.mfp.mfp-lgn.mfp-native-generated .lgn-price{position:absolute;top:16px;right:16px;text-align:right}\n.mfp.mfp-lgn.mfp-native-generated .mf-option-group--cards .mf-option-item:nth-child(n+2) .lgn-price{top:26px}\n.mfp.mfp-lgn.mfp-native-generated .lgn-amt{display:block;font-size:18px;line-height:28px;font-weight:700;color:var(--lgn-primary)}\n.mfp.mfp-lgn.mfp-native-generated .lgn-per{display:block;font-size:12px;line-height:16px;font-weight:400;color:#9A8C7E}\n.mfp.mfp-lgn.mfp-native-generated .lgn-occ{position:absolute;left:16px;right:16px;bottom:12px;display:flex;align-items:center;\n  gap:12px}\n.mfp.mfp-lgn.mfp-native-generated .lgn-occ-l{font-size:11px;line-height:16px;font-weight:600;letter-spacing:.05em;\n  text-transform:uppercase;color:#9A8C7E}\n.mfp.mfp-lgn.mfp-native-generated .lgn-bar{flex:1 1 auto;height:6px;border-radius:999px;overflow:hidden;background:var(--lgn-border)}\n.mfp.mfp-lgn.mfp-native-generated .lgn-bar-f{display:block;height:100%;border-radius:999px;background:#9A8C7E}\n.mfp.mfp-lgn.mfp-native-generated .lgn-bar-82{width:82%}\n.mfp.mfp-lgn.mfp-native-generated .lgn-bar-75{width:75%}\n.mfp.mfp-lgn.mfp-native-generated .lgn-bar-68{width:68%}\n.mfp.mfp-lgn.mfp-native-generated .lgn-pct{font-size:14px;line-height:20px;font-weight:700;color:var(--lgn-text)}\n.mfp.mfp-lgn.mfp-native-generated .lgn-delta{font-size:12px;line-height:16px;color:#9A8C7E}\n.mfp.mfp-lgn.mfp-native-generated .mf-option-group--cards .mf-option-item.is-selected .mf-option-ui,\n.mfp.mfp-lgn.mfp-native-generated .mf-option-group--cards input:checked+.mf-option-ui{border-color:var(--lgn-primary);background:#FEF9EE}\n\n/* amenity pills ---------------------------------------------------------- */\n.mfp.mfp-lgn.mfp-native-generated .mf-option-group--chips{display:flex;flex-wrap:wrap;gap:8px}\n.mfp.mfp-lgn.mfp-native-generated .mf-option-group--chips .mf-option-ui{display:block;gap:0;padding:6px 16px;\n  border:1px solid var(--lgn-border);border-radius:9999px;background:#fff;color:#9A8C7E;font-size:14px;\n  line-height:20px;font-weight:500;text-align:center;cursor:pointer;transition:all .15s ease}\n.mfp.mfp-lgn.mfp-native-generated .mf-option-group--chips .mf-option-label{font-size:14px;line-height:20px;font-weight:500;\n  color:inherit}\n.mfp.mfp-lgn.mfp-native-generated .mf-option-group--chips .mf-option-item.is-selected .mf-option-ui,\n.mfp.mfp-lgn.mfp-native-generated .mf-option-group--chips input:checked+.mf-option-ui{background:var(--lgn-primary);border-color:var(--lgn-primary);\n  color:#fff}\n\n/* consent panel + CTA ---------------------------------------------------- */\n.mfp.mfp-lgn.mfp-native-generated .lgn-terms{display:flex;flex-direction:column;gap:12px;padding:20px;border:1px solid var(--lgn-border);\n  border-radius:16px;background:#fff}\n.mfp.mfp-lgn.mfp-native-generated .lgn-terms .mf-option-group--list{display:flex;flex-direction:column;gap:12px}\n.mfp.mfp-lgn.mfp-native-generated .lgn-terms .mf-option-item{display:flex;align-items:flex-start;gap:12px}\n.mfp.mfp-lgn.mfp-native-generated .lgn-terms .mf-option-ui{display:block;padding:0;border:0;background:transparent}\n.mfp.mfp-lgn.mfp-native-generated .lgn-terms .mf-option-label{font-size:14px;line-height:20px;font-weight:400;color:#9A8C7E}\n/* the SECOND consent row is charcoal in the mock; each field renders its own one-item group,\n   so the selector has to reach the last FIELD, not the last option. */\n.mfp.mfp-lgn.mfp-native-generated .lgn-terms>.mf-field-group:last-child .mf-option-label{color:var(--lgn-text)}\n.mfp.mfp-lgn.mfp-native-generated .lgn-terms input[type=\"checkbox\"]{width:20px!important;height:20px!important;flex:0 0 20px!important;\n  margin:2px 0 0!important;border:2px solid var(--lgn-border)!important;border-radius:4px!important}\n.mfp.mfp-lgn.mfp-native-generated .lgn-link{text-decoration:underline;font-weight:600;color:var(--lgn-accent)}\n.mfp.mfp-lgn.mfp-native-generated button.lgn-submit[type=\"submit\"]{display:block;width:100%!important;padding:16px 0!important;\n  border:0!important;border-radius:16px!important;\n  background:linear-gradient(135deg,var(--lgn-accent) 0%,var(--lgn-primary) 100%)!important;color:#fff!important;\n  font-family:inherit!important;font-size:16px!important;line-height:24px!important;\n  font-weight:700!important;letter-spacing:.1em!important;text-transform:uppercase!important;\n  cursor:pointer!important;box-shadow:none!important}\n.mfp.mfp-lgn.mfp-native-generated button.lgn-submit.mf-nav-blocked,.mfp.mfp-lgn.mfp-native-generated button.lgn-submit[disabled]{opacity:1!important;\n  background:linear-gradient(135deg,var(--lgn-accent) 0%,var(--lgn-primary) 100%)!important;\n  cursor:not-allowed!important;filter:none!important}\n@container (max-width:520px){\n  .mfp.mfp-lgn.mfp-native-generated button.lgn-submit[type=\"submit\"]{width:calc(100% - 16px)!important}\n}\n\n/* sticky sidebar --------------------------------------------------------- */\n.mfp.mfp-lgn.mfp-native-generated .lgn-side{display:none}\n@container (min-width:896px){.mfp.mfp-lgn.mfp-native-generated .lgn-side{display:block}}\n.mfp.mfp-lgn.mfp-native-generated .lgn-side-in{position:sticky;top:32px;display:flex;flex-direction:column;gap:16px}\n.mfp.mfp-lgn.mfp-native-generated .lgn-panel{overflow:hidden;border:1px solid var(--lgn-border);border-radius:16px}\n.mfp.mfp-lgn.mfp-native-generated .lgn-panel-h{padding:12px 16px;background:var(--lgn-accent);color:#F0D898;font-size:12px;line-height:16px;\n  font-weight:700;letter-spacing:.1em;text-transform:uppercase}\n.mfp.mfp-lgn.mfp-native-generated .lgn-panel-empty{padding:24px;text-align:center;font-size:14px;line-height:20px;\n  font-weight:400;color:#9A8C7E;background:var(--lgn-page)}\n.mfp.mfp-lgn.mfp-native-generated .lgn-panel-body{display:flex;flex-direction:column;gap:12px;padding:16px;background:#fff}\n.mfp.mfp-lgn.mfp-native-generated .lgn-shead{display:flex;align-items:center;justify-content:space-between}\n.mfp.mfp-lgn.mfp-native-generated .lgn-sname{font-size:14px;line-height:20px;font-weight:600;color:var(--lgn-text)}\n.mfp.mfp-lgn.mfp-native-generated .lgn-sprice{font-size:14px;line-height:20px;font-weight:700;color:var(--lgn-primary)}\n.mfp.mfp-lgn.mfp-native-generated .lgn-sper{font-size:12px;font-weight:400;color:#9A8C7E}\n.mfp.mfp-lgn.mfp-native-generated .lgn-shr{height:1px;background:var(--lgn-border)}\n.mfp.mfp-lgn.mfp-native-generated .lgn-srow{display:flex;align-items:center;justify-content:space-between;font-size:14px;\n  line-height:20px}\n.mfp.mfp-lgn.mfp-native-generated .lgn-sl{color:#9A8C7E}\n.mfp.mfp-lgn.mfp-native-generated .lgn-sv{font-weight:500;color:var(--lgn-text)}\n.mfp.mfp-lgn.mfp-native-generated .lgn-panel2,.mfp.mfp-lgn.mfp-native-generated .lgn-panel3{padding:16px;border:1px solid var(--lgn-border);border-radius:16px;\n  background:#fff}\n/* space-y-3 measures as a bottom margin on each child, not as a flex gap. */\n.mfp.mfp-lgn.mfp-native-generated .lgn-panel2{display:block}\n.mfp.mfp-lgn.mfp-native-generated .lgn-panel2>*{margin-bottom:12px}\n.mfp.mfp-lgn.mfp-native-generated .lgn-panel2>*:last-child{margin-bottom:0}\n.mfp.mfp-lgn.mfp-native-generated p.lgn-cap{margin:0 0 12px!important;font-size:11px!important;line-height:16px!important;\n  font-weight:700!important;letter-spacing:.1em!important;text-transform:uppercase!important;\n  color:#9A8C7E!important}\n\n.mfp.mfp-lgn.mfp-native-generated .lgn-pop-r{display:flex;justify-content:space-between;margin-bottom:4px;font-size:12px;\n  line-height:16px}\n.mfp.mfp-lgn.mfp-native-generated .lgn-pop-n{color:var(--lgn-text)}\n.mfp.mfp-lgn.mfp-native-generated .lgn-pop-p{font-weight:700;color:var(--lgn-primary)}\n.mfp.mfp-lgn.mfp-native-generated .lgn-pop-bar{height:6px;border-radius:999px;overflow:hidden;background:var(--lgn-border)}\n.mfp.mfp-lgn.mfp-native-generated .lgn-pop-f{display:block;height:100%;border-radius:999px;background:#F0D898}\n.mfp.mfp-lgn.mfp-native-generated .lgn-pos{display:flex;align-items:center;justify-content:space-between;padding-top:4px;\n  border-top:1px solid var(--lgn-border)}\n.mfp.mfp-lgn.mfp-native-generated .lgn-pos-l{font-size:12px;line-height:16px;font-weight:600;letter-spacing:.05em;\n  text-transform:uppercase;color:var(--lgn-primary)}\n.mfp.mfp-lgn.mfp-native-generated .lgn-pos-v{font-size:18px;line-height:28px;font-weight:700;color:var(--lgn-text)}\n.mfp.mfp-lgn.mfp-native-generated .lgn-inc-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}\n.mfp.mfp-lgn.mfp-native-generated .lgn-inc{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 0;\n  border-radius:12px;background:var(--lgn-page)}\n.mfp.mfp-lgn.mfp-native-generated .lgn-inc i{font-size:16px;line-height:16px;color:var(--lgn-primary)}\n.mfp.mfp-lgn.mfp-native-generated .lgn-inc-l{font-size:10px;line-height:15px;font-weight:500;color:#9A8C7E}\n.mfp.mfp-lgn.mfp-native-generated .lgn-page{padding:0!important;background:transparent!important;min-height:0!important}.mfp.mfp-lgn.mfp-native-generated .lgn-shell,.mfp.mfp-lgn.mfp-native-generated .lgn-wrap{max-width:none!important;margin:0!important}.mfp.mfp-lgn.mfp-native-generated .lgn-grid,.mfp.mfp-lgn.mfp-native-generated .lgn-main,.mfp.mfp-lgn.mfp-native-generated .lgn-hero-in,.mfp.mfp-lgn.mfp-native-generated .lgn-card{max-width:none!important;margin-left:0!important;margin-right:0!important}.mfp.mfp-lgn.mfp-native-generated .lgn-page{border:1px solid var(--lgn-border)!important;border-radius:12px!important;overflow:hidden;background:var(--lgn-page)!important}.mf-form-wrapper.mf-has-date-popover .mfp.mfp-lgn.mfp-native-generated .lgn-page{overflow:visible!important}",
+    "themeSelector": false,
+    "premiumGeneratedShell": true,
+    "gateNavigationUntilValid": true,
+    "postSubmitExperience": {
+      "enabled": true,
+      "mode": "rich",
+      "title": "Reservation Confirmed",
+      "message": "Thank you, {{field:first_name}}. We sent the confirmation to {{field:email}}.",
+      "showSubmissionId": true,
+      "submissionIdLabel": "Reference:",
+      "showAnswerSummary": false,
+      "allowFillAgain": true,
+      "fillAgainLabel": "Submit another",
+      "doneLabel": "Done"
+    },
+    "themeCompatibility": {
+      "policy": "hybrid",
+      "supportsPageColors": false,
+      "supportsPageTypography": true,
+      "supportsDarkHost": true,
+      "prefixes": [
+        "lgn"
+      ],
+      "immutable": [
+        "primary",
+        "accent",
+        "deco"
+      ]
+    }
+  },
+  "fields": [
+    {
+      "placeholder": "Eleanor",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "first_name",
+      "type": "Text",
+      "label": "First name *",
+      "required": true
+    },
+    {
+      "placeholder": "Hartley",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "last_name",
+      "type": "Text",
+      "label": "Last name *",
+      "required": true
+    },
+    {
+      "placeholder": "eleanor@email.com",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "email",
+      "type": "Email",
+      "label": "Email *",
+      "required": true
+    },
+    {
+      "placeholder": "+1 212 555 0100",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "phone",
+      "type": "Text",
+      "label": "Phone",
+      "required": false
+    },
+    {
+      "placeholder": "1990",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "birth_year",
+      "type": "Text",
+      "label": "Year of birth",
+      "required": false
+    },
+    {
+      "placeholder": "Select country",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Germany",
+          "value": "Germany"
+        },
+        {
+          "label": "France",
+          "value": "France"
+        },
+        {
+          "label": "Spain",
+          "value": "Spain"
+        },
+        {
+          "label": "Italy",
+          "value": "Italy"
+        },
+        {
+          "label": "Portugal",
+          "value": "Portugal"
+        },
+        {
+          "label": "Netherlands",
+          "value": "Netherlands"
+        },
+        {
+          "label": "Austria",
+          "value": "Austria"
+        },
+        {
+          "label": "Belgium",
+          "value": "Belgium"
+        },
+        {
+          "label": "Greece",
+          "value": "Greece"
+        },
+        {
+          "label": "Poland",
+          "value": "Poland"
+        },
+        {
+          "label": "Other",
+          "value": "Other"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "dropdown"
+      },
+      "key": "country",
+      "type": "Select",
+      "label": "Country *",
+      "required": true,
+      "optionDisplay": "dropdown",
+      "choiceDisplay": "dropdown",
+      "optionVariant": "dropdown",
+      "widgetProps": {
+        "optionDisplay": "dropdown"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "mm/dd/yyyy",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "check_in",
+      "type": "Date",
+      "label": "Check-in date *",
+      "required": true
+    },
+    {
+      "placeholder": "mm/dd/yyyy",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "check_out",
+      "type": "Date",
+      "label": "Check-out date *",
+      "required": true
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "2 guests",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "1 guest",
+          "value": "1 guest"
+        },
+        {
+          "label": "2 guests",
+          "value": "2 guests"
+        },
+        {
+          "label": "3 guests",
+          "value": "3 guests"
+        },
+        {
+          "label": "4 guests",
+          "value": "4 guests"
+        },
+        {
+          "label": "5 guests",
+          "value": "5 guests"
+        },
+        {
+          "label": "6 guests",
+          "value": "6 guests"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "dropdown"
+      },
+      "key": "guests",
+      "type": "Select",
+      "label": "Number of guests",
+      "required": false,
+      "optionDisplay": "dropdown",
+      "choiceDisplay": "dropdown",
+      "optionVariant": "dropdown",
+      "widgetProps": {
+        "optionDisplay": "dropdown"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "Select month",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "January 2026",
+          "value": "January 2026"
+        },
+        {
+          "label": "February 2026",
+          "value": "February 2026"
+        },
+        {
+          "label": "March 2026",
+          "value": "March 2026"
+        },
+        {
+          "label": "April 2026",
+          "value": "April 2026"
+        },
+        {
+          "label": "May 2026",
+          "value": "May 2026"
+        },
+        {
+          "label": "June 2026",
+          "value": "June 2026"
+        },
+        {
+          "label": "July 2026",
+          "value": "July 2026"
+        },
+        {
+          "label": "August 2026",
+          "value": "August 2026"
+        },
+        {
+          "label": "September 2026",
+          "value": "September 2026"
+        },
+        {
+          "label": "October 2026",
+          "value": "October 2026"
+        },
+        {
+          "label": "November 2026",
+          "value": "November 2026"
+        },
+        {
+          "label": "December 2026",
+          "value": "December 2026"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "dropdown"
+      },
+      "key": "start_month",
+      "type": "Select",
+      "label": "Preferred start month",
+      "required": false,
+      "optionDisplay": "dropdown",
+      "choiceDisplay": "dropdown",
+      "optionVariant": "dropdown",
+      "widgetProps": {
+        "optionDisplay": "dropdown"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Standard Room<span class='lgn-size'>28 m²</span>",
+          "value": "standard",
+          "icon": "fa-bed",
+          "description": "Single room with double bed and city view.<span class='lgn-price'><span class='lgn-amt'>$180</span><span class='lgn-per'>/night</span></span><span class='lgn-occ'><span class='lgn-occ-l'>Occupancy</span><span class='lgn-bar'><span class='lgn-bar-f lgn-bar-82'></span></span><span class='lgn-pct'>82%</span><span class='lgn-delta'>+2.5%</span></span>"
+        },
+        {
+          "label": "Family Suite<span class='lgn-size'>54 m²</span>",
+          "value": "family",
+          "icon": "fa-users",
+          "description": "Two-bedroom room featuring a parlor and kitchenette.<span class='lgn-price'><span class='lgn-amt'>$320</span><span class='lgn-per'>/night</span></span><span class='lgn-occ'><span class='lgn-occ-l'>Occupancy</span><span class='lgn-bar'><span class='lgn-bar-f lgn-bar-75'></span></span><span class='lgn-pct'>75%</span><span class='lgn-delta'>+1.2%</span></span>"
+        },
+        {
+          "label": "Royal Suite<span class='lgn-size'>96 m²</span>",
+          "value": "royal",
+          "icon": "fa-star",
+          "description": "Highly spacious with private dining and butler service.<span class='lgn-price'><span class='lgn-amt'>$1,200</span><span class='lgn-per'>/night</span></span><span class='lgn-occ'><span class='lgn-occ-l'>Occupancy</span><span class='lgn-bar'><span class='lgn-bar-f lgn-bar-68'></span></span><span class='lgn-pct'>68%</span><span class='lgn-delta'>+0.8%</span></span>"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "cards",
+        "optionColumns": 1
+      },
+      "key": "room_type",
+      "type": "Radio",
+      "label": "Room",
+      "required": true,
+      "optionDisplay": "cards",
+      "choiceDisplay": "cards",
+      "optionVariant": "cards",
+      "widgetProps": {
+        "optionDisplay": "cards",
+        "optionColumns": 1
+      },
+      "allowOptionHtml": true,
+      "optionColumns": 1
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Complimentary Wi-Fi",
+          "value": "Complimentary Wi-Fi"
+        },
+        {
+          "label": "Airport Transfer",
+          "value": "Airport Transfer"
+        },
+        {
+          "label": "Room Service",
+          "value": "Room Service"
+        },
+        {
+          "label": "Spa Access",
+          "value": "Spa Access"
+        },
+        {
+          "label": "Fine Dining",
+          "value": "Fine Dining"
+        },
+        {
+          "label": "Pool & Gym",
+          "value": "Pool & Gym"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "chips"
+      },
+      "key": "interests",
+      "type": "Checkbox",
+      "label": "Preferred Amenities",
+      "required": false,
+      "optionDisplay": "chips",
+      "choiceDisplay": "chips",
+      "optionVariant": "chips",
+      "widgetProps": {
+        "optionDisplay": "chips"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "Select programme",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Erasmus Exchange",
+          "value": "erasmus"
+        },
+        {
+          "label": "Language Immersion",
+          "value": "language"
+        },
+        {
+          "label": "Solidarity Corps",
+          "value": "volunteer"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "dropdown"
+      },
+      "key": "programme",
+      "type": "Select",
+      "label": "Programme track",
+      "required": false,
+      "optionDisplay": "dropdown",
+      "choiceDisplay": "dropdown",
+      "optionVariant": "dropdown",
+      "widgetProps": {
+        "optionDisplay": "dropdown"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "3 months",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "1 month",
+          "value": "1 month"
+        },
+        {
+          "label": "3 months",
+          "value": "3 months"
+        },
+        {
+          "label": "6 months",
+          "value": "6 months"
+        },
+        {
+          "label": "12 months",
+          "value": "12 months"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "dropdown"
+      },
+      "key": "duration",
+      "type": "Select",
+      "label": "Duration",
+      "required": false,
+      "optionDisplay": "dropdown",
+      "choiceDisplay": "dropdown",
+      "optionVariant": "dropdown",
+      "widgetProps": {
+        "optionDisplay": "dropdown"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "Select level",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "A1 — Beginner",
+          "value": "A1 — Beginner"
+        },
+        {
+          "label": "A2 — Elementary",
+          "value": "A2 — Elementary"
+        },
+        {
+          "label": "B1 — Intermediate",
+          "value": "B1 — Intermediate"
+        },
+        {
+          "label": "B2 — Upper-int.",
+          "value": "B2 — Upper-int."
+        },
+        {
+          "label": "C1 — Advanced",
+          "value": "C1 — Advanced"
+        },
+        {
+          "label": "C2 — Fluent",
+          "value": "C2 — Fluent"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "dropdown"
+      },
+      "key": "language_level",
+      "type": "Select",
+      "label": "Language level",
+      "required": false,
+      "optionDisplay": "dropdown",
+      "choiceDisplay": "dropdown",
+      "optionVariant": "dropdown",
+      "widgetProps": {
+        "optionDisplay": "dropdown"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "Early check-in, dietary requirements, room preferences...",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "requests",
+      "type": "Textarea",
+      "label": "Notes for the concierge (optional)",
+      "required": false
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Send me exclusive offers and seasonal packages.",
+          "value": "yes"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "list"
+      },
+      "key": "newsletter",
+      "type": "Checkbox",
+      "label": "Newsletter",
+      "required": false,
+      "optionDisplay": "list",
+      "choiceDisplay": "list",
+      "optionVariant": "list",
+      "widgetProps": {
+        "optionDisplay": "list"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "I accept the <span class=\"lgn-link\">booking terms &amp; cancellation policy</span>. *",
+          "value": "yes"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "list"
+      },
+      "key": "terms",
+      "type": "Checkbox",
+      "label": "Terms",
+      "required": true,
+      "optionDisplay": "list",
+      "choiceDisplay": "list",
+      "optionVariant": "list",
+      "widgetProps": {
+        "optionDisplay": "list"
+      },
+      "allowOptionHtml": true
+    }
+  ],
+  "rules": [],
+  "workflow": {
+    "notifications": []
+  }
+}

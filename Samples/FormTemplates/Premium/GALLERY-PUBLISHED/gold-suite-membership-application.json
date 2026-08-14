@@ -1,0 +1,685 @@
+{
+  "version": "1.0",
+  "slug": "gold-suite-membership-application",
+  "title": "Gold Suite — Membership Application",
+  "description": "Full-bleed suite photograph with member statistics over it, then a bare 896px column: three membership tiers side by side with price, popularity meter and perk list, boxed member details, experience pills, a bordered consent box and a bronze-to-gold CTA. Transcribed from the hotel-suite mock.",
+  "category": "application",
+  "categories": [
+    "application",
+    "premium",
+    "hospitality"
+  ],
+  "icon": "crown",
+  "submitButtonText": "Apply for Membership",
+  "successMessage": "Membership application received. Our team replies within 24 hours.",
+  "settings": {
+    "theme": "custom",
+    "multiPage": false,
+    "showProgressBar": false,
+    "customContent": {
+      "exclusive_membership": "Exclusive Membership",
+      "gold_suite": "Gold Suite",
+      "membership": "Membership",
+      "join_an_elite_circle_of_members_with_unrivalled_acce": "Join an elite circle of members with unrivalled access to the world's finest hotel experiences.",
+      "text_92": "92%",
+      "text_4_218_reviews": "4,218 reviews",
+      "text_47": "47",
+      "countries": "Countries",
+      "text_3_200": "$3,200",
+      "per_year": "Per year",
+      "choose_your_tier": "Choose Your Tier",
+      "member_details": "Member Details",
+      "first_name": "First name *",
+      "last_name": "Last name *",
+      "email_address": "Email address *",
+      "phone": "Phone",
+      "year_of_birth": "Year of birth",
+      "country": "Country *",
+      "stay_and_preferences": "Stay & Preferences",
+      "number_of_guests": "Number of guests",
+      "preferred_start": "Preferred start",
+      "programme_track": "Programme track",
+      "language_level": "Language level",
+      "special_occasion": "Special occasion",
+      "preferred_experiences": "Preferred Experiences",
+      "why_join_gold_suite_optional": "Why join Gold Suite? (optional)",
+      "apply_for_membership": "Apply for Membership",
+      "our_membership_team_reviews_all_applications_within": "Our membership team reviews all applications within 24 hours. No commitment required.",
+      "hero_image": "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs="
+    },
+    "customScripts": {},
+    "customHtml": "<div class='mfp mfp-gsu mfp-native-generated' data-mf-flexgrid=\"locked\" style=\"background:transparent!important;border:0!important;border-radius:0!important;padding:0!important;box-shadow:none!important\"><div class='gsu-page'><div class='gsu-hero'><img class='gsu-content-image' src='{{content:hero_image}}' alt='' aria-hidden='true'><div class='gsu-hero-scrim' role='presentation'></div><div class='gsu-hero-copy'><p class='gsu-hero-eyebrow'>{{content:exclusive_membership}}</p><h1 class='gsu-hero-h'>{{content:gold_suite}}<br><em>{{content:membership}}</em></h1><p class='gsu-hero-lede'>{{content:join_an_elite_circle_of_members_with_unrivalled_acce}}</p></div><div class='gsu-pills'><div class='gsu-pill'><div class='gsu-pill-top'><i class='fa fa-star'></i><span class='gsu-pill-v'>{{content:text_92}}</span></div><div class='gsu-pill-s'>{{content:text_4_218_reviews}}</div></div><div class='gsu-pill'><div class='gsu-pill-top'><i class='fa fa-line-chart'></i><span class='gsu-pill-v'>{{content:text_47}}</span></div><div class='gsu-pill-s'>{{content:countries}}</div></div><div class='gsu-pill'><div class='gsu-pill-top'><i class='fa fa-magic'></i><span class='gsu-pill-v'>{{content:text_3_200}}</span></div><div class='gsu-pill-s'>{{content:per_year}}</div></div></div></div><div class='gsu-main'><div class='gsu-sec'><span class='gsu-sec-pill'></span><h2 class='gsu-sec-h'>{{content:choose_your_tier}}</h2></div><div class='gsu-tiers'>{{field:tier}}</div><div class='gsu-block'><div class='gsu-sec'><span class='gsu-sec-pill'></span><h2 class='gsu-sec-h'>{{content:member_details}}</h2></div><div class='gsu-grid2'><label class='gsu-field'><span class='gsu-label'>{{content:first_name}}</span>{{field:first_name}}</label><label class='gsu-field'><span class='gsu-label'>{{content:last_name}}</span>{{field:last_name}}</label><label class='gsu-field'><span class='gsu-label'>{{content:email_address}}</span>{{field:email}}</label><label class='gsu-field'><span class='gsu-label'>{{content:phone}}</span>{{field:phone}}</label><label class='gsu-field'><span class='gsu-label'>{{content:year_of_birth}}</span>{{field:birth_year}}</label><label class='gsu-field'><span class='gsu-label'>{{content:country}}</span>{{field:country}}</label></div></div><div class='gsu-block'><div class='gsu-sec'><span class='gsu-sec-pill'></span><h2 class='gsu-sec-h'>{{content:stay_and_preferences}}</h2></div><div class='gsu-grid2'><label class='gsu-field'><span class='gsu-label'>{{content:number_of_guests}}</span>{{field:guests}}</label><label class='gsu-field'><span class='gsu-label'>{{content:preferred_start}}</span>{{field:start_month}}</label><label class='gsu-field'><span class='gsu-label'>{{content:programme_track}}</span>{{field:programme}}</label><label class='gsu-field'><span class='gsu-label'>{{content:language_level}}</span>{{field:language_level}}</label><label class='gsu-field gsu-span2'><span class='gsu-label'>{{content:special_occasion}}</span>{{field:occasion}}</label></div></div><div class='gsu-block'><div class='gsu-sec'><span class='gsu-sec-pill'></span><h2 class='gsu-sec-h'>{{content:preferred_experiences}}</h2></div><div class='gsu-chips'>{{field:interests}}</div></div><label class='gsu-field gsu-mot'><span class='gsu-label'>{{content:why_join_gold_suite_optional}}</span>{{field:motivation}}</label><div class='gsu-terms'>{{field:newsletter}}{{field:terms}}</div><button class='gsu-submit' type='submit'>{{content:apply_for_membership}}</button><p class='gsu-foot'>{{content:our_membership_team_reviews_all_applications_within}}</p></div></div></div>",
+    "customCss": "@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Cormorant+Garamond:wght@400;500;600;700&display=swap');\n.mfp.mfp-gsu.mfp-native-generated {--gsu-primary:#B8860B;--gsu-accent:#D4A520;--gsu-surface:var(--mf-page-surface,var(--mf-preset-surface,#FFFFFF));--gsu-text:var(--mf-page-text,var(--mf-preset-text,#1A1A1A));--gsu-muted:var(--mf-page-muted,var(--mf-preset-muted,#8C7A5E));--gsu-border:var(--mf-page-border,var(--mf-preset-border,#E8D9B0));--gsu-on-primary:var(--mf-preset-on-primary,#FFFFFF);--gsu-deco:#F5E6B8;--gsu-page:#FFFBF2;--gsu-fill:#FFFBF2;--gsu-fill-strong:color-mix(in srgb, var(--gsu-text) 9%, var(--gsu-surface));--gsu-soft:color-mix(in srgb, var(--gsu-primary) 12%, var(--gsu-surface));--gsu-hairline:color-mix(in srgb, var(--gsu-text) 12%, var(--gsu-surface));}.mfp.mfp-gsu.mfp-native-generated {background:transparent!important;border:0!important;padding:0!important;font-family:'DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif}.mfp.mfp-gsu.mfp-native-generated {--gsu-primary:var(--mf-page-primary,var(--mf-preset-primary,#B8860B));--gsu-accent:var(--mf-page-accent,var(--mf-preset-accent,#D4A520));--gsu-surface:var(--mf-page-surface,var(--mf-preset-surface,#FFFFFF));--gsu-text:var(--mf-page-text,var(--mf-preset-text,#1A1A1A));--gsu-border:var(--mf-page-border,var(--mf-preset-border,#E8D9B0));--gsu-on-primary:var(--mf-page-on-primary,var(--mf-preset-on-primary,#FFFFFF));--gsu-page:var(--mf-preset-bg,#FFFBF2);}@container (max-width:520px){.mfp.mfp-gsu.mfp-native-generated [class*=\"-grid\"],.mfp.mfp-gsu.mfp-native-generated [class*=\"-meta\"],.mfp.mfp-gsu.mfp-native-generated [class*=\"-scores\"],.mfp.mfp-gsu.mfp-native-generated [class*=\"-charts\"],.mfp.mfp-gsu.mfp-native-generated [class*=\"-cols\"]{grid-template-columns:1fr!important}.mfp.mfp-gsu.mfp-native-generated [class*=\"-body\"],.mfp.mfp-gsu.mfp-native-generated [class*=\"-split\"],.mfp.mfp-gsu.mfp-native-generated [class*=\"-foot\"],.mfp.mfp-gsu.mfp-native-generated [class*=\"-head\"],.mfp.mfp-gsu.mfp-native-generated [class*=\"-row\"]{flex-wrap:wrap!important}.mfp.mfp-gsu.mfp-native-generated [class*=\"-aside\"],.mfp.mfp-gsu.mfp-native-generated [class*=\"-side\"]{flex:1 1 100%!important;width:100%!important;max-width:none!important}}.mfp.mfp-gsu.mfp-native-generated  img{max-width:100%!important;height:auto}.mfp.mfp-gsu.mfp-native-generated {overflow-wrap:break-word}\n\n/* The wrapper itself: strip the host's card, but NOT its width. Layout > Max width in the module\n   settings (480/640/768/960/Full) is a max-width on THIS element, and the previous version of this\n   rule overrode it with max-width:none!important - so picking 960 did nothing at all. */\n.mf-form-wrapper:has(.mfp-gsu){background:transparent!important;border:0!important;\n  border-radius:0!important;box-shadow:none!important;padding:0!important}\n/* The boxes INSIDE it have their own measures, and those are what squeezed the design. */\n.mf-form-wrapper:has(.mfp-gsu) > .mf-form-inner,\n.mf-form-wrapper:has(.mfp-gsu) .mf-form,\n.mf-form-wrapper:has(.mfp-gsu) .mf-fields-container{background:transparent!important;\n  border:0!important;border-radius:0!important;box-shadow:none!important;padding:0!important;\n  margin:0!important;max-width:none!important;width:100%!important}\n\n.mfp.mfp-gsu.mfp-native-generated {container-type:inline-size;font-family:'DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif!important;color:var(--gsu-text)}\n.mfp.mfp-gsu.mfp-native-generated .gsu-page{background:var(--gsu-page)}\n\n/* full-bleed hero -------------------------------------------------------- */\n.mfp.mfp-gsu.mfp-native-generated .gsu-hero{position:relative;overflow:hidden;height:320px;\n  background-image:url('/DesktopModules/MegaForm/Assets/img/gold-suite-membership-application/hotel-suite-hero.png'),url('/Modules/MegaForm/img/gold-suite-membership-application/hotel-suite-hero.png');\n  background-size:cover;background-position:50% 50%}\n.mfp.mfp-gsu.mfp-native-generated img.gsu-content-image{position:absolute!important;inset:0!important;display:block!important;\n  width:100%!important;height:100%!important;object-fit:cover!important;object-position:50% 50%!important;\n  border:0!important;border-radius:0!important;pointer-events:none!important}\n.mfp.mfp-gsu.mfp-native-generated .gsu-hero-scrim{position:absolute;inset:0;\n  background:linear-gradient(to right,rgba(26,26,26,.7) 0%,rgba(26,26,26,.1) 60%)}\n.mfp.mfp-gsu.mfp-native-generated .gsu-hero-copy{position:absolute;inset:0;display:flex;flex-direction:column;\n  justify-content:center;padding:0 32px}\n@container (min-width:640px){.mfp.mfp-gsu.mfp-native-generated .gsu-hero-copy{padding:0 64px}}\n.mfp.mfp-gsu.mfp-native-generated p.gsu-hero-eyebrow{margin:0 0 8px!important;font-size:12px!important;line-height:16px!important;\n  font-weight:700!important;letter-spacing:.25em!important;text-transform:uppercase!important;\n  color:var(--gsu-accent)!important}\n.mfp.mfp-gsu.mfp-native-generated h1.gsu-hero-h{margin:0!important;font-family:'Cormorant Garamond',Georgia,'Times New Roman',serif!important;font-size:60px!important;\n  line-height:1!important;font-weight:700!important;color:#fff!important}\n.mfp.mfp-gsu.mfp-native-generated h1.gsu-hero-h em{font-style:normal;color:var(--gsu-accent)}\n.mfp.mfp-gsu.mfp-native-generated p.gsu-hero-lede{margin:12px 0 0!important;max-width:384px;font-size:14px!important;\n  line-height:20px!important;font-weight:400!important;color:rgba(255,255,255,.75)!important}\n.mfp.mfp-gsu.mfp-native-generated .gsu-pills{position:absolute;right:20px;bottom:20px;display:flex;gap:12px}\n.mfp.mfp-gsu.mfp-native-generated .gsu-pill{border-radius:16px;padding:10px 16px;text-align:center;\n  background:rgba(253,240,204,.92)}\n@container (max-width:520px){\n  .mfp.mfp-gsu.mfp-native-generated .gsu-pills{left:12px;right:12px;gap:6px}\n  .mfp.mfp-gsu.mfp-native-generated .gsu-pill{flex:1 1 0;min-width:0;padding:8px 6px}\n}\n.mfp.mfp-gsu.mfp-native-generated .gsu-pill-top{display:flex;align-items:center;justify-content:center;gap:6px}\n.mfp.mfp-gsu.mfp-native-generated .gsu-pill-top i{font-size:14px;line-height:14px;color:var(--gsu-primary)}\n.mfp.mfp-gsu.mfp-native-generated .gsu-pill-v{font-size:16px;line-height:24px;font-weight:700;color:var(--gsu-text)}\n.mfp.mfp-gsu.mfp-native-generated .gsu-pill-s{font-size:10px;line-height:15px;font-weight:500;color:#8C7A5E}\n\n/* content column --------------------------------------------------------- */\n.mfp.mfp-gsu.mfp-native-generated .gsu-main{max-width:896px;margin:0 auto;padding:40px 32px}\n.mfp.mfp-gsu.mfp-native-generated .gsu-block{margin-top:40px}\n.mfp.mfp-gsu.mfp-native-generated .gsu-sec{display:flex;align-items:center;gap:12px;padding-bottom:12px;\n  border-bottom:1px solid var(--gsu-border)}\n.mfp.mfp-gsu.mfp-native-generated .gsu-sec-pill{width:6px;height:20px;border-radius:999px;background:var(--gsu-accent);flex:0 0 auto}\n.mfp.mfp-gsu.mfp-native-generated h2.gsu-sec-h{margin:0!important;font-family:'Cormorant Garamond',Georgia,'Times New Roman',serif!important;font-size:20px!important;\n  line-height:28px!important;font-weight:600!important;color:var(--gsu-text)!important}\n.mfp.mfp-gsu.mfp-native-generated .gsu-tiers{margin-top:16px}\n.mfp.mfp-gsu.mfp-native-generated .gsu-grid2{display:grid;grid-template-columns:1fr 1fr;column-gap:24px;row-gap:20px;\n  margin-top:20px}\n.mfp.mfp-gsu.mfp-native-generated .gsu-span2{grid-column:1/-1}\n.mfp.mfp-gsu.mfp-native-generated .gsu-field{display:block;margin:0}\n.mfp.mfp-gsu.mfp-native-generated .gsu-label{display:block;margin:0 0 6px;font-size:10px;line-height:15px;font-weight:600;\n  letter-spacing:.1em;text-transform:uppercase;color:#8C7A5E}\n.mfp.mfp-gsu.mfp-native-generated .gsu-chips{margin-top:16px}\n.mfp.mfp-gsu.mfp-native-generated .gsu-mot{display:block;margin-top:32px}\n.mfp.mfp-gsu.mfp-native-generated .gsu-mot .mf-textarea[class]{margin-top:6px!important}\n\n/* megaform sets font-family on label/input/select/textarea with !important, so an authored\n   <span> inside a <label> inherits the HOST typeface no matter what the shell root declares.\n   Element selectors are (0,3,1) here - above megaform, below every authored class rule - and\n   <i> is left alone so Font Awesome keeps its own family. */\n.mfp.mfp-gsu.mfp-native-generated label,.mfp.mfp-gsu.mfp-native-generated span,.mfp.mfp-gsu.mfp-native-generated p,.mfp.mfp-gsu.mfp-native-generated div,.mfp.mfp-gsu.mfp-native-generated ul,.mfp.mfp-gsu.mfp-native-generated li,.mfp.mfp-gsu.mfp-native-generated h1,.mfp.mfp-gsu.mfp-native-generated h2,.mfp.mfp-gsu.mfp-native-generated h3,.mfp.mfp-gsu.mfp-native-generated button{font-family:inherit!important}\n.mfp.mfp-gsu.mfp-native-generated .mf-field-label{display:none!important}\n/* A wizard's page-break Section renders a visible heading the mock has no room for - it exists to\n   split the pages, not to be seen. */\n.mfp.mfp-gsu.mfp-native-generated .mf-section-break,.mfp.mfp-gsu.mfp-native-generated .mf-section-title{display:none!important}\n.mfp.mfp-gsu.mfp-native-generated .mf-field-group{margin:0!important;width:100%}\n.mfp.mfp-gsu.mfp-native-generated .mf-form-title,.mfp.mfp-gsu.mfp-native-generated .mf-form-description,.mfp.mfp-gsu.mfp-native-generated .mf-form-actions{display:none!important}\n.mfp.mfp-gsu.mfp-native-generated .mf-option-item{margin:0!important}\n/* megaform gives every option chip a 36px floor and paints .mf-option-icon as a rounded tile. */\n.mfp.mfp-gsu.mfp-native-generated .mf-option-group--chips .mf-option-check,\n.mfp.mfp-gsu.mfp-native-generated .mf-option-group--cards .mf-option-check{display:none!important}\n.mfp.mfp-gsu.mfp-native-generated .mf-option-group--chips .mf-option-ui{min-height:0!important;height:auto!important}\n.mfp.mfp-gsu.mfp-native-generated .mf-option-group--cards .mf-option-copy{display:block;width:100%}\n\n\n.mfp.mfp-gsu.mfp-native-generated .mf-input[class],.mfp.mfp-gsu.mfp-native-generated .mf-select[class]{width:100%!important;box-sizing:border-box!important;\n  border:1px solid var(--gsu-border)!important;border-radius:12px!important;background:var(--gsu-surface)!important;\n  padding:12px 16px!important;min-height:0!important;height:auto!important;\n  color:var(--gsu-text)!important;font-family:inherit!important;font-size:14px!important;\n  line-height:20px!important;font-weight:400!important;box-shadow:none!important}\n.mfp.mfp-gsu.mfp-native-generated .mf-input[class]:focus,.mfp.mfp-gsu.mfp-native-generated .mf-select[class]:focus{border-color:var(--gsu-accent)!important;\n  box-shadow:none!important;outline:none!important}\n.mfp.mfp-gsu.mfp-native-generated .mf-input[class]::placeholder,.mfp.mfp-gsu.mfp-native-generated .mf-textarea[class]::placeholder{color:#8C7A5E!important;opacity:1}\n\n\n.mfp.mfp-gsu.mfp-native-generated .mf-textarea[class]{width:100%!important;box-sizing:border-box!important;\n  border:1px solid var(--gsu-border)!important;border-radius:12px!important;background:#fff!important;\n  padding:12px 16px!important;min-height:106px!important;height:106px!important;\n  resize:none!important;color:var(--gsu-text)!important;font-family:inherit!important;\n  font-size:14px!important;line-height:20px!important;box-shadow:none!important}\n\n/* tier cards ------------------------------------------------------------- */\n.mfp.mfp-gsu.mfp-native-generated .mf-option-group--cards{display:grid!important;grid-template-columns:1fr 1fr 1fr!important;\n  gap:16px!important}\n.mfp.mfp-gsu.mfp-native-generated .mf-option-group--cards .mf-option-ui{display:flex;flex-direction:column;align-items:stretch;\n  gap:0;width:100%;box-sizing:border-box;padding:20px;border:2px solid var(--gsu-border);\n  border-radius:16px;background:#fff;cursor:pointer;transition:all .15s ease}\n.mfp.mfp-gsu.mfp-native-generated .mf-option-group--cards .mf-option-icon{display:flex!important;align-items:center!important;\n  justify-content:center!important;width:40px!important;height:40px!important;flex:0 0 40px!important;\n  margin:0 0 12px!important;padding:0!important;border:0!important;border-radius:12px!important;\n  background:#F5E6B8!important;color:var(--gsu-primary)!important;font-size:20px!important;\n  line-height:20px!important}\n.mfp.mfp-gsu.mfp-native-generated .mf-option-group--cards .mf-option-label{font-size:14px;line-height:20px;font-weight:700;\n  color:var(--gsu-text)}\n.mfp.mfp-gsu.mfp-native-generated .mf-option-group--cards .mf-option-desc{display:block;width:100%;margin:0;font-size:12px;\n  line-height:16px;font-weight:400;color:#8C7A5E}\n.mfp.mfp-gsu.mfp-native-generated .gsu-price{display:block;margin-top:2px;font-size:20px;line-height:28px;font-weight:700;\n  color:var(--gsu-primary)}\n.mfp.mfp-gsu.mfp-native-generated .gsu-period{display:block;margin-top:2px;margin-bottom:12px;font-size:12px;line-height:16px;\n  color:#8C7A5E}\n.mfp.mfp-gsu.mfp-native-generated .gsu-pop{display:block;margin-bottom:12px}\n.mfp.mfp-gsu.mfp-native-generated .gsu-pop-row{display:flex;justify-content:space-between;margin-bottom:4px;font-size:10px;\n  line-height:15px}\n.mfp.mfp-gsu.mfp-native-generated .gsu-pop-l{color:#8C7A5E}\n.mfp.mfp-gsu.mfp-native-generated .gsu-pop-r{font-weight:700;color:#8C7A5E}\n.mfp.mfp-gsu.mfp-native-generated .gsu-pop-d{font-weight:400}\n.mfp.mfp-gsu.mfp-native-generated .gsu-bar{display:block;height:6px;border-radius:999px;overflow:hidden;background:var(--gsu-border)}\n.mfp.mfp-gsu.mfp-native-generated .gsu-bar-f{display:block;height:100%;border-radius:999px;background:#F5E6B8}\n.mfp.mfp-gsu.mfp-native-generated .gsu-bar-82{width:82%}\n.mfp.mfp-gsu.mfp-native-generated .gsu-bar-75{width:75%}\n.mfp.mfp-gsu.mfp-native-generated .gsu-bar-68{width:68%}\n.mfp.mfp-gsu.mfp-native-generated .gsu-perks{display:block}\n.mfp.mfp-gsu.mfp-native-generated .gsu-perk{display:flex;align-items:center;gap:6px;margin-bottom:4px;font-size:12px;\n  line-height:16px;color:#8C7A5E}\n.mfp.mfp-gsu.mfp-native-generated .gsu-perk:last-child{margin-bottom:0}\n.mfp.mfp-gsu.mfp-native-generated .gsu-perk::before{content:'\\2713';flex:0 0 auto;font-size:12px;line-height:16px;\n  font-weight:700;color:var(--gsu-primary)}\n.mfp.mfp-gsu.mfp-native-generated .mf-option-group--cards .mf-option-item.is-selected .mf-option-ui,\n.mfp.mfp-gsu.mfp-native-generated .mf-option-group--cards input:checked+.mf-option-ui{border-color:var(--gsu-accent);background:#FEF6E0}\n@container (max-width:520px){\n  .mfp.mfp-gsu.mfp-native-generated .mf-option-group--cards{grid-template-columns:1fr!important}\n}\n\n/* experience pills ------------------------------------------------------- */\n.mfp.mfp-gsu.mfp-native-generated .mf-option-group--chips{display:flex;flex-wrap:wrap;gap:8px}\n.mfp.mfp-gsu.mfp-native-generated .mf-option-group--chips .mf-option-ui{display:block;gap:0;padding:6px 16px;\n  border:1px solid var(--gsu-border);border-radius:9999px;background:#fff;color:#8C7A5E;font-size:14px;\n  line-height:20px;font-weight:500;text-align:center;cursor:pointer;transition:all .15s ease}\n.mfp.mfp-gsu.mfp-native-generated .mf-option-group--chips .mf-option-label{font-size:14px;line-height:20px;font-weight:500;\n  color:inherit}\n.mfp.mfp-gsu.mfp-native-generated .mf-option-group--chips .mf-option-item.is-selected .mf-option-ui,\n.mfp.mfp-gsu.mfp-native-generated .mf-option-group--chips input:checked+.mf-option-ui{background:var(--gsu-accent);border-color:var(--gsu-accent);\n  color:var(--gsu-text)}\n\n/* consent box, CTA, footnote -------------------------------------------- */\n.mfp.mfp-gsu.mfp-native-generated .gsu-terms{display:flex;flex-direction:column;gap:12px;margin-top:32px;padding:20px;\n  border:1px solid var(--gsu-border);border-radius:16px;background:#fff}\n.mfp.mfp-gsu.mfp-native-generated .gsu-terms .mf-option-group--list{display:flex;flex-direction:column;gap:12px}\n.mfp.mfp-gsu.mfp-native-generated .gsu-terms .mf-option-ui{display:flex;align-items:flex-start;gap:12px;padding:0;border:0;\n  background:transparent}\n.mfp.mfp-gsu.mfp-native-generated .gsu-terms .mf-option-label{font-size:14px;line-height:20px;font-weight:400;color:#8C7A5E}\n.mfp.mfp-gsu.mfp-native-generated .gsu-link{text-decoration:underline;font-weight:600;color:var(--gsu-primary)}\n.mfp.mfp-gsu.mfp-native-generated button.gsu-submit[type=\"submit\"]{display:block;width:100%!important;margin-top:24px!important;\n  padding:16px 0!important;border:0!important;border-radius:16px!important;\n  background:linear-gradient(135deg,#8B5E0A 0%,var(--gsu-accent) 100%)!important;color:#fff!important;\n  font-family:inherit!important;font-size:14px!important;line-height:20px!important;\n  font-weight:700!important;letter-spacing:.1em!important;text-transform:uppercase!important;\n  cursor:pointer!important;box-shadow:none!important}\n.mfp.mfp-gsu.mfp-native-generated button.gsu-submit.mf-nav-blocked,.mfp.mfp-gsu.mfp-native-generated button.gsu-submit[disabled]{opacity:1;\n  background:linear-gradient(135deg,#8B5E0A 0%,var(--gsu-accent) 100%)!important;\n  cursor:not-allowed!important;filter:none!important}\n.mfp.mfp-gsu.mfp-native-generated p.gsu-foot{margin:16px 0 0!important;text-align:center!important;font-size:12px!important;\n  line-height:16px!important;font-weight:400!important;color:#8C7A5E!important}\n.mfp.mfp-gsu.mfp-native-generated .gsu-page{padding:0!important;background:transparent!important;min-height:0!important}.mfp.mfp-gsu.mfp-native-generated .gsu-shell,.mfp.mfp-gsu.mfp-native-generated .gsu-wrap{max-width:none!important;margin:0!important}.mfp.mfp-gsu.mfp-native-generated .gsu-grid,.mfp.mfp-gsu.mfp-native-generated .gsu-main,.mfp.mfp-gsu.mfp-native-generated .gsu-hero-in,.mfp.mfp-gsu.mfp-native-generated .gsu-card{max-width:none!important;margin-left:0!important;margin-right:0!important}.mfp.mfp-gsu.mfp-native-generated .gsu-page{border:1px solid var(--gsu-border)!important;border-radius:12px!important;overflow:hidden;background:var(--gsu-page)!important}.mf-form-wrapper.mf-has-date-popover .mfp.mfp-gsu.mfp-native-generated .gsu-page{overflow:visible!important}",
+    "themeSelector": false,
+    "premiumGeneratedShell": true,
+    "gateNavigationUntilValid": true,
+    "postSubmitExperience": {
+      "enabled": true,
+      "mode": "rich",
+      "title": "Welcome",
+      "message": "Welcome, {{field:first_name}}. Your application has been received. We will reach you at {{field:email}} within 24 hours.",
+      "showSubmissionId": true,
+      "submissionIdLabel": "Reference:",
+      "showAnswerSummary": false,
+      "allowFillAgain": true,
+      "fillAgainLabel": "Submit another",
+      "doneLabel": "Done"
+    },
+    "themeCompatibility": {
+      "policy": "hybrid",
+      "supportsPageColors": false,
+      "supportsPageTypography": true,
+      "supportsDarkHost": true,
+      "prefixes": [
+        "gsu"
+      ],
+      "immutable": [
+        "primary",
+        "accent",
+        "deco"
+      ]
+    }
+  },
+  "fields": [
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Gold Membership",
+          "value": "gold",
+          "icon": "fa-star",
+          "description": "<span class='gsu-price'>$480</span><span class='gsu-period'>per year</span><span class='gsu-pop'><span class='gsu-pop-row'><span class='gsu-pop-l'>Popularity</span><span class='gsu-pop-r'>82% <span class='gsu-pop-d'>+2.5%</span></span></span><span class='gsu-bar'><span class='gsu-bar-f gsu-bar-82'></span></span></span><span class='gsu-perks'><span class='gsu-perk'>Priority Check-in</span><span class='gsu-perk'>Daily Breakfast</span><span class='gsu-perk'>Late Checkout</span><span class='gsu-perk'>2 Spa Visits/Month</span></span>"
+        },
+        {
+          "label": "Platinum Membership",
+          "value": "platinum",
+          "icon": "fa-crown",
+          "description": "<span class='gsu-price'>$980</span><span class='gsu-period'>per year</span><span class='gsu-pop'><span class='gsu-pop-row'><span class='gsu-pop-l'>Popularity</span><span class='gsu-pop-r'>75% <span class='gsu-pop-d'>+1.2%</span></span></span><span class='gsu-bar'><span class='gsu-bar-f gsu-bar-75'></span></span></span><span class='gsu-perks'><span class='gsu-perk'>Dedicated Butler</span><span class='gsu-perk'>Airport Transfer</span><span class='gsu-perk'>Unlimited Dining</span><span class='gsu-perk'>Suite Upgrades</span></span>"
+        },
+        {
+          "label": "Diamond Membership",
+          "value": "diamond",
+          "icon": "fa-gem",
+          "description": "<span class='gsu-price'>$2,400</span><span class='gsu-period'>per year</span><span class='gsu-pop'><span class='gsu-pop-row'><span class='gsu-pop-l'>Popularity</span><span class='gsu-pop-r'>68% <span class='gsu-pop-d'>+0.8%</span></span></span><span class='gsu-bar'><span class='gsu-bar-f gsu-bar-68'></span></span></span><span class='gsu-perks'><span class='gsu-perk'>Private Jet Transfers</span><span class='gsu-perk'>Personal Chef</span><span class='gsu-perk'>Island Buyouts</span><span class='gsu-perk'>Custom Experiences</span></span>"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "cards",
+        "optionColumns": 3
+      },
+      "key": "tier",
+      "type": "Radio",
+      "label": "Membership tier",
+      "required": true,
+      "optionDisplay": "cards",
+      "choiceDisplay": "cards",
+      "optionVariant": "cards",
+      "widgetProps": {
+        "optionDisplay": "cards",
+        "optionColumns": 3
+      },
+      "allowOptionHtml": true,
+      "optionColumns": 3
+    },
+    {
+      "placeholder": "Eleanor",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "first_name",
+      "type": "Text",
+      "label": "First name *",
+      "required": true
+    },
+    {
+      "placeholder": "Hartley",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "last_name",
+      "type": "Text",
+      "label": "Last name *",
+      "required": true
+    },
+    {
+      "placeholder": "eleanor@email.com",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "email",
+      "type": "Email",
+      "label": "Email address *",
+      "required": true
+    },
+    {
+      "placeholder": "+ 1 212 555 0100",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "phone",
+      "type": "Text",
+      "label": "Phone",
+      "required": false
+    },
+    {
+      "placeholder": "1990",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "birth_year",
+      "type": "Text",
+      "label": "Year of birth",
+      "required": false
+    },
+    {
+      "placeholder": "Select country",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Germany",
+          "value": "Germany"
+        },
+        {
+          "label": "France",
+          "value": "France"
+        },
+        {
+          "label": "Spain",
+          "value": "Spain"
+        },
+        {
+          "label": "Italy",
+          "value": "Italy"
+        },
+        {
+          "label": "United Kingdom",
+          "value": "United Kingdom"
+        },
+        {
+          "label": "United States",
+          "value": "United States"
+        },
+        {
+          "label": "Japan",
+          "value": "Japan"
+        },
+        {
+          "label": "UAE",
+          "value": "UAE"
+        },
+        {
+          "label": "Switzerland",
+          "value": "Switzerland"
+        },
+        {
+          "label": "Other",
+          "value": "Other"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "dropdown"
+      },
+      "key": "country",
+      "type": "Select",
+      "label": "Country *",
+      "required": true,
+      "optionDisplay": "dropdown",
+      "choiceDisplay": "dropdown",
+      "optionVariant": "dropdown",
+      "widgetProps": {
+        "optionDisplay": "dropdown"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "2 guests",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "1 guest",
+          "value": "1 guest"
+        },
+        {
+          "label": "2 guests",
+          "value": "2 guests"
+        },
+        {
+          "label": "3 guests",
+          "value": "3 guests"
+        },
+        {
+          "label": "4 guests",
+          "value": "4 guests"
+        },
+        {
+          "label": "5 guests",
+          "value": "5 guests"
+        },
+        {
+          "label": "6 guests",
+          "value": "6 guests"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "dropdown"
+      },
+      "key": "guests",
+      "type": "Select",
+      "label": "Number of guests",
+      "required": false,
+      "optionDisplay": "dropdown",
+      "choiceDisplay": "dropdown",
+      "optionVariant": "dropdown",
+      "widgetProps": {
+        "optionDisplay": "dropdown"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "Select month",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "January 2026",
+          "value": "January 2026"
+        },
+        {
+          "label": "February 2026",
+          "value": "February 2026"
+        },
+        {
+          "label": "March 2026",
+          "value": "March 2026"
+        },
+        {
+          "label": "April 2026",
+          "value": "April 2026"
+        },
+        {
+          "label": "May 2026",
+          "value": "May 2026"
+        },
+        {
+          "label": "June 2026",
+          "value": "June 2026"
+        },
+        {
+          "label": "July 2026",
+          "value": "July 2026"
+        },
+        {
+          "label": "August 2026",
+          "value": "August 2026"
+        },
+        {
+          "label": "September 2026",
+          "value": "September 2026"
+        },
+        {
+          "label": "October 2026",
+          "value": "October 2026"
+        },
+        {
+          "label": "November 2026",
+          "value": "November 2026"
+        },
+        {
+          "label": "December 2026",
+          "value": "December 2026"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "dropdown"
+      },
+      "key": "start_month",
+      "type": "Select",
+      "label": "Preferred start",
+      "required": false,
+      "optionDisplay": "dropdown",
+      "choiceDisplay": "dropdown",
+      "optionVariant": "dropdown",
+      "widgetProps": {
+        "optionDisplay": "dropdown"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "Select",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Erasmus Exchange",
+          "value": "Erasmus Exchange"
+        },
+        {
+          "label": "Language Immersion",
+          "value": "Language Immersion"
+        },
+        {
+          "label": "Solidarity Corps",
+          "value": "Solidarity Corps"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "dropdown"
+      },
+      "key": "programme",
+      "type": "Select",
+      "label": "Programme track",
+      "required": false,
+      "optionDisplay": "dropdown",
+      "choiceDisplay": "dropdown",
+      "optionVariant": "dropdown",
+      "widgetProps": {
+        "optionDisplay": "dropdown"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "Select level",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "A1 — Beginner",
+          "value": "A1 — Beginner"
+        },
+        {
+          "label": "A2 — Elementary",
+          "value": "A2 — Elementary"
+        },
+        {
+          "label": "B1 — Intermediate",
+          "value": "B1 — Intermediate"
+        },
+        {
+          "label": "B2 — Upper-int.",
+          "value": "B2 — Upper-int."
+        },
+        {
+          "label": "C1 — Advanced",
+          "value": "C1 — Advanced"
+        },
+        {
+          "label": "C2 — Fluent",
+          "value": "C2 — Fluent"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "dropdown"
+      },
+      "key": "language_level",
+      "type": "Select",
+      "label": "Language level",
+      "required": false,
+      "optionDisplay": "dropdown",
+      "choiceDisplay": "dropdown",
+      "optionVariant": "dropdown",
+      "widgetProps": {
+        "optionDisplay": "dropdown"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "Anniversary, honeymoon, milestone celebration...",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "occasion",
+      "type": "Text",
+      "label": "Special occasion",
+      "required": false
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Private Dining",
+          "value": "Private Dining"
+        },
+        {
+          "label": "Wine Cellar",
+          "value": "Wine Cellar"
+        },
+        {
+          "label": "Infinity Pool",
+          "value": "Infinity Pool"
+        },
+        {
+          "label": "Heli Transfers",
+          "value": "Heli Transfers"
+        },
+        {
+          "label": "Art Gallery",
+          "value": "Art Gallery"
+        },
+        {
+          "label": "Yacht Charter",
+          "value": "Yacht Charter"
+        },
+        {
+          "label": "Golf Course",
+          "value": "Golf Course"
+        },
+        {
+          "label": "Spa & Wellness",
+          "value": "Spa & Wellness"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "chips"
+      },
+      "key": "interests",
+      "type": "Checkbox",
+      "label": "Preferred Experiences",
+      "required": false,
+      "optionDisplay": "chips",
+      "choiceDisplay": "chips",
+      "optionVariant": "chips",
+      "widgetProps": {
+        "optionDisplay": "chips"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "Tell us about your expectations and travel lifestyle...",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {},
+      "key": "motivation",
+      "type": "Textarea",
+      "label": "Why join Gold Suite? (optional)",
+      "required": false
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "Send me exclusive member previews and priority offers.",
+          "value": "yes"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "list"
+      },
+      "key": "newsletter",
+      "type": "Checkbox",
+      "label": "Newsletter",
+      "required": false,
+      "optionDisplay": "list",
+      "choiceDisplay": "list",
+      "optionVariant": "list",
+      "widgetProps": {
+        "optionDisplay": "list"
+      },
+      "allowOptionHtml": true
+    },
+    {
+      "placeholder": "",
+      "helpText": "",
+      "defaultValue": "",
+      "cssClass": "",
+      "width": "100%",
+      "readOnly": false,
+      "prefillParam": "",
+      "validation": {},
+      "options": [
+        {
+          "label": "I accept the <span class=\"gsu-link\">membership terms &amp; privacy policy</span>. *",
+          "value": "yes"
+        }
+      ],
+      "showIf": null,
+      "htmlContent": "",
+      "fileSettings": null,
+      "properties": {
+        "optionDisplay": "list"
+      },
+      "key": "terms",
+      "type": "Checkbox",
+      "label": "Terms",
+      "required": true,
+      "optionDisplay": "list",
+      "choiceDisplay": "list",
+      "optionVariant": "list",
+      "widgetProps": {
+        "optionDisplay": "list"
+      },
+      "allowOptionHtml": true
+    }
+  ],
+  "rules": [],
+  "workflow": {
+    "notifications": []
+  }
+}

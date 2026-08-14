@@ -48,6 +48,24 @@ The worktree contains unrelated user changes. Do not reset, clean, overwrite, or
 - Keep the Blog module a thin RazorHost presentation layer.
 - Use only the public `MegaForm.Sdk` facade from Blog Razor code.
 - Typed values are canonical. Do not add direct `MF_Submissions.DataJson` parsing.
+  - ⚠️ 2026-08-10, checked rather than assumed, because it keeps being proposed as a perf fix:
+    `SubmissionListItemDto` DOES carry `DataJson` (`MegaForm.Sdk/Dtos.cs:323`), so it is tempting
+    to read it straight off a `SearchAsync` row and delete the per-row `GetRecordAsync`. **It is
+    not a drop-in.** The two paths return different VALUE SHAPES, not just different freshness:
+    `SubmissionDataResolver.GetTypedFirstData` returns typed-store objects when typed rows exist
+    (a Number comes back as `decimal`) and only falls back to a raw
+    `JsonConvert.DeserializeObject<Dictionary<string, object>>` of DataJson when they do not. The
+    `Number()` helper in `MegaFormBlogs.cshtml` exists precisely because of that decimal — every
+    counter on the public blog once read 0 over it. Swapping the read path would re-run that class
+    of bug across dates, selects and file refs at once, silently.
+  - Freshness is not the blocker: every typed write derives from DataJson
+    (`SubmissionProcessor`, `LegacySubmissionBackfillService`, `TypedSubmissionResyncService`) and
+    `MegaFormClient.PatchRecordAsync` mirrors both in one operation
+    (`MegaForm.Sdk/MegaFormClient.cs:548` typed, `:562` DataJson). The blocker is normalization,
+    and the right place to fix the N+1 is a batch record read behind the SDK facade
+    (`Records.GetRecordsAsync(ids)`), not a second value-shape convention in the Razor module —
+    which is also what "any compatibility fallback must remain behind the SDK boundary" below
+    already says. That change lives in MegaForm, so it needs the owner's sign-off first.
 - Do not add Blog-owned SQL tables or direct MegaForm repository/SQL access.
 - Use `Records.PatchRecordAsync` for editorial writes.
 - Use named queries for public/admin reads. The keys are defined in
@@ -70,7 +88,11 @@ The worktree contains unrelated user changes. Do not reset, clean, overwrite, or
 
 - MegaForm live version: `2.0.14` (2026-08-09 — blog analytics rollup fix, below. The
   `_02.00.012` and `_02.00.013` zips in `MegaForm.DNN/Install` are older, do not deploy them)
-- MegaForm Blogs live version: `1.16.3` (2026-08-09)
+- MegaForm Blogs live version: `1.16.3` (2026-08-09). Source is at `1.16.4` (2026-08-10 — text
+  anchors, duplicate-query removal, 45 s public read cache, IsBounded surfaced); **not packaged
+  or installed anywhere yet**. It was verified by deploying the script straight into
+  `E:\DNN_SITES\DNN_MegaClean008\Website\DesktopModules\RazorModules\RazorHost\Scripts\`, diffing
+  the rendered HTML against the HEAD script over 7 URLs, then restoring that site byte-for-byte.
 - Template gallery files: `MegaForm.Blogs.DNN/Assets/Templates/` (catalog.json + 4 designs),
   packaged to `/DesktopModules/MegaFormBlogs/Assets/Templates/`
 - Live state: **the switch is OFF**, so /Blogs uses the built-in design. Newsroom is marked Active

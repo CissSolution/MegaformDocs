@@ -27,6 +27,14 @@ namespace MegaForm.Umbraco.Composers
                 return new ModuleSettingsPaymentGatewayStore(settings, key => config != null ? config[key] : null);
             });
             builder.Services.AddScoped<PaymentSubmissionVerifier>();
+
+            // [PAY-3 v20260712 parity] Gateway webhook intake (stripe/webhook, paypal/webhook)
+            // + the shared checkout service, same registrations as the Oqtane host
+            // (MegaForm.Oqtane.Server/Services/Startup.cs). Dependencies are already wired:
+            // IPaymentGatewayStore (above), PaymentGatewayClient (above), IFormRepository and
+            // ILogService (MegaFormComposer).
+            builder.Services.AddScoped<PaymentEndpointService>();
+            builder.Services.AddScoped<PaymentWebhookService>();
         }
     }
 }

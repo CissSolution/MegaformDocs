@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Umbraco.Cms.Core;
@@ -72,13 +73,59 @@ namespace MegaForm.Umbraco.Composers
 
             // ── Repositories
             builder.Services.AddScoped<IFormRepository, UmbracoFormRepository>();
-            builder.Services.AddScoped<ISubmissionRepository, UmbracoSubmissionRepository>();
             builder.Services.AddScoped<IDraftRepository, UmbracoDraftRepository>();
             builder.Services.AddScoped<IFileRepository, UmbracoFileRepository>();
             builder.Services.AddScoped<IPhase2Repository, UmbracoPhase2Repository>();
             builder.Services.AddScoped<IWorkflowRepository, UmbracoWorkflowRepository>();
             builder.Services.AddScoped<IWorkflowLibraryRepository, EfWorkflowLibraryRepository>();
             builder.Services.AddScoped<IDocumentRepository, UmbracoDocumentRepository>();
+
+            // [ATBE P1] A form bound to a table in a CUSTOMER database reads its records live from
+            // that table instead of from MF_Submissions. That routing is per form: the concrete
+            // UmbracoSubmissionRepository still serves every ordinary form, and it is also what the
+            // anchor store writes through, so anchor creation cannot recurse back into the decorator.
+            builder.Services.AddScoped<UmbracoSubmissionRepository>();
+            builder.Services.AddScoped<MegaForm.Core.Models.ExternalTable.IExternalBindingStore, UmbracoExternalBindingStore>();
+            builder.Services.AddScoped<MegaForm.Core.Models.ExternalTable.IExternalRowMapStore, UmbracoExternalRowMapStore>();
+            builder.Services.AddScoped<MegaForm.Core.Services.ExternalTable.ExternalTableQueryService>();
+            // [SourcePicker v20260715] Lets the submissions dashboard read a databaseInsert form's
+            // mirror table through the SAME external query path (source=sql). The connection
+            // allow-list mirrors the ExternalTableController: DashboardDatabase plus the operator's
+            // MegaForm:ExternalTables:AllowedConnections — a key not listed can never be opened,
+            // whatever the form settings say (SECURITY rule 1).
+            builder.Services.AddScoped<MegaForm.Core.Services.ExternalTable.DatabaseInsertBindingResolver>(sp =>
+            {
+                var cfg = sp.GetRequiredService<IConfiguration>();
+                var configured = cfg.GetSection("MegaForm:ExternalTables:AllowedConnections").Get<string[]>() ?? new string[0];
+                var allowed = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "DashboardDatabase" };
+                foreach (var k in configured)
+                    if (!string.IsNullOrWhiteSpace(k)) allowed.Add(k.Trim());
+                // [NamedConnections v20260717-01] Admin-saved connections (Database Settings popup)
+                // are allow-listed too: saving one is itself an admin-gated act, so it carries the
+                // same trust as an appsettings entry. Checked lazily per call so a connection added
+                // mid-process is usable without a restart.
+                var moduleSettings = sp.GetService<IModuleSettingsService>();
+                Func<string, bool> savedContains = key =>
+                {
+                    try
+                    {
+                        if (moduleSettings == null) return false;
+                        var json = moduleSettings.GetSetting(0, NamedConnectionCatalog.SettingKey, "");
+                        return NamedConnectionCatalog.Contains(json, key);
+                    }
+                    catch { return false; }
+                };
+                return new MegaForm.Core.Services.ExternalTable.DatabaseInsertBindingResolver(
+                    sp.GetRequiredService<IConnectionRegistry>(),
+                    sp.GetRequiredService<IFormRepository>(),
+                    key => allowed.Contains((key ?? string.Empty).Trim()) || savedContains((key ?? string.Empty).Trim()));
+            });
+            builder.Services.AddScoped<ISubmissionRepository>(sp => new MegaForm.Core.Services.ExternalTable.ExternalSubmissionRepository(
+                sp.GetRequiredService<UmbracoSubmissionRepository>(),
+                sp.GetRequiredService<MegaForm.Core.Models.ExternalTable.IExternalBindingStore>(),
+                sp.GetRequiredService<MegaForm.Core.Models.ExternalTable.IExternalRowMapStore>(),
+                sp.GetRequiredService<MegaForm.Core.Services.ExternalTable.ExternalTableQueryService>(),
+                sp.GetRequiredService<MegaForm.Core.Services.ExternalTable.DatabaseInsertBindingResolver>()));
 
             // ── Shared UI route rewrite (/api/MegaForm/ → /umbraco/MegaForm/MegaFormApi/)
             builder.Services.AddTransient<IStartupFilter, MegaFormRouteRewriteStartupFilter>();

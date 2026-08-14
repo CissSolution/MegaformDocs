@@ -1,0 +1,72 @@
+@page
+@model MegaForm.Samples.CorporateWeb.Pages.AboutModel
+@{
+    ViewData["Title"] = "About";
+}
+
+<section class="content-page">
+    <div class="container">
+        <h1>About MegaForm Corporate Demo</h1>
+        <p class="lead">
+            This sample site represents a typical corporate ASP.NET Core application that
+            consumes the MegaForm NuGet package. It is not a separate product — it is the
+            same MegaForm engine running inside a host website that you control.
+        </p>
+
+        <div class="two-column">
+            <div class="text-column">
+                <h2>Forms live inside your pages</h2>
+                <p>
+                    The form on the right is not a separate page. It is embedded directly
+                    into this Razor Page using the <code>&lt;megaform&gt;</code> TagHelper.
+                    Your designers keep full control over the layout, navigation, and
+                    branding while MegaForm handles rendering, validation, and submissions.
+                </p>
+                <ul>
+                    <li>Embed any published form from the MegaForm dashboard.</li>
+                    <li>Place the form next to marketing copy, images, or pricing tables.</li>
+                    <li>Style the host page normally — MegaForm renders inside the container.</li>
+                </ul>
+                <div class="cta-row">
+                    <a class="btn btn-primary" href="/Services">Our services</a>
+                    <a class="btn btn-secondary" href="/embedding">Embedding guide</a>
+                </div>
+            </div>
+
+            <div class="form-column">
+                @if (Model.FormId > 0)
+                {
+                    <div class="form-host">
+                        <megaform form-id="@Model.FormId" mode="embed" min-height="720" theme="corporate" radius="12"></megaform>
+                    </div>
+                }
+                else
+                {
+                    <div class="no-form">
+                        <p>No published MegaForm was found. Make sure the app has finished starting.</p>
+                        <a class="btn btn-secondary" href="/admin" target="_blank">Open MegaForm admin</a>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="code-snippet-section">
+            <h2>Code used on this page</h2>
+            <div class="code-block">
+                <pre><code>&lt;!-- In your .cshtml file --&gt;
+&lt;megaform form-id="@Model.FormId" mode="embed" min-height="720" theme="corporate" radius="12"&gt;&lt;/megaform&gt;</code></pre>
+            </div>
+            <p>
+                The model loads a published form id from the dashboard:
+            </p>
+            <div class="code-block">
+                <pre><code>public void OnGet()
+{
+    var form = _formRepo.ListForms(portalId: 0, status: "published", pageSize: 1)
+                        .FirstOrDefault();
+    FormId = form?.FormId ?? 0;
+}</code></pre>
+            </div>
+        </div>
+    </div>
+</section>

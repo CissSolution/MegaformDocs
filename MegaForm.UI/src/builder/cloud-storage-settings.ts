@@ -29,7 +29,7 @@ import { wt } from './designer-i18n';
   var B = MegaFormBuilder;
   var bound = false;
 
-  var PROVIDERS = ['GoogleDrive', 'AmazonS3', 'AzureBlob'];
+  var PROVIDERS = ['GoogleDrive', 'AmazonS3'];  // [AzureBlobRemoved v20260726] Azure Blob dropped (Azure.Core net472 crash risk)
   var FILE_FIELD_TYPES = ['File', 'FileUpload', 'PdfForm'];
   var SECRET_MASK = '***';
   var NAME_RE = /^[A-Za-z][A-Za-z0-9_-]{0,63}$/;

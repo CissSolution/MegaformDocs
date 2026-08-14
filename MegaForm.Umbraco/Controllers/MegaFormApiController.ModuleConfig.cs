@@ -154,9 +154,15 @@ namespace MegaForm.Umbraco.Controllers
             if (string.IsNullOrWhiteSpace(connectionString)) return Ok(new { success = false, message = "Connection string is required." });
             try
             {
+                var existingJson = moduleSettings.GetSetting(0, NamedConnectionCatalog.SettingKey, "");
+                // [MaskRoundTrip v20260726] The editor prefills the MASKED string, so a save that
+                // only changed the server/database still carries password=***. Put the stored
+                // secret back instead of persisting the mask. (DNN twin: MegaFormApiController.)
+                var prior = NamedConnectionCatalog.Parse(existingJson)
+                    .FirstOrDefault(c => string.Equals(c.Name?.Trim(), (name ?? string.Empty).Trim(), System.StringComparison.OrdinalIgnoreCase));
                 var next = NamedConnectionCatalog.Upsert(
-                    moduleSettings.GetSetting(0, NamedConnectionCatalog.SettingKey, ""),
-                    new NamedConnectionInfo { Name = name, Provider = provider, ConnectionString = connectionString });
+                    existingJson,
+                    new NamedConnectionInfo { Name = name, Provider = provider, ConnectionString = NamedConnectionCatalog.RestoreMaskedSecrets(connectionString, prior?.ConnectionString) });
                 moduleSettings.SetSetting(0, NamedConnectionCatalog.SettingKey, next);
                 return Ok(new { success = true, message = "Connection '" + name.Trim() + "' saved." });
             }

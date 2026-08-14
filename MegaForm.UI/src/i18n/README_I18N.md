@@ -8,7 +8,7 @@
 | es-ES   | Español        | `locales/es-ES.json` |
 | ja-JP   | 日本語          | `locales/ja-JP.json` |
 | ko-KR   | 한국어          | `locales/ko-KR.json` |
-| vi-VN   | Tiếng Việt     | `locales/vi-VN.json` |
+| ur-PK   | اردو (RTL)      | `locales/ur-PK.json` |
 | zh-CN   | 中文 (简体)     | `locales/zh-CN.json` |
 
 ---

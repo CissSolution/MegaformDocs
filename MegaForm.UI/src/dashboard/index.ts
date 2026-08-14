@@ -2489,17 +2489,17 @@ async function openPortalAccess(formId: number, title?: string) {
 // providers.ts because the dashboard does NOT load megaform-ai-form-assistant.js.
 // This is config data, not business logic; keeping it inline avoids pulling the
 // ~160 KB AI bundle into the dashboard just to render a settings form.
-const AI_PROVIDERS: Record<string, { label: string; baseUrl: string; defaultModel: string; helpUrl: string }> = {
+const AI_PROVIDERS: Record<string, { label: string; baseUrl: string; defaultModel: string; helpUrl: string; noApiKey?: boolean; serverProxy?: boolean }> = {
   openai:     { label: 'OpenAI',                      baseUrl: 'https://api.openai.com/v1',    defaultModel: 'gpt-4o',             helpUrl: 'https://platform.openai.com/api-keys' },
   claude:     { label: 'Anthropic Claude',            baseUrl: 'https://api.anthropic.com/v1', defaultModel: 'claude-sonnet-4-5',  helpUrl: 'https://console.anthropic.com/settings/keys' },
   kimi:       { label: 'Kimi (Moonshot.ai)',          baseUrl: 'https://api.moonshot.ai/v1',   defaultModel: 'moonshot-v1-8k',     helpUrl: 'https://platform.moonshot.ai/console/api-keys' },
   openrouter: { label: 'OpenRouter (multi-model)',    baseUrl: 'https://openrouter.ai/api/v1', defaultModel: 'openai/gpt-4o',      helpUrl: 'https://openrouter.ai/keys' },
   qwen:       { label: 'Qwen (DashScope · Intl)',     baseUrl: 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1', defaultModel: 'qwen-plus', helpUrl: 'https://bailian.console.alibabacloud.com/' },
   'qwen-cn':  { label: 'Qwen (DashScope · China)',    baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',      defaultModel: 'qwen-plus', helpUrl: 'https://bailian.console.aliyun.com/' },
-  local:      { label: 'Ollama / LM Studio (Local · no key)', baseUrl: 'http://localhost:11434/v1', defaultModel: 'qwen2.5',       helpUrl: 'https://ollama.com/library' },
-  'ollama-proxy': { label: 'Ollama (via server · no CORS/HTTPS)', baseUrl: '', defaultModel: 'qwen2.5', helpUrl: 'https://ollama.com/library' },
+  local:      { label: 'Ollama / LM Studio (Local · no key)', baseUrl: 'http://localhost:11434/v1', defaultModel: 'qwen2.5',       helpUrl: 'https://ollama.com/library', noApiKey: true },
+  'ollama-proxy': { label: 'Ollama (via server · no CORS/HTTPS)', baseUrl: '', defaultModel: 'qwen2.5', helpUrl: 'https://ollama.com/library', noApiKey: true, serverProxy: true },
   // [B88] Free local provider — shells out to the Claude Code CLI on the server.
-  'claude-cli': { label: 'Claude Local CLI (free · no token)', baseUrl: '/api/AiAssistant/LocalCliChat', defaultModel: 'sonnet', helpUrl: 'https://docs.anthropic.com/en/docs/claude-code' },
+  'claude-cli': { label: 'Claude Local CLI (free · no token)', baseUrl: '/api/AiAssistant/LocalCliChat', defaultModel: 'sonnet', helpUrl: 'https://docs.anthropic.com/en/docs/claude-code', noApiKey: true },
   custom:     { label: 'Custom OpenAI-compatible',    baseUrl: '',                             defaultModel: '',                   helpUrl: '' },
 };
 
@@ -2561,9 +2561,14 @@ async function aiTestConnection(provider: string, baseUrl: string, model: string
       if (!res.ok) return { ok: false, message: 'HTTP ' + res.status + ' ' + (await res.text().catch(() => '')).slice(0, 120) };
       return { ok: true, message: 'connection OK' };
     }
-    const res = await fetch(baseUrl + '/chat/completions', {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (apiKey) headers.Authorization = 'Bearer ' + apiKey;
+    const isServerProxy = provider === 'ollama-proxy';
+    const chatUrl = baseUrl + '/chat/completions' + (isServerProxy ? aiConfigUrl().replace(/^[^?]*/, '') : '');
+    const res = await fetch(chatUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + apiKey },
+      headers: isServerProxy ? { ...headers, ...dnnAuthHeaders(), 'X-Requested-With': 'XMLHttpRequest' } : headers,
+      credentials: isServerProxy ? 'same-origin' : 'omit',
       body: JSON.stringify({ model, max_tokens: 5, messages: [{ role: 'user', content: 'ping' }] }),
     });
     if (!res.ok) return { ok: false, message: 'HTTP ' + res.status + ' ' + (await res.text().catch(() => '')).slice(0, 120) };
@@ -2653,9 +2658,11 @@ async function openAiSettings(targetBody?: HTMLElement) {
   testBtn.type = 'button'; testBtn.innerHTML = ic('zap', 14) + ' Test';
   testBtn.onclick = async () => {
     const b = readBody();
-    if (!b.apiKey) { statusEl.textContent = 'Enter an API key first.'; statusEl.style.color = '#dc2626'; return; }
     const p = AI_PROVIDERS[b.provider] || AI_PROVIDERS.openai;
-    const baseUrl = (b.baseUrl || p.baseUrl).replace(/\/+$/, '');
+    if (!p.noApiKey && !b.apiKey) { statusEl.textContent = 'Enter an API key first.'; statusEl.style.color = '#dc2626'; return; }
+    const baseUrl = p.serverProxy
+      ? aiConfigUrl().replace(/\/DefaultConfig(\?.*)?$/, '/OllamaProxy')
+      : (b.baseUrl || p.baseUrl).replace(/\/+$/, '');
     const model = b.model || p.defaultModel;
     statusEl.textContent = 'Testing…'; statusEl.style.color = '#64748b';
     testBtn.disabled = true;
@@ -4986,4 +4993,34 @@ function render(root: HTMLElement, data: DashboardData) {
       if (e.key === 'mfai:forms-changed' && e.newValue) scheduleReload('cross-tab: ' + e.newValue);
     });
   };
+
+  // ── [OqAdminPane v20260812] self-mount ──────────────────────────────────────
+  // Normally the host page emits a small inline <script> that calls initDashboard.
+  // That breaks in exactly one place: Oqtane's Admin Dashboard links its tiles with
+  // ENHANCED NAVIGATION (Modules/Admin/Dashboard/Index.razor adds data-enhance-nav="true"),
+  // and Blazor's enhanced navigation swaps the DOM WITHOUT executing inline scripts — it
+  // does still fetch <script src> resources, so this bundle arrives while the code that
+  // was supposed to start it never runs. The surface then draws its chrome around an empty
+  // body, which reads as "the admin tile is broken".
+  //
+  // So the bundle starts itself. Guarded by data-booted — the same flag the inline script
+  // sets — so the ordinary full-load path still mounts exactly once.
+  function selfMount() {
+    try {
+      const root = document.getElementById('mf-dashboard-root') as HTMLElement | null;
+      if (!root || root.dataset.booted === '1') return;
+      (window as any).MegaForm.initDashboard(root);
+      root.dataset.booted = '1';
+    } catch (e) {
+      console.error('[MegaForm] dashboard self-mount failed', e);
+    }
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', selfMount, { once: true });
+  } else {
+    selfMount();
+  }
+  // A LATER enhanced navigation into the surface re-uses this already-loaded bundle, so no
+  // script of any kind runs on that pass — this event is the only remaining hook.
+  document.addEventListener('blazor:enhancedload', selfMount);
 })();

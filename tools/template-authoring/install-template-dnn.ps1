@@ -3,7 +3,7 @@
 #
 #   powershell -ExecutionPolicy Bypass -File install-template-dnn.ps1 `
 #       -Server "WINDOWS-11\SQLEXPRESS" -Database DNN_MegaClean008 -ModuleId 10599 `
-#       -Template ..\..\Samples\FormTemplates\Premium\DONEE\holiday-request-travel.json
+#       -Template ..\..\Samples\FormTemplates\Premium\GALLERY-PUBLISHED\holiday-request-travel.json
 #
 # Uses SqlClient with parameters rather than Invoke-Sqlcmd string interpolation: the schema
 # and settings payloads are tens of KB of JSON full of quotes and braces, which do not survive

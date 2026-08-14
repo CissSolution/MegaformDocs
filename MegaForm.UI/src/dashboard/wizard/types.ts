@@ -22,11 +22,11 @@ export interface WizardData {
   // starters are custom-shell too, and routing them down the standard path rebuilds `settings`
   // from scratch and silently drops their customHtml/customCss (the design is lost on Create).
   templateRecord: any | null; templateIsCustomShell: boolean;
-  // Editable working copy of a premium template's fields (③ — add/remove in the wizard;
-  // customHtml is reconciled via syncFieldPlaceholders on Create). null when not premium.
+  // Editable canonical working copy of a premium template's fields. Multi-step templates
+  // include native Section page-break anchors so Wizard and Builder share one model.
   premiumFields: any[] | null;
-  // Editable stepper labels + page headings for premium templates. These patch customHtml
-  // before native migration so the created form keeps the edited step copy.
+  // Editable stepper labels + page headings for premium templates. This is display metadata;
+  // Section fields remain the structural source of truth.
   premiumStepDetails: PremiumStepDetail[];
   // 2 — Fields
   isMultiStep: boolean; fields: WizardField[]; formPages: FormPage[]; showProgressBar: boolean;

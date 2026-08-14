@@ -5,7 +5,12 @@ using MegaForm.Core.Models;
 using MegaForm.Core.Services.AiKnowledge;
 using MegaForm.Oqtane.Server.Data;
 using Microsoft.EntityFrameworkCore;
+using Oqtane.Enums;          // LogFunction
+using Oqtane.Infrastructure; // ILogManager
 using Oqtane.Modules;
+using Oqtane.Shared;         // LogLevel — ILogManager.Log takes OQTANE's LogLevel, not
+                             // Microsoft.Extensions.Logging's. Importing both makes every
+                             // call site ambiguous, so this file deliberately imports only this one.
 
 namespace MegaForm.Oqtane.Server.Services
 {
@@ -21,10 +26,15 @@ namespace MegaForm.Oqtane.Server.Services
     public class OqtaneAiKnowledgeService : IAiKnowledgeService, ITransientService
     {
         private readonly IDbContextFactory<MegaFormDbContext> _dbContextFactory;
+        /// <summary>[KbSeedVisibility v20260812] Site event log. Optional so the service still
+        /// activates on a host that has not registered ILogManager — seeding then still works,
+        /// it just cannot report itself.</summary>
+        private readonly ILogManager _logger;
 
-        public OqtaneAiKnowledgeService(IDbContextFactory<MegaFormDbContext> dbContextFactory)
+        public OqtaneAiKnowledgeService(IDbContextFactory<MegaFormDbContext> dbContextFactory, ILogManager logger = null)
         {
             _dbContextFactory = dbContextFactory;
+            _logger = logger;
         }
 
         // [KbLazySeed 2026-06-12] On Oqtane the startup KbSeeder cannot seed: MegaFormDbContext
@@ -35,6 +45,27 @@ namespace MegaForm.Oqtane.Server.Services
         // (scope/tenant not ready) the flag stays false and a later request retries.
         private static volatile bool _seedEnsured;
         private static readonly object _seedGate = new object();
+
+        /// <summary>
+        /// [KbSeedVisibility v20260812] Outcome of the last seed attempt in this process, so an
+        /// admin can be told why the KB looks empty instead of having to guess. Mirrors
+        /// DnnKbSeeder.LastRun.
+        /// </summary>
+        public sealed class SeedOutcome
+        {
+            public bool Ran { get; set; }
+            public bool Succeeded { get; set; }
+            public int Imported { get; set; }
+            public int MissingBefore { get; set; }
+            public int SeedTotal { get; set; }
+            public string Message { get; set; }
+        }
+
+        private static volatile SeedOutcome _lastRun =
+            new SeedOutcome { Message = "The knowledge seeder has not run yet in this application." };
+
+        public static SeedOutcome LastRun => _lastRun;
+
         private void EnsureSeeded()
         {
             if (_seedEnsured) return;
@@ -44,16 +75,103 @@ namespace MegaForm.Oqtane.Server.Services
                 try
                 {
                     using var ctx = _dbContextFactory.CreateDbContext();
+                    var json = OqtaneKbSeederHostedService.ReadSeedJson();
+                    if (string.IsNullOrWhiteSpace(json))
+                    {
+                        // Not transient: the resource is either embedded in this assembly or it
+                        // never will be. Stop retrying and say so.
+                        _seedEnsured = true;
+                        Record(false, 0, 0, 0, "The bundled knowledge seed is not embedded in this build.");
+                        _logger?.Log(LogLevel.Error, this, LogFunction.Other,
+                            "[MegaForm KbSeed] bundled seed resource missing from the assembly — the AI has no built-in knowledge.");
+                        return;
+                    }
+
+                    var seedSlugs = ReadSeedSlugs(json);
                     if (!ctx.AiKnowledgeEntries.AsNoTracking().Any())
+                    {
                         OqtaneKbSeederHostedService.SeedEntries(ctx, null);
-                    _seedEnsured = true;
+                        var after = ctx.AiKnowledgeEntries.AsNoTracking().Count();
+                        _seedEnsured = true;
+                        Record(after > 0, after, seedSlugs.Count, seedSlugs.Count,
+                            after > 0 ? "Imported " + after + " knowledge entries from the bundled seed."
+                                      : "The bundled seed produced no rows.");
+                    }
+                    else
+                    {
+                        // [KbSeedGate v20260812] The table being non-empty used to end the story,
+                        // which became a real hole once knowledge started arriving PER TEMPLATE
+                        // from the gallery: install one template first and its one row would block
+                        // the entire bundled seed, permanently and silently. Catch up by SLUG
+                        // instead, through the upsert merger (safe to run repeatedly).
+                        var existing = new HashSet<string>(
+                            ctx.AiKnowledgeEntries.AsNoTracking().Select(e => e.Slug),
+                            StringComparer.OrdinalIgnoreCase);
+                        var missing = seedSlugs.Count(s => !existing.Contains(s));
+                        if (missing == 0)
+                        {
+                            _seedEnsured = true;
+                            Record(true, 0, 0, seedSlugs.Count,
+                                "Up to date — all " + seedSlugs.Count + " bundled knowledge entries are already installed.");
+                        }
+                        else
+                        {
+                            var result = MegaForm.Core.Services.AiKnowledge.AiKnowledgeSeedMerger.Merge(json, this, null);
+                            _seedEnsured = result.Entries > 0;
+                            Record(result.Entries > 0, result.Entries, missing, seedSlugs.Count,
+                                result.Entries > 0
+                                    ? result.Summary + " (" + missing + " of " + seedSlugs.Count + " entries were missing)"
+                                    : "Could not write any of the " + missing + " missing knowledge entries.");
+                            _logger?.Log(result.Entries > 0 ? LogLevel.Information : LogLevel.Error, this, LogFunction.Other,
+                                "[MegaForm KbSeed] {Message}", _lastRun.Message);
+                        }
+                    }
                 }
                 catch (Exception ex)
                 {
-                    // tenant/provider not ready in this scope — a later request retries.
-                    try { System.IO.File.AppendAllText(System.IO.Path.Combine(System.IO.Path.GetTempPath(), "mf_kbseed_err.txt"), DateTime.UtcNow.ToString("o") + "  " + ex + "\n\n"); } catch { }
+                    // Tenant/provider not ready in this scope — a later request retries, and the
+                    // flag deliberately stays false. This used to append the stack trace to
+                    // %TEMP%\mf_kbseed_err.txt, where no administrator has ever looked; it now
+                    // goes to the site's own event log.
+                    Record(false, 0, 0, 0, "The knowledge seeder could not run yet; it will retry on a later request.");
+                    try
+                    {
+                        _logger?.Log(LogLevel.Warning, this, LogFunction.Other, ex,
+                            "[MegaForm KbSeed] deferred — {Reason}", ex.GetType().Name);
+                    }
+                    catch { /* logging must never break a KB read */ }
                 }
             }
+        }
+
+        private static void Record(bool ok, int imported, int missing, int total, string message)
+        {
+            _lastRun = new SeedOutcome
+            {
+                Ran = true,
+                Succeeded = ok,
+                Imported = imported,
+                MissingBefore = missing,
+                SeedTotal = total,
+                Message = message,
+            };
+        }
+
+        private static List<string> ReadSeedSlugs(string json)
+        {
+            var slugs = new List<string>();
+            try
+            {
+                var arr = Newtonsoft.Json.Linq.JObject.Parse(json)["entries"] as Newtonsoft.Json.Linq.JArray;
+                if (arr == null) return slugs;
+                foreach (var jt in arr)
+                {
+                    var slug = ((string)jt["Slug"] ?? string.Empty).Trim();
+                    if (slug.Length > 0) slugs.Add(slug);
+                }
+            }
+            catch { slugs.Clear(); }
+            return slugs;
         }
 
         // ── Entry CRUD ──────────────────────────────────────────────────

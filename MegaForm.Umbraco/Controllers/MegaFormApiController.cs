@@ -11,10 +11,13 @@ using Umbraco.Cms.Web.Common.Attributes;
 using MegaForm.Core.Interfaces;
 using MegaForm.Core.Models;
 using MegaForm.Core.Services;
+using MegaForm.Core.Services.TypedSubmission;
 using MegaForm.Core.Utilities;
+using MegaForm.Umbraco.Data;
 using MegaForm.Umbraco.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -45,6 +48,8 @@ namespace MegaForm.Umbraco.Controllers
         private readonly IWorkflowNodeUiSchemaProvider _nodeSchemaProvider;
         private readonly WorkflowTaskService _workflowTasks;
         private readonly IMegaFormPermissionService _nativePermissions;
+        private readonly SubmissionQueryService _submissionQueries;
+        private readonly SubmissionDataResolver _submissionDataResolver;
 
         private readonly Services.IUmbracoMemberContext _memberContext;
 
@@ -63,7 +68,9 @@ namespace MegaForm.Umbraco.Controllers
             IWorkflowNodeUiSchemaProvider nodeSchemaProvider,
             Services.IUmbracoMemberContext memberContext,
             WorkflowTaskService workflowTasks,
-            IMegaFormPermissionService nativePermissions)
+            IMegaFormPermissionService nativePermissions,
+            SubmissionQueryService submissionQueries,
+            SubmissionDataResolver submissionDataResolver)
         {
             _formRepo = formRepo;
             _subRepo = subRepo;
@@ -80,6 +87,8 @@ namespace MegaForm.Umbraco.Controllers
             _memberContext = memberContext;
             _workflowTasks = workflowTasks;
             _nativePermissions = nativePermissions;
+            _submissionQueries = submissionQueries;
+            _submissionDataResolver = submissionDataResolver;
         }
 
         // ── Form CRUD ──
@@ -411,6 +420,13 @@ namespace MegaForm.Umbraco.Controllers
             form.UpdatedByUserId = _platform.UserId > 0 ? _platform.UserId : form.UpdatedByUserId;
             form.UpdatedOnUtc = DateTime.UtcNow;
 
+            // [AfterSubmitScript v20260813-01] settings.afterSubmitScript never travels through an
+            // ordinary form save. MegaForm.Umbraco ships no authoring endpoint for it, so this
+            // always resolves to "strip it" — a form imported here cannot bring runnable server
+            // code along, and would carry no valid host approval even if it did.
+            MegaForm.Core.Services.AfterSubmitScriptStore.PreserveOnSave(
+                form, form.FormId > 0 ? _formRepo.GetForm(form.FormId) : null);
+
             _logger.LogInformation("[MegaForm.Umbraco] SaveForm formId={FormId} moduleId={ModuleId} portalId={PortalId} title={Title}", form.FormId, form.ModuleId, form.PortalId, form.Title);
             int formId = _formRepo.SaveForm(form);
             return Ok(new { formId, moduleId = form.ModuleId, siteId = form.PortalId });
@@ -429,11 +445,37 @@ namespace MegaForm.Umbraco.Controllers
         [HttpGet]
         [AllowAnonymous]
         public IActionResult GetSubmissions(int formId, string status = null,
-            string search = null, int pageIndex = 0, int pageSize = 50)
+            string search = null, DateTime? dateFrom = null, DateTime? dateTo = null,
+            int pageIndex = 0, int pageSize = 50, string fieldFilters = null)
         {
             if (formId <= 0) return BadRequest(new { error = "formId required" });
             pageIndex = Math.Max(0, pageIndex);
-            pageSize = Math.Max(1, Math.Min(500, pageSize));
+            pageSize = Math.Max(1, Math.Min(250, pageSize));
+
+            List<SubmissionFieldFilter> typedFilters;
+            try
+            {
+                typedFilters = string.IsNullOrWhiteSpace(fieldFilters)
+                    ? new List<SubmissionFieldFilter>()
+                    : JsonConvert.DeserializeObject<List<SubmissionFieldFilter>>(fieldFilters)
+                        ?? new List<SubmissionFieldFilter>();
+            }
+            catch (JsonException)
+            {
+                return BadRequest(new { error = "fieldFilters must be a JSON array of typed field filters" });
+            }
+
+            var query = new SubmissionListQuery
+            {
+                FormId = formId,
+                Status = status,
+                Search = search,
+                DateFrom = dateFrom,
+                DateTo = dateTo,
+                PageIndex = pageIndex,
+                PageSize = pageSize,
+                FieldFilters = typedFilters
+            };
 
             var actor = BuildUserContext();
             var permissions = MatrixPermissions;
@@ -442,54 +484,106 @@ namespace MegaForm.Umbraco.Controllers
 
             var ownOnly = permissions.IsOwnOnlyViewScope(formId, actor);
             var rowScoped = permissions.RequiresSubmissionScopeEvaluation(formId, actor, "view");
-            (List<SubmissionInfo> Items, int TotalCount) result;
+            try
+            {
+                if (ownOnly)
+                    query.UserId = actor.UserId;
 
-            if (ownOnly && _subRepo is ISubmissionOwnerFilterableRepository ownerRepo)
-            {
-                result = ownerRepo.ListOwnedBy(formId, actor.UserId, status, search,
-                    null, null, pageIndex, pageSize);
-            }
-            else if (rowScoped)
-            {
-                var bounded = _subRepo.List(formId, status, search, null, null, 0, 5000);
-                var visible = (bounded.Items ?? new List<SubmissionInfo>())
-                    .Where(row => permissions.CanViewSubmission(formId, row, actor))
+                if (!rowScoped || ownOnly)
+                {
+                    var result = _submissionQueries.List(query);
+                    return Ok(new { items = result.Items, totalCount = result.TotalCount });
+                }
+
+                // Team and mixed scopes must be evaluated per row. Fetch one bounded, typed page,
+                // reconstruct each row's data once, then apply the permission matrix before paging.
+                query.PageIndex = 0;
+                query.PageSize = SubmissionQueryService.TrustedMaxPageSize;
+                query.TrustedFetch = true;
+                var bounded = _submissionQueries.List(query);
+                var visible = (bounded.Items ?? new List<SubmissionListItem>())
+                    .Where(item => permissions.CanViewSubmission(formId, ToPermissionSubmission(item), actor))
                     .ToList();
-                result = (visible.Skip(pageIndex * pageSize).Take(pageSize).ToList(), visible.Count);
+                return Ok(new
+                {
+                    items = visible.Skip(pageIndex * pageSize).Take(pageSize).ToList(),
+                    totalCount = visible.Count
+                });
             }
-            else
+            catch (ArgumentException ex)
             {
-                result = _subRepo.List(formId, status, search, null, null, pageIndex, pageSize);
+                return BadRequest(new { error = ex.Message });
             }
-            return Ok(new { items = result.Items, totalCount = result.TotalCount });
+            catch (NotSupportedException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
         }
 
         [HttpGet]
         [AllowAnonymous]
         [Route("/umbraco/MegaForm/MegaFormApi/Submissions/List")]
         public IActionResult SubmissionsList(int formId = 0, string status = null,
-            string search = null, int pageIndex = 0, int pageSize = 50)
-            => GetSubmissions(formId, status, search, pageIndex, pageSize);
+            string search = null, DateTime? dateFrom = null, DateTime? dateTo = null,
+            int pageIndex = 0, int pageSize = 50, string fieldFilters = null)
+            => GetSubmissions(formId, status, search, dateFrom, dateTo, pageIndex, pageSize, fieldFilters);
+
+        private static SubmissionInfo ToPermissionSubmission(SubmissionListItem item)
+        {
+            return new SubmissionInfo
+            {
+                SubmissionId = item.SubmissionId,
+                FormId = item.FormId,
+                UserId = item.UserId,
+                Status = item.Status,
+                SubmittedOnUtc = item.SubmittedOnUtc,
+                IpAddress = item.IpAddress,
+                DataJson = JsonConvert.SerializeObject(item.Data ?? new Dictionary<string, object>())
+            };
+        }
 
         [HttpGet]
-        [Authorize(Policy = AuthorizationPolicies.BackOfficeAccess)]
+        [MegaFormAuthorize(MegaFormPermissionConstants.ReportsLetter)]
         [Route("/umbraco/MegaForm/MegaFormApi/Reports/FormsOverview")]
-        public IActionResult ReportsFormsOverview(int days = 30, int siteId = 0)
+        public IActionResult ReportsFormsOverview([FromServices] MegaFormDbContext db,
+            int days = 30, int siteId = 0)
         {
-            var forms = _formRepo.ListForms(-1);
-            var rows = new List<object>();
+            if (days < 1) days = 7;
+            if (days > 90) days = 90;
+
+            var forms = _formRepo.ListForms(-1, pageSize: 0) ?? new List<FormInfo>();
             var utcNow = DateTime.UtcNow;
+            if (forms.Count == 0)
+                return Ok(new { generatedAtUtc = utcNow, forms = new object[0] });
+
+            var formIds = forms.Select(f => f.FormId).ToList();
             var startDate = utcNow.Date.AddDays(-days);
+
+            // SQL-side aggregation (mirrors ReportsController.FormsOverview) — was
+            // materialising every submission per form via List(pageSize: int.MaxValue).
+            var allTime = db.Submissions.AsNoTracking()
+                .Where(s => !s.IsSpam && formIds.Contains(s.FormId))
+                .GroupBy(s => s.FormId)
+                .Select(g => new { FormId = g.Key, Count = g.Count() })
+                .ToList()
+                .ToDictionary(x => x.FormId, x => x.Count);
+
+            var dayCounts = db.Submissions.AsNoTracking()
+                .Where(s => !s.IsSpam && s.SubmittedOnUtc >= startDate && formIds.Contains(s.FormId))
+                .GroupBy(s => new { s.FormId, Day = s.SubmittedOnUtc.Date })
+                .Select(g => new { g.Key.FormId, g.Key.Day, Count = g.Count() })
+                .ToList();
+
+            var byForm = dayCounts.ToLookup(r => r.FormId);
+
+            var rows = new List<object>();
             foreach (var form in forms)
             {
-                var all = _subRepo.List(form.FormId, pageSize: int.MaxValue);
-                var items = all.Items ?? new List<SubmissionInfo>();
                 var series = new int[days];
-                foreach (var s in items)
+                foreach (var r in byForm[form.FormId])
                 {
-                    var d = s.SubmittedOnUtc.Date;
-                    var idx = (int)(d - startDate).TotalDays;
-                    if (idx >= 0 && idx < days) series[idx]++;
+                    var idx = (int)(r.Day - startDate).TotalDays;
+                    if (idx >= 0 && idx < days) series[idx] += r.Count;
                 }
                 rows.Add(new
                 {
@@ -497,7 +591,7 @@ namespace MegaForm.Umbraco.Controllers
                     title = form.Title,
                     status = form.Status,
                     createdOnUtc = form.CreatedOnUtc,
-                    allTime = items.Count,
+                    allTime = allTime.TryGetValue(form.FormId, out var c) ? c : 0,
                     last7 = series.Skip(Math.Max(0, days - 7)).Take(7).Sum(),
                     last30 = series.Sum(),
                     series = series,
@@ -785,7 +879,7 @@ namespace MegaForm.Umbraco.Controllers
             return actor;
         }
 
-        private PermissionService MatrixPermissions => new PermissionService(_phase2Repo);
+        private PermissionService MatrixPermissions => new PermissionService(_phase2Repo, _submissionDataResolver);
 
         private bool CanUseSubmissionManagement(
             int formId,

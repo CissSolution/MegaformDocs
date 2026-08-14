@@ -19,7 +19,9 @@ namespace MegaForm.Oqtane.Server.Migrations
     ///                               so report queries can filter by FormId
     ///                               without joining MF_Submissions.
     ///
-    /// The DNN twin lives in MegaForm.DNN\SqlScripts\01.06.30.SqlDataProvider.
+    /// The DNN twin lives in MegaForm.DNN\SqlScripts\01.06.42.SqlDataProvider,
+    /// in the section marked "BEGIN 01.06.30.SqlDataProvider" (the per-version
+    /// scripts were consolidated into two files on 2026-08-14).
     /// Keep both in sync when extending the report runtime.
     /// </summary>
     [DbContext(typeof(MegaFormDbContext))]

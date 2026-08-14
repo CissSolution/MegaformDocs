@@ -66,6 +66,10 @@ namespace MegaForm.Core.Services.GalleryRepo
         public const long MaxAssetsBytes = 20L * 1024 * 1024;        // 20 MB
         public const long MaxKbSeedBytes = 20L * 1024 * 1024;        // 20 MB
         public const long MaxKbResourceBytes = 2L * 1024 * 1024;     // 2 MB per md/json
+        /// <summary>[KbPerTemplate v20260812] One template's knowledge bundle. Measured on the
+        /// 68 published templates the largest is ~80 KB, so this is a sanity ceiling rather than
+        /// a working limit.</summary>
+        public const long MaxKbBundleBytes = 5L * 1024 * 1024;       // 5 MB
 
         private static readonly TimeSpan CacheTtl = TimeSpan.FromMinutes(15);
         private static readonly TimeSpan HttpTimeout = TimeSpan.FromSeconds(20);

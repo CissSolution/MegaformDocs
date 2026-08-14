@@ -17,7 +17,7 @@
    ConsoleBaseUrl is what the view tabs link to, and it differs per host: the page URL when
    inline, the Edit-action URL inside the dialog. Everything else is identical. *@
 
-<link rel="stylesheet" href="/Modules/MegaFormBlogs/megaform-blogs-admin.css?v=20260730e" />
+<link rel="stylesheet" href="/Modules/MegaFormBlogs/megaform-blogs-admin.css?v=20260730f" />
 
 <div class="mf-oq-surface is-inline mfba-surface" data-mfba-surface="1">
     <div class="mfba @(View == "comments" ? "mfba-comments-page" : "")">
@@ -36,7 +36,18 @@
         {
             <header class="mfba-head">
                 <nav class="mfba-crumb" aria-label="Breadcrumb">
-                    <a href="@BlogUrl">@(IsNews ? "News" : "Blog")</a>@BlogData.Icon("chevron-right", "mfba-icon mfba-icon-md")
+                    @* Plain text, not a link, while the "blog" resolves to this very page —
+                       see BlogInstanceConfig.PublicPageId. *@
+                    @if (string.IsNullOrWhiteSpace(BlogUrl)
+                         || string.Equals(BlogUrl, ConsoleBaseUrl, StringComparison.OrdinalIgnoreCase))
+                    {
+                        <span>@(IsNews ? "News" : "Blog")</span>
+                    }
+                    else
+                    {
+                        <a href="@BlogUrl">@(IsNews ? "News" : "Blog")</a>
+                    }
+                    @BlogData.Icon("chevron-right", "mfba-icon mfba-icon-md")
                     <strong>@ScreenTitle</strong>
                 </nav>
                 <div class="mfba-head-row">
@@ -55,7 +66,7 @@
 
             @if (View == "editorial")
             {
-                <AdminEditorial Scope="Scope" AdminBaseUrl="@ConsoleBaseUrl" AppKey="@AppKey" />
+                <AdminEditorial Scope="Scope" AdminBaseUrl="@ConsoleBaseUrl" AppKey="@AppKey" PostUrl="PostUrl" />
             }
             else if (View == "comments")
             {
@@ -65,9 +76,17 @@
             {
                 <AdminNewPost Scope="Scope" AdminBaseUrl="@ConsoleBaseUrl" AppKey="@AppKey" IsNews="IsNews" />
             }
+            else if (View == "edit")
+            {
+                @* SubmissionId is only a selector: AdminEditPost refuses any record that does not
+                   belong to this app's posts form, so ?id= cannot reach another form's data. *@
+                <AdminEditPost Scope="Scope" AdminBaseUrl="@ConsoleBaseUrl" AppKey="@AppKey"
+                               IsNews="IsNews" SubmissionId="EditId" PostUrl="PostUrl" />
+            }
             else
             {
-                <AdminDashboard Scope="Scope" AdminBaseUrl="@ConsoleBaseUrl" BlogUrl="@BlogUrl" AppKey="@AppKey" />
+                <AdminDashboard Scope="Scope" AdminBaseUrl="@ConsoleBaseUrl" BlogUrl="@BlogUrl"
+                                AppKey="@AppKey" PostUrl="PostUrl" />
             }
         }
     </div>
@@ -90,18 +109,30 @@
     [Parameter] public bool IsNews { get; set; }
     [Parameter] public bool Allowed { get; set; }
 
-    /// <summary>dashboard | editorial | comments | new — already whitelisted by the host.</summary>
+    /// <summary>dashboard | editorial | comments | new | edit — already whitelisted by the host.</summary>
     [Parameter] public string View { get; set; } = "dashboard";
+
+    /// <summary>The post the "edit" view opens. 0 when none was named.</summary>
+    [Parameter] public int EditId { get; set; }
+
+    /// <summary>
+    /// Turns a slug into the reader-facing URL, so console screens can offer a preview link.
+    /// Only the host knows the site's page list and this instance's slug convention, so it
+    /// supplies the function rather than every screen rebuilding the URL itself.
+    /// </summary>
+    [Parameter] public Func<string, string> PostUrl { get; set; }
 
     private string ScreenTitle => View == "editorial" ? "Editorial Kanban"
         : View == "comments" ? "Comments Moderation"
         : View == "new" ? ("New " + (IsNews ? "Article" : "Post"))
+        : View == "edit" ? ("Edit " + (IsNews ? "Article" : "Post"))
         : "Admin Dashboard";
 
     private string ScreenSubtitle => View == "editorial"
         ? "Move posts between columns to update the typed status"
         : View == "comments" ? "Review and moderate user comments"
         : View == "new" ? "Write a draft and let the editorial board take it from there"
+        : View == "edit" ? "Change any field, including the ones that decide where the post appears"
         : (IsNews ? "Overview of newsroom output and the content pipeline"
                   : "Overview of your blog performance and content pipeline");
 

@@ -79,6 +79,9 @@ namespace MegaForm.Oqtane.Server.Controllers
         // but other tabs still render the previous form. Fire a Site Refresh after saving.
         private readonly ISyncManager _syncManager;
         private readonly ITenantManager _tenantManager;
+        // [KbPerTemplate v20260812] A gallery template brings its own AI knowledge; this is where
+        // it is merged. May be null (see the ctor) — the install reports that instead of hiding it.
+        private readonly MegaForm.Core.Services.AiKnowledge.IAiKnowledgeService _knowledge;
 
         public MegaFormController(
             IFormRepository formRepo,
@@ -105,8 +108,14 @@ namespace MegaForm.Oqtane.Server.Controllers
             MegaForm.Core.Interfaces.IFileRepository fileRepo,
             ILogManager logger,
             IHttpContextAccessor accessor,
-            MegaForm.Core.Interfaces.ISubmissionDataStore typedStore = null) : base(logger, accessor)
+            MegaForm.Core.Interfaces.ISubmissionDataStore typedStore = null,
+            // [KbPerTemplate v20260812] Used by RemoteGalleryInstall to merge a template's own
+            // AI knowledge. Optional so controller activation still succeeds on a host where the
+            // KB service is not registered — the install then REPORTS that knowledge was skipped
+            // instead of failing the template install.
+            MegaForm.Core.Services.AiKnowledge.IAiKnowledgeService knowledge = null) : base(logger, accessor)
         {
+            _knowledge = knowledge;
             _formRepo = formRepo;
             _subRepo = subRepo;
             _phase2Repo = phase2Repo;
@@ -500,6 +509,12 @@ namespace MegaForm.Oqtane.Server.Controllers
             var entity = ToEntity(dto);
             entity.ModuleId = dto.ModuleId;
             entity.PortalId = dto.SiteId;
+            // [AfterSubmitScript v20260813-01] The host-only C# hook never travels through an
+            // ordinary form save: whatever the caller posted for settings.afterSubmitScript is
+            // replaced by the server's stored copy. Authoring goes through FormScriptController,
+            // which is Host-gated and writes the approval hash the runtime insists on.
+            MegaForm.Core.Services.AfterSubmitScriptStore.PreserveOnSave(
+                entity, dto.FormId > 0 ? _formRepo.GetForm(dto.FormId) : null);
             int formId = _formRepo.SaveForm(entity);
 
             // [OQ-difix20260418-09] Bug A fix: auto-bind module → form on save.
@@ -799,10 +814,15 @@ namespace MegaForm.Oqtane.Server.Controllers
         // ══════════════════════════════════════════════════════
         //  i18n — serve locale files from wwwroot/Modules/MegaForm/js/builder/i18n/
         //  Called by megaform-languages.js / megaform-i18n.js in the builder admin.
-        //  GET  i18n/list          → ["en-US","vi-VN","fr-FR",...] (array of locale codes)
-        //  GET  i18n/Get?id=vi-VN  → locale JSON  { "field.text": "Văn bản ngắn", ... }
+        //  GET  i18n/list          → ["en-US","ur-PK","fr-FR",...] (array of locale codes)
+        //  GET  i18n/Get?id=ur-PK  → locale JSON  { "field.text": "مختصر متن", ... }
         // ══════════════════════════════════════════════════════
 
+        // [LocaleSwap 2026-08-13] vi-VN + ru-RU left the shipped pack. Installing a nupkg
+        // EXTRACTS over the existing wwwroot — it never deletes files the new version
+        // dropped — and the union below is index.json PLUS a DISK SCAN, so the retired packs
+        // would keep being listed and served on every upgraded site. They are deleted once at
+        // startup instead; see RetiredLocaleSweep in MegaFormWarmupHostedService.
         [HttpGet("i18n/list")]
         public IActionResult ListI18nLocales()
         {
@@ -1050,6 +1070,30 @@ namespace MegaForm.Oqtane.Server.Controllers
             catch { return null; }
         }
 
+        /// <summary>[KbPerTemplate v20260812] Where a downloaded design guide has to land: the
+        /// exact folder AiToolsController.ResolveKnowledgeBody reads guide_file from
+        /// (AiToolsController.cs:551). Anywhere else and the lookup answers
+        /// "[guide_file not found: …]", which the AI would then read AS the design contract.</summary>
+        /// <summary>[KbPerTemplate v20260812] Audit actor for KB upserts. ParseClaimsUserId
+        /// answers -1 when there is no usable claim; the KB history column wants null for
+        /// "unknown", not a fake user id.</summary>
+        private int? ResolveAuditUserId()
+        {
+            var id = ParseClaimsUserId(User);
+            return id > 0 ? (int?)id : null;
+        }
+
+        private string ResolveGalleryGuidesRoot()
+        {
+            try
+            {
+                var web = _env?.WebRootPath;
+                if (string.IsNullOrWhiteSpace(web)) return null;
+                return System.IO.Path.Combine(web, "Modules", "MegaForm", "Resources", "TemplateGuides");
+            }
+            catch { return null; }
+        }
+
         /// <summary>
         /// [TrialBrowse 2026-07-24] Gates DOWNLOADING a gallery template, not looking at one.
         ///
@@ -1145,14 +1189,27 @@ namespace MegaForm.Oqtane.Server.Controllers
 
         [HttpPost("BuilderTemplates/RemoteGalleryInstall")]
         [Authorize(Policy = "EditModule")]
-        public async Task<IActionResult> RemoteGalleryInstall([FromBody] Newtonsoft.Json.Linq.JObject body)
+        // [OqStjBind v20260812] Was `[FromBody] Newtonsoft.Json.Linq.JObject`. Oqtane does NOT call
+        // AddNewtonsoftJson(), so System.Text.Json binds a Newtonsoft JObject to an EMPTY object —
+        // slug came through null and every install answered 400 "Invalid template slug.". Measured
+        // on a clean Oqtane 10.2.1 + MegaForm 2.0.12: the online gallery listed and previewed fine,
+        // and installing failed 100% of the time. This endpoint was the last one in the controller
+        // still on JObject; every other body here already uses JsonElement for exactly this reason
+        // (see SaveForm:386, LockForm:605, TestFieldInsert:1714).
+        public async Task<IActionResult> RemoteGalleryInstall([FromBody] System.Text.Json.JsonElement body)
         {
             // THE gate. Listing and previewing are open; writing a paid template into this site
             // is not. Enforced here, server-side — the client's read-only rendering is only UX.
             var gate = GalleryDownloadTrialGate();
             if (gate != null) return gate;
 
-            var slug = (string)(body?["slug"] ?? body?["Slug"]);
+            string slug = null;
+            if (body.ValueKind == System.Text.Json.JsonValueKind.Object)
+            {
+                System.Text.Json.JsonElement slugEl;
+                if (body.TryGetProperty("slug", out slugEl) || body.TryGetProperty("Slug", out slugEl))
+                    slug = slugEl.ValueKind == System.Text.Json.JsonValueKind.String ? slugEl.GetString() : null;
+            }
             var svc = BuildGalleryService();
             var fetch = await svc.FetchTemplateAsync(slug, forceRefresh: false);
             if (!fetch.Success)
@@ -1166,13 +1223,29 @@ namespace MegaForm.Oqtane.Server.Controllers
                 // failed bundle is reported rather than failing the whole install (parity with DNN).
                 var assets = await svc.InstallAssetsAsync(fetch.Info, ResolveGalleryImageRoot());
 
+                // [KbPerTemplate v20260812] Parity with DNN: the template's AI knowledge is
+                // downloaded and merged with it, and a failure is REPORTED rather than swallowed.
+                var knowledge = await svc.InstallKnowledgeAsync(
+                    fetch.Info, ResolveGalleryGuidesRoot(), _knowledge, ResolveAuditUserId());
+                if (!knowledge.Installed && !knowledge.NotPublished)
+                {
+                    _logger.Log(LogLevel.Warning, this, LogFunction.Other,
+                        "MegaForm gallery: template {Slug} installed WITHOUT its AI knowledge — {Reason}",
+                        fetch.Slug, knowledge.Message);
+                }
+
                 return JsonOk(new
                 {
                     success = true,
                     slug = fetch.Slug,
                     template = record,
                     assetsInstalled = assets.FilesWritten,
-                    assetsError = assets.Success ? null : assets.Error
+                    assetsError = assets.Success ? null : assets.Error,
+                    knowledgeInstalled = knowledge.Installed,
+                    knowledgeEntries = knowledge.Entries,
+                    knowledgeGuides = knowledge.GuideFiles,
+                    knowledgeError = knowledge.Installed || knowledge.NotPublished ? null : knowledge.Message,
+                    knowledgeMessage = knowledge.Message
                 });
             }
             catch (Exception ex)

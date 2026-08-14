@@ -23,9 +23,9 @@ namespace MegaForm.WebApi
         private int CurrentUserId => UserInfo?.UserID ?? 0;
 
         private HttpResponseMessage Gate()
-            => AiFeatureGate.IsEnabled(PortalSettings?.HomeDirectoryMapPath)
+            => AiFeatureGate.IsAvailable(PortalSettings?.HomeDirectoryMapPath)
                 ? null
-                : Request.CreateResponse(HttpStatusCode.NotFound, new { error = "AI knowledge disabled (no dev.lock)" });
+                : Request.CreateResponse(HttpStatusCode.NotFound, new { error = "AI knowledge is not available on this install (a production licence is required)." });
 
         [HttpGet]
         [ActionName("List")]

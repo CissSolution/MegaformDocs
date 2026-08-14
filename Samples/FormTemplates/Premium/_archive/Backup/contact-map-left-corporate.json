@@ -1,0 +1,237 @@
+{
+  "version": "1.0",
+  "slug": "v0-contact-map-left-corporate",
+  "title": "Contact Us - Map Left, Corporate",
+  "description": "Premium contact page with Google Map on the left, form body on the right. Corporate color presets.",
+  "category": "contact",
+  "submitButtonText": "Send Message",
+  "successMessage": "Thank you for reaching out. We'll get back to you as soon as possible.",
+  "settings": {
+    "theme": "pure-grid-premium",
+    "multiPage": false,
+    "customContent": {
+      "brand_title": "Get in Touch",
+      "brand_subtitle": "We'd love to hear from you. Send us a message and we'll respond as soon as possible.",
+      "section_label": "Send a Message",
+      "map_embed_url": "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d193595.15830869428!2d-74.119763973046!3d40.69766374874431!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c24fa5d33f083b%3A0xc80b8f06e177fe62!2sNew%20York%2C%20NY%2C%20USA!5e0!3m2!1sen!2sus!4v1620000000000!5m2!1sen!2sus",
+      "map_position": "left",
+      "contact_address": "123 Business Ave, Suite 100\nNew York, NY 10001",
+      "contact_phone": "+1 (555) 123-4567",
+      "contact_email": "hello@example.com",
+      "submit_btn_text": "Send Message",
+      "footer_message": "We typically reply within 1–2 business days."
+    },
+    "customScripts": {
+      "theme_selector": "(function(root,ctx){\nvar tp=(ctx&&ctx.themePreset)||null;\nvar TP={\"executive-navy\":{\"name\":\"Executive Navy\",\"group\":\"Corporate\",\"background\":\"oklch(0.98 0.002 240)\",\"foreground\":\"oklch(0.20 0.04 240)\",\"card\":\"oklch(1 0 0)\",\"primary\":\"oklch(0.35 0.12 240)\",\"primaryForeground\":\"oklch(0.98 0 0)\",\"secondary\":\"oklch(0.94 0.01 240)\",\"muted\":\"oklch(0.96 0.005 240)\",\"mutedForeground\":\"oklch(0.45 0.02 240)\",\"accent\":\"oklch(0.55 0.08 240)\",\"border\":\"oklch(0.90 0.01 240)\"},\"corporate-charcoal\":{\"name\":\"Corporate Charcoal\",\"group\":\"Corporate\",\"background\":\"oklch(0.97 0 0)\",\"foreground\":\"oklch(0.18 0 0)\",\"card\":\"oklch(1 0 0)\",\"primary\":\"oklch(0.30 0 0)\",\"primaryForeground\":\"oklch(0.98 0 0)\",\"secondary\":\"oklch(0.94 0 0)\",\"muted\":\"oklch(0.96 0 0)\",\"mutedForeground\":\"oklch(0.45 0 0)\",\"accent\":\"oklch(0.50 0.10 240)\",\"border\":\"oklch(0.88 0 0)\"},\"business-blue\":{\"name\":\"Business Blue\",\"group\":\"Corporate\",\"background\":\"oklch(0.98 0.005 220)\",\"foreground\":\"oklch(0.22 0.05 220)\",\"card\":\"oklch(1 0 0)\",\"primary\":\"oklch(0.50 0.15 220)\",\"primaryForeground\":\"oklch(0.98 0 0)\",\"secondary\":\"oklch(0.94 0.02 220)\",\"muted\":\"oklch(0.96 0.01 220)\",\"mutedForeground\":\"oklch(0.45 0.03 220)\",\"accent\":\"oklch(0.60 0.12 200)\",\"border\":\"oklch(0.90 0.01 220)\"},\"finance-green\":{\"name\":\"Finance Green\",\"group\":\"Corporate\",\"background\":\"oklch(0.98 0.005 145)\",\"foreground\":\"oklch(0.22 0.04 145)\",\"card\":\"oklch(1 0 0)\",\"primary\":\"oklch(0.45 0.12 145)\",\"primaryForeground\":\"oklch(0.98 0 0)\",\"secondary\":\"oklch(0.94 0.02 145)\",\"muted\":\"oklch(0.96 0.01 145)\",\"mutedForeground\":\"oklch(0.45 0.03 145)\",\"accent\":\"oklch(0.55 0.10 145)\",\"border\":\"oklch(0.90 0.01 145)\"},\"legal-burgundy\":{\"name\":\"Legal Burgundy\",\"group\":\"Corporate\",\"background\":\"oklch(0.98 0.005 15)\",\"foreground\":\"oklch(0.22 0.04 15)\",\"card\":\"oklch(1 0 0)\",\"primary\":\"oklch(0.38 0.12 15)\",\"primaryForeground\":\"oklch(0.98 0 0)\",\"secondary\":\"oklch(0.94 0.01 15)\",\"muted\":\"oklch(0.96 0.005 15)\",\"mutedForeground\":\"oklch(0.45 0.02 15)\",\"accent\":\"oklch(0.50 0.10 15)\",\"border\":\"oklch(0.90 0.01 15)\"},\"consulting-slate\":{\"name\":\"Consulting Slate\",\"group\":\"Corporate\",\"background\":\"oklch(0.97 0.005 260)\",\"foreground\":\"oklch(0.22 0.03 260)\",\"card\":\"oklch(1 0 0)\",\"primary\":\"oklch(0.42 0.08 260)\",\"primaryForeground\":\"oklch(0.98 0 0)\",\"secondary\":\"oklch(0.94 0.01 260)\",\"muted\":\"oklch(0.96 0.005 260)\",\"mutedForeground\":\"oklch(0.48 0.02 260)\",\"accent\":\"oklch(0.55 0.06 260)\",\"border\":\"oklch(0.88 0.01 260)\"}};\nvar SCOPE=\".cel-rsvp-min\";\nvar DEFAULT=\"clean-white\";\nvar PFX=\"crm\";\n\nvar cur=DEFAULT;var isOpen=false;var styleId=PFX+'-vars';\nfunction scopeSel(){\n  var host=(root&&root.closest)?root.closest('.mf-form-wrapper,[id^=\"mf-form-wrapper-\"]'):null;\n  var id=host&&host.id?('#'+host.id+' '):(tp&&tp.formId?('#mf-form-wrapper-'+String(tp.formId)+' '):'');\n  return id?(id+SCOPE):SCOPE;\n}\nfunction applyTheme(key){\n  var t=TP[key];if(!t)return;cur=key;\n  var s=document.getElementById(styleId);\n  if(!s){s=document.createElement('style');s.id=styleId;document.head.appendChild(s);}\n  var sel=scopeSel();\n  var rules=sel+'{';\n  rules+='--background:'+t.background+';--foreground:'+t.foreground+';';\n  rules+='--card:'+t.card+';--card-foreground:'+t.foreground+';';\n  rules+='--primary:'+t.primary+';--primary-foreground:'+t.primaryForeground+';';\n  rules+='--secondary:'+t.secondary+';--secondary-foreground:'+t.foreground+';';\n  rules+='--muted:'+t.muted+';--muted-foreground:'+t.mutedForeground+';';\n  rules+='--accent:'+t.accent+';--accent-foreground:'+t.foreground+';';\n  rules+='--border:'+t.border+';--input:'+t.muted+';--ring:'+t.primary+';';\n  rules+='}';\n  s.textContent=rules;\n  var ps=document.getElementById(PFX+'-swatch');if(ps)ps.style.background=t.primary;\n  var pn=document.getElementById(PFX+'-name');if(pn)pn.textContent=t.name;\n  document.querySelectorAll('[data-'+PFX+'-key]').forEach(function(btn){\n    var active=btn.getAttribute('data-'+PFX+'-key')===key;\n    btn.style.background=active?'color-mix(in oklab,'+t.primary+' 12%,transparent)':'';\n    var ck=btn.querySelector('.'+PFX+'-check');if(ck)ck.style.display=active?'inline':'none';\n  });\n  if(tp&&typeof tp.setActiveThemeKey==='function'){try{tp.setActiveThemeKey(key,true);}catch(e){}}\n  else{try{localStorage.setItem(PFX+'-theme',key);}catch(e){}}\n}\nfunction mkBtn(key,theme){\n  var btn=document.createElement('button');btn.type='button';\n  btn.setAttribute('data-'+PFX+'-key',key);\n  btn.style.cssText='display:flex;align-items:center;gap:8px;width:100%;padding:6px 8px;text-align:left;border:none;cursor:pointer;font-family:inherit;background:transparent;font-size:13px;transition:background .15s;';\n  var sw=document.createElement('span');\n  sw.style.cssText='width:10px;height:10px;border-radius:50%;flex-shrink:0;background:'+theme.primary+';border:1px solid rgba(0,0,0,.12);';\n  var nm=document.createElement('span');\n  nm.style.cssText='color:#222;flex:1;font-family:inherit;font-size:13px;';\n  nm.textContent=theme.name;\n  var ck=document.createElement('svg');\n  ck.setAttribute('width','14');ck.setAttribute('height','14');\n  ck.setAttribute('viewBox','0 0 20 20');ck.setAttribute('fill','currentColor');\n  ck.setAttribute('class',PFX+'-check');\n  ck.style.cssText='margin-left:auto;color:'+theme.primary+';display:none;width:14px;height:14px;flex-shrink:0;';\n  ck.innerHTML='<path fill-rule=\"evenodd\" d=\"M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z\" clip-rule=\"evenodd\"/>';\n  btn.appendChild(sw);btn.appendChild(nm);btn.appendChild(ck);\n  btn.addEventListener('mouseenter',function(){if(btn.getAttribute('data-'+PFX+'-key')!==cur)btn.style.background='rgba(0,0,0,.04)';});\n  btn.addEventListener('mouseleave',function(){if(btn.getAttribute('data-'+PFX+'-key')!==cur)btn.style.background='';});\n  btn.addEventListener('click',function(e){e.stopPropagation();applyTheme(key);close();});\n  return btn;\n}\nfunction mkGroup(title,entries,last){\n  var wrap=document.createElement('div');\n  wrap.style.cssText='padding:10px 10px;'+(last?'':'border-bottom:1px solid rgba(0,0,0,.08);');\n  var h=document.createElement('p');\n  h.style.cssText='font-size:10px;font-weight:500;color:#888;letter-spacing:.18em;text-transform:uppercase;margin:0 0 6px 4px;font-family:inherit;';\n  h.textContent=title;wrap.appendChild(h);\n  entries.forEach(function(e){wrap.appendChild(mkBtn(e[0],e[1]));});\n  return wrap;\n}\nvar groups={Corporate:[],Modern:[],Minimal:[]};\nObject.keys(TP).forEach(function(k){var t=TP[k];var g=t.group||'Other';if(!groups[g])groups[g]=[];groups[g].push([k,t]);});\nvar order=['Corporate','Modern','Minimal'];\nvar wrap=document.createElement('div');wrap.id=PFX+'-wrap';\nwrap.style.cssText='position:fixed;top:16px;right:16px;z-index:99999;font-family:system-ui,-apple-system,sans-serif;';\nvar pill=document.createElement('button');pill.type='button';\npill.style.cssText='display:flex;align-items:center;gap:8px;padding:8px 12px;background:#fff;border:1px solid rgba(0,0,0,.14);border-radius:0;box-shadow:0 2px 8px rgba(0,0,0,.08);cursor:pointer;font-family:inherit;font-size:13px;color:#222;white-space:nowrap;';\nvar ps=document.createElement('span');ps.id=PFX+'-swatch';\nps.style.cssText='width:12px;height:12px;border-radius:50%;flex-shrink:0;background:#000;display:inline-block;border:1px solid rgba(0,0,0,.12);';\nvar pn=document.createElement('span');pn.id=PFX+'-name';pn.textContent='Theme';\nvar chv=document.createElement('svg');chv.setAttribute('width','14');chv.setAttribute('height','14');\nchv.setAttribute('viewBox','0 0 24 24');chv.setAttribute('fill','none');\nchv.setAttribute('stroke','currentColor');chv.setAttribute('stroke-width','2');\nchv.style.cssText='transition:transform .2s;color:#888;';\nchv.innerHTML='<polyline points=\"6 9 12 15 18 9\"/>';\npill.appendChild(ps);pill.appendChild(pn);pill.appendChild(chv);\nvar panel=document.createElement('div');\npanel.style.cssText='position:absolute;top:calc(100% + 6px);right:0;width:260px;background:#fff;border:1px solid rgba(0,0,0,.1);box-shadow:0 12px 36px rgba(0,0,0,.15);max-height:70vh;overflow-y:auto;display:none;';\norder.forEach(function(g,i){if(groups[g]&&groups[g].length)panel.appendChild(mkGroup(g,groups[g],i===order.length-1));});\nwrap.appendChild(pill);wrap.appendChild(panel);\nif(!tp||tp.selectorEnabled!==false){\n  document.body.appendChild(wrap);\n  function positionWrap(){\n    var nav=document.querySelector('header,.dnn-nav,nav[class*=nav]');\n    var navH=nav?nav.getBoundingClientRect().bottom:0;\n    wrap.style.top=Math.max(16,navH+8)+'px';\n  }\n  positionWrap();window.addEventListener('resize',positionWrap);setTimeout(positionWrap,500);\n  function open(){isOpen=true;panel.style.display='block';chv.style.transform='rotate(180deg)';}\n  function close(){isOpen=false;panel.style.display='none';chv.style.transform='';}\n  pill.addEventListener('click',function(e){e.stopPropagation();isOpen?close():open();});\n  document.addEventListener('click',function(){if(isOpen)close();});\n  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&isOpen)close();});\n}\nvar saved=(tp&&typeof tp.getActiveThemeKey==='function'?tp.getActiveThemeKey():(tp&&tp.savedThemeKey)||null);\nif(saved==null){try{saved=localStorage.getItem(PFX+'-theme');}catch(e){}}\napplyTheme(saved||((tp&&tp.defaultThemeKey)||DEFAULT));\nif(tp&&typeof tp.reportAvailable==='function'){try{tp.reportAvailable({activeThemeKey:cur,selectedThemeKey:cur,dirty:false});}catch(e){}}\n})(window.__mfCurrentScriptRoot||document,window.__mfScriptContext||{});\n"
+    },
+    "themeSelector": {
+      "enabled": true,
+      "mode": "module-controlled",
+      "scriptKey": "theme_selector",
+      "presetSet": "contact-split-themes",
+      "defaultThemeKey": "executive-navy",
+      "showUpdateThemeButton": true,
+      "presets": {
+        "executive-navy": {
+          "name": "Executive Navy",
+          "group": "Corporate",
+          "background": "oklch(0.98 0.002 240)",
+          "foreground": "oklch(0.20 0.04 240)",
+          "card": "oklch(1 0 0)",
+          "primary": "oklch(0.35 0.12 240)",
+          "primaryForeground": "oklch(0.98 0 0)",
+          "secondary": "oklch(0.94 0.01 240)",
+          "muted": "oklch(0.96 0.005 240)",
+          "mutedForeground": "oklch(0.45 0.02 240)",
+          "accent": "oklch(0.55 0.08 240)",
+          "border": "oklch(0.90 0.01 240)"
+        },
+        "corporate-charcoal": {
+          "name": "Corporate Charcoal",
+          "group": "Corporate",
+          "background": "oklch(0.97 0 0)",
+          "foreground": "oklch(0.18 0 0)",
+          "card": "oklch(1 0 0)",
+          "primary": "oklch(0.30 0 0)",
+          "primaryForeground": "oklch(0.98 0 0)",
+          "secondary": "oklch(0.94 0 0)",
+          "muted": "oklch(0.96 0 0)",
+          "mutedForeground": "oklch(0.45 0 0)",
+          "accent": "oklch(0.50 0.10 240)",
+          "border": "oklch(0.88 0 0)"
+        },
+        "business-blue": {
+          "name": "Business Blue",
+          "group": "Corporate",
+          "background": "oklch(0.98 0.005 220)",
+          "foreground": "oklch(0.22 0.05 220)",
+          "card": "oklch(1 0 0)",
+          "primary": "oklch(0.50 0.15 220)",
+          "primaryForeground": "oklch(0.98 0 0)",
+          "secondary": "oklch(0.94 0.02 220)",
+          "muted": "oklch(0.96 0.01 220)",
+          "mutedForeground": "oklch(0.45 0.03 220)",
+          "accent": "oklch(0.60 0.12 200)",
+          "border": "oklch(0.90 0.01 220)"
+        },
+        "finance-green": {
+          "name": "Finance Green",
+          "group": "Corporate",
+          "background": "oklch(0.98 0.005 145)",
+          "foreground": "oklch(0.22 0.04 145)",
+          "card": "oklch(1 0 0)",
+          "primary": "oklch(0.45 0.12 145)",
+          "primaryForeground": "oklch(0.98 0 0)",
+          "secondary": "oklch(0.94 0.02 145)",
+          "muted": "oklch(0.96 0.01 145)",
+          "mutedForeground": "oklch(0.45 0.03 145)",
+          "accent": "oklch(0.55 0.10 145)",
+          "border": "oklch(0.90 0.01 145)"
+        },
+        "legal-burgundy": {
+          "name": "Legal Burgundy",
+          "group": "Corporate",
+          "background": "oklch(0.98 0.005 15)",
+          "foreground": "oklch(0.22 0.04 15)",
+          "card": "oklch(1 0 0)",
+          "primary": "oklch(0.38 0.12 15)",
+          "primaryForeground": "oklch(0.98 0 0)",
+          "secondary": "oklch(0.94 0.01 15)",
+          "muted": "oklch(0.96 0.005 15)",
+          "mutedForeground": "oklch(0.45 0.02 15)",
+          "accent": "oklch(0.50 0.10 15)",
+          "border": "oklch(0.90 0.01 15)"
+        },
+        "consulting-slate": {
+          "name": "Consulting Slate",
+          "group": "Corporate",
+          "background": "oklch(0.97 0.005 260)",
+          "foreground": "oklch(0.22 0.03 260)",
+          "card": "oklch(1 0 0)",
+          "primary": "oklch(0.42 0.08 260)",
+          "primaryForeground": "oklch(0.98 0 0)",
+          "secondary": "oklch(0.94 0.01 260)",
+          "muted": "oklch(0.96 0.005 260)",
+          "mutedForeground": "oklch(0.48 0.02 260)",
+          "accent": "oklch(0.55 0.06 260)",
+          "border": "oklch(0.88 0.01 260)"
+        }
+      }
+    },
+    "customCss": "@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');\n\n/* ===== Scope root: CSS variables (theme_selector overrides these) ===== */\n.mf-contact-split {\n  --background: oklch(0.98 0.002 240);\n  --foreground: oklch(0.20 0.04 240);\n  --card: oklch(1 0 0);\n  --card-foreground: oklch(0.20 0.04 240);\n  --primary: oklch(0.35 0.12 240);\n  --primary-foreground: oklch(0.98 0 0);\n  --secondary: oklch(0.94 0.01 240);\n  --muted: oklch(0.96 0.005 240);\n  --muted-foreground: oklch(0.45 0.02 240);\n  --accent: oklch(0.55 0.08 240);\n  --border: oklch(0.90 0.01 240);\n  --input: oklch(0.97 0.005 240);\n  --ring: oklch(0.35 0.12 240);\n\n  display: block !important;\n  width: 100% !important;\n  min-height: 100%;\n  position: relative;\n  background: var(--background);\n  color: var(--foreground);\n  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;\n  box-sizing: border-box;\n  overflow: hidden !important;\n}\n.mf-contact-split *,\n.mf-contact-split *::before,\n.mf-contact-split *::after {\n  box-sizing: border-box;\n}\n.mf-contact-split * {\n  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;\n}\n\n/* ===== Background ===== */\n.mf-contact-split .mf-bg {\n  position: absolute;\n  inset: 0;\n  background: var(--background);\n  z-index: 0;\n  pointer-events: none;\n}\n.mf-contact-split .mf-overlay {\n  position: absolute;\n  inset: 0;\n  background: linear-gradient(135deg, color-mix(in oklab, var(--primary) 4%, transparent) 0%, transparent 60%);\n  z-index: 0;\n  pointer-events: none;\n}\n\n/* ===== Content wrapper ===== */\n.mf-contact-split .mf-content {\n  position: relative;\n  z-index: 1;\n  width: 100%;\n  padding: 24px 16px;\n}\n@media (min-width: 768px) {\n  .mf-contact-split .mf-content {\n    padding: 40px 24px;\n  }\n}\n@media (min-width: 1024px) {\n  .mf-contact-split .mf-content {\n    padding: 56px 32px;\n  }\n}\n\n/* ===== Split grid: map beside form ===== */\n.mf-contact-split .mf-split-grid {\n  display: grid;\n  grid-template-columns: 1fr;\n  gap: 24px;\n  max-width: 1200px;\n  margin: 0 auto;\n  align-items: stretch;\n}\n@media (min-width: 992px) {\n  .mf-contact-split .mf-split-grid {\n    grid-template-columns: 1fr 1fr;\n    gap: 32px;\n  }\n}\n@media (min-width: 1200px) {\n  .mf-contact-split .mf-split-grid {\n    grid-template-columns: 5fr 7fr;\n    gap: 40px;\n  }\n}\n\n/* Map on the left visually */\n.mf-contact-split.mf-map-left .mf-map-col {\n  order: 0;\n}\n.mf-contact-split.mf-map-left .mf-form-col {\n  order: 1;\n}\n/* Map on the right visually */\n.mf-contact-split.mf-map-right .mf-map-col {\n  order: 1;\n}\n.mf-contact-split.mf-map-right .mf-form-col {\n  order: 0;\n}\n/* Mobile: form always first, map second for better UX */\n@media (max-width: 991px) {\n  .mf-contact-split .mf-form-col { order: 0 !important; }\n  .mf-contact-split .mf-map-col { order: 1 !important; }\n}\n\n/* ===== Map column ===== */\n.mf-contact-split .mf-map-col {\n  display: flex;\n  flex-direction: column;\n  gap: 20px;\n}\n.mf-contact-split .mf-map-wrap {\n  flex: 1 1 auto;\n  min-height: 360px;\n  border-radius: 12px;\n  overflow: hidden;\n  border: 1px solid var(--border);\n  box-shadow: 0 10px 25px -5px rgba(0,0,0,.08);\n}\n.mf-contact-split .mf-map-iframe {\n  width: 100%;\n  height: 100%;\n  min-height: 360px;\n  border: 0;\n  display: block;\n}\n@media (min-width: 992px) {\n  .mf-contact-split .mf-map-wrap,\n  .mf-contact-split .mf-map-iframe {\n    min-height: 480px;\n  }\n}\n\n/* ===== Contact info under map ===== */\n.mf-contact-split .mf-contact-info {\n  background: var(--card);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  padding: 20px;\n  box-shadow: 0 4px 12px rgba(0,0,0,.04);\n}\n.mf-contact-split .mf-contact-title {\n  margin: 0 0 12px;\n  font-size: 1.125rem;\n  font-weight: 600;\n  color: var(--foreground);\n}\n.mf-contact-split .mf-contact-line {\n  margin: 0 0 8px;\n  font-size: 0.9375rem;\n  line-height: 1.6;\n  color: var(--muted-foreground);\n}\n.mf-contact-split .mf-contact-address {\n  white-space: pre-line;\n}\n\n/* ===== Form card ===== */\n.mf-contact-split .mf-card {\n  background: var(--card) !important;\n  border: 1px solid var(--border) !important;\n  border-radius: 16px !important;\n  box-shadow: 0 20px 40px -10px rgba(0,0,0,.1) !important;\n  overflow: hidden;\n  height: 100%;\n  display: flex;\n  flex-direction: column;\n}\n.mf-contact-split .mf-header {\n  padding: 28px 28px 20px;\n  border-bottom: 1px solid var(--border);\n}\n.mf-contact-split .mf-title {\n  margin: 0 0 8px;\n  font-size: clamp(1.75rem, 4vw, 2.5rem);\n  font-weight: 600;\n  line-height: 1.15;\n  color: var(--foreground);\n}\n.mf-contact-split .mf-lead {\n  margin: 0;\n  font-size: 1rem;\n  line-height: 1.6;\n  color: var(--muted-foreground);\n}\n.mf-contact-split .mf-section {\n  padding: 24px 28px;\n  flex: 1 1 auto;\n}\n.mf-contact-split .mf-section-label {\n  margin: 0 0 18px;\n  font-size: 0.75rem;\n  font-weight: 600;\n  letter-spacing: 0.12em;\n  text-transform: uppercase;\n  color: var(--muted-foreground);\n}\n\n/* ===== Fields grid ===== */\n.mf-contact-split .mf-fields {\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n}\n.mf-contact-split .mf-row {\n  width: 100%;\n}\n.mf-contact-split .mf-grid-2 {\n  display: grid;\n  grid-template-columns: 1fr;\n  gap: 16px;\n}\n@media (min-width: 576px) {\n  .mf-contact-split .mf-grid-2 {\n    grid-template-columns: 1fr 1fr;\n  }\n}\n\n/* ===== Inputs (override host styles) ===== */\n.mf-contact-split input[type=\"text\"],\n.mf-contact-split input[type=\"email\"],\n.mf-contact-split input[type=\"tel\"],\n.mf-contact-split select,\n.mf-contact-split textarea {\n  width: 100% !important;\n  padding: 12px 14px !important;\n  font-size: 0.9375rem !important;\n  line-height: 1.5 !important;\n  color: var(--foreground) !important;\n  background: var(--input) !important;\n  border: 1px solid var(--border) !important;\n  border-radius: 8px !important;\n  outline: none !important;\n  transition: border-color .15s, box-shadow .15s !important;\n}\n.mf-contact-split input:focus,\n.mf-contact-split select:focus,\n.mf-contact-split textarea:focus {\n  border-color: var(--primary) !important;\n  box-shadow: 0 0 0 3px color-mix(in oklab, var(--primary) 18%, transparent) !important;\n}\n.mf-contact-split label {\n  display: block;\n  margin-bottom: 6px;\n  font-size: 0.875rem;\n  font-weight: 500;\n  color: var(--foreground);\n}\n.mf-contact-split .mf-required label::after {\n  content: \" *\";\n  color: var(--accent);\n}\n\n/* ===== Submit ===== */\n.mf-contact-split .mf-submit-wrap {\n  padding: 0 28px 24px;\n}\n.mf-contact-split .mf-submit-wrap button,\n.mf-contact-split .mf-submit-wrap input[type=\"submit\"] {\n  width: 100%;\n  padding: 14px 24px !important;\n  font-size: 1rem !important;\n  font-weight: 600 !important;\n  color: var(--primary-foreground) !important;\n  background: var(--primary) !important;\n  border: 1px solid var(--primary) !important;\n  border-radius: 10px !important;\n  cursor: pointer;\n  transition: filter .15s, transform .15s !important;\n}\n.mf-contact-split .mf-submit-wrap button:hover,\n.mf-contact-split .mf-submit-wrap input[type=\"submit\"]:hover {\n  filter: brightness(1.08);\n  transform: translateY(-1px);\n}\n\n/* ===== Footer ===== */\n.mf-contact-split .mf-footer {\n  padding: 16px 28px 24px;\n  border-top: 1px solid var(--border);\n  text-align: center;\n}\n.mf-contact-split .mf-footer p {\n  margin: 0;\n  font-size: 0.875rem;\n  color: var(--muted-foreground);\n}\n\n/* ===== Hide theme preset UI interference ===== */\n.mf-contact-split .mf-theme-ui {\n  position: fixed;\n  z-index: 9999;\n}\n",
+    "CustomCss": "@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');\n\n/* ===== Scope root: CSS variables (theme_selector overrides these) ===== */\n.mf-contact-split {\n  --background: oklch(0.98 0.002 240);\n  --foreground: oklch(0.20 0.04 240);\n  --card: oklch(1 0 0);\n  --card-foreground: oklch(0.20 0.04 240);\n  --primary: oklch(0.35 0.12 240);\n  --primary-foreground: oklch(0.98 0 0);\n  --secondary: oklch(0.94 0.01 240);\n  --muted: oklch(0.96 0.005 240);\n  --muted-foreground: oklch(0.45 0.02 240);\n  --accent: oklch(0.55 0.08 240);\n  --border: oklch(0.90 0.01 240);\n  --input: oklch(0.97 0.005 240);\n  --ring: oklch(0.35 0.12 240);\n\n  display: block !important;\n  width: 100% !important;\n  min-height: 100%;\n  position: relative;\n  background: var(--background);\n  color: var(--foreground);\n  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;\n  box-sizing: border-box;\n  overflow: hidden !important;\n}\n.mf-contact-split *,\n.mf-contact-split *::before,\n.mf-contact-split *::after {\n  box-sizing: border-box;\n}\n.mf-contact-split * {\n  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;\n}\n\n/* ===== Background ===== */\n.mf-contact-split .mf-bg {\n  position: absolute;\n  inset: 0;\n  background: var(--background);\n  z-index: 0;\n  pointer-events: none;\n}\n.mf-contact-split .mf-overlay {\n  position: absolute;\n  inset: 0;\n  background: linear-gradient(135deg, color-mix(in oklab, var(--primary) 4%, transparent) 0%, transparent 60%);\n  z-index: 0;\n  pointer-events: none;\n}\n\n/* ===== Content wrapper ===== */\n.mf-contact-split .mf-content {\n  position: relative;\n  z-index: 1;\n  width: 100%;\n  padding: 24px 16px;\n}\n@media (min-width: 768px) {\n  .mf-contact-split .mf-content {\n    padding: 40px 24px;\n  }\n}\n@media (min-width: 1024px) {\n  .mf-contact-split .mf-content {\n    padding: 56px 32px;\n  }\n}\n\n/* ===== Split grid: map beside form ===== */\n.mf-contact-split .mf-split-grid {\n  display: grid;\n  grid-template-columns: 1fr;\n  gap: 24px;\n  max-width: 1200px;\n  margin: 0 auto;\n  align-items: stretch;\n}\n@media (min-width: 992px) {\n  .mf-contact-split .mf-split-grid {\n    grid-template-columns: 1fr 1fr;\n    gap: 32px;\n  }\n}\n@media (min-width: 1200px) {\n  .mf-contact-split .mf-split-grid {\n    grid-template-columns: 5fr 7fr;\n    gap: 40px;\n  }\n}\n\n/* Map on the left visually */\n.mf-contact-split.mf-map-left .mf-map-col {\n  order: 0;\n}\n.mf-contact-split.mf-map-left .mf-form-col {\n  order: 1;\n}\n/* Map on the right visually */\n.mf-contact-split.mf-map-right .mf-map-col {\n  order: 1;\n}\n.mf-contact-split.mf-map-right .mf-form-col {\n  order: 0;\n}\n/* Mobile: form always first, map second for better UX */\n@media (max-width: 991px) {\n  .mf-contact-split .mf-form-col { order: 0 !important; }\n  .mf-contact-split .mf-map-col { order: 1 !important; }\n}\n\n/* ===== Map column ===== */\n.mf-contact-split .mf-map-col {\n  display: flex;\n  flex-direction: column;\n  gap: 20px;\n}\n.mf-contact-split .mf-map-wrap {\n  flex: 1 1 auto;\n  min-height: 360px;\n  border-radius: 12px;\n  overflow: hidden;\n  border: 1px solid var(--border);\n  box-shadow: 0 10px 25px -5px rgba(0,0,0,.08);\n}\n.mf-contact-split .mf-map-iframe {\n  width: 100%;\n  height: 100%;\n  min-height: 360px;\n  border: 0;\n  display: block;\n}\n@media (min-width: 992px) {\n  .mf-contact-split .mf-map-wrap,\n  .mf-contact-split .mf-map-iframe {\n    min-height: 480px;\n  }\n}\n\n/* ===== Contact info under map ===== */\n.mf-contact-split .mf-contact-info {\n  background: var(--card);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  padding: 20px;\n  box-shadow: 0 4px 12px rgba(0,0,0,.04);\n}\n.mf-contact-split .mf-contact-title {\n  margin: 0 0 12px;\n  font-size: 1.125rem;\n  font-weight: 600;\n  color: var(--foreground);\n}\n.mf-contact-split .mf-contact-line {\n  margin: 0 0 8px;\n  font-size: 0.9375rem;\n  line-height: 1.6;\n  color: var(--muted-foreground);\n}\n.mf-contact-split .mf-contact-address {\n  white-space: pre-line;\n}\n\n/* ===== Form card ===== */\n.mf-contact-split .mf-card {\n  background: var(--card) !important;\n  border: 1px solid var(--border) !important;\n  border-radius: 16px !important;\n  box-shadow: 0 20px 40px -10px rgba(0,0,0,.1) !important;\n  overflow: hidden;\n  height: 100%;\n  display: flex;\n  flex-direction: column;\n}\n.mf-contact-split .mf-header {\n  padding: 28px 28px 20px;\n  border-bottom: 1px solid var(--border);\n}\n.mf-contact-split .mf-title {\n  margin: 0 0 8px;\n  font-size: clamp(1.75rem, 4vw, 2.5rem);\n  font-weight: 600;\n  line-height: 1.15;\n  color: var(--foreground);\n}\n.mf-contact-split .mf-lead {\n  margin: 0;\n  font-size: 1rem;\n  line-height: 1.6;\n  color: var(--muted-foreground);\n}\n.mf-contact-split .mf-section {\n  padding: 24px 28px;\n  flex: 1 1 auto;\n}\n.mf-contact-split .mf-section-label {\n  margin: 0 0 18px;\n  font-size: 0.75rem;\n  font-weight: 600;\n  letter-spacing: 0.12em;\n  text-transform: uppercase;\n  color: var(--muted-foreground);\n}\n\n/* ===== Fields grid ===== */\n.mf-contact-split .mf-fields {\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n}\n.mf-contact-split .mf-row {\n  width: 100%;\n}\n.mf-contact-split .mf-grid-2 {\n  display: grid;\n  grid-template-columns: 1fr;\n  gap: 16px;\n}\n@media (min-width: 576px) {\n  .mf-contact-split .mf-grid-2 {\n    grid-template-columns: 1fr 1fr;\n  }\n}\n\n/* ===== Inputs (override host styles) ===== */\n.mf-contact-split input[type=\"text\"],\n.mf-contact-split input[type=\"email\"],\n.mf-contact-split input[type=\"tel\"],\n.mf-contact-split select,\n.mf-contact-split textarea {\n  width: 100% !important;\n  padding: 12px 14px !important;\n  font-size: 0.9375rem !important;\n  line-height: 1.5 !important;\n  color: var(--foreground) !important;\n  background: var(--input) !important;\n  border: 1px solid var(--border) !important;\n  border-radius: 8px !important;\n  outline: none !important;\n  transition: border-color .15s, box-shadow .15s !important;\n}\n.mf-contact-split input:focus,\n.mf-contact-split select:focus,\n.mf-contact-split textarea:focus {\n  border-color: var(--primary) !important;\n  box-shadow: 0 0 0 3px color-mix(in oklab, var(--primary) 18%, transparent) !important;\n}\n.mf-contact-split label {\n  display: block;\n  margin-bottom: 6px;\n  font-size: 0.875rem;\n  font-weight: 500;\n  color: var(--foreground);\n}\n.mf-contact-split .mf-required label::after {\n  content: \" *\";\n  color: var(--accent);\n}\n\n/* ===== Submit ===== */\n.mf-contact-split .mf-submit-wrap {\n  padding: 0 28px 24px;\n}\n.mf-contact-split .mf-submit-wrap button,\n.mf-contact-split .mf-submit-wrap input[type=\"submit\"] {\n  width: 100%;\n  padding: 14px 24px !important;\n  font-size: 1rem !important;\n  font-weight: 600 !important;\n  color: var(--primary-foreground) !important;\n  background: var(--primary) !important;\n  border: 1px solid var(--primary) !important;\n  border-radius: 10px !important;\n  cursor: pointer;\n  transition: filter .15s, transform .15s !important;\n}\n.mf-contact-split .mf-submit-wrap button:hover,\n.mf-contact-split .mf-submit-wrap input[type=\"submit\"]:hover {\n  filter: brightness(1.08);\n  transform: translateY(-1px);\n}\n\n/* ===== Footer ===== */\n.mf-contact-split .mf-footer {\n  padding: 16px 28px 24px;\n  border-top: 1px solid var(--border);\n  text-align: center;\n}\n.mf-contact-split .mf-footer p {\n  margin: 0;\n  font-size: 0.875rem;\n  color: var(--muted-foreground);\n}\n\n/* ===== Hide theme preset UI interference ===== */\n.mf-contact-split .mf-theme-ui {\n  position: fixed;\n  z-index: 9999;\n}\n",
+    "customHtml": "<div class=\"mf-contact-split mf-map-left\" data-mf-script-root=\"theme_selector\">\n  <div class=\"mf-bg\"></div>\n  <div class=\"mf-overlay\"></div>\n  <div class=\"mf-content\">\n    <div class=\"mf-split-grid\">\n      <aside class=\"mf-map-col\">\n        <div class=\"mf-map-wrap\">\n          <iframe class=\"mf-map-iframe\" src=\"{{content:map_embed_url}}\" allowfullscreen=\"\" loading=\"lazy\" referrerpolicy=\"no-referrer-when-downgrade\"></iframe>\n        </div>\n        <div class=\"mf-contact-info\">\n          <h3 class=\"mf-contact-title\">Visit Us</h3>\n          <p class=\"mf-contact-line mf-contact-address\">{{content:contact_address}}</p>\n          <p class=\"mf-contact-line\"><strong>Phone:</strong> {{content:contact_phone}}</p>\n          <p class=\"mf-contact-line\"><strong>Email:</strong> {{content:contact_email}}</p>\n        </div>\n      </aside>\n      <section class=\"mf-form-col\">\n        <div class=\"mf-card\">\n          <header class=\"mf-header\">\n            <h1 class=\"mf-title\">{{content:brand_title}}</h1>\n            <p class=\"mf-lead\">{{content:brand_subtitle}}</p>\n          </header>\n          <div class=\"mf-section\">\n            <h2 class=\"mf-section-label\">{{content:section_label}}</h2>\n            <div class=\"mf-fields\">\n              <div class=\"mf-row\">{{field:full_name}}</div>\n              <div class=\"mf-grid-2\">\n                <div class=\"mf-row\">{{field:email}}</div>\n                <div class=\"mf-row\">{{field:phone}}</div>\n              </div>\n              <div class=\"mf-row\">{{field:company}}</div>\n              <div class=\"mf-row\">{{field:subject}}</div>\n              <div class=\"mf-row\">{{field:message}}</div>\n              <div class=\"mf-row\">{{field:preferred_contact}}</div>\n              <div class=\"mf-row\">{{field:newsletter}}</div>\n            </div>\n          </div>\n          <div class=\"mf-submit-wrap\">\n            <button type=\"submit\" class=\"mf-btn-submit\">{{content:submit_btn_text}}</button>\n          </div>\n          <footer class=\"mf-footer\">\n            <p>{{content:footer_message}}</p>\n          </footer>\n        </div>\n      </section>\n    </div>\n  </div>\n</div>",
+    "CustomHtml": "<div class=\"mf-contact-split mf-map-left\" data-mf-script-root=\"theme_selector\">\n  <div class=\"mf-bg\"></div>\n  <div class=\"mf-overlay\"></div>\n  <div class=\"mf-content\">\n    <div class=\"mf-split-grid\">\n      <aside class=\"mf-map-col\">\n        <div class=\"mf-map-wrap\">\n          <iframe class=\"mf-map-iframe\" src=\"{{content:map_embed_url}}\" allowfullscreen=\"\" loading=\"lazy\" referrerpolicy=\"no-referrer-when-downgrade\"></iframe>\n        </div>\n        <div class=\"mf-contact-info\">\n          <h3 class=\"mf-contact-title\">Visit Us</h3>\n          <p class=\"mf-contact-line mf-contact-address\">{{content:contact_address}}</p>\n          <p class=\"mf-contact-line\"><strong>Phone:</strong> {{content:contact_phone}}</p>\n          <p class=\"mf-contact-line\"><strong>Email:</strong> {{content:contact_email}}</p>\n        </div>\n      </aside>\n      <section class=\"mf-form-col\">\n        <div class=\"mf-card\">\n          <header class=\"mf-header\">\n            <h1 class=\"mf-title\">{{content:brand_title}}</h1>\n            <p class=\"mf-lead\">{{content:brand_subtitle}}</p>\n          </header>\n          <div class=\"mf-section\">\n            <h2 class=\"mf-section-label\">{{content:section_label}}</h2>\n            <div class=\"mf-fields\">\n              <div class=\"mf-row\">{{field:full_name}}</div>\n              <div class=\"mf-grid-2\">\n                <div class=\"mf-row\">{{field:email}}</div>\n                <div class=\"mf-row\">{{field:phone}}</div>\n              </div>\n              <div class=\"mf-row\">{{field:company}}</div>\n              <div class=\"mf-row\">{{field:subject}}</div>\n              <div class=\"mf-row\">{{field:message}}</div>\n              <div class=\"mf-row\">{{field:preferred_contact}}</div>\n              <div class=\"mf-row\">{{field:newsletter}}</div>\n            </div>\n          </div>\n          <div class=\"mf-submit-wrap\">\n            <button type=\"submit\" class=\"mf-btn-submit\">{{content:submit_btn_text}}</button>\n          </div>\n          <footer class=\"mf-footer\">\n            <p>{{content:footer_message}}</p>\n          </footer>\n        </div>\n      </section>\n    </div>\n  </div>\n</div>"
+  },
+  "fields": [
+    {
+      "key": "full_name",
+      "type": "Text",
+      "label": "Full Name",
+      "required": true,
+      "placeholder": "Your full name"
+    },
+    {
+      "key": "email",
+      "type": "Email",
+      "label": "Email Address",
+      "required": true,
+      "placeholder": "you@example.com"
+    },
+    {
+      "key": "phone",
+      "type": "Phone",
+      "label": "Phone Number",
+      "required": false,
+      "placeholder": "+1 (555) 000-0000"
+    },
+    {
+      "key": "company",
+      "type": "Text",
+      "label": "Company / Organization",
+      "required": false,
+      "placeholder": "Acme Inc."
+    },
+    {
+      "key": "subject",
+      "type": "Select",
+      "label": "How can we help?",
+      "required": true,
+      "options": [
+        {
+          "value": "",
+          "label": "Select a topic",
+          "disabled": true
+        },
+        {
+          "value": "general",
+          "label": "General Inquiry"
+        },
+        {
+          "value": "sales",
+          "label": "Sales"
+        },
+        {
+          "value": "support",
+          "label": "Technical Support"
+        },
+        {
+          "value": "feedback",
+          "label": "Feedback"
+        },
+        {
+          "value": "other",
+          "label": "Other"
+        }
+      ]
+    },
+    {
+      "key": "message",
+      "type": "Textarea",
+      "label": "Message",
+      "required": true,
+      "placeholder": "Tell us how we can help you...",
+      "rows": 5
+    },
+    {
+      "key": "preferred_contact",
+      "type": "Radio",
+      "label": "Preferred contact method",
+      "required": false,
+      "options": [
+        {
+          "value": "email",
+          "label": "Email"
+        },
+        {
+          "value": "phone",
+          "label": "Phone"
+        }
+      ],
+      "default": "email"
+    },
+    {
+      "key": "newsletter",
+      "type": "Checkbox",
+      "label": "Keep me updated with news and offers",
+      "required": false,
+      "options": [
+        {
+          "value": "yes",
+          "label": "Subscribe to newsletter",
+          "selected": false
+        }
+      ]
+    }
+  ],
+  "customHtml": "<div class=\"mf-contact-split mf-map-left\" data-mf-script-root=\"theme_selector\">\n  <div class=\"mf-bg\"></div>\n  <div class=\"mf-overlay\"></div>\n  <div class=\"mf-content\">\n    <div class=\"mf-split-grid\">\n      <aside class=\"mf-map-col\">\n        <div class=\"mf-map-wrap\">\n          <iframe class=\"mf-map-iframe\" src=\"{{content:map_embed_url}}\" allowfullscreen=\"\" loading=\"lazy\" referrerpolicy=\"no-referrer-when-downgrade\"></iframe>\n        </div>\n        <div class=\"mf-contact-info\">\n          <h3 class=\"mf-contact-title\">Visit Us</h3>\n          <p class=\"mf-contact-line mf-contact-address\">{{content:contact_address}}</p>\n          <p class=\"mf-contact-line\"><strong>Phone:</strong> {{content:contact_phone}}</p>\n          <p class=\"mf-contact-line\"><strong>Email:</strong> {{content:contact_email}}</p>\n        </div>\n      </aside>\n      <section class=\"mf-form-col\">\n        <div class=\"mf-card\">\n          <header class=\"mf-header\">\n            <h1 class=\"mf-title\">{{content:brand_title}}</h1>\n            <p class=\"mf-lead\">{{content:brand_subtitle}}</p>\n          </header>\n          <div class=\"mf-section\">\n            <h2 class=\"mf-section-label\">{{content:section_label}}</h2>\n            <div class=\"mf-fields\">\n              <div class=\"mf-row\">{{field:full_name}}</div>\n              <div class=\"mf-grid-2\">\n                <div class=\"mf-row\">{{field:email}}</div>\n                <div class=\"mf-row\">{{field:phone}}</div>\n              </div>\n              <div class=\"mf-row\">{{field:company}}</div>\n              <div class=\"mf-row\">{{field:subject}}</div>\n              <div class=\"mf-row\">{{field:message}}</div>\n              <div class=\"mf-row\">{{field:preferred_contact}}</div>\n              <div class=\"mf-row\">{{field:newsletter}}</div>\n            </div>\n          </div>\n          <div class=\"mf-submit-wrap\">\n            <button type=\"submit\" class=\"mf-btn-submit\">{{content:submit_btn_text}}</button>\n          </div>\n          <footer class=\"mf-footer\">\n            <p>{{content:footer_message}}</p>\n          </footer>\n        </div>\n      </section>\n    </div>\n  </div>\n</div>",
+  "customCss": "@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');\n\n/* ===== Scope root: CSS variables (theme_selector overrides these) ===== */\n.mf-contact-split {\n  --background: oklch(0.98 0.002 240);\n  --foreground: oklch(0.20 0.04 240);\n  --card: oklch(1 0 0);\n  --card-foreground: oklch(0.20 0.04 240);\n  --primary: oklch(0.35 0.12 240);\n  --primary-foreground: oklch(0.98 0 0);\n  --secondary: oklch(0.94 0.01 240);\n  --muted: oklch(0.96 0.005 240);\n  --muted-foreground: oklch(0.45 0.02 240);\n  --accent: oklch(0.55 0.08 240);\n  --border: oklch(0.90 0.01 240);\n  --input: oklch(0.97 0.005 240);\n  --ring: oklch(0.35 0.12 240);\n\n  display: block !important;\n  width: 100% !important;\n  min-height: 100%;\n  position: relative;\n  background: var(--background);\n  color: var(--foreground);\n  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;\n  box-sizing: border-box;\n  overflow: hidden !important;\n}\n.mf-contact-split *,\n.mf-contact-split *::before,\n.mf-contact-split *::after {\n  box-sizing: border-box;\n}\n.mf-contact-split * {\n  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;\n}\n\n/* ===== Background ===== */\n.mf-contact-split .mf-bg {\n  position: absolute;\n  inset: 0;\n  background: var(--background);\n  z-index: 0;\n  pointer-events: none;\n}\n.mf-contact-split .mf-overlay {\n  position: absolute;\n  inset: 0;\n  background: linear-gradient(135deg, color-mix(in oklab, var(--primary) 4%, transparent) 0%, transparent 60%);\n  z-index: 0;\n  pointer-events: none;\n}\n\n/* ===== Content wrapper ===== */\n.mf-contact-split .mf-content {\n  position: relative;\n  z-index: 1;\n  width: 100%;\n  padding: 24px 16px;\n}\n@media (min-width: 768px) {\n  .mf-contact-split .mf-content {\n    padding: 40px 24px;\n  }\n}\n@media (min-width: 1024px) {\n  .mf-contact-split .mf-content {\n    padding: 56px 32px;\n  }\n}\n\n/* ===== Split grid: map beside form ===== */\n.mf-contact-split .mf-split-grid {\n  display: grid;\n  grid-template-columns: 1fr;\n  gap: 24px;\n  max-width: 1200px;\n  margin: 0 auto;\n  align-items: stretch;\n}\n@media (min-width: 992px) {\n  .mf-contact-split .mf-split-grid {\n    grid-template-columns: 1fr 1fr;\n    gap: 32px;\n  }\n}\n@media (min-width: 1200px) {\n  .mf-contact-split .mf-split-grid {\n    grid-template-columns: 5fr 7fr;\n    gap: 40px;\n  }\n}\n\n/* Map on the left visually */\n.mf-contact-split.mf-map-left .mf-map-col {\n  order: 0;\n}\n.mf-contact-split.mf-map-left .mf-form-col {\n  order: 1;\n}\n/* Map on the right visually */\n.mf-contact-split.mf-map-right .mf-map-col {\n  order: 1;\n}\n.mf-contact-split.mf-map-right .mf-form-col {\n  order: 0;\n}\n/* Mobile: form always first, map second for better UX */\n@media (max-width: 991px) {\n  .mf-contact-split .mf-form-col { order: 0 !important; }\n  .mf-contact-split .mf-map-col { order: 1 !important; }\n}\n\n/* ===== Map column ===== */\n.mf-contact-split .mf-map-col {\n  display: flex;\n  flex-direction: column;\n  gap: 20px;\n}\n.mf-contact-split .mf-map-wrap {\n  flex: 1 1 auto;\n  min-height: 360px;\n  border-radius: 12px;\n  overflow: hidden;\n  border: 1px solid var(--border);\n  box-shadow: 0 10px 25px -5px rgba(0,0,0,.08);\n}\n.mf-contact-split .mf-map-iframe {\n  width: 100%;\n  height: 100%;\n  min-height: 360px;\n  border: 0;\n  display: block;\n}\n@media (min-width: 992px) {\n  .mf-contact-split .mf-map-wrap,\n  .mf-contact-split .mf-map-iframe {\n    min-height: 480px;\n  }\n}\n\n/* ===== Contact info under map ===== */\n.mf-contact-split .mf-contact-info {\n  background: var(--card);\n  border: 1px solid var(--border);\n  border-radius: 12px;\n  padding: 20px;\n  box-shadow: 0 4px 12px rgba(0,0,0,.04);\n}\n.mf-contact-split .mf-contact-title {\n  margin: 0 0 12px;\n  font-size: 1.125rem;\n  font-weight: 600;\n  color: var(--foreground);\n}\n.mf-contact-split .mf-contact-line {\n  margin: 0 0 8px;\n  font-size: 0.9375rem;\n  line-height: 1.6;\n  color: var(--muted-foreground);\n}\n.mf-contact-split .mf-contact-address {\n  white-space: pre-line;\n}\n\n/* ===== Form card ===== */\n.mf-contact-split .mf-card {\n  background: var(--card) !important;\n  border: 1px solid var(--border) !important;\n  border-radius: 16px !important;\n  box-shadow: 0 20px 40px -10px rgba(0,0,0,.1) !important;\n  overflow: hidden;\n  height: 100%;\n  display: flex;\n  flex-direction: column;\n}\n.mf-contact-split .mf-header {\n  padding: 28px 28px 20px;\n  border-bottom: 1px solid var(--border);\n}\n.mf-contact-split .mf-title {\n  margin: 0 0 8px;\n  font-size: clamp(1.75rem, 4vw, 2.5rem);\n  font-weight: 600;\n  line-height: 1.15;\n  color: var(--foreground);\n}\n.mf-contact-split .mf-lead {\n  margin: 0;\n  font-size: 1rem;\n  line-height: 1.6;\n  color: var(--muted-foreground);\n}\n.mf-contact-split .mf-section {\n  padding: 24px 28px;\n  flex: 1 1 auto;\n}\n.mf-contact-split .mf-section-label {\n  margin: 0 0 18px;\n  font-size: 0.75rem;\n  font-weight: 600;\n  letter-spacing: 0.12em;\n  text-transform: uppercase;\n  color: var(--muted-foreground);\n}\n\n/* ===== Fields grid ===== */\n.mf-contact-split .mf-fields {\n  display: flex;\n  flex-direction: column;\n  gap: 16px;\n}\n.mf-contact-split .mf-row {\n  width: 100%;\n}\n.mf-contact-split .mf-grid-2 {\n  display: grid;\n  grid-template-columns: 1fr;\n  gap: 16px;\n}\n@media (min-width: 576px) {\n  .mf-contact-split .mf-grid-2 {\n    grid-template-columns: 1fr 1fr;\n  }\n}\n\n/* ===== Inputs (override host styles) ===== */\n.mf-contact-split input[type=\"text\"],\n.mf-contact-split input[type=\"email\"],\n.mf-contact-split input[type=\"tel\"],\n.mf-contact-split select,\n.mf-contact-split textarea {\n  width: 100% !important;\n  padding: 12px 14px !important;\n  font-size: 0.9375rem !important;\n  line-height: 1.5 !important;\n  color: var(--foreground) !important;\n  background: var(--input) !important;\n  border: 1px solid var(--border) !important;\n  border-radius: 8px !important;\n  outline: none !important;\n  transition: border-color .15s, box-shadow .15s !important;\n}\n.mf-contact-split input:focus,\n.mf-contact-split select:focus,\n.mf-contact-split textarea:focus {\n  border-color: var(--primary) !important;\n  box-shadow: 0 0 0 3px color-mix(in oklab, var(--primary) 18%, transparent) !important;\n}\n.mf-contact-split label {\n  display: block;\n  margin-bottom: 6px;\n  font-size: 0.875rem;\n  font-weight: 500;\n  color: var(--foreground);\n}\n.mf-contact-split .mf-required label::after {\n  content: \" *\";\n  color: var(--accent);\n}\n\n/* ===== Submit ===== */\n.mf-contact-split .mf-submit-wrap {\n  padding: 0 28px 24px;\n}\n.mf-contact-split .mf-submit-wrap button,\n.mf-contact-split .mf-submit-wrap input[type=\"submit\"] {\n  width: 100%;\n  padding: 14px 24px !important;\n  font-size: 1rem !important;\n  font-weight: 600 !important;\n  color: var(--primary-foreground) !important;\n  background: var(--primary) !important;\n  border: 1px solid var(--primary) !important;\n  border-radius: 10px !important;\n  cursor: pointer;\n  transition: filter .15s, transform .15s !important;\n}\n.mf-contact-split .mf-submit-wrap button:hover,\n.mf-contact-split .mf-submit-wrap input[type=\"submit\"]:hover {\n  filter: brightness(1.08);\n  transform: translateY(-1px);\n}\n\n/* ===== Footer ===== */\n.mf-contact-split .mf-footer {\n  padding: 16px 28px 24px;\n  border-top: 1px solid var(--border);\n  text-align: center;\n}\n.mf-contact-split .mf-footer p {\n  margin: 0;\n  font-size: 0.875rem;\n  color: var(--muted-foreground);\n}\n\n/* ===== Hide theme preset UI interference ===== */\n.mf-contact-split .mf-theme-ui {\n  position: fixed;\n  z-index: 9999;\n}\n",
+  "rules": [],
+  "workflow": null,
+  "categories": [
+    "contact",
+    "with_map",
+    "tailwindcss",
+    "premium"
+  ]
+}

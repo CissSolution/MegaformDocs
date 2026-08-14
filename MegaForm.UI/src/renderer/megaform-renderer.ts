@@ -2967,7 +2967,7 @@ function renderStandardFields(container: HTMLElement): void {
       var list = zone.querySelector<HTMLElement>('.mf-file-list');
       var errEl3 = fieldKey ? document.getElementById('mf-err-' + fieldKey) : null;
 
-      zone.addEventListener('click', function () { input.click(); });
+      zone.addEventListener('click', function (e: MouseEvent) { if (e.target !== input) input.click(); });
       zone.addEventListener('dragover', function (e: Event) { e.preventDefault(); zone.classList.add('mf-file-dragover'); });
       zone.addEventListener('dragleave', function () { zone.classList.remove('mf-file-dragover'); });
       zone.addEventListener('drop', function (e: Event) {
@@ -3029,7 +3029,8 @@ function renderStandardFields(container: HTMLElement): void {
       var ctx = canvas.getContext('2d');
       if (!ctx) return;
       var drawing = false;
-      var hiddenInput = canvas.parentElement ? canvas.parentElement.querySelector<HTMLInputElement>('input[type="hidden"]') : null;
+      var signatureField = canvas.closest<HTMLElement>('.mf-signature-field');
+      var hiddenInput = signatureField ? signatureField.querySelector<HTMLInputElement>('input[type="hidden"]') : null;
 
       function resizeCanvas(): void {
         var rect = canvas!.getBoundingClientRect();

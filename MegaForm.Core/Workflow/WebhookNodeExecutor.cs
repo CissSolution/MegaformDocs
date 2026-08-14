@@ -313,7 +313,16 @@ namespace MegaForm.Core.Services.Workflow
             {
                 foreach (var mapping in config.BodyMappings)
                 {
-                    string value = mapping.StaticValue != null
+                    // [MappedFieldsFix v20260813] The test used to be `mapping.StaticValue != null`,
+                    // and the builder serialises EVERY row as `StaticValue: row.staticValue || ''`
+                    // (serializeNodeConfigForApi, src/builder/workflow/index.ts). An empty string is
+                    // not null, so every row took the static branch, resolved to "", and the whole
+                    // "Map selected fields" payload went out with empty values — the CRM received the
+                    // right JSON shape carrying nothing. Only rows where the user actually typed a
+                    // fixed value are static; the rest read the form field, which is what the panel's
+                    // own hint promises ("Leave blank to use the selected form field").
+                    // Verified against a live submission on :5131, 2026-08-13.
+                    string value = !string.IsNullOrWhiteSpace(mapping.StaticValue)
                         ? ResolveTemplate(mapping.StaticValue, ctx)
                         : GetFormDataValue(ctx, mapping.FormFieldKey ?? "");
 

@@ -2621,6 +2621,26 @@
                     </ul>
                 }
             </nav>
+            @* The nav is a SCROLL BOX (max-height + overflow:auto) holding every article in the
+               channel, and it opens at scrollTop 0. On a 38-article channel the newest branch is
+               ~1380px down a 960px box, so opening one of its articles showed a left column in which
+               the current page - and its whole branch heading - was 420px below the fold. Measured on
+               ?doc=int-sql-insert, 2026-08-13: the owner read that as "this page is not in the left
+               list at all", and they were right about what they could see.
+               scrollTop arithmetic, NOT scrollIntoView: scrollIntoView on a child of an overflow
+               container also scrolls the WINDOW, which throws the reader past the article's own
+               heading to land a nav row. Already-visible rows are left alone. *@
+            <script>
+                (function () {
+                    var nav = document.querySelector('.mfb-tree-nav');
+                    if (!nav) return;
+                    var on = nav.querySelector('li.on');
+                    if (!on) return;
+                    var navBox = nav.getBoundingClientRect(), rowBox = on.getBoundingClientRect();
+                    if (rowBox.top >= navBox.top && rowBox.bottom <= navBox.bottom) return;
+                    nav.scrollTop += (rowBox.top - navBox.top) - Math.max(0, (navBox.height - rowBox.height) / 3);
+                })();
+            </script>
 
             <main class="mfb-tree-main">
                 @if (treeBounded)

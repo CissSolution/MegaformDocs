@@ -1,3 +1,14 @@
 @inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage
 @using MegaForm.Umbraco.ViewModels
-@await Html.PartialAsync("~/Views/MegaFormView.cshtml", new MegaFormViewModel { ContentId = Model.Id })
+@using Umbraco.Extensions
+@{
+    var formId = Model.Value<int?>("megaFormPicker");
+}
+@if (formId.HasValue && formId.Value > 0)
+{
+    @await Html.PartialAsync("~/Views/MegaFormView.cshtml", new MegaFormViewModel { ContentId = Model.Id, FormId = formId.Value })
+}
+else
+{
+    <p style="padding:1rem;color:#64748b;">No MegaForm selected on this page.</p>
+}

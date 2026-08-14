@@ -1,0 +1,79 @@
+@page "/api-demo"
+@model MegaForm.Samples.CorporateWeb.Pages.ApiDemoModel
+@{
+    ViewData["Title"] = "API Demo";
+}
+
+<section class="content-page">
+    <div class="container">
+        <h1>Custom view built with the MegaForm API</h1>
+        <p class="lead">
+            This page uses the injected <code>IMegaFormClient</code> (from the
+            <code>MegaForm.Sdk</code> package) to query forms and submissions without
+            writing SQL or touching internal repositories.
+        </p>
+
+        <h2>Published forms</h2>
+        @if (Model.Forms?.Items?.Any() == true)
+        {
+            <div class="form-list">
+                @foreach (var form in Model.Forms.Items)
+                {
+                    <div class="form-list-item">
+                        <div>
+                            <strong>@form.Title</strong>
+                            <span class="badge">@form.Status</span>
+                            <span class="meta">ID: @form.FormId</span>
+                        </div>
+                        <div class="form-actions">
+                            <a class="btn btn-sm" href="/f/@form.FormId" target="_blank">Preview</a>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <p>No forms found.</p>
+        }
+
+        <h2 style="margin-top: 2.5rem;">Recent submissions</h2>
+        @if (Model.SubmissionRows.Any())
+        {
+            <div class="table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Form</th>
+                            <th>Submitted</th>
+                            <th>Status</th>
+                            <th>Data preview</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var sub in Model.SubmissionRows)
+                        {
+                            <tr>
+                                <td>@sub.SubmissionId</td>
+                                <td>@sub.FormTitle</td>
+                                <td>@sub.SubmittedOnUtc.ToString("g")</td>
+                                <td>@sub.Status</td>
+                                <td><code class="data-preview">@sub.DataPreview</code></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <p>No submissions yet. Submit the contact form to see data here.</p>
+        }
+
+        <div class="cta-row" style="margin-top: 2rem;">
+            <a class="btn btn-primary" href="/Contact">Submit a test entry</a>
+            <a class="btn btn-secondary" href="/admin-dashboard">Admin dashboard</a>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,246 @@
+<style>
+/* ACME — article page. Converted from ACME-website-Blogs/app/templates/blog/post/page.tsx.
+   Prefixed .ac- and scoped to .mfb-tpl so nothing reaches the skin or the built-in design.
+
+   Two things worth knowing before editing this file:
+   - The mock styles its article body with Tailwind's `prose` classes, and that plugin is NOT in the
+     mock's package.json — those classes are no-ops even there. So the body typography below is
+     written from scratch against the real HTML the editor produces.
+   - The comment box is a <div>, never a <form>: it rides the DNN page form, and a nested form tag is
+     dropped by the browser. The hidden mfb_csrf field is what makes the POST accepted; without it
+     the module answers "the commenting session expired". */
+.mfb-tpl .ac { --ac-ink: #0f172a; --ac-dim: #64748b; --ac-line: #e2e8f0; --ac-card: #fff;
+  --ac-accent: #4f46e5; --ac-soft: #f1f5f9;
+  color: var(--ac-ink); font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif; }
+.mfb-tpl .ac * { box-sizing: border-box; }
+/* A DNN skin styles h1..h6 (and often a, p) DIRECTLY, and a direct rule beats an inherited value. */
+.mfb-tpl .ac h1, .mfb-tpl .ac h2, .mfb-tpl .ac h3, .mfb-tpl .ac h4, .mfb-tpl .ac h5,
+.mfb-tpl .ac p, .mfb-tpl .ac a, .mfb-tpl .ac span, .mfb-tpl .ac small, .mfb-tpl .ac li,
+.mfb-tpl .ac b, .mfb-tpl .ac strong, .mfb-tpl .ac label { font-family: inherit; }
+.mfb-tpl .ac a { color: inherit; text-decoration: none; }
+.mfb-tpl .ac-wrap { width: min(1180px, calc(100% - 32px)); margin: 0 auto; }
+
+/* ---- masthead --------------------------------------------------------------- */
+.mfb-tpl .ac-top { padding: 40px 0 28px; }
+.mfb-tpl .ac-crumb { margin-bottom: 18px; color: var(--ac-dim); font-size: 14px; }
+.mfb-tpl .ac-crumb a:hover { color: var(--ac-accent); }
+.mfb-tpl .ac-tagrow { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+.mfb-tpl .ac-pill { padding: 5px 13px; border-radius: 999px; background: var(--ac-soft);
+  color: var(--ac-dim); font-size: 13px; font-weight: 600; }
+.mfb-tpl .ac-pill-accent { background: rgba(79,70,229,.10); color: var(--ac-accent); }
+.mfb-tpl .ac-top h1 { margin: 0 0 14px; font-size: clamp(30px, 4.4vw, 50px); font-weight: 800;
+  line-height: 1.08; letter-spacing: -.03em; max-width: 20ch; }
+.mfb-tpl .ac-lede { margin: 0 0 26px; max-width: 62ch; color: var(--ac-dim); font-size: 20px; line-height: 1.55; }
+
+.mfb-tpl .ac-byline { display: flex; align-items: center; justify-content: space-between; gap: 20px;
+  padding: 18px 0; border-top: 1px solid var(--ac-line); border-bottom: 1px solid var(--ac-line); flex-wrap: wrap; }
+.mfb-tpl .ac-author { display: flex; align-items: center; gap: 12px; }
+.mfb-tpl .ac-author img { width: 48px; height: 48px; border-radius: 999px; object-fit: cover; }
+.mfb-tpl .ac-author b { display: block; font-size: 15px; }
+.mfb-tpl .ac-author small { color: var(--ac-dim); font-size: 13px; }
+.mfb-tpl .ac-metrics { display: flex; gap: 18px; color: var(--ac-dim); font-size: 14px; }
+
+.mfb-tpl .ac-hero { margin: 26px 0 8px; }
+.mfb-tpl .ac-hero img { display: block; width: 100%; max-height: 460px; border-radius: 20px; object-fit: cover; }
+.mfb-tpl .ac-hero figcaption { margin-top: 10px; color: var(--ac-dim); font-size: 13px; }
+
+/* ---- body + rail ------------------------------------------------------------ */
+.mfb-tpl .ac-layout { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 52px; padding: 34px 0 8px; align-items: start; }
+
+.mfb-tpl .ac-prose { font-size: 17px; line-height: 1.75; }
+.mfb-tpl .ac-prose h2 { margin: 40px 0 14px; font-size: 27px; font-weight: 700; letter-spacing: -.02em; line-height: 1.25; }
+.mfb-tpl .ac-prose h3 { margin: 30px 0 10px; font-size: 21px; font-weight: 700; line-height: 1.3; }
+.mfb-tpl .ac-prose h4 { margin: 24px 0 8px; font-size: 18px; font-weight: 700; }
+.mfb-tpl .ac-prose p { margin: 0 0 20px; }
+.mfb-tpl .ac-prose a { color: var(--ac-accent); text-decoration: underline; text-underline-offset: 2px; }
+.mfb-tpl .ac-prose ul, .mfb-tpl .ac-prose ol { margin: 0 0 20px; padding-left: 24px; }
+.mfb-tpl .ac-prose li { margin-bottom: 8px; }
+.mfb-tpl .ac-prose img { max-width: 100%; height: auto; border-radius: 14px; }
+.mfb-tpl .ac-prose blockquote { margin: 26px 0; padding: 4px 0 4px 22px; border-left: 3px solid var(--ac-accent);
+  color: var(--ac-dim); font-size: 19px; font-style: italic; }
+.mfb-tpl .ac-prose pre { margin: 0 0 22px; padding: 18px; overflow-x: auto; border-radius: 12px;
+  background: #0f172a; color: #e2e8f0; font-size: 14px; line-height: 1.6; }
+.mfb-tpl .ac-prose code { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: .92em; }
+.mfb-tpl .ac-prose :not(pre) > code { padding: 2px 6px; border-radius: 5px; background: var(--ac-soft); }
+.mfb-tpl .ac-prose table { width: 100%; margin: 0 0 22px; border-collapse: collapse; font-size: 15px; }
+.mfb-tpl .ac-prose th, .mfb-tpl .ac-prose td { padding: 10px 12px; border: 1px solid var(--ac-line); text-align: left; vertical-align: top; }
+.mfb-tpl .ac-prose th { background: var(--ac-soft); font-weight: 700; }
+
+.mfb-tpl .ac-rail { position: sticky; top: 20px; }
+.mfb-tpl .ac-rail h3 { margin: 0 0 12px; color: var(--ac-dim); font-size: 12px; font-weight: 700;
+  letter-spacing: .09em; text-transform: uppercase; }
+.mfb-tpl .ac-toc ol { margin: 0; padding: 0; list-style: none; border-left: 2px solid var(--ac-line); }
+.mfb-tpl .ac-toc li { padding: 6px 0 6px 14px; font-size: 14px; line-height: 1.4; }
+.mfb-tpl .ac-toc li.sub { padding-left: 28px; font-size: 13px; color: var(--ac-dim); }
+.mfb-tpl .ac-toc a:hover { color: var(--ac-accent); }
+
+/* ---- tags, related, thread --------------------------------------------------- */
+.mfb-tpl .ac-tags { display: flex; flex-wrap: wrap; gap: 8px; margin: 30px 0 0; padding-top: 26px; border-top: 1px solid var(--ac-line); }
+.mfb-tpl .ac-tags a { padding: 7px 15px; border-radius: 999px; background: var(--ac-soft); font-size: 14px; font-weight: 600; }
+.mfb-tpl .ac-tags a:hover { background: var(--ac-accent); color: #fff; }
+
+.mfb-tpl .ac-section { padding: 40px 0 0; }
+.mfb-tpl .ac-section > h2 { margin: 0 0 20px; font-size: 24px; font-weight: 700; }
+.mfb-tpl .ac-related { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+.mfb-tpl .ac-related article { overflow: hidden; border: 1px solid var(--ac-line); border-radius: 16px; background: var(--ac-card); }
+.mfb-tpl .ac-related img { display: block; width: 100%; height: 150px; object-fit: cover; }
+.mfb-tpl .ac-related div { padding: 16px; }
+.mfb-tpl .ac-related strong { display: block; margin-bottom: 6px; font-size: 16px; line-height: 1.3; }
+.mfb-tpl .ac-related small { color: var(--ac-dim); font-size: 13px; }
+
+.mfb-tpl .ac-thread { margin: 0; padding: 0; list-style: none; }
+.mfb-tpl .ac-thread li { padding: 18px 0; border-bottom: 1px solid var(--ac-line); }
+.mfb-tpl .ac-thread b { font-size: 15px; }
+.mfb-tpl .ac-thread small { margin-left: 8px; color: var(--ac-dim); font-size: 13px; }
+.mfb-tpl .ac-thread p { margin: 8px 0 0; line-height: 1.6; }
+
+.mfb-tpl .ac-box { margin-top: 26px; padding: 24px; border: 1px solid var(--ac-line); border-radius: 18px; background: var(--ac-card); }
+.mfb-tpl .ac-box h3 { margin: 0 0 16px; color: var(--ac-ink); font-size: 18px; font-weight: 700;
+  letter-spacing: 0; text-transform: none; }
+.mfb-tpl .ac-box label { display: block; margin-bottom: 6px; font-size: 14px; font-weight: 600; }
+.mfb-tpl .ac-box input[type=text], .mfb-tpl .ac-box input[type=email], .mfb-tpl .ac-box textarea {
+  width: 100%; margin-bottom: 16px; padding: 11px 13px; border: 1px solid var(--ac-line);
+  border-radius: 10px; background: #fff; color: var(--ac-ink); font: inherit; font-size: 15px; }
+.mfb-tpl .ac-box textarea { min-height: 120px; resize: vertical; }
+.mfb-tpl .ac-grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.mfb-tpl .ac-btn { padding: 11px 22px; border: 0; border-radius: 999px; background: var(--ac-accent);
+  color: #fff; font: inherit; font-size: 15px; font-weight: 600; cursor: pointer; }
+.mfb-tpl .ac-hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+.mfb-tpl .ac-note { margin: 0 0 16px; padding: 11px 15px; border-radius: 10px; font-size: 14px; }
+.mfb-tpl .ac-note-ok { background: #ecfdf5; color: #065f46; }
+.mfb-tpl .ac-note-bad { background: #fef2f2; color: #991b1b; }
+.mfb-tpl .ac-muted { color: var(--ac-dim); font-size: 13px; }
+.mfb-tpl .ac-foot { padding: 34px 0 48px; }
+
+@media (max-width: 1000px) {
+  .mfb-tpl .ac-layout { grid-template-columns: 1fr; gap: 30px; }
+  .mfb-tpl .ac-rail { position: static; }
+  .mfb-tpl .ac-related { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+  .mfb-tpl .ac-grid2 { grid-template-columns: 1fr; }
+}
+</style>
+
+<div class="ac">
+  <div class="ac-wrap">
+    <header class="ac-top">
+      <nav class="ac-crumb"><a href="{{site.url}}">{{site.title}}</a> &rsaquo; {{post.category}}</nav>
+      <div class="ac-tagrow">
+        <span class="ac-pill ac-pill-accent">{{post.category}}</span>
+        <span class="ac-pill">{{post.readingTime}} min read</span>
+        <span class="ac-pill">{{post.format}}</span>
+      </div>
+      <h1>{{post.title}}</h1>
+      {{#if post.subtitle}}<p class="ac-lede">{{post.subtitle}}</p>{{/if}}
+
+      <div class="ac-byline">
+        <div class="ac-author">
+          {{#if post.authorAvatar}}<img src="{{post.authorAvatar}}" alt="{{post.author}}" />{{/if}}
+          <div>
+            <b>{{post.author}}</b>
+            <small>{{post.authorRole}} &middot; {{post.date}}</small>
+          </div>
+        </div>
+        <div class="ac-metrics">
+          <span>{{post.readsLabel}}</span>
+          <span>{{post.commentsLabel}}</span>
+          <span>{{post.sharesLabel}}</span>
+        </div>
+      </div>
+
+      {{#if post.image}}
+      <figure class="ac-hero">
+        <img src="{{post.image}}" alt="{{post.imageAlt}}" />
+        {{#if post.mediaCaption}}<figcaption>{{post.mediaCaption}}</figcaption>{{/if}}
+      </figure>
+      {{/if}}
+    </header>
+
+    <div class="ac-layout">
+      <article>
+        <div class="ac-prose">{{{post.body}}}</div>
+
+        {{#if tags}}
+        <div class="ac-tags">
+          {{#each tags}}<a href="{{url}}">#{{name}}</a>{{/each}}
+        </div>
+        {{/if}}
+      </article>
+
+      <aside class="ac-rail">
+        {{#if toc}}
+        <div class="ac-toc">
+          <h3>On this page</h3>
+          <ol>
+            {{#each toc}}
+            <li class="{{#if sub}}sub{{/if}}"><a href="#{{id}}">{{text}}</a></li>
+            {{/each}}
+          </ol>
+        </div>
+        {{/if}}
+      </aside>
+    </div>
+
+    {{#if related}}
+    <section class="ac-section">
+      <h2>Keep reading</h2>
+      <div class="ac-related">
+        {{#each related}}
+        <article>
+          <a href="{{url}}"><img src="{{image}}" alt="{{title}}" loading="lazy" /></a>
+          <div>
+            <span class="ac-pill">{{category}}</span>
+            <strong><a href="{{url}}">{{title}}</a></strong>
+            <small>{{date}} &middot; {{readingTime}} min</small>
+          </div>
+        </article>
+        {{/each}}
+      </div>
+    </section>
+    {{/if}}
+
+    <section class="ac-section ac-foot">
+      <h2>{{post.commentsLabel}}</h2>
+
+      {{#if comments}}
+      <ul class="ac-thread">
+        {{#each comments}}
+        <li>
+          <b>{{name}}</b><small>{{date}}</small>
+          <p>{{body}}</p>
+        </li>
+        {{/each}}
+      </ul>
+      {{else}}
+      <p class="ac-muted">No comments yet — be the first.</p>
+      {{/if}}
+
+      {{#if commentForm.open}}
+      <div class="ac-box">
+        <h3>Leave a comment</h3>
+        {{#if commentForm.posted}}<p class="ac-note ac-note-ok">Thanks — your comment is waiting for review.</p>{{/if}}
+        {{#if commentForm.error}}<p class="ac-note ac-note-bad">{{commentForm.error}}</p>{{/if}}
+        <input type="hidden" name="mfb_csrf" value="{{commentForm.csrf}}" />
+        <input type="hidden" name="slug" value="{{commentForm.slug}}" />
+        <input type="text" name="__mf_blog_comment_hp" value="" tabindex="-1" autocomplete="off" class="ac-hp" aria-hidden="true" />
+        <div class="ac-grid2">
+          <div>
+            <label for="ac-name">Name *</label>
+            <input id="ac-name" name="commenter_name" type="text" maxlength="100" required />
+          </div>
+          <div>
+            <label for="ac-email">Email <span class="ac-muted">(not published)</span></label>
+            <input id="ac-email" name="commenter_email" type="email" maxlength="200" />
+          </div>
+        </div>
+        <label for="ac-body">Comment *</label>
+        <textarea id="ac-body" name="comment_body" rows="4" maxlength="2000" required></textarea>
+        <button type="submit" class="ac-btn" name="mfb_comment_submit" value="1">Post comment</button>
+        <p class="ac-muted" style="margin-top:12px">Comments are reviewed before they appear.</p>
+      </div>
+      {{/if}}
+      {{#if commentForm.autoClosed}}<p class="ac-muted">Comments are closed on older stories.</p>{{/if}}
+    </section>
+  </div>
+</div>

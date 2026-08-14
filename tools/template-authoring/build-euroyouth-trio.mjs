@@ -22,7 +22,7 @@ import { fileURLToPath } from 'node:url';
 const here = path.dirname(fileURLToPath(import.meta.url));
 const repo = path.resolve(here, '..', '..');
 const outDirs = [
-  path.join(repo, 'Samples', 'FormTemplates', 'Premium', 'DONEE'),
+  path.join(repo, 'Samples', 'FormTemplates', 'Premium', 'GALLERY-PUBLISHED'),
   path.join(repo, 'MegaForm.Oqtane.Server', 'wwwroot', 'Modules', 'MegaForm', 'Templates'),
 ];
 

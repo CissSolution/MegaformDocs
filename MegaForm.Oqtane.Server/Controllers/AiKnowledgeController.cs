@@ -48,15 +48,81 @@ namespace MegaForm.Oqtane.Server.Controllers
         [HttpGet("Ping")]
         public IActionResult Ping() => Ok(new { pong = true, now = DateTime.UtcNow });
 
+        /// <summary>
+        /// [KbSeedVisibility v20260812] Why the knowledge base looks the way it does — DNN parity
+        /// (AiKnowledgeController.SeedStatus). Reading the KB also TRIGGERS the lazy seeder, so
+        /// the answer describes the attempt that just ran; on Oqtane that is the only seed path
+        /// that can work at all (the startup one has no tenant connection).
+        /// Admin-only, read-only, and it never returns exception detail.
+        /// </summary>
+        [HttpGet("SeedStatus")]
+        public IActionResult SeedStatus()
+        {
+            if (!IsAdmin) return Forbid();
+
+            int total = 0, formTemplates = 0, guides = 0;
+            string readError = null;
+            try
+            {
+                // ListEntries clamps top to 500 here, so ask the context directly for counts —
+                // a count query, never the bodies (CLAUDE.md §11).
+                using var ctx = _dbContextFactory.CreateDbContext();
+                total = ctx.AiKnowledgeEntries.AsNoTracking().Count();
+                formTemplates = ctx.AiKnowledgeEntries.AsNoTracking().Count(e => e.Kind == "form_template");
+                guides = ctx.AiKnowledgeEntries.AsNoTracking().Count(e => e.Kind == "template_guide");
+            }
+            catch
+            {
+                readError = "The knowledge table could not be read.";
+            }
+
+            var seed = MegaForm.Oqtane.Server.Services.OqtaneAiKnowledgeService.LastRun;
+            return Ok(new
+            {
+                entries = total,
+                formTemplates,
+                templateGuides = guides,
+                readError,
+                seed = new
+                {
+                    ran = seed.Ran,
+                    succeeded = seed.Succeeded,
+                    merged = seed.Imported,
+                    missingBefore = seed.MissingBefore,
+                    seedTotal = seed.SeedTotal,
+                    message = seed.Message,
+                },
+                templateKnowledgeSource = "gallery",
+            });
+        }
+
         [HttpGet("List")]
         public IActionResult List(string kind = null, string search = null, int top = 200)
         {
             if (!IsAdmin) return Forbid();
             try {
                 var entries = _svc.ListEntries(kind, search, SiteId, top).ToList();
-                return Ok(new { count = entries.Count, firstSlug = entries.FirstOrDefault()?.Slug });
+                // [KbPanelFix v20260812] Was `{ count, firstSlug }` — a debug shape the admin panel
+                // could not read (ai-knowledge/index.ts:212 keeps only an ARRAY), so the panel has
+                // been showing "No entries match." on Oqtane no matter what the table holds.
+                return Ok(entries.Select(e => new
+                {
+                    id = e.Id,
+                    slug = e.Slug,
+                    kind = e.Kind,
+                    title = e.Title,
+                    summary = e.Summary,
+                    tags = e.Tags,
+                    portalId = e.PortalId,
+                    source = e.Source,
+                    version = e.Version,
+                    updatedOnDate = e.UpdatedOnDate ?? e.CreatedOnDate,
+                }));
             } catch (Exception ex) {
-                return Ok(new { error = ex.Message, stack = ex.StackTrace });
+                // [SecFix v20260812] Was `Ok(new { error = ex.Message, stack = ex.StackTrace })` —
+                // HTTP 200 carrying a stack trace to the client, against SECURITY_CODING_RULES §10.
+                _logger.Log(LogLevel.Error, this, LogFunction.Read, ex, "MegaForm AI knowledge list failed");
+                return StatusCode(500, new { error = "list_failed", message = "The knowledge base could not be read." });
             }
         }
 

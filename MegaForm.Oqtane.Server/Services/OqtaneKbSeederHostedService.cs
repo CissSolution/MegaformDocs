@@ -75,17 +75,30 @@ namespace MegaForm.Oqtane.Server.Services
         }
 
         /// <summary>
+        /// [KbSeedVisibility v20260812] The bundled seed JSON, or null when the resource is not
+        /// embedded in this assembly. Exposed so the lazy seeder can ALSO run a slug-level
+        /// catch-up (through AiKnowledgeSeedMerger) instead of only the empty-table bulk insert
+        /// below — a site that received one row from anywhere, e.g. a gallery template's own
+        /// knowledge, would otherwise never receive the bundled knowledge at all.
+        /// </summary>
+        public static string ReadSeedJson()
+        {
+            var asm = typeof(OqtaneKbSeederHostedService).Assembly;
+            using var stream = asm.GetManifestResourceStream(ResourceName);
+            if (stream == null) return null;
+            using var reader = new StreamReader(stream);
+            return reader.ReadToEnd();
+        }
+
+        /// <summary>
         /// Imports the bundled seed JSON into the given context. The caller MUST pass a
         /// ctx with a resolved provider (i.e. created inside a request scope on Oqtane)
         /// and is responsible for the "is the table already populated?" check.
         /// </summary>
         public static void SeedEntries(MegaFormDbContext ctx, ILogger logger)
         {
-            var asm = typeof(OqtaneKbSeederHostedService).Assembly;
-            using var stream = asm.GetManifestResourceStream(ResourceName);
-            if (stream == null) { logger?.LogWarning("[KbSeeder] Resource {Resource} not found in assembly", ResourceName); return; }
-            string json;
-            using (var reader = new StreamReader(stream)) json = reader.ReadToEnd();
+            var json = ReadSeedJson();
+            if (json == null) { logger?.LogWarning("[KbSeeder] Resource {Resource} not found in assembly", ResourceName); return; }
             if (string.IsNullOrWhiteSpace(json)) { logger?.LogWarning("[KbSeeder] Empty seed JSON"); return; }
 
             JObject root;

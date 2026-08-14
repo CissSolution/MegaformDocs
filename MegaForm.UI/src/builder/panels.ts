@@ -510,6 +510,9 @@ function initFormLoader(): void {
                     if (B.callModule) B.callModule('post-submit-settings', 'syncFromSchema');
                     if (B.callModule) B.callModule('integration-settings', 'syncFromSchema');
                     if (B.callModule) B.callModule('cloud-storage-settings', 'syncFromSchema');
+                    // [AfterSubmitScript v20260813-01] For this panel "sync" means re-ask the
+                    // server: the schema does not carry settings.afterSubmitScript at all.
+                    if (B.callModule) B.callModule('after-submit-script', 'syncFromSchema');
                 }
             } catch (_psErr) { /* noop */ }
 

@@ -63,6 +63,10 @@ const STATE = {
   // PRISTINE customHtml text. `occ` is the 0-based occurrence index among identical shell
   // strings so the save swaps the exact instance the host edited (not blindly the first).
   pendingShell: {} as Record<string, { find: string; replace: string; occ: number }>,
+  // Tokenized premium copy/images must persist by content key. Replacing the rendered text in
+  // customHtml cannot work after a template has moved to {{content:key}}, and matching by image
+  // URL is unsafe because several image tokens can share the same transparent fallback pixel.
+  pendingContent: {} as Record<string, string>,
   pendingFields: {} as Record<string, string>,
   // Option labels (Cards/Radio/Checkbox/Select) → field.options[].label, keyed by fieldKey::value.
   pendingOptions: {} as Record<string, { fieldKey: string; value: string; label: string }>,
@@ -258,6 +262,8 @@ function onBlur(e: Event): void {
     const base = el.getAttribute('data-mf-ie-base') || orig;
     const occ = parseInt(el.getAttribute('data-mf-ie-occ') || '0', 10) || 0;
     STATE.pendingShell[id] = { find: base, replace: next, occ };
+  } else if (kind === 'content') {
+    if (key) STATE.pendingContent[key] = next;
   } else if (kind === 'form-title') {
     STATE.pendingFormTitle = next;
   } else if (kind === 'form-description') {
@@ -299,6 +305,75 @@ function collectShellLeaves(root: ParentNode): Element[] {
   const out: Element[] = [];
   Array.prototype.forEach.call(root.querySelectorAll('*'), (el: Element) => { if (isShellLeaf(el)) out.push(el); });
   return out;
+}
+
+function schemaSettings(): any {
+  const schema: any = (STATE.cfg && STATE.cfg.schema) || {};
+  return schema.settings || schema.Settings || {};
+}
+
+function contentMap(): Record<string, string> {
+  const settings = schemaSettings();
+  const value = settings.customContent || settings.CustomContent;
+  return value && typeof value === 'object' ? value : {};
+}
+
+function copyValue(value: any): string {
+  return String(value == null ? '' : value).replace(/\s+/g, ' ').trim();
+}
+
+function sourceTokenKeysForElement(el: HTMLElement, shell: HTMLElement): string[] {
+  const settings = schemaSettings();
+  const html = String(settings.customHtml || settings.CustomHtml || '');
+  if (!html || html.indexOf('{{content:') < 0) return [];
+  const tpl = document.createElement('template');
+  tpl.innerHTML = html;
+  const sourceShell = (tpl.content.querySelector('.mfp, [class*="mfp-"]') as HTMLElement | null)
+    || (tpl.content.firstElementChild as HTMLElement | null);
+  if (!sourceShell) return [];
+
+  // Runtime-only wrappers (for example the leading-text span inserted above) have no source
+  // equivalent. Walk upward until a stable authored class maps the live node to the source node.
+  let anchor: HTMLElement | null = el;
+  while (anchor && anchor !== shell) {
+    const classes = String(anchor.className || '').split(/\s+/)
+      .filter((c) => c && !/^mf-ie/.test(c) && c !== 'active' && c !== 'is-active');
+    for (let ci = 0; ci < classes.length; ci++) {
+      const cls = classes[ci];
+      const sel = '.' + cssIdent(cls);
+      let liveNodes: HTMLElement[] = [];
+      let sourceNodes: HTMLElement[] = [];
+      try {
+        liveNodes = Array.prototype.slice.call(shell.querySelectorAll(sel));
+        sourceNodes = Array.prototype.slice.call(sourceShell.querySelectorAll(sel));
+      } catch { continue; }
+      if (anchor.matches(sel)) liveNodes.unshift(shell.matches(sel) ? shell : null as any);
+      liveNodes = liveNodes.filter(Boolean);
+      if (sourceShell.matches(sel)) sourceNodes.unshift(sourceShell);
+      const index = liveNodes.indexOf(anchor);
+      if (index < 0 || !sourceNodes[index]) continue;
+      const keys: string[] = [];
+      const authored = String(sourceNodes[index].innerHTML || sourceNodes[index].outerHTML || '');
+      authored.replace(/\{\{content:([a-zA-Z0-9_-]+)\}\}/g, (_m, key) => {
+        if (keys.indexOf(key) < 0) keys.push(key);
+        return _m;
+      });
+      if (keys.length) return keys;
+    }
+    anchor = anchor.parentElement;
+  }
+  return [];
+}
+
+function contentKeyForText(el: HTMLElement, shell: HTMLElement): string {
+  const text = copyValue(plainText(el));
+  if (!text) return '';
+  const content = contentMap();
+  const sourceKeys = sourceTokenKeysForElement(el, shell);
+  const sourceMatches = sourceKeys.filter((key) => copyValue(content[key]) === text);
+  if (sourceMatches.length === 1) return sourceMatches[0];
+  const exact = Object.keys(content).filter((key) => copyValue(content[key]) === text);
+  return exact.length === 1 ? exact[0] : '';
 }
 
 // ── scan + tag the rendered form ────────────────────────────────────────────
@@ -384,7 +459,10 @@ export function scanAndTag(root: HTMLElement): number {
   //    ("Reef Turquoise"…) are theme metadata, not form copy, and were noise before. Duplicate
   //    identical strings are stamped with a 0-based occurrence index (data-mf-ie-occ) so the
   //    save swaps the SAME instance the host edited.
-  const shellSel = 'h1,h2,h3,p,span,strong,em,figcaption,a';
+  // Premium heroes and footers frequently use leaf divs/lis for metrics, badges and legal copy.
+  // isEditableTextEl() still enforces a leaf-only target, so adding these semantic containers does
+  // not turn structural layout divs into giant contenteditable regions.
+  const shellSel = 'h1,h2,h3,p,span,strong,em,figcaption,a,div,li,small';
   // Shell strings live ONLY in a premium customHtml shell (`.mfp`). A standard form has no
   // customHtml, so a shell edit there has nowhere to persist (it would silently no-op on save)
   // — so only premium forms get the shell pass; standard forms are field-labels-only by design.
@@ -403,7 +481,7 @@ export function scanAndTag(root: HTMLElement): number {
       if (el.closest('[class*="preset"],[class*="swatch"],[class*="mf-le-"]')) return;
       const cls = String(el.getAttribute('class') || '');
       const tag = el.tagName.toUpperCase();
-      const important = /hero|brand|title|subtitle|tagline|eyebrow|rating|stats|footer|caption|step|head|copy|programme|program/i.test(cls)
+      const important = /hero|brand|logo|title|subtitle|tagline|eyebrow|kicker|lede|lead|intro|badge|rating|stats?|metrics?|footer|legal|caption|step|head|copy|programme|program/i.test(cls)
         || /^H[1-3]$/.test(tag) || !!el.closest('header,aside,footer,[class*="head"],[class*="hero"],[class*="step"]');
       if (!important) return;
       if (!isEditableTextEl(el)) {
@@ -414,13 +492,15 @@ export function scanAndTag(root: HTMLElement): number {
         if (wrap && !wrap.getAttribute('data-mf-ie')) {
           const wt = plainText(wrap);
           wrap.setAttribute('data-mf-ie-occ', String(occSeen[wt] !== undefined ? occSeen[wt] : 0));
-          markEditable(wrap, 'shell', ''); count++;
+          const contentKey = contentKeyForText(wrap, shellHost);
+          markEditable(wrap, contentKey ? 'content' : 'shell', contentKey); count++;
         }
         return;
       }
       const occ = occOf.has(el) ? (occOf.get(el) as number) : 0;
       el.setAttribute('data-mf-ie-occ', String(occ));
-      markEditable(el, 'shell', ''); count++;
+      const contentKey = contentKeyForText(el, shellHost);
+      markEditable(el, contentKey ? 'content' : 'shell', contentKey); count++;
     });
   }
   return count;
@@ -481,7 +561,7 @@ function markDirty(): void {
     document.body.appendChild(pill);
   }
   pill.classList.add('is-dirty');
-  const n = Object.keys(STATE.pendingShell).length + Object.keys(STATE.pendingFields).length
+  const n = Object.keys(STATE.pendingShell).length + Object.keys(STATE.pendingContent).length + Object.keys(STATE.pendingFields).length
     + Object.keys(STATE.pendingLayout).length + (STATE.pendingOrder ? 1 : 0)
     + Object.keys(STATE.pendingRowSpan).length
     + Object.keys(STATE.pendingOptions).length + (STATE.pendingSubmit != null ? 1 : 0)
@@ -513,6 +593,12 @@ function applyAllPending(schema: any, settings: any): void {
   shellSwaps.forEach((sw) => { html = swapTextOnly(html, sw.find, sw.replace, sw.occ || 0); });
   if (STATE.pendingSubmit) html = swapTextOnly(html, STATE.pendingSubmit.find, STATE.pendingSubmit.replace, 0);
   if (html) settings.customHtml = html;
+  if (Object.keys(STATE.pendingContent).length) {
+    const content = settings.customContent || settings.CustomContent || {};
+    Object.keys(STATE.pendingContent).forEach((key) => { content[key] = STATE.pendingContent[key]; });
+    settings.customContent = content;
+    if (settings.CustomContent !== undefined) settings.CustomContent = content;
+  }
   schema.settings = settings;
   if (STATE.pendingFormTitle != null) {
     schema.title = STATE.pendingFormTitle;
@@ -540,7 +626,7 @@ function applyAllPending(schema: any, settings: any): void {
 }
 
 function resetAllPending(): void {
-  STATE.pendingShell = {}; STATE.pendingFields = {}; STATE.pendingLayout = {}; STATE.pendingOrder = null; STATE.pendingRowSpan = {}; STATE.pendingOptions = {}; STATE.pendingSubmit = null; STATE.pendingImages = {}; STATE.pendingCompositeSub = {}; STATE.pendingBlocks = {}; STATE.pendingPlacement = {}; STATE.pendingLayoutMode = null; STATE.pendingPremiumGridConvert = false; STATE.pendingPremiumPlacement = {}; STATE.pendingFormTitle = null; STATE.pendingFormDescription = null; STATE.pendingHeroStyles = {}; STATE.dirty = false;
+  STATE.pendingShell = {}; STATE.pendingContent = {}; STATE.pendingFields = {}; STATE.pendingLayout = {}; STATE.pendingOrder = null; STATE.pendingRowSpan = {}; STATE.pendingOptions = {}; STATE.pendingSubmit = null; STATE.pendingImages = {}; STATE.pendingCompositeSub = {}; STATE.pendingBlocks = {}; STATE.pendingPlacement = {}; STATE.pendingLayoutMode = null; STATE.pendingPremiumGridConvert = false; STATE.pendingPremiumPlacement = {}; STATE.pendingFormTitle = null; STATE.pendingFormDescription = null; STATE.pendingHeroStyles = {}; STATE.dirty = false;
 }
 
 /** [InlineEdit→Builder 20260630] In the builder DESIGN preview, persist by POSTing a patch to the
@@ -1244,18 +1330,41 @@ function commitImage(img: HTMLImageElement, url: string): void {
   if (!isAllowedImageUrl(u)) { try { window.alert(t('ie.invalid_image_url')); } catch {} return; }
   const orig = img.getAttribute('data-mf-ie-img-orig') || cur;
   img.setAttribute('src', u);
-  addPendingImageSwap(orig, u);
-  try { addPendingImageSwap(img.src || '', u); } catch { /* origin not comparable - ignore */ }
+  const contentKey = img.getAttribute('data-mf-ie-content-key') || '';
+  if (contentKey) {
+    STATE.pendingContent[contentKey] = u;
+  } else {
+    addPendingImageSwap(orig, u);
+    try { addPendingImageSwap(img.src || '', u); } catch { /* origin not comparable - ignore */ }
+  }
   markDirty();
 }
 
 /** Extract the url(...) target of an element's background-image — preferring the inline style
  *  (its literal stored form) over the computed value (which the browser absolutizes). */
+function bgUrlsOf(el: HTMLElement): string[] {
+  const pick = (s: string): string[] => {
+    const out: string[] = [];
+    const re = /url\((['"]?)(.*?)\1\)/gi;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(s || ''))) { if (m[2]) out.push(String(m[2])); }
+    return out;
+  };
+  const inline = el.style && el.style.backgroundImage ? pick(el.style.backgroundImage) : [];
+  if (inline.length) return inline;
+  try { return pick(getComputedStyle(el).backgroundImage || ''); } catch { return []; }
+}
+
 function bgUrlOf(el: HTMLElement): string {
-  const pick = (s: string): string => { const m = /url\((['"]?)(.*?)\1\)/i.exec(s || ''); return m ? String(m[2] || '') : ''; };
-  const inline = el.style && el.style.backgroundImage ? pick(el.style.backgroundImage) : '';
-  if (inline) return inline;
-  try { return pick(getComputedStyle(el).backgroundImage || ''); } catch { return ''; }
+  const urls = bgUrlsOf(el);
+  if (!urls.length) return '';
+  const pf = String(((window as any).__MF_PLATFORM__ || {}).platform || '').toLowerCase();
+  const marker = pf.indexOf('oqtane') >= 0 ? '/Modules/' : (pf.indexOf('dnn') >= 0 ? '/DesktopModules/' : '');
+  if (marker) {
+    const preferred = urls.filter((url) => url.indexOf(marker) >= 0)[0];
+    if (preferred) return preferred;
+  }
+  return urls[0];
 }
 
 function onBgClick(e: Event): void {
@@ -1272,8 +1381,10 @@ function commitBg(el: HTMLElement, url: string): void {
   const orig = el.getAttribute('data-mf-ie-bg-orig') || bgUrlOf(el);
   if (!u || !orig || u === orig) return;
   if (!isAllowedImageUrl(u)) { try { window.alert(t('ie.invalid_image_url')); } catch {} return; }
+  const originals = bgUrlsOf(el);
   el.style.setProperty('background-image', "url('" + u.replace(/'/g, '%27') + "')", 'important');
   addPendingImageSwap(orig, u);
+  originals.forEach((oldUrl) => addPendingImageSwap(oldUrl, u));
   markDirty();
 }
 
@@ -1310,6 +1421,8 @@ export function enableImageEdit(root: HTMLElement): number {
     if (!src) return;
     img.setAttribute('data-mf-ie-img', '1');
     img.setAttribute('data-mf-ie-img-orig', src);
+    const tokenKeys = sourceTokenKeysForElement(img, host);
+    if (tokenKeys.length === 1) img.setAttribute('data-mf-ie-content-key', tokenKeys[0]);
     img.classList.add('mf-ie-img-editable');
     img.addEventListener('click', onImageClick);
     attachImageActionButton(img, 'img');
@@ -1323,6 +1436,9 @@ export function enableImageEdit(root: HTMLElement): number {
     if (!el || el.tagName === 'IMG' || el.getAttribute('data-mf-ie-bg') === '1') return;
     const url = bgUrlOf(el);
     if (!url) return;
+    // A token-backed overlay image is the canonical editable source. Tagging its CSS fallback too
+    // creates two overlapping Change Image buttons and can save a platform-specific fallback URL.
+    if (el.querySelector('img[data-mf-ie-content-key]')) return;
     let w = 0; let h = 0;
     try { w = el.offsetWidth; h = el.offsetHeight; } catch { /* detached */ }
     if (w < 120 || h < 80) return; // skip small/decorative backgrounds
@@ -1441,13 +1557,48 @@ function cssAttrVal(v: string): string { return String(v).replace(/\\/g, '\\\\')
 
 /** Pick the form's header / hero block inside the premium shell (the brand + title region). */
 function pickHeaderBlock(shell: HTMLElement): HTMLElement | null {
-  const cand = shell.querySelector('header, [class*="hero" i], [class*="masthead" i], [class*="brand" i], [class*="-head" i]') as HTMLElement | null;
-  if (!cand) return null;
-  // climb to the outermost header-ish block that is still inside the shell (not the shell itself)
-  let el: HTMLElement = cand;
-  let p = el.parentElement as HTMLElement | null;
-  while (p && p !== shell && /hero|masthead|brand|header|head/i.test(p.className || '')) { el = p; p = el.parentElement as HTMLElement | null; }
-  return el;
+  const candidates: HTMLElement[] = [];
+  Array.prototype.forEach.call(shell.querySelectorAll('header,[class]'), (el: HTMLElement) => {
+    const cls = String(el.className || '');
+    if (el.tagName === 'HEADER' || /(^|[-_\s])(hero|masthead|banner|head|brand|logo)([-_\s]|$)/i.test(cls)) candidates.push(el);
+  });
+  const heading = shell.querySelector('h1,h2') as HTMLElement | null;
+  if (heading) {
+    candidates.push(heading);
+    let parent = heading.parentElement as HTMLElement | null;
+    while (parent && parent !== shell) {
+      if (parent.querySelector('input,select,textarea,.mf-field-group')) break;
+      candidates.push(parent);
+      parent = parent.parentElement as HTMLElement | null;
+    }
+  }
+  let best: HTMLElement | null = null;
+  let bestScore = -1;
+  const scored: HTMLElement[] = [];
+  candidates.forEach((el) => {
+    if (!el || scored.indexOf(el) >= 0) return;
+    scored.push(el);
+    const cls = String(el.className || '');
+    const score = (el.tagName === 'HEADER' ? 60 : 0)
+      + (/(^|[-_\s])hero([-_\s]|$)/i.test(cls) ? 60 : 0)
+      + (/(^|[-_\s])(masthead|banner)([-_\s]|$)/i.test(cls) ? 55 : 0)
+      + (/(^|[-_\s])head([-_\s]|$)/i.test(cls) ? 50 : 0)
+      + (/(^|[-_\s])(brand|logo)([-_\s]|$)/i.test(cls) ? 18 : 0)
+      + (/^H[12]$/i.test(el.tagName || '') ? 35 : 0)
+      + (el.querySelector('h1,h2') ? 25 : 0)
+      + (el.querySelector('img') ? 12 : 0)
+      + Math.min(24, el.querySelectorAll('[data-mf-ie-kind="content"]').length);
+    if (score > bestScore) { best = el; bestScore = score; }
+  });
+  return best || heading;
+}
+
+function pickFooterBlocks(shell: HTMLElement): HTMLElement[] {
+  const found = Array.prototype.slice.call(shell.querySelectorAll('footer, [class*="footer" i]')) as HTMLElement[];
+  return found.filter((el, index) => {
+    if (!el || found.indexOf(el) !== index) return false;
+    return !found.some((other) => other !== el && other.contains(el));
+  });
 }
 
 /** Build a STABLE scoped selector for a block: prefer data-step / data-key (unique), else a class. */
@@ -1481,7 +1632,7 @@ function setBlockState(el: HTMLElement, sel: string, st: { hidden?: boolean; noB
 }
 
 function blockKindLabel(kind: string): string {
-  return kind === 'header' ? t('ie.block_header') : kind === 'steps' ? t('ie.block_steps') : kind === 'step' ? t('ie.block_step') : kind === 'section' ? t('ie.block_section') : t('ie.block_generic');
+  return kind === 'header' ? t('ie.block_header') : kind === 'footer' ? t('ie.block_footer') : kind === 'steps' ? t('ie.block_steps') : kind === 'step' ? t('ie.block_step') : kind === 'section' ? t('ie.block_section') : t('ie.block_generic');
 }
 
 function openBlockMenu(el: HTMLElement, kind: string, sel: string, anchor: HTMLElement): void {
@@ -1545,6 +1696,7 @@ export function enableBlockActions(root: HTMLElement): number {
   const blocks: Array<{ el: HTMLElement; kind: string }> = [];
   const header = pickHeaderBlock(shell);
   if (header) blocks.push({ el: header, kind: 'header' });
+  pickFooterBlocks(shell).forEach((el) => blocks.push({ el, kind: 'footer' }));
   Array.prototype.forEach.call(root.querySelectorAll('.mf-steps'), (el: HTMLElement) => blocks.push({ el, kind: 'steps' }));
   Array.prototype.forEach.call(root.querySelectorAll('[data-step]'), (el: HTMLElement) => { if (!el.closest('.mf-steps')) blocks.push({ el, kind: 'step' }); });
   Array.prototype.forEach.call(root.querySelectorAll('.mf-field-group[data-type="Section" i], .mf-section'), (el: HTMLElement) => blocks.push({ el, kind: 'section' }));
@@ -1554,6 +1706,7 @@ export function enableBlockActions(root: HTMLElement): number {
     const sel = blockSelector(b.el, scope);
     if (!sel) return;
     b.el.setAttribute('data-mf-ieblk-on', '1');
+    b.el.setAttribute('data-mf-ie-block-kind', b.kind);
     b.el.setAttribute('data-mf-ieblk', sel);
     b.el.classList.add('mf-ieblk');
     attachBlockActionBtn(b.el, b.kind, sel);

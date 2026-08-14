@@ -46,14 +46,21 @@ import { wt } from './designer-i18n';
   function isImageToken(key: string): boolean {
     var parts = String(key || '').toLowerCase().split(/[_\-\s]+/).filter(Boolean);
     if (!parts.length) return false;
+    // A non-empty saved value is authoritative. Copy such as "Your Logo" and "Cover Letter"
+    // legitimately contains image-hint words but belongs in the text editor; uploaded/module URLs
+    // and data images belong in the image editor. Fall back to the key heuristic only for a blank
+    // value, where there is no stronger signal yet.
+    try {
+      var cur = String(((B.state.schema.settings || {}).customContent || {})[key] || '').trim();
+      if (cur) {
+        if (/^(?:data:image\/|https?:\/\/|\/|\.\/|\.\.\/)/i.test(cur)
+          || /\.(jpe?g|png|gif|webp|svg|bmp)(?:[?#].*)?$/i.test(cur)) return true;
+        return false;
+      }
+    } catch (e) {}
     for (var i = 0; i < parts.length; i++) {
       if (IMAGE_HINTS.indexOf(parts[i]) !== -1) return true;
     }
-    // Also accept if the saved value already looks like an image URL
-    try {
-      var cur = String(((B.state.schema.settings || {}).customContent || {})[key] || '');
-      if (/\.(jpe?g|png|gif|webp|svg|bmp)(\?|$)/i.test(cur)) return true;
-    } catch (e) {}
     return false;
   }
 
@@ -74,14 +81,19 @@ import { wt } from './designer-i18n';
     var imgs: any[] = [];
     var re = /<img\b([^>]*)>/gi;
     var m: any;
+    var sourceIndex = 0;
     while ((m = re.exec(String(html || ''))) !== null) {
       var attrs = m[1];
       var srcM = /\ssrc=(["'])([^"']*)\1/i.exec(attrs);
       var classM = /\sclass=(["'])([^"']*)\1/i.exec(attrs);
       var altM = /\salt=(["'])([^"']*)\1/i.exec(attrs);
+      // A token-backed <img> is already represented by renderImagePane(). Listing it again as a
+      // raw inline image produces two controls that edit the same source in incompatible ways.
+      var index = sourceIndex++;
+      if (srcM && /\{\{content:[a-zA-Z0-9_-]+\}\}/.test(srcM[2])) continue;
       imgs.push({
         kind: 'inline',
-        index: imgs.length,
+        index: index,
         start: m.index,
         attrBlock: attrs,
         src: srcM ? srcM[2] : '',
@@ -90,6 +102,70 @@ import { wt } from './designer-i18n';
       });
     }
     return imgs;
+  }
+
+  var TRANSPARENT_PIXEL = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
+
+  function isTransparentPlaceholder(url: string): boolean {
+    return String(url || '').trim() === TRANSPARENT_PIXEL;
+  }
+
+  function preferredPlatformUrl(urls: string[]): string {
+    if (!urls.length) return '';
+    var w: any = window as any;
+    var platform = String((w.__MF_PLATFORM__ || {}).platform || '').toLowerCase();
+    var marker = platform.indexOf('oqtane') >= 0 ? '/Modules/' : (platform.indexOf('dnn') >= 0 ? '/DesktopModules/' : '');
+    if (marker) {
+      for (var i = 0; i < urls.length; i++) if (urls[i].indexOf(marker) >= 0) return urls[i];
+    }
+    return urls[0];
+  }
+
+  function fallbackImageForToken(key: string): string {
+    var s = B.state.schema.settings || {};
+    var html = String(s.customHtml || s.CustomHtml || '');
+    var css = String(s.customCss || s.CustomCss || '');
+    if (!html || !css) return '';
+    var tpl = document.createElement('template');
+    tpl.innerHTML = html;
+    var token = '{{content:' + key + '}}';
+    var img: HTMLElement | null = null;
+    Array.prototype.some.call(tpl.content.querySelectorAll('img'), function (node: HTMLElement) {
+      if (String(node.getAttribute('src') || '').indexOf(token) >= 0) { img = node; return true; }
+      return false;
+    });
+    if (!img) return '';
+    var classes: string[] = [];
+    var cur: HTMLElement | null = img;
+    while (cur && classes.length < 24) {
+      String(cur.getAttribute('class') || '').split(/\s+/).forEach(function (cls) {
+        if (cls && classes.indexOf(cls) < 0) classes.push(cls);
+      });
+      cur = cur.parentElement;
+    }
+    var candidates: string[] = [];
+    var blockRe = /([^{}]+)\{([^{}]*)\}/gi;
+    var block: RegExpExecArray | null;
+    while ((block = blockRe.exec(css))) {
+      var selector = block[1] || '';
+      if (!/(?:background|background-image)\s*:[^;{}]*url\(/i.test(block[2] || '')) continue;
+      var relevant = classes.some(function (cls) { return selector.indexOf('.' + cls) >= 0; });
+      if (!relevant) continue;
+      var urlRe = /url\((['"]?)(.*?)\1\)/gi;
+      var hit: RegExpExecArray | null;
+      while ((hit = urlRe.exec(block[2] || ''))) {
+        var value = String(hit[2] || '');
+        if (value && candidates.indexOf(value) < 0 && !/^data:/i.test(value)) candidates.push(value);
+      }
+      if (candidates.length) break;
+    }
+    return preferredPlatformUrl(candidates);
+  }
+
+  function previewUrlForToken(key: string, raw: string): string {
+    var value = String(raw || '').trim();
+    if (!value || isTransparentPlaceholder(value)) return fallbackImageForToken(key) || value;
+    return value;
   }
 
   function setInlineImageSrc(inline: any, newSrc: string) {
@@ -182,6 +258,103 @@ import { wt } from './designer-i18n';
       .catch(function () { _galleryCache = []; return _galleryCache; });
   }
 
+  function pickHeaderElement(root: ParentNode): HTMLElement | null {
+    var candidates: HTMLElement[] = [];
+    Array.prototype.forEach.call(root.querySelectorAll('header,[class]'), function (el: HTMLElement) {
+      var cls = String(el.getAttribute('class') || '');
+      if (String(el.tagName || '').toUpperCase() === 'HEADER' || /(^|[-_\s])(hero|masthead|banner|head)([-_\s]|$)/i.test(cls) || /(^|[-_\s])(brand|logo)([-_\s]|$)/i.test(cls)) candidates.push(el);
+    });
+    var firstHeading = root.querySelector('h1,h2') as HTMLElement | null;
+    if (firstHeading) {
+      candidates.push(firstHeading);
+      var parent = firstHeading.parentElement;
+      while (parent && parent.parentElement && candidates.length < 40) {
+        if (String(parent.innerHTML || '').indexOf('{{field:') >= 0) break;
+        candidates.push(parent);
+        parent = parent.parentElement;
+      }
+    }
+    var best: HTMLElement | null = null;
+    var bestScore = -1;
+    var scored: HTMLElement[] = [];
+    candidates.forEach(function (el) {
+      if (scored.indexOf(el) >= 0) return;
+      scored.push(el);
+      var cls = String(el.getAttribute('class') || '');
+      var tokens = parseTokenKeys(String(el.innerHTML || '')).length;
+      var score = (String(el.tagName || '').toUpperCase() === 'HEADER' ? 60 : 0)
+        + (/(^|[-_\s])hero([-_\s]|$)/i.test(cls) ? 60 : 0)
+        + (/(^|[-_\s])(masthead|banner)([-_\s]|$)/i.test(cls) ? 55 : 0)
+        + (/(^|[-_\s])head([-_\s]|$)/i.test(cls) ? 50 : 0)
+        + (/(^|[-_\s])(brand|logo)([-_\s]|$)/i.test(cls) ? 18 : 0)
+        + (/^H[12]$/i.test(String(el.tagName || '')) ? 35 : 0)
+        + (el.querySelector('h1,h2') ? 25 : 0)
+        + (el.querySelector('img') ? 12 : 0)
+        + Math.min(tokens, 24);
+      if (score > bestScore) { best = el; bestScore = score; }
+    });
+    if (best) return best;
+    return firstHeading;
+  }
+
+  function headerInfo(html?: string): any {
+    var tpl = document.createElement('template');
+    tpl.innerHTML = html == null ? String((B.state.schema.settings || {}).customHtml || '') : String(html || '');
+    var el = pickHeaderElement(tpl.content);
+    var cluster = el ? headerCluster(el) : [];
+    var clusterHtml = cluster.map(function (node) { return String(node.outerHTML || ''); }).join('');
+    return el ? {
+      keys: parseTokenKeys(clusterHtml),
+      visible: cluster.every(function (node) { return node.getAttribute('data-mf-header-hidden') !== '1'; }),
+      className: String(el.getAttribute('class') || '').split(/\s+/)[0] || 'header'
+    } : null;
+  }
+
+  function headerCluster(el: HTMLElement): HTMLElement[] {
+    if (!/^H[12]$/i.test(String(el.tagName || '')) || !el.parentElement) return [el];
+    var siblings = Array.prototype.slice.call(el.parentElement.children) as HTMLElement[];
+    var at = siblings.indexOf(el);
+    if (at < 0) return [el];
+    var out: HTMLElement[] = [el];
+    var inspect = function (node: HTMLElement): boolean {
+      var html = String(node.outerHTML || '');
+      var cls = String(node.getAttribute('class') || '');
+      if (html.indexOf('{{field:') >= 0 || /(^|[-_\s])(body|form|fields?|section|charts?|tabs?|main|grid)([-_\s]|$)/i.test(cls)) return false;
+      if (parseTokenKeys(html).length || /logo|brand|kicker|lede|lead|intro|subtitle|sub|rule/i.test(cls)) out.push(node);
+      return true;
+    };
+    for (var i = at - 1, n = 0; i >= 0 && n < 4; i--, n++) if (!inspect(siblings[i])) break;
+    for (var j = at + 1, m = 0; j < siblings.length && m < 5; j++, m++) if (!inspect(siblings[j])) break;
+    out.sort(function (a, b) { return siblings.indexOf(a) - siblings.indexOf(b); });
+    return out;
+  }
+
+  function setHeaderVisible(visible: boolean) {
+    var tpl = customHtmlDom();
+    var el = pickHeaderElement(tpl.content);
+    if (!el) return;
+    headerCluster(el).forEach(function (node) {
+      if (!visible) {
+        if (!node.hasAttribute('data-mf-header-display')) {
+          node.setAttribute('data-mf-header-display', node.style.getPropertyValue('display') || '');
+          node.setAttribute('data-mf-header-display-priority', node.style.getPropertyPriority('display') || '');
+        }
+        node.setAttribute('data-mf-header-hidden', '1');
+        node.style.setProperty('display', 'none', 'important');
+      } else {
+        var oldDisplay = node.getAttribute('data-mf-header-display') || '';
+        var oldPriority = node.getAttribute('data-mf-header-display-priority') || '';
+        node.removeAttribute('data-mf-header-hidden');
+        node.removeAttribute('data-mf-header-display');
+        node.removeAttribute('data-mf-header-display-priority');
+        if (oldDisplay) node.style.setProperty('display', oldDisplay, oldPriority);
+        else node.style.removeProperty('display');
+        if (!String(node.getAttribute('style') || '').trim()) node.removeAttribute('style');
+      }
+    });
+    commitCustomHtml(tpl, 'token-designer-header-visibility');
+  }
+
   // ── Modal scaffolding ────────────────────────────────────────────
   function open() {
     var schema = B.state.schema || {};
@@ -204,6 +377,9 @@ import { wt } from './designer-i18n';
     var slideGroups = detectSlideGroups(keys);
     var hasSlides = slideGroups.length > 0;
     var hasMap = !!mapKey;
+    var currentHeader = headerInfo(html);
+    var hasHeader = !!currentHeader;
+    var defaultTab = hasSlides ? 'slides' : (hasHeader ? 'header' : 'text');
 
     var existing = document.getElementById('mf-token-designer-modal');
     if (existing && existing.parentNode) existing.parentNode.removeChild(existing);
@@ -232,7 +408,12 @@ import { wt } from './designer-i18n';
                 slideGroups.reduce(function (a: number, g: any) { return a + g.indices.length; }, 0) + '</span>' +
               '</button>'
             : '') +
-          '<button type="button" class="mf-token-designer-tab' + (hasSlides ? '' : ' active') + '" data-tab="text">' +
+          (hasHeader
+            ? '<button type="button" class="mf-token-designer-tab' + (defaultTab === 'header' ? ' active' : '') + '" data-tab="header">' +
+                '<i class="fas fa-heading"></i> ' + wt('des.shell.tabHeader', 'Header') + ' <span class="mf-token-designer-count">' + currentHeader.keys.length + '</span>' +
+              '</button>'
+            : '') +
+          '<button type="button" class="mf-token-designer-tab' + (defaultTab === 'text' ? ' active' : '') + '" data-tab="text">' +
             '<i class="fas fa-font"></i> ' + wt('des.shell.tabTextTokens', 'Text tokens') + ' <span class="mf-token-designer-count">' + textKeys.length + '</span>' +
           '</button>' +
           '<button type="button" class="mf-token-designer-tab" data-tab="image">' +
@@ -249,7 +430,8 @@ import { wt } from './designer-i18n';
         '</div>' +
         '<div class="mf-token-designer-body">' +
           (hasSlides ? '<div class="mf-token-designer-pane" data-pane="slides"></div>' : '') +
-          '<div class="mf-token-designer-pane" data-pane="text"' + (hasSlides ? ' style="display:none"' : '') + '></div>' +
+          (hasHeader ? '<div class="mf-token-designer-pane" data-pane="header"' + (defaultTab === 'header' ? '' : ' style="display:none"') + '></div>' : '') +
+          '<div class="mf-token-designer-pane" data-pane="text"' + (defaultTab === 'text' ? '' : ' style="display:none"') + '></div>' +
           '<div class="mf-token-designer-pane" data-pane="image" style="display:none"></div>' +
           (hasMap ? '<div class="mf-token-designer-pane" data-pane="map" style="display:none"></div>' : '') +
           '<div class="mf-token-designer-pane" data-pane="form" style="display:none"></div>' +
@@ -269,6 +451,8 @@ import { wt } from './designer-i18n';
     var paneForm = modal.querySelector('[data-pane="form"]') as HTMLElement;
 
     renderTextPane(paneText, textKeys, content);
+    var paneHeader = modal.querySelector('[data-pane="header"]') as HTMLElement | null;
+    if (paneHeader && currentHeader) renderHeaderPane(paneHeader, currentHeader, content);
     renderImagePane(paneImage, imageKeys, content);
     renderFormPane(paneForm, s);
     var paneSlides = modal.querySelector('[data-pane="slides"]') as HTMLElement | null;
@@ -333,10 +517,52 @@ import { wt } from './designer-i18n';
         content[key] = ta.value;
         B.state.isDirty = true;
         if (B.markDirty) B.markDirty();
+        try { B.callModule('canvas', 'render'); } catch (e) {}
       });
       row.appendChild(ta);
       host.appendChild(row);
     });
+  }
+
+  function renderHeaderPane(host: HTMLElement, info: any, content: Record<string, string>) {
+    host.innerHTML = '';
+    var control = document.createElement('div');
+    control.className = 'mf-token-header-control';
+    control.innerHTML =
+      '<div class="mf-token-header-control-copy">' +
+        '<strong><i class="fas fa-heading"></i> ' + wt('des.shell.headerBlock', 'Header / hero') + '</strong>' +
+        '<span>.' + B.escHtml(info.className || 'header') + '</span>' +
+      '</div>' +
+      '<label class="mf-token-header-switch">' +
+        '<input type="checkbox"' + (info.visible ? ' checked' : '') + '>' +
+        '<span>' + wt('des.shell.showHeader', 'Show header') + '</span>' +
+      '</label>';
+    var toggle = control.querySelector('input') as HTMLInputElement;
+    toggle.addEventListener('change', function () { setHeaderVisible(toggle.checked); });
+    host.appendChild(control);
+
+    var textKeys = info.keys.filter(function (key: string) { return !isImageToken(key); });
+    var imageKeys = info.keys.filter(isImageToken);
+    if (textKeys.length) {
+      var title = document.createElement('div');
+      title.className = 'mf-token-header-group-title';
+      title.textContent = wt('des.shell.headerContent', 'Header content');
+      host.appendChild(title);
+      textKeys.forEach(function (key: string) { host.appendChild(buildTextField(key, key, content)); });
+    }
+    if (imageKeys.length) {
+      var imageTitle = document.createElement('div');
+      imageTitle.className = 'mf-token-header-group-title';
+      imageTitle.textContent = wt('des.shell.headerImages', 'Header images');
+      host.appendChild(imageTitle);
+      imageKeys.forEach(function (key: string) { host.appendChild(buildImageField(key, key, content)); });
+    }
+    if (!info.keys.length) {
+      var note = document.createElement('div');
+      note.className = 'mf-token-designer-empty';
+      note.textContent = wt('des.shell.headerUsesHtml', 'This header uses literal Custom HTML. Edit its strings in Form strings.');
+      host.appendChild(note);
+    }
   }
 
   // ── Render: image-token list (input + Upload + Gallery) ──────────
@@ -558,11 +784,12 @@ import { wt } from './designer-i18n';
     var wrap = document.createElement('div');
     wrap.className = 'mf-slide-field mf-slide-field-image';
     var cur = String(content[key] || '');
+    var curPreview = previewUrlForToken(key, cur);
     function prev(u: string) { return u ? '<img src="' + B.escAttr(u) + '" alt="" onerror="this.style.opacity=.25"/>' : '<span class="mf-token-image-empty"><i class="fas fa-image"></i></span>'; }
     wrap.innerHTML =
       '<label class="mf-slide-field-label"><i class="fas fa-image"></i> ' + B.escHtml(prettyField(fieldName)) + '</label>' +
       '<div class="mf-slide-img">' +
-        '<div class="mf-slide-img-prev">' + prev(cur) + '</div>' +
+        '<div class="mf-slide-img-prev" data-mf-preview-src="' + B.escAttr(curPreview) + '">' + prev(curPreview) + '</div>' +
         '<div class="mf-slide-img-ctrl">' +
           '<input type="text" class="mf-slide-img-url" value="' + B.escAttr(cur) + '" placeholder="/Portals/0/MegaForm/Images/..."/>' +
           '<div class="mf-slide-img-btns">' +
@@ -574,7 +801,7 @@ import { wt } from './designer-i18n';
       '</div>';
     var url = wrap.querySelector('.mf-slide-img-url') as HTMLInputElement;
     var box = wrap.querySelector('.mf-slide-img-prev') as HTMLElement;
-    function setUrl(u: string) { url.value = u; content[key] = u; B.state.isDirty = true; if (B.markDirty) B.markDirty(); box.innerHTML = prev(u); try { B.callModule('canvas', 'render'); } catch (e) {} }
+    function setUrl(u: string) { url.value = u; content[key] = u; B.state.isDirty = true; if (B.markDirty) B.markDirty(); var effective = previewUrlForToken(key, u); box.setAttribute('data-mf-preview-src', effective); box.innerHTML = prev(effective); try { B.callModule('canvas', 'render'); } catch (e) {} }
     url.addEventListener('input', function () { setUrl(url.value); });
     (wrap.querySelector('.mf-slide-up') as HTMLButtonElement).addEventListener('click', function () {
       var inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
@@ -741,15 +968,18 @@ import { wt } from './designer-i18n';
       var row = document.createElement('div');
       row.className = 'mf-token-row mf-token-row-image';
       var curUrl = String(content[key] || '');
+      var previewUrl = previewUrlForToken(key, curUrl);
+      var usesFallback = previewUrl && previewUrl !== curUrl;
       row.innerHTML =
         '<div class="mf-token-row-head">' +
           '<span class="mf-token-row-label"><i class="fas fa-image"></i> ' + B.escHtml(key) + '</span>' +
           '<code class="mf-token-row-tag">{{content:' + B.escHtml(key) + '}}</code>' +
+          (usesFallback ? '<span class="mf-token-image-fallback">' + wt('des.shell.templateDefaultImage', 'template default') + '</span>' : '') +
         '</div>' +
         '<div class="mf-token-image-grid">' +
-          '<div class="mf-token-image-preview">' +
-            (curUrl
-              ? '<img src="' + B.escAttr(curUrl) + '" alt="" onerror="this.style.opacity=.25"/>'
+          '<div class="mf-token-image-preview" data-mf-preview-src="' + B.escAttr(previewUrl) + '">' +
+            (previewUrl
+              ? '<img src="' + B.escAttr(previewUrl) + '" alt="" onerror="this.style.opacity=.25"/>'
               : '<span class="mf-token-image-empty"><i class="fas fa-image"></i><br>' + wt('des.shell.noImage', 'no image') + '</span>') +
           '</div>' +
           '<div class="mf-token-image-controls">' +
@@ -781,8 +1011,10 @@ import { wt } from './designer-i18n';
       }
 
       function refreshPreview(u: string) {
-        previewBox.innerHTML = u
-          ? '<img src="' + B.escAttr(u) + '" alt="" onerror="this.style.opacity=.25"/>'
+        var effective = previewUrlForToken(key, u);
+        previewBox.setAttribute('data-mf-preview-src', effective);
+        previewBox.innerHTML = effective
+          ? '<img src="' + B.escAttr(effective) + '" alt="" onerror="this.style.opacity=.25"/>'
           : '<span class="mf-token-image-empty"><i class="fas fa-image"></i><br>' + wt('des.shell.noImage', 'no image') + '</span>';
       }
       function setUrl(u: string) {
@@ -791,6 +1023,7 @@ import { wt } from './designer-i18n';
         B.state.isDirty = true;
         if (B.markDirty) B.markDirty();
         refreshPreview(u);
+        try { B.callModule('canvas', 'render'); } catch (e) {}
       }
 
       urlInput.addEventListener('input', function () { setUrl(urlInput.value); });

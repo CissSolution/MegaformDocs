@@ -15,6 +15,7 @@ builder.AddMegaForm(options =>
 
 // Add the demo MVC controllers/views that use IMegaFormClient.
 builder.Services.AddControllersWithViews();
+builder.Services.AddHostedService<MegaForm.Samples.SdkWebDemo.HostedServices.SampleDataSeeder>();
 
 var app = builder.Build();
 
@@ -23,6 +24,6 @@ app.UseMegaForm();
 
 app.MapControllers();
 app.MapDefaultControllerRoute();
-app.MapGet("/", () => Results.Redirect("/Dashboard"));
+app.MapGet("/", () => Results.Redirect("/admin"));
 
 app.Run();

@@ -3,9 +3,9 @@
 //
 // Usage:
 //   import { t, setLocale } from '@i18n';
-//   setLocale('vi-VN', { ... });
-//   t('builder.save');                    // → "Lưu"
-//   t('form.required', {field: 'Email'}); // → "Email là bắt buộc"
+//   setLocale('nl-NL', { ... });
+//   t('builder.save');                    // → "Opslaan"
+//   t('form.required', {field: 'Email'}); // → "Email is verplicht"
 // ============================================================
 
 // [P0 2026-06-11] SINGLE SOURCE OF TRUTH: build-embed the canonical 941-key
@@ -42,19 +42,22 @@ const RTL_LANGS = /^(ar|he|iw|fa|ur|yi|dv|ps|sd)(-|_|$)/i;
 // [FullLocaleSet 2026-07-02] MUST include EVERY locale we ship a public/i18n/<loc>.json for,
 // otherwise normalizeLocale() falls the code back to en-US and the (now fully-translated) pack
 // is never loaded/applied when the user picks it in the Language Manager. This list mirrors the
-// 39 shipped locale files.
+// shipped locale files.
+// [LocaleSwap 2026-08-13] vi-VN + ru-RU dropped from the shipped pack, ur-PK (Urdu, RTL) added.
+// A site that still stores 'vi-VN'/'ru-RU' now normalises to en-US instead of 404-ing on a
+// missing catalog. Bare 'ur' resolves to 'ur-PK' via the byRegion lookup in normalizeLocale().
 const KNOWN_LOCALES = [
   'en-US', 'en-GB', 'es-ES', 'es-MX', 'fr-FR', 'de-DE', 'pt-BR', 'pt-PT', 'ar-SA',
-  'ja-JP', 'ko-KR', 'zh-CN', 'zh-TW', 'vi-VN', 'it-IT', 'th-TH',
-  'nl-NL', 'pl-PL', 'ru-RU', 'tr-TR', 'id-ID', 'hi-IN',
+  'ja-JP', 'ko-KR', 'zh-CN', 'zh-TW', 'ur-PK', 'it-IT', 'th-TH',
+  'nl-NL', 'pl-PL', 'tr-TR', 'id-ID', 'hi-IN',
   // [FullLocaleSet 2026-07-02] remaining shipped packs (were missing → fell back to en-US)
   'bg-BG', 'cs-CZ', 'da-DK', 'el-GR', 'et-EE', 'fi-FI', 'hr-HR', 'hu-HU', 'lt-LT',
   'lv-LV', 'nb-NO', 'ro-RO', 'sk-SK', 'sl-SI', 'sr-Latn-RS', 'sv-SE', 'uk-UA',
 ];
 const LANG_DEFAULT: Record<string, string> = {
   en: 'en-US', es: 'es-ES', fr: 'fr-FR', de: 'de-DE', pt: 'pt-BR', ar: 'ar-SA',
-  ja: 'ja-JP', ko: 'ko-KR', zh: 'zh-CN', vi: 'vi-VN', it: 'it-IT', th: 'th-TH',
-  nl: 'nl-NL', pl: 'pl-PL', ru: 'ru-RU', tr: 'tr-TR', id: 'id-ID', hi: 'hi-IN',
+  ja: 'ja-JP', ko: 'ko-KR', zh: 'zh-CN', ur: 'ur-PK', it: 'it-IT', th: 'th-TH',
+  nl: 'nl-NL', pl: 'pl-PL', tr: 'tr-TR', id: 'id-ID', hi: 'hi-IN',
   // [FullLocaleSet 2026-07-02] base-language → default region for the newly-recognized packs
   bg: 'bg-BG', cs: 'cs-CZ', da: 'da-DK', el: 'el-GR', et: 'et-EE', fi: 'fi-FI', hr: 'hr-HR',
   hu: 'hu-HU', lt: 'lt-LT', lv: 'lv-LV', nb: 'nb-NO', ro: 'ro-RO', sk: 'sk-SK', sl: 'sl-SI',

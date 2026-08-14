@@ -59,9 +59,10 @@ namespace MegaForm.Blogs.Client
 
         /// <summary>
         /// Screens reachable by <c>?view=</c>. Wider than <see cref="ConsoleViews"/> because "new"
-        /// is an action you navigate to, not a sensible landing screen.
+        /// and "edit" are actions you navigate to, not sensible landing screens — "edit" in
+        /// particular is meaningless without an <c>?id=</c> beside it.
         /// </summary>
-        public static readonly string[] ConsoleRoutes = { "dashboard", "editorial", "comments", "new" };
+        public static readonly string[] ConsoleRoutes = { "dashboard", "editorial", "comments", "new", "edit" };
 
         public const string DefaultAppKey = "blog-starter";
         public const string DefaultFeaturedQueryKey = "featured-posts";
@@ -102,6 +103,14 @@ namespace MegaForm.Blogs.Client
         public string ThemeVariant { get; set; } = "default";
 
         public bool ShowHero { get; set; } = true;
+
+        /// <summary>
+        /// The module's own eyebrow + H1 + strapline. OFF by default since 1.4.0: both hosts
+        /// already print a title directly above the module (Oqtane's container renders
+        /// ModuleState.Title), so a second, larger heading underneath is duplicated chrome that
+        /// pushes the content down a screen. Turn it on for a standalone magazine page.
+        /// </summary>
+        public bool ShowHeroText { get; set; }
         public string HeroEyebrow { get; set; } = "";
         public string HeroTitle { get; set; } = "";
         public string HeroSubtitle { get; set; } = "";
@@ -119,6 +128,24 @@ namespace MegaForm.Blogs.Client
         public int DetailModuleId { get; set; }
         public string SlugSource { get; set; } = "query";
         public string SlugParam { get; set; } = "slug";
+
+        /// <summary>
+        /// The page carrying the PUBLIC blog surface. Only a console instance needs it: the
+        /// console lives on its own admin page, so without this it has no way to name the page a
+        /// reader would land on, and every "view the post" link would point back at itself.
+        /// 0 keeps the old behaviour (fall back to DetailPageId, then to this page).
+        /// </summary>
+        public int PublicPageId { get; set; }
+
+        /// <summary>
+        /// Whether opening a post records a read.
+        ///
+        /// This writes a row to the blog app's <c>reader-events</c> form; the Core rollup service
+        /// then assigns <c>view_count</c> from those rows. It is per-instance so a preview or a
+        /// staging instance pointed at live data does not inflate the numbers, and so a site can
+        /// switch counting off entirely without uninstalling anything.
+        /// </summary>
+        public bool TrackReads { get; set; } = true;
 
         public string ConsoleRoles { get; set; } = string.Join(",", DefaultConsoleRoles);
         public string ConsoleView { get; set; } = "dashboard";
@@ -203,6 +230,7 @@ namespace MegaForm.Blogs.Client
             c.ThemeVariant = Pick(settings, "ThemeVariant", ThemeVariants, "default");
 
             c.ShowHero = Bool(settings, "ShowHero", true);
+            c.ShowHeroText = Bool(settings, "ShowHeroText", false);
             c.HeroEyebrow = TextOr(settings, "HeroEyebrow", "", 120);
             c.HeroTitle = TextOr(settings, "HeroTitle", "", 200);
             c.HeroSubtitle = TextOr(settings, "HeroSubtitle", "", 400);
@@ -218,8 +246,11 @@ namespace MegaForm.Blogs.Client
 
             c.DetailPageId = Math.Max(0, Int(settings, "DetailPageId", 0));
             c.DetailModuleId = Math.Max(0, Int(settings, "DetailModuleId", 0));
+            c.PublicPageId = Math.Max(0, Int(settings, "PublicPageId", 0));
             c.SlugSource = Pick(settings, "SlugSource", SlugSources, "query");
             c.SlugParam = SanitizeSlugParam(Raw(settings, "SlugParam"));
+
+            c.TrackReads = Bool(settings, "TrackReads", true);
 
             var roles = SplitCsv(Raw(settings, "ConsoleRoles"), 24, 64);
             c.ConsoleRoles = roles.Count > 0
@@ -256,6 +287,7 @@ namespace MegaForm.Blogs.Client
             yield return Row("ThemeVariant", Norm(ThemeVariant, ThemeVariants, "default"));
 
             yield return Row("ShowHero", B(ShowHero));
+            yield return Row("ShowHeroText", B(ShowHeroText));
             yield return Row("HeroEyebrow", Trim(HeroEyebrow, 120, ""));
             yield return Row("HeroTitle", Trim(HeroTitle, 200, ""));
             yield return Row("HeroSubtitle", Trim(HeroSubtitle, 400, ""));
@@ -271,8 +303,11 @@ namespace MegaForm.Blogs.Client
 
             yield return Row("DetailPageId", Math.Max(0, DetailPageId).ToString(CultureInfo.InvariantCulture));
             yield return Row("DetailModuleId", Math.Max(0, DetailModuleId).ToString(CultureInfo.InvariantCulture));
+            yield return Row("PublicPageId", Math.Max(0, PublicPageId).ToString(CultureInfo.InvariantCulture));
             yield return Row("SlugSource", Norm(SlugSource, SlugSources, "query"));
             yield return Row("SlugParam", SanitizeSlugParam(SlugParam));
+
+            yield return Row("TrackReads", B(TrackReads));
 
             var roles = SplitCsv(ConsoleRoles, 24, 64);
             yield return Row("ConsoleRoles", roles.Count > 0

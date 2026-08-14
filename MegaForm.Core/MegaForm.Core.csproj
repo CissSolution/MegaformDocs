@@ -10,7 +10,19 @@
     <AssemblyName>MegaForm.Core</AssemblyName>
     <Version>1.5.0</Version>
     <Authors>MegaForm Team</Authors>
-    <Description>MegaForm Core — Platform-agnostic form builder engine for DNN, Oqtane, and standalone .NET.</Description>
+    <Company>MegaForm</Company>
+    <Copyright>© 2026 MegaForm. All rights reserved.</Copyright>
+    <Description>MegaForm Core — Platform-agnostic form builder engine for DNN, Oqtane, Umbraco, nopCommerce, and standalone .NET.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>icon.png</PackageIcon>
+    <PackageProjectUrl>https://megaform.github.io/MegaFormSolution</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/megaform/MegaFormSolution.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>megaform;forms;workflow;dotnet;dnn;oqtane;umbraco;nopcommerce</PackageTags>
+    <PackageReleaseNotes>MegaForm Core 1.5.0: form schema engine, submission pipeline, validation, workflow, AI KB, typed submission storage foundation, and cloud storage contracts.</PackageReleaseNotes>
+    <IsPackable>true</IsPackable>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
   </PropertyGroup>
 
@@ -37,6 +49,10 @@
     <DefineConstants>$(DefineConstants);MEGAFORM_PRODUCTION</DefineConstants>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+    <None Include="icon.png" Pack="true" PackagePath="\" />
+  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>

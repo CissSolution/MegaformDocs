@@ -11,16 +11,23 @@
  * Badge: CapabilityCard v20260711-P0
  */
 
+// [i18n 2026-07-13] All user-facing strings go through wt(key, EnglishFallback) —
+// English is the default, translations (incl. Vietnamese) live in the i18n catalog
+// (RULE: no hard-coded Vietnamese defaults).
+import { wt } from '../designer-i18n';
+
 const BADGE = 'CapabilityCard v20260711-P0';
 
 type Mode = 'readwrite' | 'insertonly' | 'readonly' | 'unsupported';
 
-const MODE_LABEL: Record<Mode, string> = {
-  readwrite: 'Đọc + Ghi + Sửa',
-  insertonly: 'Chỉ đọc + Gửi mới',
-  readonly: 'Chỉ đọc',
-  unsupported: 'Không dùng được',
-};
+function modeLabel(mode: Mode): string {
+  switch (mode) {
+    case 'readwrite': return wt('atbe.mode_readwrite', 'Read + Write + Edit');
+    case 'insertonly': return wt('atbe.mode_insertonly', 'Read + Submit only');
+    case 'readonly': return wt('atbe.mode_readonly', 'Read only');
+    default: return wt('atbe.mode_unsupported', 'Not usable');
+  }
+}
 
 const MODE_COLOR: Record<Mode, string> = {
   readwrite: '#059669',
@@ -102,13 +109,13 @@ function columnsTable(cols: any[]): string {
     if (c.isRowVersion) badges.push('rowversion');
     if (c.serverFill) badges.push('server: ' + c.serverFill);
     if (c.valueMode) badges.push(c.valueMode);
-    if (c.unsupported) badges.push('KHÔNG HỖ TRỢ');
+    if (c.unsupported) badges.push(wt('atbe.badge_unsupported', 'UNSUPPORTED'));
 
     return '<tr>'
       + '<td style="font-family:Consolas,monospace">' + esc(c.name) + '</td>'
       + '<td style="color:#64748b">' + esc(c.sqlType) + (c.maxLengthChars ? '(' + c.maxLengthChars + ')' : '') + '</td>'
       + '<td>' + esc(c.uiType) + '</td>'
-      + '<td style="text-align:center">' + (c.required ? '<b style="color:#b91c1c">bắt buộc</b>' : '—') + '</td>'
+      + '<td style="text-align:center">' + (c.required ? '<b style="color:#b91c1c">' + esc(wt('atbe.required', 'required')) + '</b>' : '—') + '</td>'
       + '<td style="text-align:center">' + (c.sortable ? '↕' : '') + (c.searchable ? ' 🔍' : '') + '</td>'
       + '<td style="font-size:11px;color:#64748b">' + esc(badges.join(' · ')) + '</td>'
       + '<td style="font-size:11px;color:#94a3b8">' + esc(c.machineNote || '') + '</td>'
@@ -117,7 +124,7 @@ function columnsTable(cols: any[]): string {
 
   return '<table style="width:100%;border-collapse:collapse;font-size:12px">'
     + '<thead><tr style="text-align:left;color:#475569;font-size:11px;text-transform:uppercase;letter-spacing:.04em">'
-    + '<th style="padding:4px 6px">Cột</th><th>Kiểu SQL</th><th>UI</th><th>Nhập</th><th>Truy vấn</th><th>Đặc tính</th><th>Ghi chú của máy</th>'
+    + '<th style="padding:4px 6px">' + esc(wt('atbe.th_column', 'Column')) + '</th><th>' + esc(wt('atbe.th_sqltype', 'SQL type')) + '</th><th>UI</th><th>' + esc(wt('atbe.th_input', 'Input')) + '</th><th>' + esc(wt('atbe.th_query', 'Query')) + '</th><th>' + esc(wt('atbe.th_traits', 'Traits')) + '</th><th>' + esc(wt('atbe.th_machine_note', 'Machine note')) + '</th>'
     + '</tr></thead><tbody>' + rows + '</tbody></table>';
 }
 
@@ -136,38 +143,38 @@ function render(p: any): string {
 
   const keyLine = key.columns && key.columns.length
     ? key.columns.map((k: any) => k.name + ':' + k.sqlType).join(' + ')
-      + ' (' + esc(key.strategy) + ', lấy khoá bằng ' + esc(key.retrieval) + ')'
-      + (key.trusted ? '' : ' — <b style="color:#b91c1c">KHÔNG đáng tin</b>')
-    : '<b style="color:#b91c1c">không có khoá đáng tin</b>';
+      + ' (' + esc(key.strategy) + ', ' + esc(wt('atbe.key_via', 'key via')) + ' ' + esc(key.retrieval) + ')'
+      + (key.trusted ? '' : ' — <b style="color:#b91c1c">' + esc(wt('atbe.key_untrusted', 'NOT trusted')) + '</b>')
+    : '<b style="color:#b91c1c">' + esc(wt('atbe.key_none', 'no trusted key')) + '</b>';
 
   return ''
     + '<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">'
-    + '  <span style="padding:6px 14px;border-radius:8px;font-weight:700;color:#fff;background:' + MODE_COLOR[mode] + '">' + esc(MODE_LABEL[mode] || mode) + '</span>'
+    + '  <span style="padding:6px 14px;border-radius:8px;font-weight:700;color:#fff;background:' + MODE_COLOR[mode] + '">' + esc(modeLabel(mode)) + '</span>'
     + '  <span style="font-family:Consolas,monospace;font-size:14px">' + esc((p.obj && p.obj.schema) || '') + '.' + esc((p.obj && p.obj.name) || '') + '</span>'
-    + '  <span style="color:#64748b;font-size:12px">' + esc((p.obj && p.obj.type) || '') + ' · ≈' + Number(size.approxRows || 0).toLocaleString('vi-VN') + ' dòng (' + esc(size.bucket) + ')'
+    + '  <span style="color:#64748b;font-size:12px">' + esc((p.obj && p.obj.type) || '') + ' · ≈' + Number(size.approxRows || 0).toLocaleString() + ' ' + esc(wt('atbe.rows', 'rows')) + ' (' + esc(size.bucket) + ')'
     + ' · metadata ' + esc((p.coverage && p.coverage.metadataLevel) || '') + '</span>'
     + '</div>'
 
     + '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px">'
-    + flag(!!caps.canOpenDetail, 'Xem chi tiết') + flag(!!caps.canInsert, 'Gửi mới')
-    + flag(!!caps.canUpdate, 'Sửa') + flag(!!caps.canDelete, 'Xoá')
-    + flag(!!caps.canSort, 'Sắp xếp') + flag(!!caps.canFilterServer, 'Lọc phía server')
-    + flag(caps.canSearch && caps.canSearch !== 'off', 'Tìm kiếm (' + esc(caps.canSearch) + ')')
-    + flag(!!caps.canExport, 'Xuất file')
-    + (caps.requiresFilterBeforeList ? '<span style="padding:3px 9px;border-radius:999px;font-size:11px;font-weight:600;background:#fef3c7;color:#92400e">Phải lọc trước khi xem</span>' : '')
+    + flag(!!caps.canOpenDetail, wt('atbe.flag_detail', 'View detail')) + flag(!!caps.canInsert, wt('atbe.flag_insert', 'Submit new'))
+    + flag(!!caps.canUpdate, wt('atbe.flag_update', 'Edit')) + flag(!!caps.canDelete, wt('atbe.flag_delete', 'Delete'))
+    + flag(!!caps.canSort, wt('atbe.flag_sort', 'Sort')) + flag(!!caps.canFilterServer, wt('atbe.flag_filter', 'Server-side filter'))
+    + flag(caps.canSearch && caps.canSearch !== 'off', wt('atbe.flag_search', 'Search') + ' (' + String(caps.canSearch) + ')')
+    + flag(!!caps.canExport, wt('atbe.flag_export', 'Export'))
+    + (caps.requiresFilterBeforeList ? '<span style="padding:3px 9px;border-radius:999px;font-size:11px;font-weight:600;background:#fef3c7;color:#92400e">' + esc(wt('atbe.must_filter', 'Filter required before listing')) + '</span>' : '')
     + '</div>'
 
     + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12px;margin-bottom:14px">'
-    + '  <div><b>Khoá:</b> ' + keyLine + '</div>'
-    + '  <div><b>Đồng thời:</b> ' + esc((p.concurrency && p.concurrency.mode) || '-') + ' ' + esc((p.concurrency && p.concurrency.rowVersionColumn) || '') + '</div>'
-    + '  <div><b>Cột thời gian:</b> ' + (sem.time ? esc(sem.time.name) + (sem.time.confirmedByAdmin ? '' : ' <span style="color:#b45309">(chờ xác nhận múi giờ)</span>') : '—') + '</div>'
-    + '  <div><b>Trạng thái:</b> ' + (sem.status ? esc(sem.status.name) + ' (' + esc(sem.status.kind) + ')' : '—') + '</div>'
-    + '  <div><b>Xoá mềm:</b> ' + (sem.softDelete ? esc(sem.softDelete.column) : '—') + '</div>'
-    + '  <div><b>Chủ sở hữu dòng:</b> ' + (sem.owner ? esc(sem.owner.name) : '—') + '</div>'
+    + '  <div><b>' + esc(wt('atbe.lbl_key', 'Key:')) + '</b> ' + keyLine + '</div>'
+    + '  <div><b>' + esc(wt('atbe.lbl_concurrency', 'Concurrency:')) + '</b> ' + esc((p.concurrency && p.concurrency.mode) || '-') + ' ' + esc((p.concurrency && p.concurrency.rowVersionColumn) || '') + '</div>'
+    + '  <div><b>' + esc(wt('atbe.lbl_time', 'Time column:')) + '</b> ' + (sem.time ? esc(sem.time.name) + (sem.time.confirmedByAdmin ? '' : ' <span style="color:#b45309">' + esc(wt('atbe.tz_pending', '(timezone needs confirmation)')) + '</span>') : '—') + '</div>'
+    + '  <div><b>' + esc(wt('atbe.lbl_status', 'Status:')) + '</b> ' + (sem.status ? esc(sem.status.name) + ' (' + esc(sem.status.kind) + ')' : '—') + '</div>'
+    + '  <div><b>' + esc(wt('atbe.lbl_softdelete', 'Soft delete:')) + '</b> ' + (sem.softDelete ? esc(sem.softDelete.column) : '—') + '</div>'
+    + '  <div><b>' + esc(wt('atbe.lbl_owner', 'Row owner:')) + '</b> ' + (sem.owner ? esc(sem.owner.name) : '—') + '</div>'
     + '</div>'
 
     + (reasons ? '<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 14px;margin-bottom:14px">'
-        + '<div style="font-weight:700;font-size:12px;color:#92400e;margin-bottom:6px">Máy kết luận như vậy vì:</div>'
+        + '<div style="font-weight:700;font-size:12px;color:#92400e;margin-bottom:6px">' + esc(wt('atbe.machine_reasons', 'The machine concluded this because:')) + '</div>'
         + '<ul style="margin:0;padding-left:18px;font-size:12px;color:#78350f">' + reasons + '</ul></div>' : '')
 
     + '<div style="max-height:340px;overflow:auto;border:1px solid #e2e8f0;border-radius:8px;padding:8px">' + columnsTable(p.columns || []) + '</div>'
@@ -183,9 +190,9 @@ export async function openCapabilityCard(connectionKey: string, schema: string, 
   back.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:200002;display:flex;align-items:center;justify-content:center;padding:24px';
   back.innerHTML = '<div style="background:#fff;border-radius:14px;max-width:1100px;width:100%;max-height:88vh;overflow:auto;padding:20px 24px;box-shadow:0 24px 60px rgba(0,0,0,.35)">'
     + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">'
-    + '<h3 style="margin:0;font-size:16px">Năng lực của bảng — <span style="font-family:Consolas,monospace">' + esc(schema || 'dbo') + '.' + esc(table) + '</span></h3>'
-    + '<button type="button" data-close style="border:0;background:#f1f5f9;border-radius:6px;padding:6px 12px;cursor:pointer">Đóng</button>'
-    + '</div><div data-body style="color:#64748b">Đang dò năng lực…</div></div>';
+    + '<h3 style="margin:0;font-size:16px">' + esc(wt('atbe.card_title', 'Table capability')) + ' — <span style="font-family:Consolas,monospace">' + esc(schema || 'dbo') + '.' + esc(table) + '</span></h3>'
+    + '<button type="button" data-close style="border:0;background:#f1f5f9;border-radius:6px;padding:6px 12px;cursor:pointer">' + esc(wt('atbe.close', 'Close')) + '</button>'
+    + '</div><div data-body style="color:#64748b">' + esc(wt('atbe.probing', 'Probing capability…')) + '</div></div>';
 
   back.addEventListener('click', (e) => { if (e.target === back) back.remove(); });
   back.querySelector('[data-close]')!.addEventListener('click', () => back.remove());
@@ -202,9 +209,9 @@ export async function openCapabilityCard(connectionKey: string, schema: string, 
     if (p.capabilities && p.capabilities.mode !== 'unsupported') {
       const bar = document.createElement('div');
       bar.style.cssText = 'display:flex;align-items:center;gap:10px;margin-top:14px;padding-top:12px;border-top:1px solid #e2e8f0;flex-wrap:wrap';
-      bar.innerHTML = '<button type="button" data-bind style="background:#0f766e;color:#fff;border:0;border-radius:8px;padding:8px 16px;font-weight:600;cursor:pointer">Tạo form (máy sinh)</button>'
-        + '<button type="button" data-ai style="background:#7c3aed;color:#fff;border:0;border-radius:8px;padding:8px 16px;font-weight:600;cursor:pointer">✨ Thiết kế bằng AI</button>'
-        + '<span style="font-size:11px;color:#64748b">Dashboard đọc THẲNG bảng của bạn — không sao chép dữ liệu.</span>'
+      bar.innerHTML = '<button type="button" data-bind style="background:#0f766e;color:#fff;border:0;border-radius:8px;padding:8px 16px;font-weight:600;cursor:pointer">' + esc(wt('atbe.bind_btn', 'Create form (machine-generated)')) + '</button>'
+        + '<button type="button" data-ai style="background:#7c3aed;color:#fff;border:0;border-radius:8px;padding:8px 16px;font-weight:600;cursor:pointer">✨ ' + esc(wt('atbe.ai_btn', 'Design with AI')) + '</button>'
+        + '<span style="font-size:11px;color:#64748b">' + esc(wt('atbe.direct_note', 'The dashboard reads your table DIRECTLY — no data is copied.')) + '</span>'
         + '<div data-bind-msg style="font-size:12px;flex-basis:100%"></div>';
       body.appendChild(bar);
 
@@ -214,11 +221,12 @@ export async function openCapabilityCard(connectionKey: string, schema: string, 
 
       btn.addEventListener('click', async () => {
         btn.disabled = true;
-        msg.textContent = 'Đang tạo…';
+        msg.textContent = wt('atbe.creating', 'Creating…');
         try {
           const res = await bind(connectionKey, schema, table);
-          msg.innerHTML = '<b style="color:#059669">Xong.</b> Form #' + esc(res.formId) + ' · ' + esc(res.fields)
-            + ' trường · ' + Number(res.approxRows || 0).toLocaleString('vi-VN') + ' dòng. Mở Submissions để xem.';
+          msg.innerHTML = '<b style="color:#059669">' + esc(wt('atbe.done', 'Done.')) + '</b> Form #' + esc(res.formId) + ' · ' + esc(res.fields)
+            + ' ' + esc(wt('atbe.fields', 'fields')) + ' · ' + Number(res.approxRows || 0).toLocaleString() + ' ' + esc(wt('atbe.rows', 'rows'))
+            + '. ' + esc(wt('atbe.open_subs', 'Open Submissions to view.'));
         } catch (e: any) {
           msg.innerHTML = '<span style="color:#b91c1c">' + esc(e.message || e) + '</span>';
           btn.disabled = false;
@@ -227,7 +235,7 @@ export async function openCapabilityCard(connectionKey: string, schema: string, 
 
       aiBtn.addEventListener('click', async () => {
         const design = (window as any).__MF_DESIGN_TABLE_WITH_AI__;
-        if (typeof design !== 'function') { msg.textContent = 'AI designer chưa nạp.'; return; }
+        if (typeof design !== 'function') { msg.textContent = wt('atbe.ai_not_loaded', 'AI designer is not loaded.'); return; }
         aiBtn.disabled = true; btn.disabled = true;
 
         try {
@@ -236,14 +244,14 @@ export async function openCapabilityCard(connectionKey: string, schema: string, 
           // The rejected attempts are shown, not swallowed: an admin who sees WHAT the machine
           // refused can judge whether to trust the result — and it is the proof the rails work.
           const rej = (res.rejections || []).map((list: string[], i: number) =>
-            '<div style="margin-top:4px"><b>Lần ' + (i + 1) + ' bị trả lại:</b><br>' + list.map(esc).join('<br>') + '</div>').join('');
+            '<div style="margin-top:4px"><b>' + esc(wt('atbe.attempt_rejected', 'Attempt {n} rejected:').replace('{n}', String(i + 1))) + '</b><br>' + list.map(esc).join('<br>') + '</div>').join('');
 
           msg.innerHTML = (res.source === 'ai'
-              ? '<b style="color:#059669">AI thiết kế xong</b> sau ' + esc(res.attempts) + ' lần (máy đã chấm đạt).'
-              : '<b style="color:#b45309">Dùng bản máy sinh</b> — AI không qua được validator.')
-            + ' Form #' + esc(res.formId) + ' · ' + esc(res.fields) + ' trường.'
+              ? '<b style="color:#059669">' + esc(wt('atbe.ai_done', 'AI design complete')) + '</b> ' + esc(wt('atbe.ai_after', 'after {n} attempt(s) — machine-validated.').replace('{n}', String(res.attempts)))
+              : '<b style="color:#b45309">' + esc(wt('atbe.ai_fallback_title', 'Using the machine-generated version')) + '</b> — ' + esc(wt('atbe.ai_fallback_note', 'the AI did not pass the validator.')))
+            + ' Form #' + esc(res.formId) + ' · ' + esc(res.fields) + ' ' + esc(wt('atbe.fields', 'fields')) + '.'
             + (res.questions && res.questions.length
-                ? '<div style="margin-top:6px;color:#7c3aed"><b>AI hỏi bạn:</b> ' + res.questions.map(esc).join(' · ') + '</div>' : '')
+                ? '<div style="margin-top:6px;color:#7c3aed"><b>' + esc(wt('atbe.ai_asks', 'The AI asks you:')) + '</b> ' + res.questions.map(esc).join(' · ') + '</div>' : '')
             + (rej ? '<div style="margin-top:6px;color:#64748b;font-size:11px">' + rej + '</div>' : '');
         } catch (e: any) {
           msg.innerHTML = '<span style="color:#b91c1c">' + esc(e.message || e) + '</span>';
@@ -253,7 +261,7 @@ export async function openCapabilityCard(connectionKey: string, schema: string, 
       });
     }
   } catch (err: any) {
-    body.innerHTML = '<div style="color:#b91c1c">Không dò được bảng này (' + esc(err.message || err) + ').</div>';
+    body.innerHTML = '<div style="color:#b91c1c">' + esc(wt('atbe.probe_failed', 'Could not probe this table')) + ' (' + esc(err.message || err) + ').</div>';
   }
 }
 

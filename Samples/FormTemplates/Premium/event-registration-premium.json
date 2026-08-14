@@ -1,0 +1,244 @@
+{
+  "title": "Event Registration Premium",
+  "slug": "event-registration-premium",
+  "description": "A navy patterned premium event registration form with white card, event details table, participant information, payment and consent.",
+  "category": "Premium",
+  "theme": "custom",
+  "fields": [
+    {
+      "key": "full_name",
+      "type": "Text",
+      "label": "Full Name",
+      "placeholder": "Jordan Bennett",
+      "required": true
+    },
+    {
+      "key": "date_of_birth",
+      "type": "Date",
+      "label": "Date of Birth",
+      "required": false
+    },
+    {
+      "key": "gender",
+      "type": "Select",
+      "label": "Gender",
+      "placeholder": "Select...",
+      "required": false,
+      "options": [
+        {
+          "0": "Female",
+          "1": "Male",
+          "2": "Non-binary",
+          "3": "Prefer not to say",
+          "value": "female",
+          "label": "Female"
+        },
+        {
+          "0": "Female",
+          "1": "Male",
+          "2": "Non-binary",
+          "3": "Prefer not to say",
+          "value": 1,
+          "label": "Male"
+        },
+        {
+          "0": "Female",
+          "1": "Male",
+          "2": "Non-binary",
+          "3": "Prefer not to say",
+          "value": 2,
+          "label": "Non-binary"
+        },
+        {
+          "0": "Female",
+          "1": "Male",
+          "2": "Non-binary",
+          "3": "Prefer not to say",
+          "value": 3,
+          "label": "Prefer not to say"
+        }
+      ]
+    },
+    {
+      "key": "phone_number",
+      "type": "Phone",
+      "label": "Phone Number",
+      "placeholder": "+1 (555) 000-0000",
+      "required": false
+    },
+    {
+      "key": "email_address",
+      "type": "Email",
+      "label": "Email",
+      "placeholder": "jordan@example.com",
+      "required": true
+    },
+    {
+      "key": "company",
+      "type": "Text",
+      "label": "Company / Organization",
+      "placeholder": "Acme Studio",
+      "required": false
+    },
+    {
+      "key": "heard_from",
+      "type": "Radio",
+      "label": "Where did you hear about this event?",
+      "required": false,
+      "options": [
+        {
+          "0": "Facebook",
+          "1": "YouTube",
+          "2": "Instagram",
+          "3": "Twitter",
+          "4": "Other",
+          "value": "facebook",
+          "label": "Facebook"
+        },
+        {
+          "0": "Facebook",
+          "1": "YouTube",
+          "2": "Instagram",
+          "3": "Twitter",
+          "4": "Other",
+          "value": 1,
+          "label": "YouTube"
+        },
+        {
+          "0": "Facebook",
+          "1": "YouTube",
+          "2": "Instagram",
+          "3": "Twitter",
+          "4": "Other",
+          "value": 2,
+          "label": "Instagram"
+        },
+        {
+          "0": "Facebook",
+          "1": "YouTube",
+          "2": "Instagram",
+          "3": "Twitter",
+          "4": "Other",
+          "value": 3,
+          "label": "Twitter"
+        },
+        {
+          "0": "Facebook",
+          "1": "YouTube",
+          "2": "Instagram",
+          "3": "Twitter",
+          "4": "Other",
+          "value": 4,
+          "label": "Other"
+        }
+      ],
+      "optionColumns": 5,
+      "properties": {
+        "optionColumns": 5
+      },
+      "Properties": {
+        "optionColumns": 5
+      }
+    },
+    {
+      "key": "ticket_count",
+      "type": "Text",
+      "label": "Number of Tickets",
+      "placeholder": "1",
+      "required": true
+    },
+    {
+      "key": "payment_method",
+      "type": "Radio",
+      "label": "Payment Method",
+      "required": true,
+      "options": [
+        {
+          "0": "Credit Card",
+          "1": "Debit Card",
+          "2": "Cash",
+          "3": "Check",
+          "value": "credit_card",
+          "label": "Credit Card"
+        },
+        {
+          "0": "Credit Card",
+          "1": "Debit Card",
+          "2": "Cash",
+          "3": "Check",
+          "value": 1,
+          "label": "Debit Card"
+        },
+        {
+          "0": "Credit Card",
+          "1": "Debit Card",
+          "2": "Cash",
+          "3": "Check",
+          "value": 2,
+          "label": "Cash"
+        },
+        {
+          "0": "Credit Card",
+          "1": "Debit Card",
+          "2": "Cash",
+          "3": "Check",
+          "value": 3,
+          "label": "Check"
+        }
+      ],
+      "optionColumns": 4,
+      "properties": {
+        "optionColumns": 4
+      },
+      "Properties": {
+        "optionColumns": 4
+      }
+    },
+    {
+      "key": "signature",
+      "type": "Text",
+      "label": "Signature",
+      "placeholder": "Type full legal name",
+      "required": true
+    },
+    {
+      "key": "date_signed",
+      "type": "Date",
+      "label": "Date Signed",
+      "required": false
+    },
+    {
+      "key": "consent",
+      "type": "Checkbox",
+      "label": "Consent",
+      "required": true,
+      "options": [
+        {
+          "value": "yes",
+          "label": "I agree to the event terms and photography policy"
+        }
+      ]
+    }
+  ],
+  "settings": {
+    "theme": "custom",
+    "customHtml": "\n<div class=\"mfp-mock11 mfp-event-registration-premium\">\n  <article class=\"ev-card\">\n    <header class=\"ev-head\"><a href=\"/\" class=\"ev-back\">&larr; Back to forms</a><h1>Event Registration Form</h1><p>Design Forward Summit / October 15, 2028</p></header>\n    <section class=\"ev-body\">\n      <h2>About Event</h2>\n      <table class=\"ev-table\"><tbody><tr><th>Event Name</th><td>Design Forward Summit</td></tr><tr><th>Date</th><td>October 15, 2028</td></tr><tr><th>Venue</th><td>Grand Hall, 214 Harbor Avenue</td></tr></tbody></table>\n      <div class=\"ev-icons\"><span><i class=\"fa-solid fa-calendar-days\"></i> Oct 15, 2028</span><span><i class=\"fa-solid fa-clock\"></i> 9:00 AM - 5:00 PM</span><span><i class=\"fa-solid fa-location-dot\"></i> Grand Hall</span></div>\n      <div class=\"ev-section\"><h2>Participant Information</h2><div class=\"ev-grid\">\n        <label><span>Full Name *</span>{{field:full_name}}</label><label><span>Date of Birth</span>{{field:date_of_birth}}</label><label><span>Gender</span>{{field:gender}}</label><label><span>Phone Number</span>{{field:phone_number}}</label><label><span>Email *</span>{{field:email_address}}</label><label><span>Company / Organization</span>{{field:company}}</label>\n      </div><label class=\"ev-full\"><span>Where did you hear about this event?</span>{{field:heard_from}}</label></div>\n      <div class=\"ev-section\"><h2>Payment and Consent</h2><div class=\"ev-grid\"><label><span>Number of Tickets *</span>{{field:ticket_count}}</label><label><span>Payment Method *</span>{{field:payment_method}}</label><label><span>Signature *</span>{{field:signature}}</label><label><span>Date Signed</span>{{field:date_signed}}</label></div><div class=\"ev-consent\">{{field:consent}}</div></div>\n      <button class=\"ev-submit\" type=\"submit\"><i class=\"fa-solid fa-ticket\"></i> Complete registration</button>\n      <footer>Webinar Pros LLC / 555-0100 / events@example.com</footer>\n    </section>\n  </article>\n</div>",
+    "customCss": "@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css');\n\n.mfp-mock11.mfp-mock11{position:relative!important;left:50%!important;right:50%!important;width:100vw!important;max-width:100vw!important;margin-left:-50vw!important;margin-right:-50vw!important}\n.mfp-mock11 .mf-field-group{margin:0!important;min-width:0!important;width:100%!important}\n.mfp-mock11 .mf-field-label{display:none!important}\n.mfp-mock11 label{line-height:1.2!important}\n.mfp-mock11 input[type='text'],.mfp-mock11 input[type='email'],.mfp-mock11 input[type='tel'],.mfp-mock11 input[type='number'],.mfp-mock11 input[type='date'],.mfp-mock11 select,.mfp-mock11 textarea,.mfp-mock11 .mf-input,.mfp-mock11 .mf-select,.mfp-mock11 .mf-textarea{box-sizing:border-box!important;width:100%!important;max-width:none!important;margin:0!important;box-shadow:none!important;outline:0!important;line-height:1.2!important}\n.mfp-mock11 .mf-option-group{flex-direction:row!important}\n.mfp-mock11 .mf-field-error:empty{display:none!important}\n.mfp-mock11 button[type='submit']{appearance:none;-webkit-appearance:none;cursor:pointer}\n\n.mfp-event-registration-premium{min-height:720px;background:#172b46!important;background-image:radial-gradient(circle at 1px 1px,#44617b 1px,transparent 0)!important;background-size:18px 18px!important;color:#172b46!important;font-family:Inter,Geist,system-ui,sans-serif!important;width:100%!important;max-width:none!important;padding:26px 0!important}\n.mfp-event-registration-premium *{box-sizing:border-box}\n.mfp-event-registration-premium .ev-card{width:min(100%,760px);margin:0 auto;background:#fff;box-shadow:0 28px 65px rgba(4,15,30,.28)}\n.mfp-event-registration-premium .ev-head{padding:28px 40px 24px;border-bottom:1px solid #d2d9df}\n.mfp-event-registration-premium .ev-back{display:inline-block;margin:0 0 22px;color:#52677c;font-size:12px;font-weight:700;text-decoration:none}\n.mfp-event-registration-premium h1{margin:0!important;color:#263e57!important;font-size:36px!important;line-height:40px!important;font-weight:800!important;letter-spacing:-.025em!important;font-family:Inter,Geist,system-ui,sans-serif!important}\n.mfp-event-registration-premium .ev-head p{margin:8px 0 0!important;color:#62758a!important;font-size:14px!important;line-height:20px!important;font-weight:400!important}\n.mfp-event-registration-premium .ev-body{padding:28px 40px 34px}\n.mfp-event-registration-premium h2{margin:0 0 14px!important;color:#183b5c!important;font-size:14px!important;line-height:20px!important;font-weight:700!important;text-transform:uppercase;letter-spacing:.12em}\n.mfp-event-registration-premium .ev-table{width:100%;border-collapse:collapse;margin-bottom:16px;border:1px solid #8998a7;font-size:13px}\n.mfp-event-registration-premium .ev-table th{width:35%;background:#f3f5f6;color:#183b5c;text-align:left;font-weight:800}\n.mfp-event-registration-premium .ev-table th,.mfp-event-registration-premium .ev-table td{border:1px solid #8998a7;padding:9px 10px}\n.mfp-event-registration-premium .ev-icons{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:0 0 26px;color:#425a72;font-size:12px}\n.mfp-event-registration-premium .ev-icons span{display:flex;gap:7px;align-items:center}.mfp-event-registration-premium .ev-icons i{color:#183b5c}\n.mfp-event-registration-premium .ev-section{border-top:1px solid #d2d9df;padding-top:24px;margin-top:24px}\n.mfp-event-registration-premium .ev-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px 18px}\n.mfp-event-registration-premium .ev-grid>label>span,.mfp-event-registration-premium .ev-full>span{display:block;margin:0 0 6px;color:#183b5c;font-size:11px;font-weight:600;line-height:16px}\n.mfp-event-registration-premium input,.mfp-event-registration-premium select,.mfp-event-registration-premium textarea,.mfp-event-registration-premium .mf-input,.mfp-event-registration-premium .mf-select{height:38px!important;border:1px solid #cbd5df!important;border-radius:2px!important;background:#fff!important;color:#10233a!important;padding:8px 10px!important;font:500 11px/16.5px Inter,Geist,system-ui,sans-serif!important}\n.mfp-event-registration-premium .ev-full{display:block;margin-top:18px}\n.mfp-event-registration-premium .mf-option-group{display:flex!important;flex-wrap:wrap!important;gap:12px 18px!important;margin:0!important}\n.mfp-event-registration-premium .mf-option-item{display:flex!important;align-items:center!important;gap:7px!important;width:max-content!important;max-width:100%!important;flex:0 0 auto!important;margin:0!important;color:#183b5c!important;font-size:12px!important}\n.mfp-event-registration-premium .mf-option-control{width:14px!important;height:14px!important;min-height:14px!important;margin:0!important;accent-color:#183b5c}\n.mfp-event-registration-premium .ev-consent{margin-top:18px;padding:12px 0;color:#183b5c}\n.mfp-event-registration-premium .ev-submit{display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:9px!important;margin-top:22px!important;min-height:46px!important;width:100%!important;border:0!important;border-radius:2px!important;background:#183b5c!important;color:#fff!important;font-size:14px!important;font-weight:600!important;line-height:20px!important}\n.mfp-event-registration-premium footer{margin-top:22px;padding-top:16px;border-top:1px solid #d2d9df;color:#60758a;font-size:12px;text-align:center}\n@media(max-width:720px){.mfp-event-registration-premium{padding:12px}.mfp-event-registration-premium .ev-card{width:100%}.mfp-event-registration-premium .ev-head,.mfp-event-registration-premium .ev-body{padding:22px}.mfp-event-registration-premium .ev-grid,.mfp-event-registration-premium .ev-icons{grid-template-columns:1fr}.mfp-event-registration-premium h1{font-size:28px}}",
+    "submitButtonText": "Complete registration",
+    "successMessage": "Registration confirmed. Your event registration has been received.",
+    "hideHeader": true,
+    "templateSlug": "event-registration-premium",
+    "postSubmitExperience": {
+      "mode": "confirmation",
+      "title": "Form received",
+      "message": "Registration confirmed. Your event registration has been received.",
+      "fillAgainLabel": "Submit another",
+      "doneLabel": "Done"
+    },
+    "templateGuideSlug": "tpl-event-registration-premium"
+  },
+  "submitButtonText": "Complete registration",
+  "successMessage": "Registration confirmed. Your event registration has been received.",
+  "customHtml": "\n<div class=\"mfp-mock11 mfp-event-registration-premium\">\n  <article class=\"ev-card\">\n    <header class=\"ev-head\"><a href=\"/\" class=\"ev-back\">&larr; Back to forms</a><h1>Event Registration Form</h1><p>Design Forward Summit / October 15, 2028</p></header>\n    <section class=\"ev-body\">\n      <h2>About Event</h2>\n      <table class=\"ev-table\"><tbody><tr><th>Event Name</th><td>Design Forward Summit</td></tr><tr><th>Date</th><td>October 15, 2028</td></tr><tr><th>Venue</th><td>Grand Hall, 214 Harbor Avenue</td></tr></tbody></table>\n      <div class=\"ev-icons\"><span><i class=\"fa-solid fa-calendar-days\"></i> Oct 15, 2028</span><span><i class=\"fa-solid fa-clock\"></i> 9:00 AM - 5:00 PM</span><span><i class=\"fa-solid fa-location-dot\"></i> Grand Hall</span></div>\n      <div class=\"ev-section\"><h2>Participant Information</h2><div class=\"ev-grid\">\n        <label><span>Full Name *</span>{{field:full_name}}</label><label><span>Date of Birth</span>{{field:date_of_birth}}</label><label><span>Gender</span>{{field:gender}}</label><label><span>Phone Number</span>{{field:phone_number}}</label><label><span>Email *</span>{{field:email_address}}</label><label><span>Company / Organization</span>{{field:company}}</label>\n      </div><label class=\"ev-full\"><span>Where did you hear about this event?</span>{{field:heard_from}}</label></div>\n      <div class=\"ev-section\"><h2>Payment and Consent</h2><div class=\"ev-grid\"><label><span>Number of Tickets *</span>{{field:ticket_count}}</label><label><span>Payment Method *</span>{{field:payment_method}}</label><label><span>Signature *</span>{{field:signature}}</label><label><span>Date Signed</span>{{field:date_signed}}</label></div><div class=\"ev-consent\">{{field:consent}}</div></div>\n      <button class=\"ev-submit\" type=\"submit\"><i class=\"fa-solid fa-ticket\"></i> Complete registration</button>\n      <footer>Webinar Pros LLC / 555-0100 / events@example.com</footer>\n    </section>\n  </article>\n</div>",
+  "customCss": "@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css');\n\n.mfp-mock11.mfp-mock11{position:relative!important;left:50%!important;right:50%!important;width:100vw!important;max-width:100vw!important;margin-left:-50vw!important;margin-right:-50vw!important}\n.mfp-mock11 .mf-field-group{margin:0!important;min-width:0!important;width:100%!important}\n.mfp-mock11 .mf-field-label{display:none!important}\n.mfp-mock11 label{line-height:1.2!important}\n.mfp-mock11 input[type='text'],.mfp-mock11 input[type='email'],.mfp-mock11 input[type='tel'],.mfp-mock11 input[type='number'],.mfp-mock11 input[type='date'],.mfp-mock11 select,.mfp-mock11 textarea,.mfp-mock11 .mf-input,.mfp-mock11 .mf-select,.mfp-mock11 .mf-textarea{box-sizing:border-box!important;width:100%!important;max-width:none!important;margin:0!important;box-shadow:none!important;outline:0!important;line-height:1.2!important}\n.mfp-mock11 .mf-option-group{flex-direction:row!important}\n.mfp-mock11 .mf-field-error:empty{display:none!important}\n.mfp-mock11 button[type='submit']{appearance:none;-webkit-appearance:none;cursor:pointer}\n\n.mfp-event-registration-premium{min-height:720px;background:#172b46!important;background-image:radial-gradient(circle at 1px 1px,#44617b 1px,transparent 0)!important;background-size:18px 18px!important;color:#172b46!important;font-family:Inter,Geist,system-ui,sans-serif!important;width:100%!important;max-width:none!important;padding:26px 0!important}\n.mfp-event-registration-premium *{box-sizing:border-box}\n.mfp-event-registration-premium .ev-card{width:min(100%,760px);margin:0 auto;background:#fff;box-shadow:0 28px 65px rgba(4,15,30,.28)}\n.mfp-event-registration-premium .ev-head{padding:28px 40px 24px;border-bottom:1px solid #d2d9df}\n.mfp-event-registration-premium .ev-back{display:inline-block;margin:0 0 22px;color:#52677c;font-size:12px;font-weight:700;text-decoration:none}\n.mfp-event-registration-premium h1{margin:0!important;color:#263e57!important;font-size:36px!important;line-height:40px!important;font-weight:800!important;letter-spacing:-.025em!important;font-family:Inter,Geist,system-ui,sans-serif!important}\n.mfp-event-registration-premium .ev-head p{margin:8px 0 0!important;color:#62758a!important;font-size:14px!important;line-height:20px!important;font-weight:400!important}\n.mfp-event-registration-premium .ev-body{padding:28px 40px 34px}\n.mfp-event-registration-premium h2{margin:0 0 14px!important;color:#183b5c!important;font-size:14px!important;line-height:20px!important;font-weight:700!important;text-transform:uppercase;letter-spacing:.12em}\n.mfp-event-registration-premium .ev-table{width:100%;border-collapse:collapse;margin-bottom:16px;border:1px solid #8998a7;font-size:13px}\n.mfp-event-registration-premium .ev-table th{width:35%;background:#f3f5f6;color:#183b5c;text-align:left;font-weight:800}\n.mfp-event-registration-premium .ev-table th,.mfp-event-registration-premium .ev-table td{border:1px solid #8998a7;padding:9px 10px}\n.mfp-event-registration-premium .ev-icons{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:0 0 26px;color:#425a72;font-size:12px}\n.mfp-event-registration-premium .ev-icons span{display:flex;gap:7px;align-items:center}.mfp-event-registration-premium .ev-icons i{color:#183b5c}\n.mfp-event-registration-premium .ev-section{border-top:1px solid #d2d9df;padding-top:24px;margin-top:24px}\n.mfp-event-registration-premium .ev-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px 18px}\n.mfp-event-registration-premium .ev-grid>label>span,.mfp-event-registration-premium .ev-full>span{display:block;margin:0 0 6px;color:#183b5c;font-size:11px;font-weight:600;line-height:16px}\n.mfp-event-registration-premium input,.mfp-event-registration-premium select,.mfp-event-registration-premium textarea,.mfp-event-registration-premium .mf-input,.mfp-event-registration-premium .mf-select{height:38px!important;border:1px solid #cbd5df!important;border-radius:2px!important;background:#fff!important;color:#10233a!important;padding:8px 10px!important;font:500 11px/16.5px Inter,Geist,system-ui,sans-serif!important}\n.mfp-event-registration-premium .ev-full{display:block;margin-top:18px}\n.mfp-event-registration-premium .mf-option-group{display:flex!important;flex-wrap:wrap!important;gap:12px 18px!important;margin:0!important}\n.mfp-event-registration-premium .mf-option-item{display:flex!important;align-items:center!important;gap:7px!important;width:max-content!important;max-width:100%!important;flex:0 0 auto!important;margin:0!important;color:#183b5c!important;font-size:12px!important}\n.mfp-event-registration-premium .mf-option-control{width:14px!important;height:14px!important;min-height:14px!important;margin:0!important;accent-color:#183b5c}\n.mfp-event-registration-premium .ev-consent{margin-top:18px;padding:12px 0;color:#183b5c}\n.mfp-event-registration-premium .ev-submit{display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:9px!important;margin-top:22px!important;min-height:46px!important;width:100%!important;border:0!important;border-radius:2px!important;background:#183b5c!important;color:#fff!important;font-size:14px!important;font-weight:600!important;line-height:20px!important}\n.mfp-event-registration-premium footer{margin-top:22px;padding-top:16px;border-top:1px solid #d2d9df;color:#60758a;font-size:12px;text-align:center}\n@media(max-width:720px){.mfp-event-registration-premium{padding:12px}.mfp-event-registration-premium .ev-card{width:100%}.mfp-event-registration-premium .ev-head,.mfp-event-registration-premium .ev-body{padding:22px}.mfp-event-registration-premium .ev-grid,.mfp-event-registration-premium .ev-icons{grid-template-columns:1fr}.mfp-event-registration-premium h1{font-size:28px}}"
+}

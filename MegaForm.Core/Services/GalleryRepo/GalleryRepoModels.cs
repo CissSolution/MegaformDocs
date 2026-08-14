@@ -36,6 +36,17 @@ namespace MegaForm.Core.Services.GalleryRepo
         public string[] AssetFiles { get; set; } = new string[0];
         public string Sha256 { get; set; }
         public long SizeBytes { get; set; }
+        /// <summary>[KbPerTemplate v20260812] Repo-relative path of this template's AI-knowledge
+        /// bundle ("kb/templates/&lt;slug&gt;.json"); null on a manifest published before the KB
+        /// channel existed. The bundle carries a seed-shaped document
+        /// (AiKnowledgeSeedMerger.Merge consumes it verbatim) plus the hashes of the guide files
+        /// it references — so a template and its knowledge share one version and one push.</summary>
+        public string Kb { get; set; }
+        /// <summary>sha256 of the KB bundle. MANDATORY when <see cref="Kb"/> is set:
+        /// DownloadFileAsync refuses unverifiable downloads, so a bundle without its own hash
+        /// could never install.</summary>
+        public string KbSha256 { get; set; }
+        public long KbSizeBytes { get; set; }
         public bool Premium { get; set; }
         /// <summary>Number of fields, straight from the manifest — lets the gallery caption a card
         /// ("Events · 20 fields") without first downloading the template document.</summary>
@@ -62,11 +73,43 @@ namespace MegaForm.Core.Services.GalleryRepo
     {
         public int RepoVersion { get; set; }
         public string GeneratedUtc { get; set; }
-        /// <summary>The canonical AI-knowledge seed JSON (entries + templates + rules).</summary>
+        /// <summary>The canonical AI-knowledge seed JSON (entries + templates + rules).
+        /// Null since [KbPerTemplate v20260812]: template knowledge is published PER TEMPLATE
+        /// (see <see cref="Templates"/>) and the module's own core knowledge still ships in the
+        /// package, so there is no whole-KB blob to sync.</summary>
         public KbRepoFileInfo Seed { get; set; }
         /// <summary>Resource files mirrored to the host's module Resources folder
         /// (PromptRecipes/*.md, TemplateGuides/*) — AI tools resolve them from disk.</summary>
         public List<KbRepoFileInfo> Files { get; set; } = new List<KbRepoFileInfo>();
+        /// <summary>[KbPerTemplate v20260812] One knowledge bundle per published template.
+        /// This is a channel INDEX (what knowledge exists, pinned by hash) — an install resolves
+        /// a single bundle from the template manifest's Kb/KbSha256 pointer and never reads this,
+        /// so a stale copy here cannot break an install.</summary>
+        public List<KbRepoTemplateInfo> Templates { get; set; } = new List<KbRepoTemplateInfo>();
+    }
+
+    /// <summary>[KbPerTemplate v20260812] One template's knowledge bundle in kb/manifest.json.</summary>
+    public sealed class KbRepoTemplateInfo
+    {
+        public string Slug { get; set; }
+        /// <summary>Repo-relative path ("kb/templates/&lt;slug&gt;.json").</summary>
+        public string Path { get; set; }
+        public string Sha256 { get; set; }
+        public long SizeBytes { get; set; }
+    }
+
+    /// <summary>
+    /// [KbPerTemplate v20260812] One template's knowledge bundle, as published.
+    /// <see cref="Seed"/> is handed to AiKnowledgeSeedMerger.Merge verbatim; <see cref="Resources"/>
+    /// are the guide/facts files that seed's rows point at through {"guide_file": …} and are
+    /// written into the host's Resources/TemplateGuides folder.
+    /// </summary>
+    public sealed class KbTemplateBundle
+    {
+        public int KbVersion { get; set; }
+        public string Slug { get; set; }
+        public Newtonsoft.Json.Linq.JObject Seed { get; set; }
+        public List<KbRepoFileInfo> Resources { get; set; } = new List<KbRepoFileInfo>();
     }
 
     /// <summary>Fetch result with offline fail-soft semantics: when the repo is

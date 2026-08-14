@@ -2,6 +2,7 @@
 @model MegaForm.Umbraco.ViewModels.MegaFormViewModel
 @inject IUmbracoModuleConfigService ModuleConfigService
 @inject Umbraco.Cms.Core.Models.PublishedContent.IVariationContextAccessor VariationContextAccessor
+@inject IUmbracoMemberContext MemberContext
 
 @{
     var moduleConfig = ModuleConfigService.GetConfig(Model.ContentId);
@@ -10,6 +11,11 @@
     var effectiveViewType = hasExplicitView ? Model.ViewType : (moduleConfig?.ViewType ?? "submit");
     var hasExplicitConfig = !string.IsNullOrWhiteSpace(Model.ConfigJson) && Model.ConfigJson != "{}";
     var effectiveConfigJson = hasExplicitConfig ? Model.ConfigJson : (moduleConfig?.ViewConfigJson ?? "{}");
+
+    var memberProfile = await MemberContext.GetCurrentAsync();
+    var memberPrefillJson = memberProfile != null
+        ? Newtonsoft.Json.JsonConvert.SerializeObject(memberProfile.Properties)
+        : "{}";
 }
 
 @* 
@@ -35,7 +41,8 @@
      data-is-admin="@Model.IsAdmin.ToString().ToLower()"
      data-view-type="@effectiveViewType"
      data-locale="@currentCulture"
-     data-config='@effectiveConfigJson'>
+     data-config='@effectiveConfigJson'
+     data-member-prefill='@memberPrefillJson.Replace("'", "&#39;")'>
 </div>
 
 <link rel="stylesheet" href="/App_Plugins/MegaForm/css/megaform.css" />
@@ -77,10 +84,38 @@ else
                 submitButtonText: payload.submitButtonText || 'Submit',
                 locale: root.getAttribute('data-locale') || document.documentElement.lang || 'en-US'
             });
+            applyMemberPrefill(root);
         })
         .catch(function (e) {
             console.error('[MegaForm.Umbraco] Failed to load form schema', e);
             root.innerHTML = '<p style="padding:1rem;color:#dc2626;">Error loading form. Please try again later.</p>';
         });
+
+    function applyMemberPrefill(container) {
+        var raw = container.getAttribute('data-member-prefill');
+        if (!raw || raw === '{}') return;
+        var values = {};
+        try { values = JSON.parse(raw); } catch (e) { return; }
+
+        setTimeout(function () {
+            for (var key in values) {
+                if (!values.hasOwnProperty(key)) continue;
+                var value = values[key];
+                var selector = 'input[name="' + key + '"], select[name="' + key + '"], textarea[name="' + key + '"]';
+                var el = container.querySelector(selector);
+                if (!el) {
+                    el = container.querySelector('[data-field-key="' + key + '"] input, [data-field-key="' + key + '"] select, [data-field-key="' + key + '"] textarea');
+                }
+                if (!el) continue;
+                if (el.type === 'checkbox' || el.type === 'radio') {
+                    el.checked = String(value).toLowerCase() === 'true' || String(value) === el.value;
+                } else if (el.tagName === 'SELECT') {
+                    el.value = String(value);
+                } else {
+                    el.value = value;
+                }
+            }
+        }, 100);
+    }
 })();
 </script>

@@ -50,9 +50,13 @@ public void ConfigureServices(IServiceCollection services)
     services.AddScoped<IStorageService, OqtaneStorageService>(); // enables file download
 
     // Then add the SDK facade:
-    MegaFormSdkServiceCollectionExtensions.AddMegaFormSdk(services);
+    services.AddMegaFormSdk();
 }
 ```
+
+> In **Oqtane**, **Umbraco**, and the standalone `MegaForm.AspNetCore.Component` host, this call is
+> already made by the MegaForm module composer/startup. You only need to add it manually when
+> building your own ASP.NET Core host from scratch.
 
 Now inject it anywhere:
 

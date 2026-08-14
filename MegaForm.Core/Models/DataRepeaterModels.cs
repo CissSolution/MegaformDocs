@@ -24,6 +24,13 @@ namespace MegaForm.Core.Models
         public string SortCol   { get; set; }
         public string SortDir   { get; set; }   // "asc" / "desc"
         public string FilterJson { get; set; }  // JSON dict of filter values
+
+        // [SecFix Phase0-3b 2026-07-22] Reserved parameters supplied by the HOST controller
+        // from the authenticated server-side identity (e.g. currentuserid/currentusername/
+        // currentuseremail). Merged LAST in BuildParameters so they override any client-
+        // supplied value of the same name — a client can never spoof the current user.
+        // Null on hosts that do not populate it (fully backward compatible).
+        public Dictionary<string, object> ServerParameters { get; set; }
     }
 
     /// <summary>
@@ -112,6 +119,11 @@ namespace MegaForm.Core.Models
         public string EmptyMessage    { get; set; }
         public string CssClass        { get; set; }
         public int    MaxRows         { get; set; }   // server-side hard cap
+
+        // [SecFix Phase0-3c 2026-07-22] Opt-in: when true, the host controller rejects
+        // anonymous callers for this widget's Query/FilterOptions/ColumnOptions/Export
+        // endpoints. Default FALSE = legacy behavior (public widgets keep working).
+        public bool   RequireAuth     { get; set; }
 
         // ── Export ──
         public bool   AllowExportCsv  { get; set; }

@@ -1,0 +1,48 @@
+@{
+    Layout = null;
+    int formId = ViewBag.FormId ?? 0;
+    string schemaJson = ViewBag.SchemaJson ?? "{}";
+    string status = ViewBag.FormStatus ?? "draft";
+    string isNew = ViewBag.IsNew ?? "true";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@(formId > 0 ? $"Edit Form {formId}" : "New Form") — MegaForm Builder</title>
+    <link rel="stylesheet" href="/App_Plugins/MegaForm/css/megaform-builder-shell.css" />
+    <link rel="stylesheet" href="/App_Plugins/MegaForm/css/megaform-builder-ts.css" />
+    <style>
+        html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
+    </style>
+</head>
+<body>
+    <div id="mf-builder-root"
+         data-platform="umbraco"
+         data-form-id="@formId"
+         data-is-new="@isNew"
+         data-api-base="/umbraco/MegaForm/MegaFormApi/"
+         data-assets-base="/App_Plugins/MegaForm/"
+         data-return-url="/umbraco/MegaForm/Admin"
+         data-dashboard-url="/umbraco/MegaForm/Admin"
+         data-builder-url="/umbraco/MegaForm/Builder"
+         data-submissions-url="/umbraco/MegaForm/Submissions"
+         data-languages-url="/umbraco/MegaForm/Languages"
+         data-module-id="0"
+         data-portal-id="-1"
+         data-tab-id="0"
+         data-schema-json="@schemaJson"
+         data-form-status="@status"
+         data-fullscreen-host="true"
+         data-mf-locale="en-US">
+        <div class="mf-boot" style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:system-ui,sans-serif;color:#64748b;background:#f8fafc;">
+            <i class="fas fa-spinner fa-spin" style="margin-right:8px;font-size:20px;color:#6366f1;"></i>
+            Loading MegaForm Builder&hellip;
+        </div>
+    </div>
+
+    <script src="/App_Plugins/MegaForm/js/megaform-umbraco-host.js"></script>
+    <script src="/App_Plugins/MegaForm/js/megaform-builder-loader.js"></script>
+</body>
+</html>
