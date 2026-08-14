@@ -3,15 +3,20 @@
  *
  * [AfterSubmitScript v20260813-01] Tests for the after-submit C# hook.
  *
- * The deny-list in ScriptSymbolPolicy is the security boundary of this feature, so it is
- * asserted here rather than left to a careful read. Each blocked namespace gets a case
- * that would genuinely do the dangerous thing if it compiled — reading a file, starting a
- * process, reaching reflection — and each is written the way someone trying to get around
- * a text filter would write it (aliased, fully qualified, hidden behind var).
+ * [OpenScripting 2026-08-14] The deny-list is no longer the boundary of this feature, and the
+ * tests below say so in both directions. A script is now ordinary C# written by a superuser, so
+ * reading a file, opening a connection and calling an API all COMPILE — the cases that used to
+ * assert refusal now assert the opposite, because a hook that could only compute would have no
+ * way to act at all now that the ctx capability rail is gone.
+ *
+ * The old fence is still in the box: ScriptSymbolPolicy.RestrictedMode puts it back. That switch
+ * is the entire safety story for a host who wants the old behaviour, so it is not left to a
+ * careful read either — the same list of surfaces is compiled twice, once in each mode.
  */
 
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using MegaForm.Core.Models;
 using MegaForm.Core.Scripting;
 using MegaForm.Core.Services;
@@ -20,6 +25,16 @@ using Xunit;
 
 namespace MegaForm.Sdk.Tests
 {
+    /// <summary>
+    /// ScriptSymbolPolicy.RestrictedMode is a process-wide static, and these tests flip it. xUnit
+    /// runs test CLASSES in parallel, so without this the fence could go up while another class
+    /// (AutomationV2Tests compiles scripts too) was mid-compile, and that class would fail with
+    /// MF1001 for no reason it could see. A non-parallel collection runs on its own.
+    /// </summary>
+    [CollectionDefinition("AfterSubmitScriptPolicy", DisableParallelization = true)]
+    public sealed class AfterSubmitScriptPolicyCollection { }
+
+    [Collection("AfterSubmitScriptPolicy")]
     public class AfterSubmitScriptTests
     {
         private static readonly RoslynScriptCompiler Compiler = new RoslynScriptCompiler();
@@ -93,29 +108,94 @@ namespace MegaForm.Sdk.Tests
             Assert.Equal(2, error.Line);
         }
 
-        // ── the deny-list ─────────────────────────────────────────────────────────
+        // ── what a script may reach ───────────────────────────────────────────────
+        //
+        // [OpenScripting 2026-08-14] Every entry below was refused before this change. They are
+        // kept, as one list compiled twice, because the pair is the claim: open by default, and
+        // shut again the moment RestrictedMode goes on.
+        //
+        // The list stops at the framework rather than reaching for DotNetNuke.Entities.Users —
+        // the DNN assemblies are not loaded in the test host, so `using DotNetNuke.…` would fail
+        // to BIND here and prove nothing about policy. That half is a site check, not a CI one.
+
+        public static IEnumerable<object[]> SurfacesTheOldFenceRefused()
+        {
+            // file system, two ways of spelling it
+            yield return new object[] { "var s = System.IO.File.ReadAllText(\"c:/windows/win.ini\");" };
+            yield return new object[] { "var f = global::System.IO.Directory.GetFiles(\"c:/\");" };
+            // network — what ctx.Http used to be the only door to
+            yield return new object[] { "var c = new System.Net.Http.HttpClient();" };
+            // ADO.NET — what ctx.Db used to be the only door to
+            yield return new object[] { "var t = new System.Data.DataTable();" };
+            // another process
+            yield return new object[] { "System.Diagnostics.Process.Start(\"cmd.exe\");" };
+            // MegaForm's own outbound-call service
+            yield return new object[] { "var w = new MegaForm.Core.Services.WebhookService(null, null);" };
+        }
 
         [Theory]
-        // file system, three ways of spelling it
-        [InlineData("var s = System.IO.File.ReadAllText(\"c:/windows/win.ini\");")]
-        [InlineData("using F = System.IO.File; ctx.Log(F.ReadAllText(\"c:/x\"));")]
-        [InlineData("var f = global::System.IO.Directory.GetFiles(\"c:/\");")]
-        // reflection — the escape hatch that reopens everything else
+        [MemberData(nameof(SurfacesTheOldFenceRefused))]
+        public void Open_mode_lets_a_script_call_the_platform_directly(string source)
+        {
+            var result = Compiler.Compile(source, "test");
+            Assert.True(result.Success, FirstError(result));
+        }
+
+        [Theory]
+        [MemberData(nameof(SurfacesTheOldFenceRefused))]
+        public void Restricted_mode_puts_the_old_fence_back(string source)
+        {
+            SetRestrictedMode(true);
+            try
+            {
+                var result = Compiler.Compile(source, "test");
+
+                Assert.False(result.Success, "Expected this to be refused with the fence up: " + source);
+                Assert.Null(result.Script);
+                Assert.Contains(result.Diagnostics, d => d.Severity == "error" && d.Code == "MF1001");
+            }
+            finally
+            {
+                // A test that left this on would refuse every script every later test compiles,
+                // and the failures would land in whichever file happened to run next.
+                SetRestrictedMode(false);
+            }
+
+            // The restore has to be observable, not just written down: if it silently failed, the
+            // damage would show up somewhere else entirely.
+            Assert.True(Compiler.Compile(source, "test").Success);
+        }
+
+        [Theory]
+        // Reflection, dynamic, Activator, Environment and Task.Run were all refused in both modes
+        // on the first cut of the opening, because the type and member lists sat ABOVE the mode
+        // gate. That was half-open: a script could `using DotNetNuke.…` and call UserController but
+        // not read Environment.MachineName — which reads as a bug to the author and buys the site
+        // nothing, since anything reachable through DNN's own API was already open. The gate moved
+        // to the top of IsDenied; these now compile.
         [InlineData("var t = typeof(string).Assembly;")]
         [InlineData("var t = ctx.GetType();")]
         [InlineData("var o = System.Activator.CreateInstance(typeof(object));")]
-        // process / environment
-        [InlineData("System.Diagnostics.Process.Start(\"cmd.exe\");")]
         [InlineData("var p = System.Environment.MachineName;")]
-        // network
-        [InlineData("var c = new System.Net.Http.HttpClient();")]
-        // threads
-        [InlineData("System.Threading.Tasks.Task.Run(() => 1);")]
-        // dynamic, which would route around the whole pass
         [InlineData("dynamic d = ctx; d.Anything();")]
-        // MegaForm's own outbound-call service
-        [InlineData("var w = new MegaForm.Core.Services.WebhookService(null, null);")]
-        public void Denied_surfaces_do_not_compile(string source)
+        [InlineData("System.Threading.Tasks.Task.Run(() => 1);")]
+        public void Open_mode_is_open_all_the_way_not_half(string source)
+        {
+            var result = Compiler.Compile(source, "test");
+
+            Assert.True(result.Success,
+                "Open mode should compile this: " + source + " — " +
+                string.Join("; ", result.Diagnostics.Where(d => d.Severity == "error").Select(d => d.Code + " " + d.Message)));
+        }
+
+        [Theory]
+        // Unsafe code is the one thing refused in BOTH modes, and not by the policy pass: pointers
+        // and stackalloc are rejected at the syntax level in Inspect, and `allowUnsafe:false` on the
+        // compilation stops them again. It sidesteps the type system the whole pass is built on and
+        // no after-submit hook has ever needed it.
+        [InlineData("unsafe { int* p = null; }")]
+        [InlineData("var s = stackalloc int[4];")]
+        public void Unsafe_code_is_refused_in_both_modes(string source)
         {
             var result = Compiler.Compile(source, "test");
 
@@ -135,91 +215,6 @@ namespace MegaForm.Sdk.Tests
         {
             var result = Compiler.Compile(source, "test");
             Assert.True(result.Success, FirstError(result));
-        }
-
-        // ── the capability rail ───────────────────────────────────────────────────
-        //
-        // These are the tests that keep the deny-list from being read as "a script cannot act".
-        // Raw System.Net / System.Data stay shut; ctx.Http and ctx.Db are the doors, and they must
-        // compile — otherwise the feature really would be a calculator.
-
-        [Theory]
-        [InlineData("var r = ctx.Http.PostJson(\"https://crm.example.com/api/leads\", new { name = ctx.GetString(\"full_name\") });\nif (!r.Ok) ctx.Fail(\"CRM said \" + r.Status);")]
-        [InlineData("var r = ctx.Http.Get(\"https://api.example.com/rate\");\nctx.SetVariable(\"body\", r.Body);")]
-        [InlineData("var r = ctx.Http.Send(\"PUT\", \"https://erp.example.com/o/1\", \"<x/>\", \"application/xml\");")]
-        public void Http_capability_compiles_even_though_System_Net_does_not(string source)
-        {
-            var result = Compiler.Compile(source, "test");
-            Assert.True(result.Success, FirstError(result));
-        }
-
-        [Theory]
-        [InlineData("var id = ctx.Db.Scalar(\"CrmDatabase\", \"SELECT TOP 1 LeadId FROM CRM_Leads WHERE Email=@e\", new { e = ctx.GetString(\"email\") });")]
-        [InlineData("var n = ctx.Db.Execute(\"CrmDatabase\", \"UPDATE CRM_Leads SET Score=@s WHERE LeadId=@id\", new { s = 70, id = 12 });")]
-        [InlineData("var rows = ctx.Db.Query(\"CrmDatabase\", \"SELECT LeadId, FullName FROM CRM_Leads WHERE Email=@e\", new { e = \"a@b.c\" });\nforeach (var row in rows) ctx.Log(row.Str(\"FullName\"));")]
-        [InlineData("foreach (var name in ctx.Db.ConnectionNames()) ctx.Log(name);")]
-        public void Db_capability_compiles_even_though_System_Data_does_not(string source)
-        {
-            var result = Compiler.Compile(source, "test");
-            Assert.True(result.Success, FirstError(result));
-        }
-
-        [Theory]
-        [InlineData("var c = new System.Net.Http.HttpClient();")]
-        [InlineData("var t = new System.Data.DataTable();")]
-        public void Raw_network_and_ado_stay_closed_so_the_guarded_door_is_the_only_one(string source)
-        {
-            var result = Compiler.Compile(source, "test");
-            Assert.False(result.Success, "Expected this to be refused: " + source);
-            Assert.Contains(result.Diagnostics, d => d.Severity == "error" && d.Code == "MF1001");
-        }
-
-        [Fact]
-        public void Capabilities_are_attached_by_the_service_not_left_null()
-        {
-            var settings = new FormAfterSubmitScriptSettings
-            {
-                Enabled = true,
-                Source = "ctx.SetVariable(\"hasHttp\", ctx.Http != null);\n" +
-                         "ctx.SetVariable(\"hasDb\", ctx.Db != null);"
-            };
-            AfterSubmitScriptGuard.Approve(settings, 7, "host", System.DateTime.UtcNow);
-
-            var service = new AfterSubmitScriptService(Compiler);
-            var ctx = Ctx();
-            var run = service.Run(settings, ctx);
-
-            Assert.True(run.Success, run.ErrorMessage);
-            Assert.Equal(true, ctx.Variables["hasHttp"]);
-            Assert.Equal(true, ctx.Variables["hasDb"]);
-        }
-
-        [Fact]
-        public void Http_blocks_a_loopback_url_and_says_so_in_the_run_record()
-        {
-            // The case that matters: a URL assembled from submitted data. ctx.Http runs it through
-            // the same guard the webhook node uses, so an anonymous public form cannot be turned
-            // into a request generator aimed at the server's own network.
-            var ctx = Ctx();
-            var http = new MegaForm.Core.Scripting.ScriptHttp(line => ctx.Log(line));
-
-            var result = http.Get("http://127.0.0.1:9/admin");
-
-            Assert.Equal(0, result.Status);
-            Assert.False(result.Ok);
-            Assert.Contains("Blocked URL", result.Error);
-            Assert.Contains(ctx.Logs, l => l.Message.Contains("blocked"));
-        }
-
-        [Fact]
-        public void Db_without_a_registry_fails_loudly_instead_of_doing_nothing()
-        {
-            var ctx = Ctx();
-            var db = new MegaForm.Core.Scripting.ScriptDatabase(null, null, line => ctx.Log(line));
-
-            var ex = Assert.Throws<System.InvalidOperationException>(
-                () => db.Execute("CrmDatabase", "UPDATE X SET Y=1"));
-            Assert.Contains("no database connections", ex.Message.ToLowerInvariant());
         }
 
         // ── the approval record is what makes a script runnable ───────────────────
@@ -292,6 +287,29 @@ namespace MegaForm.Sdk.Tests
         }
 
         // ── the service around it ─────────────────────────────────────────────────
+
+        [Fact]
+        public void Service_hands_back_what_an_approved_script_computed()
+        {
+            // What is left of "Capabilities_are_attached_by_the_service_not_left_null" once there
+            // is no rail to attach: the run still has to reach the script and the script's
+            // variables still have to come back out on the run record, which is where an admin
+            // reads what it decided.
+            var settings = new FormAfterSubmitScriptSettings
+            {
+                Enabled = true,
+                Source = "ctx.Log(\"ran\");\nctx.SetVariable(\"score\", ctx.GetDecimal(\"amount\") * 2);"
+            };
+            AfterSubmitScriptGuard.Approve(settings, 7, "host", System.DateTime.UtcNow);
+
+            var service = new AfterSubmitScriptService(Compiler);
+            var run = service.Run(settings, Ctx(("amount", "21")));
+
+            Assert.True(run.Success, run.ErrorMessage);
+            Assert.False(run.Skipped);
+            Assert.Equal(42m, run.Variables["score"]);
+            Assert.Contains(run.Log, line => line.EndsWith("ran"));
+        }
 
         [Fact]
         public void Service_skips_rather_than_fails_when_nothing_is_configured()
@@ -379,6 +397,21 @@ namespace MegaForm.Sdk.Tests
         {
             var ctx = Ctx(("Full_Name", "Daniel Brooks"));
             Assert.Equal("Daniel Brooks", ctx.GetString("full_name"));
+        }
+
+        /// <summary>
+        /// Flip the escape hatch. ScriptSymbolPolicy is internal to MegaForm.Scripting and there is
+        /// no InternalsVisibleTo, so reflection is the only way a test can reach the switch — and a
+        /// rename would otherwise turn this whole pair of tests into a silent no-op, which is why
+        /// the lookup throws rather than shrugging.
+        /// </summary>
+        private static void SetRestrictedMode(bool on)
+        {
+            var policy = typeof(RoslynScriptCompiler).Assembly
+                .GetType("MegaForm.Scripting.ScriptSymbolPolicy", throwOnError: true);
+            var flag = policy.GetProperty("RestrictedMode", BindingFlags.Public | BindingFlags.Static);
+            Assert.NotNull(flag);
+            flag.SetValue(null, on);
         }
 
         private static string FirstError(MegaForm.Core.Interfaces.ScriptCompileResult r)

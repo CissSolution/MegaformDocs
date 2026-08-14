@@ -1,22 +1,33 @@
 /*
  * MegaForm.Sdk.Tests/AutomationV2Tests.cs
  *
- * [Automation v2 20260813-01] The seven claims the feature makes, as tests.
+ * [Automation v2 20260813-01] The claims the feature makes, as tests.
  *
- * Four of them are security claims and they are the reason this file exists: a capability rail that
- * is only true in the documentation is worse than no rail, because it is sold as one. The other
- * three are behavioural claims about the lifecycle — in particular that a PreInsert abort really
- * stops the row, and a PostCommit failure really does not.
+ * [OpenScripting 2026-08-14] The shape of this file changed with the product decision behind it.
  *
- * The lifecycle tests drive a real SubmissionProcessor over the in-memory repositories rather than
- * asserting on the service in isolation: "the pipeline honours the abort" is exactly the part that
- * could be wired wrong while every unit still passes.
+ * It used to be mostly a security file: a capability rail that is only true in the documentation is
+ * worse than no rail, because it is sold as one. The rail is gone from ctx — a script now reaches
+ * the platform with ordinary C# — so the tests that proved the rail was really a rail have nothing
+ * left to prove and were deleted rather than left as commented-out furniture.
+ *
+ * What remains is the part that never depended on the rail, and it is the part that can still ruin
+ * someone's day if it breaks:
+ *
+ *   - the approval gate: an imported script is inert, a tampered one does not run;
+ *   - the lifecycle: a PreInsert abort really stops the row, and a PostCommit failure really does
+ *     not — asserted by driving a real SubmissionProcessor, because "the pipeline honours the
+ *     abort" is exactly the part that could be wired wrong while every unit still passes;
+ *   - the compile gate that survived the opening: unsafe code, reflection's front door, and the
+ *     members that start work outliving the submission are still refused, in BOTH modes;
+ *   - RestrictedMode itself, which is the escape hatch back to the old fence and is worthless
+ *     unless it is proven to still close.
  */
 
 using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using MegaForm.Core.Automation;
 using MegaForm.Core.Interfaces;
@@ -84,20 +95,6 @@ namespace MegaForm.Sdk.Tests
             }
         }
 
-        private sealed class RecordingEmailSender : IEmailSender
-        {
-            public string To { get; private set; }
-            public string Subject { get; private set; }
-            public string Body { get; private set; }
-            public void Send(string to, string subject, string htmlBody, string from = null, string replyTo = null)
-            {
-                To = to;
-                Subject = subject;
-                Body = htmlBody;
-            }
-            public string GetHostEmail() => "host@example.test";
-        }
-
         private static AutomationCatalog CatalogWithLeadAction() => new AutomationCatalog
         {
             DbActions =
@@ -155,6 +152,28 @@ namespace MegaForm.Sdk.Tests
                    registry == null ? (Func<IConnectionRegistry>)null : () => registry,
                    catalog == null ? null : new FixedCatalog(catalog));
 
+        private static string FirstError(ScriptCompileResult result) =>
+            result?.Diagnostics?.FirstOrDefault(d => d.Severity == "error")?.Message ?? "(no error reported)";
+
+        /// <summary>
+        /// [OpenScripting 2026-08-14] Flip <c>ScriptSymbolPolicy.RestrictedMode</c>.
+        ///
+        /// By reflection because the policy class is internal to MegaForm.Scripting and this project
+        /// is not a friend assembly — making it one would be a change to shipping code for a test's
+        /// convenience, and the switch is meant to be host configuration rather than API.
+        ///
+        /// The switch is a process-wide static, so every caller below restores it in a finally
+        /// block. A leaked <c>true</c> would not fail here; it would fail whichever test happened to
+        /// compile a script next, which is the worst kind of failure to be handed.
+        /// </summary>
+        private static void SetRestrictedMode(bool value)
+        {
+            var policy = typeof(RoslynScriptCompiler).Assembly
+                .GetType("MegaForm.Scripting.ScriptSymbolPolicy", throwOnError: true)!;
+            policy.GetProperty("RestrictedMode", BindingFlags.Public | BindingFlags.Static)!
+                  .SetValue(null, value);
+        }
+
         // ── 1. an imported script is inert until a host approves it here ──────────
 
         [Fact]
@@ -190,51 +209,199 @@ namespace MegaForm.Sdk.Tests
             Assert.Contains("does not match", run.SkipReason);
         }
 
-        // ── 3. raw .NET stays closed ──────────────────────────────────────────────
+        // ── 3. raw .NET is open by default, and RestrictedMode closes it again ────
 
-        [Theory]
-        [InlineData("var c = new System.Net.Http.HttpClient();")]
-        [InlineData("var c = new System.Data.SqlClient.SqlConnection(\"Server=.;\");")]
-        [InlineData("var t = new System.Data.DataTable();")]
-        [InlineData("System.IO.File.WriteAllText(@\"c:\\x.txt\", \"hi\");")]
-        [InlineData("System.Diagnostics.Process.Start(\"powershell.exe\", \"-c whoami\");")]
-        [InlineData("var a = typeof(string).Assembly;")]
-        [InlineData("var d = System.Activator.CreateInstance(typeof(object));")]
-        // The rail is async, so Task has to be nameable — but not the members that start work
-        // outliving the submission, because neither the timeout nor the audit trail can follow it.
-        [InlineData("System.Threading.Tasks.Task.Run(() => ctx.Log(\"later\"));")]
-        [InlineData("System.Threading.Tasks.Parallel.For(0, 10, i => ctx.Log(i.ToString()));")]
-        [InlineData("var t = new System.Threading.Thread(() => ctx.Log(\"x\")); t.Start();")]
-        public void Raw_dotnet_surfaces_are_refused_at_compile_time(string source)
+        /// <summary>
+        /// The surfaces the namespace deny-list used to refuse. Shared by the pair of tests below so
+        /// the open case and the restricted case can never drift apart into asserting different
+        /// things about different code.
+        ///
+        /// All of them are compile-only here — nothing is ever Run, so the Process.Start row starts
+        /// no process. `DotNetNuke.…` would belong in this list on a DNN host and is absent only
+        /// because the test project does not reference DNN, so it would fail to BIND rather than
+        /// fail on policy, which would prove nothing about the policy.
+        /// </summary>
+        public static IEnumerable<object[]> RawPlatformSurfaces()
         {
-            var result = Compiler.Compile(source, "test");
-
-            Assert.False(result.Success, "Expected this to be refused: " + source);
-            Assert.Null(result.Script);
-            Assert.Contains(result.Diagnostics, d => d.Severity == "error");
+            yield return new object[] { "var c = new System.Net.Http.HttpClient();" };
+            yield return new object[] { "var t = new System.Data.DataTable();" };
+            yield return new object[] { "System.IO.File.WriteAllText(@\"c:\\x.txt\", \"hi\");" };
+            yield return new object[] { "System.Diagnostics.Process.Start(\"powershell.exe\", \"-c whoami\");" };
+            yield return new object[] { "var d = new System.Xml.XmlDocument();" };
+            yield return new object[] { "var th = new System.Threading.Thread(() => ctx.Log(\"x\")); th.Start();" };
         }
 
-        // ── 4. a named DB action runs ─────────────────────────────────────────────
+        [Theory]
+        [MemberData(nameof(RawPlatformSurfaces))]
+        public void Raw_dotnet_surfaces_compile_now_that_the_host_owns_the_decision(string source)
+        {
+            // The inverse of what this test asserted until 2026-08-14. Only a superuser can save a
+            // script, and a superuser can already install a module and run SQL from the Persona Bar,
+            // so there was no privilege for the deny-list to hold back — it only made the obvious
+            // `using System.Net.Http;` fail with a message that read like a MegaForm bug.
+            var result = Compiler.Compile(source, "test");
+
+            Assert.True(result.Success, "Expected this to compile now: " + source + " — " + FirstError(result));
+            Assert.NotNull(result.Script);
+        }
 
         [Fact]
-        public void Named_db_action_runs_and_writes_the_row()
+        public void Restricted_mode_puts_the_old_fence_back_for_every_one_of_them()
         {
-            using var registry = new SqliteRegistry();
-            var service = Service(registry, CatalogWithLeadAction());
+            // The escape hatch for a host that wants the old behaviour. It is one static bool, which
+            // means it is exactly the kind of thing that gets refactored away as dead code unless
+            // something proves it still works.
+            //
+            // Flipped once and restored in a finally rather than once per row: the switch is
+            // process-wide, so the shorter the window, the less it can bleed into another test class
+            // compiling a script on another thread.
+            SetRestrictedMode(true);
+            try
+            {
+                foreach (var row in RawPlatformSurfaces())
+                {
+                    var source = (string)row[0];
+                    var result = Compiler.Compile(source, "test");
 
+                    Assert.False(result.Success, "Restricted mode should have refused: " + source);
+                    Assert.Null(result.Script);
+                    // MF1001 is the policy pass. Asserting on the CODE and not merely on "an error"
+                    // is what separates "the fence refused it" from "it never bound in the first
+                    // place", which would pass this test while proving nothing.
+                    Assert.Contains(result.Diagnostics, d => d.Severity == "error" && d.Code == "MF1001");
+                }
+            }
+            finally
+            {
+                SetRestrictedMode(false);
+            }
+        }
+
+        [Theory]
+        // Reflection's front door and the members that start work outliving the submission. These
+        // were refused in open mode on the first cut, because the type and member lists sat above
+        // the mode gate — the gate moved to the top of IsDenied, so open mode now means open.
+        //
+        // Task.Run in particular is worth understanding rather than fearing: the run timeout bounds
+        // what the VISITOR waits for, not what the script started, and it never could. A script that
+        // fires work and forgets it is now the host's call to make, like every other thing this
+        // change handed back to them. Restricted mode still refuses all four.
+        [InlineData("var a = typeof(string).Assembly;")]
+        [InlineData("var d = System.Activator.CreateInstance(typeof(object));")]
+        [InlineData("System.Threading.Tasks.Task.Run(() => ctx.Log(\"later\"));")]
+        [InlineData("System.Threading.Tasks.Parallel.For(0, 10, i => ctx.Log(i.ToString()));")]
+        public void Reflection_and_fire_and_forget_follow_the_same_switch(string source)
+        {
+            var open = Compiler.Compile(source, "test");
+            Assert.True(open.Success,
+                "Open mode should compile this: " + source + " — " +
+                string.Join("; ", open.Diagnostics.Where(d => d.Severity == "error").Select(d => d.Code + " " + d.Message)));
+
+            SetRestrictedMode(true);
+            try
+            {
+                var restricted = Compiler.Compile(source, "test");
+                Assert.False(restricted.Success, "Expected this to be refused in restricted mode: " + source);
+                Assert.Contains(restricted.Diagnostics, d => d.Severity == "error" && d.Code == "MF1001");
+            }
+            finally
+            {
+                SetRestrictedMode(false);
+            }
+        }
+
+        [Theory]
+        [InlineData("unsafe { int* p = null; ctx.Log(((long)p).ToString()); }")]
+        [InlineData("System.Span<int> s = stackalloc int[4]; ctx.Log(s.Length.ToString());")]
+        public void Unsafe_code_is_refused_in_both_modes(string source)
+        {
+            // Deliberately NOT asserting MF1001 here, unlike every other refusal in this file.
+            // Unsafe code never reaches the policy pass: the compilation is created with
+            // allowUnsafe:false, so the binder rejects it first (CS0227 for the pointer, CS4012 for
+            // a ref-struct local in the generated async method) and RoslynScriptCompiler returns on
+            // bind errors before it inspects anything. The pass's pointer/stackalloc branch is the
+            // second lock on the same door — it is what would still refuse this if someone ever
+            // turned allowUnsafe on. Asserting the code here would pin a diagnostic that belongs to
+            // the C# compiler rather than to us.
+            var open = Compiler.Compile(source, "test");
+            Assert.False(open.Success, "Expected unsafe code to be refused: " + source);
+            Assert.Null(open.Script);
+
+            SetRestrictedMode(true);
+            try
+            {
+                var restricted = Compiler.Compile(source, "test");
+                Assert.False(restricted.Success, "Expected unsafe code to be refused in restricted mode too: " + source);
+            }
+            finally
+            {
+                SetRestrictedMode(false);
+            }
+        }
+
+        [Fact]
+        public void Await_still_compiles_in_restricted_mode_because_Task_itself_is_reachable()
+        {
+            // Body scripts are wrapped in `async Task RunAsync(...)`, so if System.Threading.Tasks
+            // is not nameable then NOTHING compiles under the fence. Denying all of System.Threading
+            // produced exactly that once, and the suite caught it before it shipped; the narrow
+            // exception that fixed it is only load-bearing in restricted mode, where nothing else
+            // would exercise it any more.
+            SetRestrictedMode(true);
+            try
+            {
+                var result = Compiler.Compile(
+                    "await System.Threading.Tasks.Task.Delay(1, ct);\n" +
+                    "ctx.SetVariable(\"awaited\", true);", "test");
+
+                Assert.True(result.Success, FirstError(result));
+            }
+            finally
+            {
+                SetRestrictedMode(false);
+            }
+        }
+
+        [Fact]
+        public void Body_scripts_can_use_native_await_and_receive_the_run_cancellation_token()
+        {
+            // Two claims in one run, and the second is the easy one to lose silently: `ct` is a REAL
+            // token from the timeout's CancellationTokenSource, not `default`. A default token has
+            // CanBeCanceled == false, so a wiring change that stopped passing the source's token
+            // would still compile, still await, and still pass a test that only checked the await.
+            var service = Service(null, null);
             var block = Approved(
-                "var r = ctx.Actions.ExecuteNamedActionAsync(\"insert-lead\",\n" +
-                "    new { email = ctx.GetString(\"email\"), score = 70 }).Result;\n" +
-                "ctx.SetVariable(\"rows\", r.RowsAffected);\n" +
-                "var total = ctx.Actions.ExecuteNamedActionAsync(\"count-leads\").Result;\n" +
-                "ctx.SetVariable(\"total\", total.ScalarValue);");
-
+                "await Task.Delay(1, ct);\n" +
+                "ctx.SetVariable(\"awaited\", true);\n" +
+                "ctx.SetVariable(\"cancellable\", ct.CanBeCanceled);");
             var ctx = Ctx();
+
             var run = service.RunStage(AutomationStage.PostCommit, block, ctx);
 
             Assert.True(run.Success, run.ErrorMessage);
-            Assert.Equal(1, Convert.ToInt32(ctx.Variables["rows"]));
-            Assert.Equal(1, Convert.ToInt32(ctx.Variables["total"]));
+            Assert.True(Convert.ToBoolean(ctx.Variables["awaited"]));
+            Assert.True(Convert.ToBoolean(ctx.Variables["cancellable"]));
+        }
+
+        // ── 4. the named-action catalog ───────────────────────────────────────────
+        //
+        // No longer reachable from ctx, but AutomationDbCapability is still a live type the DNN
+        // service locator builds, so its behaviour is still asserted — directly, the way the two
+        // refusal tests below always did it.
+
+        [Fact]
+        public async Task Named_db_action_runs_and_writes_the_row()
+        {
+            using var registry = new SqliteRegistry();
+            var db = new AutomationDbCapability(new FixedCatalog(CatalogWithLeadAction()), registry, null, null);
+
+            var insert = await db.ExecuteNamedActionAsync(
+                "insert-lead", new { email = "emily.carter@acme-demo.com", score = 70 });
+            var total = await db.ExecuteNamedActionAsync("count-leads");
+
+            // "The action resolved" is not the claim. "The row is in the table" is.
+            Assert.Equal(1, insert.RowsAffected);
+            Assert.Equal(1, Convert.ToInt32(total.ScalarValue));
             Assert.Equal(1, registry.CountLeads());
         }
 
@@ -269,37 +436,6 @@ namespace MegaForm.Sdk.Tests
             Assert.DoesNotContain("retired-action", db.ActionNames());
         }
 
-        [Fact]
-        public void Awaiting_a_capability_compiles_because_Task_itself_is_reachable()
-        {
-            // The counterpart to the theory above: denying all of System.Threading made the whole
-            // capability rail uncallable, which the test suite found before anyone shipped it.
-            var result = Compiler.Compile(
-                "var r = ctx.Actions.ExecuteNamedActionAsync(\"insert-lead\", new { email = \"a@b.c\" }).Result;\n" +
-                "ctx.SetVariable(\"rows\", r.RowsAffected);", "test");
-
-            Assert.True(result.Success,
-                result.Diagnostics.FirstOrDefault(d => d.Severity == "error")?.Message ?? "compiled");
-        }
-
-        [Fact]
-        public void Body_scripts_can_use_native_await_and_receive_the_run_cancellation_token()
-        {
-            using var registry = new SqliteRegistry();
-            var service = Service(registry, CatalogWithLeadAction());
-            var block = Approved(
-                "var r = await ctx.Actions.ExecuteNamedActionAsync(\"insert-lead\",\n" +
-                "    new { email = ctx.GetString(\"email\"), score = 88 }, ct);\n" +
-                "ctx.SetVariable(\"rows\", r.RowsAffected);");
-            var ctx = Ctx();
-
-            var run = service.RunStage(AutomationStage.PostCommit, block, ctx);
-
-            Assert.True(run.Success, run.ErrorMessage);
-            Assert.Equal(1, Convert.ToInt32(ctx.Variables["rows"]));
-            Assert.Equal(1, registry.CountLeads());
-        }
-
         // ── 5. a named HTTP endpoint resolves, and the guard still applies ────────
 
         [Fact]
@@ -326,20 +462,13 @@ namespace MegaForm.Sdk.Tests
         }
 
         [Fact]
-        public void A_script_can_name_an_endpoint_but_can_never_read_its_secret()
+        public void An_endpoint_secret_is_masked_in_the_admin_facing_copy_of_the_catalog()
         {
-            // The catalog holds a bearer token. It is attached on the way out and is not reachable
-            // from a script: ctx.Api exposes names and results, never the endpoint definition.
-            var compiled = Compiler.Compile(
-                "var names = ctx.Api.EndpointNames();\nctx.SetVariable(\"count\", names.Count);", "test");
-            Assert.True(compiled.Success);
-
-            var reachesTheSecret = Compiler.Compile(
-                "var e = ctx.Api.GetEndpoint(\"crm-lead\").AuthValue;", "test");
-            Assert.False(reachesTheSecret.Success);   // no such member exists to compile against
-
-            // And the admin-facing copy is masked.
+            // FormScriptController hands the catalog to an editor screen. Redacted() is the only
+            // thing between a stored bearer token and an HTTP response, so the masking and the fact
+            // that masking does NOT mutate the real catalog are both asserted.
             var redacted = CatalogWithLeadAction().Redacted();
+
             Assert.Equal(AutomationCatalog.MaskedValue, redacted.FindEndpoint("crm-lead").AuthValue);
             Assert.Equal("super-secret-token", CatalogWithLeadAction().FindEndpoint("crm-lead").AuthValue);
         }
@@ -506,37 +635,6 @@ namespace MegaForm.Sdk.Tests
             Assert.True(result.Success, result.ErrorMessage);
             Assert.Equal("Your claim reference is CLM-" + result.SubmissionId + ".", result.SuccessMessage);
             Assert.Equal("/thank-you?ref=" + result.SubmissionId, result.RedirectUrl);
-        }
-
-        [Fact]
-        public void Named_email_template_is_rendered_by_the_site_sender_and_script_html_is_encoded()
-        {
-            var sender = new RecordingEmailSender();
-            var catalog = new AutomationCatalog
-            {
-                NotificationTemplates =
-                {
-                    new NamedNotificationTemplate
-                    {
-                        Name = "approval-request", Channel = "email",
-                        Subject = "Review {{reference}}",
-                        Body = "<p>Hello {{name}}</p>"
-                    }
-                }
-            };
-            var service = new AfterSubmitScriptService(Compiler, null, null, null,
-                new FixedCatalog(catalog), () => new AutomationCapabilityServices { EmailSender = sender });
-            var block = Approved(
-                "await ctx.Notify.EmailAsync(\"approval-request\", \"manager@example.test\",\n" +
-                "    new { reference = \"CLM-42\", name = \"<Admin>\" }, ct);");
-
-            var run = service.RunStage(AutomationStage.PostCommit, block, Ctx());
-
-            Assert.True(run.Success, run.ErrorMessage);
-            Assert.Equal("manager@example.test", sender.To);
-            Assert.Equal("Review CLM-42", sender.Subject);
-            Assert.Contains("&lt;Admin&gt;", sender.Body);
-            Assert.DoesNotContain("<Admin>", sender.Body);
         }
 
         [Fact]

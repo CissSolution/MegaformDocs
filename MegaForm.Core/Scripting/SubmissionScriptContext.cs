@@ -232,37 +232,35 @@ namespace MegaForm.Core.Scripting
         /// way to say the same thing, and it is the one to use when any part of the URL came from
         /// the submission.
         /// </summary>
-        public IScriptHttp Http { get; set; }
-
-        /// <summary>
-        /// [v20260813-02] Parameterised SQL against the connections an administrator registered by
-        /// name — the same catalog Form Settings → Database resolves from. A script names a
-        /// connection and never carries a connection string.
-        /// </summary>
-        public IScriptDatabase Db { get; set; }
-
-        // ── Automation v2 capability rail ─────────────────────────────────────────
+        // ── [OpenScripting 2026-08-14] The capability rail is gone from ctx ───────────
         //
-        // Named actions and named endpoints: the script supplies parameters, the site's automation
-        // catalog supplies the SQL, the URL and the secret. See MegaForm.Core.Automation.
+        // ctx.Http, ctx.Db, ctx.Actions, ctx.Api, ctx.Notify, ctx.Identity, ctx.Documents,
+        // ctx.Files, ctx.Queue and ctx.Jobs were removed on the product owner's decision.
         //
-        // Both of the v1 members above stay for scripts already written against them. New scripts
-        // should use these: an action name survives an export to another site as a name that either
-        // exists there or fails loudly, where an inline SQL statement silently runs against whatever
-        // schema it lands on.
-
-        /// <summary>Named SQL actions — <c>await ctx.Actions.ExecuteNamedActionAsync("crm-insert-lead", new {…})</c>.</summary>
-        public Automation.IAutomationDbCapability Actions { get; set; }
-
-        /// <summary>Named HTTP endpoints — <c>await ctx.Api.PostJsonAsync("hubspot-lead", payload)</c>.</summary>
-        public Automation.IAutomationHttpCapability Api { get; set; }
-
-        public Automation.IAutomationNotifyCapability Notify { get; set; }
-        public Automation.IAutomationIdentityCapability Identity { get; set; }
-        public Automation.IAutomationDocumentCapability Documents { get; set; }
-        public Automation.IAutomationFileCapability Files { get; set; }
-        public Automation.IAutomationQueueCapability Queue { get; set; }
-        public Automation.IAutomationJobCapability Jobs { get; set; }
+        // What ctx is now: the submission, and who submitted it. Nothing else. Everything a script
+        // wants to DO, it does with ordinary C# against the platform it is running on —
+        //
+        //     using DotNetNuke.Entities.Users;      UserController.CreateUser(ref user, false)
+        //     using DotNetNuke.Services.Mail;       Mail.SendMail(from, to, …)
+        //     using System.Data.SqlClient;          new SqlConnection(…)
+        //     using System.Net.Http;                new HttpClient()
+        //
+        // Why the rail went. It cost 225 lines across 9 files to reach UserController.CreateUser —
+        // a call this codebase already makes in DnnWorkflowIdentityProvisioningService — and four
+        // of its eight surfaces (Documents, Files, Queue, Jobs) threw NotWiredException on every
+        // host, on every stage, for its whole life. A closed enumeration of effects turns every
+        // capability a user wants into a vendor backlog item; the four dead doors were that design
+        // meeting a finite budget, not bad luck.
+        //
+        // Its security value was already notional: ScriptDatabase was attached alongside it on
+        // every run and executed raw SQL straight from the script, so "the script holds a name and
+        // the site holds the SQL" was not true even while the rail was mandatory. Nothing here ran
+        // in a sandbox — an in-process Assembly.Load with a timeout that cannot kill its thread.
+        //
+        // What replaced it is a policy the host owns: scripting is off until a superuser turns it
+        // on in web.config, only a superuser can save a script, an approval hash gates anything
+        // that arrives with imported data, and forms do not travel with scripts. See
+        // ScriptSymbolPolicy.RestrictedMode for the switch that puts the old fence back.
 
         /// <summary>
         /// What the visitor sees. Setting <c>SuccessMessage</c> or <c>RedirectUrl</c> overrides the

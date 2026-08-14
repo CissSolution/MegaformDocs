@@ -156,13 +156,22 @@ namespace MegaForm.Scripting
                 addPath(typeof(Enumerable).Assembly.Location);                // System.Core
                 addPath(typeof(SubmissionScriptContext).Assembly.Location);   // MegaForm.Core
                 addPath(typeof(Newtonsoft.Json.JsonConvert).Assembly.Location);
+
+                // [OpenScripting 2026-08-14] Everything the host has already loaded.
+                //
+                // A script is now ordinary C# written by the server's owner, so it must be able to
+                // name what a module in the same site can name: DotNetNuke.Entities.Users for
+                // UserController, DotNetNuke.Services.Mail for Mail.SendMail, System.Data for
+                // ADO.NET, System.Net.Http, and whatever else is in bin. Before this, the reference
+                // set was six assemblies, so `using DotNetNuke.…` did not fail on policy — it
+                // failed to BIND, with a "type or namespace could not be found" that read like a
+                // typo rather than a deliberate closure.
+                //
+                // This is not the security boundary and never was — see the header of
+                // ScriptSymbolPolicy for why a reference list cannot be one. It decides what binds.
                 foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
                 {
-                    var name = asm.GetName().Name;
-                    if (name == "netstandard" || name == "System.Runtime" || name == "System.Text.RegularExpressions")
-                    {
-                        try { if (!asm.IsDynamic) addPath(asm.Location); } catch { }
-                    }
+                    try { if (!asm.IsDynamic) addPath(asm.Location); } catch { }
                 }
 #else
                 // .NET Core / .NET 5+: the trusted-platform-assemblies list is the reference

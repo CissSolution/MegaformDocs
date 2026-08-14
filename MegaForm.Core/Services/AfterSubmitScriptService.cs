@@ -137,46 +137,17 @@ namespace MegaForm.Core.Services
 
         internal void AttachCapabilities(SubmissionScriptContext ctx, RunCallRecorder recorder)
         {
+            // [OpenScripting 2026-08-14] Nothing is attached any more.
+            //
+            // ctx carries the submission and the submitter; a script reaches everything else with
+            // ordinary C# against the platform it runs on. The capability objects that used to be
+            // built here are unreferenced from the script surface — see the block in
+            // SubmissionScriptContext for why they went, and ScriptSymbolPolicy.RestrictedMode for
+            // the switch that closes the door again.
+            //
+            // The method is kept as the seam: a host that wants to hand scripts a helper of its own
+            // has one place to do it, without that helper becoming a mandatory surface.
             if (ctx == null) return;
-            Action<string> log = line => ctx.Log(line);
-
-            IConnectionRegistry registry = null;
-            try { if (_connections != null) registry = _connections(); }
-            catch (Exception ex) { _log?.LogWarning("MegaForm.Script", "ctx.Db unavailable: " + ex.Message); }
-
-            // v1 surface — kept so scripts already written against it keep running.
-            ctx.Http = new ScriptHttp(log);
-            ctx.Db = new ScriptDatabase(registry, registry as IConnectionNameProvider, log);
-
-            // v2 rail — names resolved against the site's automation catalog.
-            ctx.Actions = new Automation.AutomationDbCapability(_catalog, registry, recorder, log);
-            ctx.Api = new Automation.AutomationHttpCapability(_catalog, recorder, log);
-
-            Automation.AutomationCapabilityServices host = null;
-            try { if (_hostCapabilities != null) host = _hostCapabilities(); }
-            catch (Exception ex) { _log?.LogWarning("MegaForm.Script", "Optional automation capabilities unavailable: " + ex.Message); }
-
-            // Host-neutral adapters over services MegaForm already owns. They still resolve every
-            // template/role policy from the server-side catalog and record every call.
-            ctx.Notify = host != null && host.EmailSender != null
-                ? (Automation.IAutomationNotifyCapability)new Automation.AutomationNotifyCapability(
-                    _catalog, host.EmailSender, recorder, log)
-                : Automation.UnavailableCapabilities.Notify();
-            ctx.Identity = host != null && host.IdentityProvisioning != null
-                ? (Automation.IAutomationIdentityCapability)new Automation.AutomationIdentityCapability(
-                    _catalog, host.IdentityProvisioning, host.PrincipalResolver, ctx.PortalId, recorder)
-                : Automation.UnavailableCapabilities.Identity();
-
-            // Documents/files/queue/jobs are platform or infrastructure adapters. A host can wire
-            // a reviewed implementation; absence remains a precise error rather than null.
-            ctx.Documents = host != null && host.Documents != null
-                ? host.Documents : Automation.UnavailableCapabilities.Documents();
-            ctx.Files = host != null && host.Files != null
-                ? host.Files : Automation.UnavailableCapabilities.Files();
-            ctx.Queue = host != null && host.Queue != null
-                ? host.Queue : Automation.UnavailableCapabilities.Queue();
-            ctx.Jobs = host != null && host.Jobs != null
-                ? host.Jobs : Automation.UnavailableCapabilities.Jobs();
         }
 
         /// <summary>

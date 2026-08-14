@@ -188,7 +188,112 @@ const CATALOG = {
 // PostCommit only. PreValidate / PreInsert / AsyncWorker have no authoring path
 // in this build — nothing in the codebase writes Settings.Automation — so a
 // sample using them could not be configured on a real site and is not offered.
-const ORDER_SCRIPT = `// PostCommit — the submission row is already saved when this runs.
+// [OpenScripting 2026-08-14] Rewritten as plain C#. The ctx capability rail is gone; ctx now
+// carries the submission and nothing else. Everything these scripts DO, they do with the same
+// APIs a DNN module would use — which is the point of the change and the proof it works.
+const ORDER_SCRIPT_PLAIN = `using System.Data.SqlClient;
+using System.Net.Http;
+using System.Text;
+using DotNetNuke.Services.Mail;
+using DotNetNuke.Entities.Portals;
+
+// PostCommit — the submission row is already saved when this runs.
+var name    = ctx.GetString("full_name");
+var email   = ctx.GetString("email");
+var company = ctx.GetString("company");
+var country = ctx.GetString("country");
+var qty     = ctx.GetInt("quantity", 1);
+var price   = ctx.GetDecimal("unit_price", 0m);
+
+decimal rate = country == "DE" ? 0.19m : country == "GB" ? 0.20m : country == "VN" ? 0.10m : 0.00m;
+var total = Math.Round(qty * price * (1m + rate), 2);
+ctx.Log("country=" + country + " rate=" + rate + " total=" + total);
+
+// 1 — write into a table this site owns. Ordinary ADO.NET against the site's own connection.
+var cs = DotNetNuke.Common.Utilities.Config.GetConnectionString();
+using (var cn = new SqlConnection(cs))
+{
+    cn.Open();
+    using (var cmd = cn.CreateCommand())
+    {
+        cmd.CommandText =
+            "INSERT INTO dbo.MF_Demo_Orders (SubmissionId, FullName, Email, Company, Country, Quantity, UnitPrice, OrderTotal) " +
+            "VALUES (@sid, @name, @email, @company, @country, @qty, @price, @total)";
+        cmd.Parameters.AddWithValue("@sid", ctx.SubmissionId);
+        cmd.Parameters.AddWithValue("@name", name);
+        cmd.Parameters.AddWithValue("@email", email);
+        cmd.Parameters.AddWithValue("@company", company ?? "");
+        cmd.Parameters.AddWithValue("@country", country);
+        cmd.Parameters.AddWithValue("@qty", qty);
+        cmd.Parameters.AddWithValue("@price", price);
+        cmd.Parameters.AddWithValue("@total", total);
+        var rows = cmd.ExecuteNonQuery();
+        ctx.Log("insert rowsAffected=" + rows);
+    }
+}
+
+// 2 — hand the order to a REST endpoint. Ordinary HttpClient.
+using (var http = new HttpClient())
+{
+    http.Timeout = TimeSpan.FromSeconds(20);
+    var payload = "{\\"submissionId\\":" + ctx.SubmissionId + ",\\"name\\":\\"" + name +
+                  "\\",\\"email\\":\\"" + email + "\\",\\"total\\":" + total + "}";
+    var content = new StringContent(payload, Encoding.UTF8, "application/json");
+    var resp = await http.PostAsync("https://postman-echo.com/post", content, ct);
+    ctx.Log("crm status=" + (int)resp.StatusCode);
+}
+
+// 3 — email the customer with DNN's own mail API, using the SMTP the admin already configured.
+var portal = PortalController.Instance.GetPortal(ctx.PortalId);
+var from = portal != null && !string.IsNullOrEmpty(portal.Email) ? portal.Email : "noreply@megaclean008.ai";
+var body = "<p>Hello " + name + ",</p><p>Your order total is <strong>" + total +
+           "</strong>.</p><p>Reference: #" + ctx.SubmissionId + "</p>";
+var subject = "We received your order (#" + ctx.SubmissionId + ")";
+Mail.SendEmail(from, email, subject, body);
+ctx.Log("mail handed to DNN's sender for " + email);
+`;
+
+const MEMBER_SCRIPT_PLAIN = `using DotNetNuke.Entities.Users;
+using DotNetNuke.Security.Roles;
+
+// PostCommit — create a real account with DNN's own membership API.
+var email = ctx.GetString("member_email");
+var name  = ctx.GetString("member_name");
+var plan  = ctx.GetString("plan");
+
+var existing = UserController.GetUserByEmail(ctx.PortalId, email);
+if (existing != null)
+{
+    ctx.Log("user already exists, id=" + existing.UserID);
+}
+else
+{
+    var u = new DotNetNuke.Entities.Users.UserInfo();
+    u.PortalID = ctx.PortalId;
+    u.Email = email;
+    u.Username = email;
+    u.DisplayName = string.IsNullOrEmpty(name) ? email : name;
+    u.FirstName = name;
+    u.Membership.Password = System.Guid.NewGuid().ToString("N").Substring(0, 12) + "aA1!";
+    u.Membership.Approved = true;
+
+    var status = UserController.CreateUser(ref u);
+    ctx.Log("CreateUser -> " + status + " id=" + u.UserID + " plan=" + plan);
+
+    if (status == DotNetNuke.Security.Membership.UserCreateStatus.Success)
+    {
+        var role = RoleController.Instance.GetRoleByName(ctx.PortalId, "Registered Users");
+        if (role != null)
+        {
+            RoleController.Instance.AddUserRole(ctx.PortalId, u.UserID, role.RoleID,
+                DotNetNuke.Security.Roles.RoleStatus.Approved, false, System.DateTime.MinValue, System.DateTime.MinValue);
+            ctx.Log("granted role " + role.RoleName);
+        }
+    }
+}
+`;
+
+const ORDER_SCRIPT_OLD_RAIL = `// PostCommit — the submission row is already saved when this runs.
 var name    = ctx.GetString("full_name");
 var email   = ctx.GetString("email");
 var company = ctx.GetString("company");
@@ -307,8 +412,8 @@ async function main() {
       const member = await findFormByTitle(page, MEMBER_FORM.Title);
       const orderId = order?.FormId ?? order?.formId;
       const memberId = member?.FormId ?? member?.formId;
-      await saveScript(page, orderId, ORDER_SCRIPT, `order ${orderId}`);
-      await saveScript(page, memberId, MEMBER_SCRIPT, `member ${memberId}`);
+      await saveScript(page, orderId, ORDER_SCRIPT_PLAIN, `order ${orderId}`);
+      await saveScript(page, memberId, MEMBER_SCRIPT_PLAIN, `member ${memberId}`);
     }
     if (STEP === "all" || STEP === "submit") {
       console.log("\n[submit] anonymous, exactly what a visitor sends");

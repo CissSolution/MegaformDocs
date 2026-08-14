@@ -204,9 +204,34 @@ namespace MegaForm.Scripting
         /// Inspect a bound tree and return everything the script is not allowed to reach.
         /// An empty list means the script may be emitted.
         /// </summary>
+        /// <summary>
+        /// [OpenScripting 2026-08-14] Whether the namespace deny-list below is enforced.
+        ///
+        /// **Off by default, on the product owner's decision.** The reasoning that built the
+        /// deny-list assumed two things that are no longer true of this product:
+        ///
+        ///   1. that the list protects the site from its author. It does not — the only account
+        ///      that can save a script is a SUPERUSER, who can already install a module, edit
+        ///      web.config and run SQL from the Persona Bar. There is no privilege here to hold back.
+        ///   2. that a script could arrive inside an imported form and be approved carelessly.
+        ///      Forms no longer travel with scripts, and the approval hash gates the case anyway.
+        ///
+        /// What replaced it is a policy statement rather than a mechanism: the host decides what
+        /// runs on their server and carries the consequence. That is the same bargain every other
+        /// extension point on a DNN site already offers.
+        ///
+        /// The pass itself is kept — it is correct, tested, and works on BOUND symbols rather than
+        /// text, so it cannot be fooled by aliases or `global::`. A site that wants the old
+        /// behaviour turns this back on and gets it unchanged.
+        /// </summary>
+        public static bool RestrictedMode { get; set; }
+
         public static List<ScriptPolicyViolation> Inspect(SyntaxTree tree, SemanticModel model)
         {
             var violations = new List<ScriptPolicyViolation>();
+
+            // Unsafe code stays refused in both modes: pointers and stackalloc sidestep the type
+            // system this pass depends on, and no after-submit hook has ever needed them.
             var reported = new HashSet<string>(StringComparer.Ordinal);
             var root = tree.GetRoot();
 
@@ -260,6 +285,12 @@ namespace MegaForm.Scripting
         private static string DeniedMemberName(ISymbol symbol)
         {
             if (symbol == null) return null;
+            // [OpenScripting 2026-08-14] Member denials (Task.Run, Task.Factory, ContinueWith,
+            // Parallel.*) are part of the same fence as the namespace list, so they follow the same
+            // switch. Leaving them on in open mode was what made `Task.Run` fail in a script that
+            // could otherwise call anything DNN exposes.
+            if (!RestrictedMode) return null;
+
             if (!(symbol is IMethodSymbol || symbol is IPropertySymbol)) return null;
             var owner = symbol.ContainingType;
             if (owner == null) return null;
@@ -306,6 +337,17 @@ namespace MegaForm.Scripting
         {
             reason = null;
             if (type == null) return false;
+
+            // [OpenScripting 2026-08-14] The mode gate belongs FIRST, not after the type and member
+            // lists. Placed lower — as it was on the first cut of this change — open mode still
+            // refused System.Type, System.Activator, System.Environment, System.Console, System.GC,
+            // Task.Run and `dynamic`, so a script could `using DotNetNuke.…` but not read
+            // Environment.MachineName. Half-open is the one setting nobody asked for: it reads as a
+            // bug to the author and gives the site none of the protection the closed list was for.
+            //
+            // Pointers and stackalloc are refused separately, at the syntax level in Inspect, and
+            // stay refused in both modes.
+            if (!RestrictedMode) return false;
 
             // `dynamic` resolves through the C# runtime binder, which is reflection wearing
             // a hat — it would route around every check in this file.
@@ -356,6 +398,12 @@ namespace MegaForm.Scripting
                 var allowed = AllowedNamespaceExceptions[i];
                 if (ns == allowed || ns.StartsWith(allowed + ".", StringComparison.Ordinal)) return false;
             }
+
+            // [OpenScripting 2026-08-14] Open mode: everything the compilation can bind is allowed.
+            // A script is ordinary C# written by the server's owner, so `using DotNetNuke.…`,
+            // `using System.IO`, `new SqlConnection(…)` and `new HttpClient()` are all fair game.
+            // Unsafe code is still refused above, in both modes.
+            if (!RestrictedMode) return false;
 
             if (ns.StartsWith("MegaForm.", StringComparison.Ordinal) || ns == "MegaForm")
             {

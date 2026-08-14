@@ -57,17 +57,70 @@ namespace MegaForm.Scripting
         }
 
         /// <summary>
+        /// [OpenScripting 2026-08-14] Lift the author's leading <c>using</c> directives out of the
+        /// body so they land where C# accepts them.
+        ///
+        /// A body-mode script is spliced into a method, and a `using X;` directive is not legal
+        /// inside a method body — only the `using (resource)` statement is. Before this, an author
+        /// writing the obvious thing:
+        ///
+        ///     using DotNetNuke.Entities.Users;
+        ///     var id = UserController.CreateUser(ref u, false);
+        ///
+        /// got "A using clause must precede all other elements", which is true of the GENERATED
+        /// file and meaningless to someone looking at the six lines they wrote. Now that scripts are
+        /// meant to reach platform APIs directly, that is the first thing most authors will type.
+        ///
+        /// Each hoisted line is replaced by a BLANK line rather than removed, so every remaining
+        /// line keeps its original number and the `#line 1` mapping still points a diagnostic at
+        /// the author's line rather than an offset one.
+        /// </summary>
+        private static void HoistUsings(string body, out string directives, out string rest)
+        {
+            directives = string.Empty;
+            rest = body ?? string.Empty;
+            if (rest.Length == 0 || rest.IndexOf("using ", StringComparison.Ordinal) < 0) return;
+
+            var lines = rest.Split('\n');
+            var hoisted = new System.Text.StringBuilder();
+            var seenCode = false;
+
+            for (var i = 0; i < lines.Length && !seenCode; i++)
+            {
+                var trimmed = lines[i].Trim();
+                if (trimmed.Length == 0 || trimmed.StartsWith("//", StringComparison.Ordinal)) continue;
+
+                // A directive, not a `using (x) {` statement: no parenthesis before the semicolon.
+                if (trimmed.StartsWith("using ", StringComparison.Ordinal)
+                    && trimmed.EndsWith(";", StringComparison.Ordinal)
+                    && trimmed.IndexOf('(') < 0)
+                {
+                    hoisted.Append(trimmed).Append("\r\n");
+                    lines[i] = string.Empty;     // keep the line, drop its content
+                    continue;
+                }
+
+                seenCode = true;                 // directives may only lead
+            }
+
+            directives = hoisted.ToString();
+            if (directives.Length > 0) rest = string.Join("\n", lines);
+        }
+
+        /// <summary>
         /// Build the compilation unit. <paramref name="typeName"/> is the generated class
         /// name for body-mode sources; it never affects semantics. Body mode is async so capability
         /// calls can be awaited without blocking on Task.Result.
         /// </summary>
         public static string Build(string source, string typeName)
         {
-            var body = source ?? string.Empty;
+            string authorUsings;
+            string body;
+            HoistUsings(source ?? string.Empty, out authorUsings, out body);
 
             if (IsFullClassSource(body))
             {
-                return Usings +
+                return Usings + authorUsings +
                        "namespace " + GeneratedNamespace + "\r\n{\r\n" +
                        "#line 1 \"" + VirtualFileName + "\"\r\n" +
                        body + "\r\n" +
@@ -75,7 +128,7 @@ namespace MegaForm.Scripting
                        "}\r\n";
             }
 
-            return Usings +
+            return Usings + authorUsings +
                    "namespace " + GeneratedNamespace + "\r\n" +
                    "{\r\n" +
                    "    public sealed class " + typeName + " : ISubmissionAsyncScript\r\n" +
