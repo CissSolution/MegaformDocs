@@ -1,7 +1,0 @@
-/*============================================================
-  MegaForm – DNN workflow inbox surface
-  Version: 01.06.01
-============================================================*/
-
-/* No database schema changes are required for this upgrade. */
-GO

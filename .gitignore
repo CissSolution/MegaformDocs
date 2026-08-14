@@ -170,3 +170,22 @@ tools/browser-qa/oq/
 # tools/browser-qa/*.mjs). A single QA run leaves ~100MB of profile behind; none of it
 # belongs in the repo.
 tools/browser-qa/**/.p/
+
+# [ScratchSweep 2026-08-14] Trees that accumulated in the working copy across sessions and were
+# never source. Listed explicitly rather than by glob so a real folder never disappears silently.
+#   - QA run output: screenshot baselines, exported schemas, incident notes
+/qa5000/
+/qa-dnn-20260713/
+/qa-dnn-20260724/
+/qa-dnn-ssr-20260724/
+/qa-wizard-template-preview-20260717/
+/out-personabar-20260802/
+/tmp_form_export/
+#   - Umbraco runtime state (Data/, Logs/) written by running the Umbraco host locally
+/umbraco/
+#   - A third-party product checked out inside this repo by mistake; it has nothing to do with MegaForm
+/nopCommerce/
+#   - A minified Umbraco backoffice bundle that got dumped at the repo root
+/login.js
+#   - One-shot QA drivers. The reusable ones live under tools/browser-qa without the _tmp- prefix.
+tools/browser-qa/_tmp-*.mjs
