@@ -1,7 +1,14 @@
 # Block a submission with a blacklist or fraud check
 
-> **Available now.** The PreInsert stage aborts the submission and nothing is written — covered by
-> an automated test that asserts the submissions table is still empty afterwards.
+> [!IMPORTANT]
+> **The engine does this; you cannot switch it on yet.** Aborting from PreInsert works and is covered
+> by a test that asserts the submissions table is still empty afterwards — but **PreInsert cannot be
+> saved on a site in this release**. Nothing in the product writes a script into that stage: no
+> editor, no API, no import path. What you can author today is PostCommit, which runs *after* the row
+> is committed and therefore cannot refuse it.
+>
+> Read this page for the shape of the check. Until PreInsert has an authoring path, the working way
+> to refuse unwelcome-but-valid input is the built-in anti-spam settings and workflow rules.
 
 Required fields and validation rules stop malformed input. They cannot stop input that is perfectly
 well-formed and unwelcome: an address on your blocklist, a fourth application from the same person

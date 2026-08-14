@@ -1,7 +1,15 @@
 # Look up tax, exchange rate or shipping in real time
 
-> **Available now.** `ctx.Api` at the PreInsert stage, with the looked-up value written into the row
-> by `ctx.SetValue`.
+> **Half of this works today.** The lookup itself — `ctx.Api.PostJsonAsync` against a named endpoint —
+> runs and is verified live: `status=200`, one attempt, 642 ms, recorded as a capability call.
+>
+> **Writing the answer back into the submission does not.** That needs `ctx.SetValue` at PreInsert,
+> and PreInsert cannot be saved on a site in this release. From PostCommit — the stage you can author —
+> a script can compute the tax or the rate and *send it onward*: into a table of your own, to an API,
+> into the confirmation email. It cannot put it back into the stored row.
+>
+> The live sample does exactly that: it computes German VAT at 19% on a €750 order and writes 892.50
+> into an orders table and into the customer's email, without touching the submission.
 
 A quote calculated in the browser is a guess. The customer's VAT rate depends on where they are and
 what they bought; the shipping cost depends on weight, destination and the carrier's rates today;

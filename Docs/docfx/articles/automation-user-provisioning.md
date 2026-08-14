@@ -1,8 +1,18 @@
 # Create a user and grant a role
 
-> **Mostly available now.** Creating a user and granting a role after a submission works today with
-> no code, through the workflow **Add User**, **Add Role** and **Add User To Role** nodes — §1.
-> Doing it from inside a script (`ctx.Identity`) is **planned**.
+> **Both routes work on DNN.** Creating a user and granting a role after a submission works with no
+> code through the workflow **Add User**, **Add Role** and **Add User To Role** nodes — §1 — and from
+> inside a script through `ctx.Identity`.
+>
+> `ctx.Identity` was verified end to end on a live DNN 10.3.0 site: a submission created a real user
+> account and granted it a role, with the run record showing `identity.find-user → found=False` then
+> `identity.create-user → created=True roles=1` in 357 ms.
+>
+> The role list is not the script's to choose. `allowedRoles` in the automation catalog is a
+> server-owned allow-list, and `allowUserCreation` is a separate switch — a script naming a role
+> outside that list is refused, which is what keeps "create a user" from becoming "grant myself
+> Administrators". On **Oqtane, Web and Umbraco `ctx.Identity` is still the stub**; it is wired on
+> DNN only.
 
 A student enters a class code and should end up with an account that can see the course materials. A
 partner completes a registration form and should land in the `Resellers` role. On DNN this is the

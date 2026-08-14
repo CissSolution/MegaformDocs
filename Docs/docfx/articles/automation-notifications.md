@@ -2,8 +2,17 @@
 
 > **Two things on this page.** Sending a message when a form is submitted works today, with no code,
 > through the workflow **Email** node — §1. Choosing the channel, the template and the recipient from
-> inside a script (`ctx.Notify`) is **planned**: the interface is defined and a script calling it
-> today gets *"ctx.Notify is not available on this installation yet"*.
+> inside a script (`ctx.Notify`) **also works on DNN** — §2 onwards.
+>
+> `ctx.Notify.EmailAsync` was verified end to end on a live DNN 10.3.0 site: the message left over
+> SMTP with the template's `{{placeholders}}` filled from the model the script passed, and the run
+> record shows `notify.email → sent`. Body values are HTML-encoded and CR/LF is stripped from the
+> subject, both server-side, so neither a script nor a submitted answer can inject a header.
+>
+> Two caveats worth having before you plan around it. **`SmsAsync` and `PushAsync` are untested** —
+> they route through a named endpoint in the catalog rather than the mail sender, and no one has run
+> them. And on **Oqtane, Web and Umbraco `ctx.Notify` is still the stub** that answers *"ctx.Notify is
+> not available on this installation yet"*; the capability is wired on DNN only.
 
 ---
 

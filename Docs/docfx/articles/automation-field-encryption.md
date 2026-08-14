@@ -1,7 +1,13 @@
 # Encrypt or normalise a field before it is stored
 
-> **Available now.** `ctx.SetValue` at the PreInsert stage changes what gets written — covered by a
-> test that reads the stored row back and asserts the new value is in it.
+> [!IMPORTANT]
+> **The engine does this; you cannot switch it on yet.** `ctx.SetValue` at PreInsert changes what gets
+> written, and a test reads the stored row back to prove it — but **PreInsert cannot be saved on a
+> site in this release**. Nothing in the product writes a script into that stage.
+>
+> The stage you can author today is PostCommit, and `ctx.SetValue` is deliberately **refused** there:
+> the row is already written, so a script that thought it had rewritten a value would be storing a lie.
+> Normalising or encrypting on the way in therefore has no working route yet.
 
 Some values should never be stored the way they arrived. A national ID or an account number should
 be encrypted or masked. A phone number typed as `+1 (415) 555-0142` and as `4155550142` is the same

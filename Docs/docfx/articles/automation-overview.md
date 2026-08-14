@@ -47,20 +47,29 @@ same power while losing every line above.
 
 ## Where a script can run
 
-`Form Settings → Server Script` offers four stages. They differ in one respect that decides
-everything else: where they sit relative to the database commit.
+Four stages exist in the engine. They differ in one respect that decides everything else: where they
+sit relative to the database commit.
 
-| Stage | Runs | Can refuse the submission? | Can change stored values? |
-|---|---|---|---|
-| **PreValidate** | before validation finishes | yes | yes |
-| **PreInsert** | inside the submit transaction | **yes — and it rolls back** | yes |
-| **PostCommit** | after the row is committed | no | no |
-| **AsyncWorker** | later, off a queue | no | no |
+| Stage | Runs | Can refuse the submission? | Can change stored values? | Can you configure it today? |
+|---|---|---|---|---|
+| **PreValidate** | before validation finishes | yes | yes | **no** |
+| **PreInsert** | inside the submit transaction | **yes — and it rolls back** | yes | **no** |
+| **PostCommit** | after the row is committed | no | no | **yes** |
+| **AsyncWorker** | later, off a queue | no | no | **no** |
 
-`ctx.Fail("…")` means *refuse this submission* before the commit and *record a failure* after it —
-`ctx.CanAbort` tells a script which. `ctx.SetValue(…)` is **refused** at PostCommit rather than
-ignored, because a script that believes it rewrote a stored value and did not is a data bug that
-surfaces months later in a report.
+> [!IMPORTANT]
+> **Only PostCommit can be saved in this release.** The script you write and approve is stored as the
+> form's after-submit hook, and the engine reads that hook as the PostCommit stage. The other three
+> stages are read by the runtime but nothing in the product writes them — there is no editor, no API
+> and no import path that sets them. Recipes on the pages below that need PreValidate or PreInsert
+> therefore describe the engine correctly and **cannot be configured on a site yet**. Each such page
+> says so at the top.
+
+`ctx.Fail("…")` records a failure at PostCommit; refusing a submission outright needs PreInsert.
+`ctx.SetValue(…)` is **refused** at PostCommit rather than ignored, because a script that believes it
+rewrote a stored value and did not is a data bug that surfaces months later in a report. A PostCommit
+script can still compute a value — it just sends the result onward (to your table, an API, an email)
+instead of back into the stored submission.
 
 ---
 
@@ -69,29 +78,42 @@ surfaces months later in a report.
 Each page below is one real job, with the script, the catalog entry it needs, and what the run
 record shows afterwards.
 
-| Recipe | Uses |
-|---|---|
-| [Write to your own database, across several tables](automation-custom-db.md) | `ctx.Actions` |
-| [Push a submission to a CRM, ERP or any REST/SOAP API](automation-rest-crm.md) | `ctx.Api` |
-| [Block a submission with a blacklist or fraud check](automation-fraud-check.md) | PreInsert + `ctx.Actions` |
-| [Encrypt or normalise a field before it is stored](automation-field-encryption.md) | PreInsert + `ctx.SetValue` |
-| [Look up tax, exchange rate or shipping in real time](automation-realtime-pricing.md) | PreInsert + `ctx.Api` |
-| [Send email, SMS or Telegram based on what was answered](automation-notifications.md) | `ctx.Notify` |
-| [Start an approval that routes itself](automation-approval-routing.md) | `ctx.Workflow` |
-| [Create a user and grant a role](automation-user-provisioning.md) | `ctx.Identity` |
-| [Generate a PDF, Word or Excel document](automation-documents.md) | `ctx.Documents` |
-| [Move an uploaded file into a secure folder](automation-file-routing.md) | `ctx.Files` |
-| [Publish an event to RabbitMQ, Kafka or SQS](automation-queue.md) | `ctx.Queue` |
+Every status below was measured on a DNN 10.3.0 site running MegaForm 2.0.20, by submitting through a
+real form and reading the run record afterwards — not by reading the code.
 
-Pages are marked **Available now** or **Planned**. A planned page describes an interface that exists
-in the product and a capability that is not wired yet; reaching for it from a script returns a clear
-"not available on this installation yet" rather than failing obscurely.
+| Recipe | Uses | Status |
+|---|---|---|
+| [Write to your own database, across several tables](automation-custom-db.md) | `ctx.Actions` | ✅ **runs** — `rows=1` in 11–53 ms |
+| [Push a submission to a CRM, ERP or any REST/SOAP API](automation-rest-crm.md) | `ctx.Api` | ✅ **runs** — `status=200`, 1 attempt, 642 ms |
+| [Send email, SMS or Telegram based on what was answered](automation-notifications.md) | `ctx.Notify` | ✅ **email runs** — delivered over SMTP. SMS/push need a named endpoint and are untested |
+| [Create a user and grant a role](automation-user-provisioning.md) | `ctx.Identity` | ✅ **runs** — real account created, role granted from the allow-list |
+| [Look up tax, exchange rate or shipping in real time](automation-realtime-pricing.md) | `ctx.Api` | 🟡 **partly** — the lookup runs; writing the result back into the submission needs PreInsert |
+| [Block a submission with a blacklist or fraud check](automation-fraud-check.md) | PreInsert + `ctx.Actions` | ❌ **not configurable** — needs PreInsert |
+| [Encrypt or normalise a field before it is stored](automation-field-encryption.md) | PreInsert + `ctx.SetValue` | ❌ **not configurable** — needs PreInsert |
+| [Start an approval that routes itself](automation-approval-routing.md) | `ctx.Workflow` | ❌ **not wired** |
+| [Generate a PDF, Word or Excel document](automation-documents.md) | `ctx.Documents` | ❌ **not wired** — `NotWiredException` at run time |
+| [Move an uploaded file into a secure folder](automation-file-routing.md) | `ctx.Files` | ❌ **not wired** — `NotWiredException` at run time |
+| [Publish an event to RabbitMQ, Kafka or SQS](automation-queue.md) | `ctx.Queue` | ❌ **not wired** — `NotWiredException` at run time |
+
+A **not wired** capability still compiles: the interface is part of the product, so a script naming it
+builds cleanly and then fails at run time with *"ctx.Documents is not available on this installation
+yet"*. That is deliberate — the alternative is a script that appears to work and quietly does nothing.
+
+**Not configurable** is a different thing and worth reading carefully: the engine implements the stage,
+but no part of the product can save a script into it yet. The recipe is accurate about what the engine
+does; you simply cannot switch it on from a site today.
+
+### Platform coverage
+
+The capability rail is wired on **DNN only**. On Oqtane the automation catalog exists but nothing else
+does — `ctx.Notify` and `ctx.Identity` are the throwing stubs there, no run or capability call is
+recorded, and an AsyncWorker script is dropped with a warning. Web and Umbraco have neither.
 
 ---
 
 ## Before any of this works
 
-1. A host enables scripting in the server's config file — `MegaForm:AutomationScriptEnabled`. It is
+1. A host enables scripting in the server's config file — `MegaForm:AfterSubmitScriptEnabled`. It is
    off on every install, and it is a file rather than a settings screen on purpose: the right bar for
    "people may run code on this server" is *can edit files on the server*.
 2. A **host account** — not a site administrator, not module-edit permission — writes and saves the
