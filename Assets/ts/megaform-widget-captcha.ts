@@ -1,6 +1,6 @@
 /**
  * MegaForm Widget: CAPTCHA — v2.0
- * Badge: CaptchaVerify v20260407-05
+ * Badge: CaptchaVerify v20260814-01
  *
  * Supported modes (site key required, validated server-side):
  *   recaptcha_v2  Google reCAPTCHA v2 checkbox ("I'm not a robot")
@@ -135,13 +135,24 @@ function shuffleArr<T>(arr: T[]): T[] {
   return a;
 }
 function loadScript(src: string, onReady?: () => void): void {
-  if (document.querySelector('script[src="' + src + '"]')) {
-    if (onReady) onReady();
+  const existing = document.querySelector<HTMLScriptElement>('script[src="' + src + '"]');
+  if (existing) {
+    const apiReady = src.indexOf('hcaptcha.com') >= 0
+      ? typeof hcaptcha !== 'undefined'
+      : typeof grecaptcha !== 'undefined';
+    if (existing.dataset.mfLoaded === '1' || apiReady) {
+      if (onReady) onReady();
+    } else if (onReady) {
+      existing.addEventListener('load', onReady, { once: true });
+    }
     return;
   }
   const s = document.createElement('script');
   s.src = src; s.async = true; s.defer = true;
-  if (onReady) s.onload = onReady;
+  s.onload = function(): void {
+    s.dataset.mfLoaded = '1';
+    if (onReady) onReady();
+  };
   document.head.appendChild(s);
 }
 function esc(s: string): string {
@@ -325,6 +336,8 @@ function genImage(diff: string): Challenge {
 // ════════════════════════════════════════════════════════════════
 const MFC_CSS = [
   '.mfc-wrap{position:relative;display:inline-block;width:100%;max-width:340px;border:1px solid #dbe4f0;border-radius:12px;padding:12px;background:#fff;transition:border-color .2s,box-shadow .2s;font-family:inherit;box-sizing:border-box;}',
+  '.mfc-wrap[data-mode="recaptcha_v3"]{display:block;width:0;height:0;min-height:0;max-width:none;border:0;padding:0;background:transparent;overflow:visible;}',
+  '.mfc-wrap[data-mode="recaptcha_v3"] .mfc-3p,.mfc-wrap[data-mode="recaptcha_v3"] .mfc-status{display:none;}',
   '.mfc-wrap.mfc-dark{background:#1e293b;border-color:#334155;color:#e2e8f0;}',
   '.mfc-wrap.mfc-ok{border-color:#16a34a;background:#f0fdf4;}',
   '.mfc-wrap.mfc-dark.mfc-ok{background:#052e16;border-color:#16a34a;}',
@@ -415,7 +428,7 @@ const MFC_CSS = [
   // ── register ──────────────────────────────────────────────
   MegaFormWidgets.register('Captcha', {
 
-    meta: { label: 'CAPTCHA • CaptchaVerify v20260407-05', icon: 'fa-shield-halved', category: 'basic' },
+    meta: { label: 'CAPTCHA • CaptchaVerify v20260814-01', icon: 'fa-shield-halved', category: 'basic' },
 
     defaults: {
       mode: 'recaptcha_v2', theme: 'light',

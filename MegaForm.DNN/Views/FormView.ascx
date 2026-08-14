@@ -11,6 +11,19 @@
    var homeUrl = ResolveUrl("~/");
 %>
 
+<script type="text/javascript">
+(function () {
+  var captchaCfg = {
+    badgeVersion: '<%= System.Web.HttpUtility.JavaScriptStringEncode(ViewModel.CaptchaBadgeVersion ?? "") %>',
+    reCaptchaSiteKey: '<%= System.Web.HttpUtility.JavaScriptStringEncode(ViewModel.ReCaptchaSiteKey ?? "") %>',
+    hCaptchaSiteKey: '<%= System.Web.HttpUtility.JavaScriptStringEncode(ViewModel.HCaptchaSiteKey ?? "") %>'
+  };
+  window.__MegaFormCaptchaConfig = captchaCfg;
+  window._MF_CONFIG = window._MF_CONFIG || {};
+  window._MF_CONFIG.captchaConfig = captchaCfg;
+})();
+</script>
+
 <% if (showAdminShell) { %>
 <script type="text/javascript">
 (function () {
@@ -89,15 +102,7 @@
   if (!p.portalId)          p.portalId          = <%= PortalId %>;
   if (!p.formId)            p.formId            = <%= ViewModel.FormId %>;
   if (!p.returnUrl)         p.returnUrl         = base;
-  var captchaCfg = {
-    badgeVersion: '<%= System.Web.HttpUtility.JavaScriptStringEncode(ViewModel.CaptchaBadgeVersion ?? "") %>',
-    reCaptchaSiteKey: '<%= System.Web.HttpUtility.JavaScriptStringEncode(ViewModel.ReCaptchaSiteKey ?? "") %>',
-    hCaptchaSiteKey: '<%= System.Web.HttpUtility.JavaScriptStringEncode(ViewModel.HCaptchaSiteKey ?? "") %>'
-  };
-  window.__MegaFormCaptchaConfig = captchaCfg;
-  p.captchaConfig = p.captchaConfig || captchaCfg;
-  window._MF_CONFIG = window._MF_CONFIG || {};
-  window._MF_CONFIG.captchaConfig = window._MF_CONFIG.captchaConfig || captchaCfg;
+  p.captchaConfig = window.__MegaFormCaptchaConfig;
   // Hash routes always use the clean server-rendered base path, regardless of
   // whatever window.location.pathname contains at script-execute time.
   p.dashboardUrl      = base;

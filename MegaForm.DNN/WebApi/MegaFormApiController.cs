@@ -1898,7 +1898,7 @@ VALUES
             if (formId <= 0 || formData == null) return success;
 
             var form = FormRepository.GetForm(formId);
-            if (form == null || !form.EnableCaptcha) return success;
+            if (form == null) return success;
 
             FormSchema schema = null;
             try { schema = RenderModelResolver.ResolveSchema(form.SchemaJson, form.SettingsJson); }
