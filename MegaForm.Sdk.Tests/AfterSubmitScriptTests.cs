@@ -217,6 +217,58 @@ namespace MegaForm.Sdk.Tests
             Assert.True(result.Success, FirstError(result));
         }
 
+        [Theory]
+        // A body script is spliced into a method, where a `using` DIRECTIVE is illegal — only the
+        // `using (resource)` statement is. ScriptSourceBuilder lifts leading directives above the
+        // wrapper so an author can write the obvious thing.
+        [InlineData("using System.Net;\nctx.Log(WebUtility.HtmlEncode(\"<b>\"));")]
+        // Trailing comment. This is the form every documentation page and every real author writes,
+        // and the first cut of the hoist required the line to END with ';' — so the comment meant
+        // the directive stayed in the method body and the script failed with "CS1001 Identifier
+        // expected", pointing at a line that is perfectly good C#. Found by compiling the
+        // documentation's own samples.
+        [InlineData("using System.Net;   // WebUtility lives here\nctx.Log(WebUtility.HtmlEncode(\"<b>\"));")]
+        // Trailing comment containing PARENTHESES. The parenthesis test exists to tell a
+        // `using (resource)` statement from a directive, and testing the whole line let a comment
+        // decide it — which is exactly how a documentation page writes a using list:
+        //     using System.Net.Http;   // new HttpClient()
+        [InlineData("using System.Net.Http;   // new HttpClient()\nctx.Log(typeof(HttpClient).Name);")]
+        [InlineData("using System.Net;   // WebUtility.HtmlEncode(s)\nctx.Log(WebUtility.HtmlEncode(\"<b>\"));")]
+        // Several directives, blank lines and comments between them.
+        [InlineData("using System.Net;\n\n// pick up the globalisation helpers too\nusing System.Globalization;\n\nctx.Log(WebUtility.HtmlEncode(1.5m.ToString(CultureInfo.InvariantCulture)));")]
+        public void Leading_using_directives_are_lifted_above_the_wrapper(string source)
+        {
+            var result = Compiler.Compile(source, "test");
+            Assert.True(result.Success, FirstError(result));
+        }
+
+        [Fact]
+        public void A_using_STATEMENT_is_left_where_the_author_put_it()
+        {
+            // `using (x) { }` is a statement and belongs in the body. Hoisting it would move the
+            // author's disposal scope out of their method, which is a very different program.
+            var result = Compiler.Compile(
+                "using (var sr = new System.IO.StringReader(\"a\")) { ctx.Log(sr.ReadToEnd()); }",
+                "test");
+
+            Assert.True(result.Success, FirstError(result));
+        }
+
+        [Fact]
+        public void Hoisting_a_directive_does_not_shift_the_line_a_diagnostic_points_at()
+        {
+            // The hoist replaces each lifted line with a BLANK line rather than removing it, so the
+            // author's line numbers survive. Without that, every error on a script with usings would
+            // be reported one line early — the kind of small lie that costs an afternoon.
+            var result = Compiler.Compile(
+                "using System.Net;   // lifted\nvar ok = true;\nthis is not valid C#;",
+                "test");
+
+            Assert.False(result.Success);
+            var error = result.Diagnostics.First(d => d.Severity == "error");
+            Assert.Equal(3, error.Line);
+        }
+
         // ── the approval record is what makes a script runnable ───────────────────
 
         [Fact]

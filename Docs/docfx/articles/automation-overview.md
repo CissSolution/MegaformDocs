@@ -1,56 +1,146 @@
-# Automation: business logic after a submission
+# Automation: your own C# after a submission
 
 A form that only stores answers is a filing cabinet. The forms that earn their place do something
-when an answer arrives: score the lead and write it into the CRM database, refuse a booking that
-clashes with a rule, call the tax service before the total is stored, hand the case to whoever owns
-that postcode.
+when an answer arrives: write the lead into the CRM database, work out the tax for the customer's
+country, create the account the applicant just asked for, tell three other systems.
 
-MegaForm covers most of that with no code — [webhooks](integration-webhook.md),
-[a database insert](integration-sql-insert.md), workflow nodes for email and approvals. This section
-is about the cases where the shape of the logic, not the destination, is the hard part: when *which*
-of those things happens depends on what was submitted.
+Most of that needs no code. Before reading further, check whether one of these already covers the
+job:
 
-For those, MegaForm runs **C# you write**, on the server, at a point in the submission lifecycle you
-choose.
+| If the requirement is | Use |
+|---|---|
+| every submission goes to one endpoint | [Webhook / API service task](integration-webhook.md) |
+| every submission is mirrored into one table | [Form Settings → Database](integration-sql-insert.md) |
+| email, approval, add-user, add-role, branch on a value | workflow nodes |
+
+This section is for what is left: when the *shape* of the logic is the hard part. A parent row whose
+generated key the child rows need. A different system depending on what was answered. A number your
+finance team rounds their own way. For those, MegaForm compiles and runs **C# you write**, on the
+server, after the submission is stored.
 
 ---
 
 ## The one idea worth understanding first
 
-A MegaForm script never holds a resource. It holds a **name**.
+`ctx` is the submission. Everything else is ordinary C#.
+
+There is no mediated object between your script and the platform — no catalog of named actions, no
+resource broker. You open a `SqlConnection`, you `new HttpClient()`, you call `UserController`. If
+you can write it in a DNN module, you can write it here.
 
 ```csharp
-// not a connection string and a SQL statement
-await ctx.Actions.ExecuteNamedActionAsync("crm-insert-lead", new { email = ctx.GetString("email") });
+using System.Net.Http;                         // everything else: plain C#
+using System.Text;
 
-// not a URL and a bearer token
-await ctx.Api.PostJsonAsync("crm-lead-created", new { submissionId = ctx.SubmissionId });
+var email = ctx.GetString("email");            // ctx: the submitted values
+var total = ctx.GetDecimal("order_total", 0m); // and facts about this submission
+ctx.Log($"order for {email}");                 // and a line in the run record
+
+using (var http = new HttpClient())
+{
+    var body  = new StringContent($"{{\"email\":\"{email}\",\"total\":{total}}}",
+                                  Encoding.UTF8, "application/json");
+    var reply = await http.PostAsync("https://crm.example.com/leads", body, ct);
+    ctx.Log($"crm status={(int)reply.StatusCode}");
+}
 ```
 
-The SQL, the URL, the credentials and the retry policy live in the site's **automation catalog**,
-which an administrator maintains. The script supplies parameters.
+A script body may begin with `using` directives; they are lifted above the generated wrapper for
+you. The body is async — `await` works directly, and you are handed a `CancellationToken` named
+`ct`.
 
-That one indirection is what makes the feature safe to put in a product that ships templates:
+> [!NOTE]
+> If you arrived from an older page describing `ctx.Actions`, `ctx.Api`, `ctx.Notify`,
+> `ctx.Identity` or an automation catalog: that layer was removed. Scripts call platform APIs
+> directly now.
 
-- **No secret is ever in a script**, so a script is safe to export, review, diff and store in git.
-- **Rotating a password is one edit in one place**, not a hunt through every form on every site.
-- **The catalog is the complete answer to "what can any form here touch"** — a reviewable list,
-  rather than free text a script assembles at runtime.
-- **An imported script names actions the new site may not define**, so it fails loudly instead of
-  running against a database that merely looks similar.
-- **Every call is recorded** — target, outcome, duration — so after an incident there is an answer.
+### What `ctx` holds — the whole surface
 
-Raw `new SqlConnection(…)` and `new HttpClient()` are refused at compile time. They would give the
-same power while losing every line above.
+| Member | What it is |
+|---|---|
+| `ctx.Data` | the submitted values, a case-insensitive dictionary |
+| `ctx.GetString` / `GetDecimal` / `GetInt` / `GetBool` / `GetDate` | typed reads with a fallback |
+| `ctx.FormId`, `ctx.SubmissionId`, `ctx.PortalId`, `ctx.FormTitle` | which form, which row |
+| `ctx.UserId`, `ctx.UserName`, `ctx.UserEmail`, `ctx.IpAddress`, `ctx.UtcNow` | who and when |
+| `ctx.Log(string)` | a line in the run record |
+| `ctx.Fail(string)` | records the run as failed |
+| `ctx.SetValue(key, value)` | changes a stored value — **refused after the commit**, see below |
+| `ctx.SetVariable`, `ctx.Variables` | values carried to the run record |
+| `ctx.Response` | override the success message or redirect for this submission |
+| `ctx.Stage` | which stage is running |
+
+Everything else comes from the platform, with a `using`. These are the ones you are likely to reach
+for — a reference list, closed with one line of code so the fence still runs as it stands:
+
+```csharp
+using DotNetNuke.Entities.Users;   // UserController.GetUserByEmail, UserController.CreateUser
+using DotNetNuke.Security.Roles;   // RoleController.Instance.GetRoleByName / AddUserRole
+using DotNetNuke.Services.Mail;    // Mail.SendEmail(from, to, subject, body) — returns void
+using System.Data.SqlClient;       // new SqlConnection(Config.GetConnectionString())
+using System.Net.Http;             // new HttpClient()
+
+// A string literal cannot sit inside an interpolation hole in this language version,
+// so build the line with concatenation when the value comes from a call that takes one.
+var found = UserController.GetUserByEmail(ctx.PortalId, "jane.carter@contoso.com");
+ctx.Log("lookup: " + (found == null ? "no account" : found.UserID.ToString()));
+```
 
 ---
 
-## Where a script can run
+## A complete example
+
+This is close to the script that was measured live. It reads two answers, computes a total, writes a
+row to a table the site owns, and mails the customer.
+
+```csharp
+using System.Data.SqlClient;
+using DotNetNuke.Common.Utilities;
+using DotNetNuke.Services.Mail;
+
+var email   = ctx.GetString("email");
+var country = ctx.GetString("country", "GB");
+var rate    = country == "DE" ? 0.19m : 0.20m;
+var total   = ctx.GetDecimal("order_total", 0m) * (1m + rate);
+
+ctx.Log($"country={country} rate={rate} total={total:0.00}");
+
+using (var cn = new SqlConnection(Config.GetConnectionString()))
+{
+    await cn.OpenAsync(ct);
+    using (var cmd = new SqlCommand(
+        "INSERT INTO Acme_Orders (SubmissionId, Email, Country, Total) " +
+        "VALUES (@sid, @email, @country, @total)", cn))
+    {
+        cmd.Parameters.AddWithValue("@sid", ctx.SubmissionId);
+        cmd.Parameters.AddWithValue("@email", email);
+        cmd.Parameters.AddWithValue("@country", country);
+        cmd.Parameters.AddWithValue("@total", total);
+        ctx.Log($"insert rowsAffected={await cmd.ExecuteNonQueryAsync(ct)}");
+    }
+}
+
+Mail.SendEmail("orders@example.com", email, "Your order",
+    $"Thank you. Your total including VAT is {total:0.00}.");
+ctx.Log($"mail handed to DNN's sender for {email}");
+```
+
+Parameterise every value that came from `ctx.Data`. The script runs with the application pool's
+database access, so string concatenation here is a SQL injection hole in your own tables.
+
+That script — plus an `HttpClient.PostAsync` to an external endpoint and a
+`UserController.CreateUser` followed by `RoleController.Instance.AddUserRole` — was run on a DNN
+10.3 site by submitting the form anonymously. One submission, 927 ms, all four effects real: `rows
+affected 1`, HTTP 200 from the external endpoint, the message handed to DNN's sender, an account
+created and a role granted.
+
+---
+
+## Stages
 
 Four stages exist in the engine. They differ in one respect that decides everything else: where they
 sit relative to the database commit.
 
-| Stage | Runs | Can refuse the submission? | Can change stored values? | Can you configure it today? |
+| Stage | Runs | Can refuse the submission? | Can change stored values? | Configurable today? |
 |---|---|---|---|---|
 | **PreValidate** | before validation finishes | yes | yes | **no** |
 | **PreInsert** | inside the submit transaction | **yes — and it rolls back** | yes | **no** |
@@ -58,68 +148,82 @@ sit relative to the database commit.
 | **AsyncWorker** | later, off a queue | no | no | **no** |
 
 > [!IMPORTANT]
-> **Only PostCommit can be saved in this release.** The script you write and approve is stored as the
-> form's after-submit hook, and the engine reads that hook as the PostCommit stage. The other three
-> stages are read by the runtime but nothing in the product writes them — there is no editor, no API
-> and no import path that sets them. Recipes on the pages below that need PreValidate or PreInsert
-> therefore describe the engine correctly and **cannot be configured on a site yet**. Each such page
-> says so at the top.
+> **Only PostCommit can be authored.** The script you write and approve is stored as the form's
+> after-submit hook, and the engine reads that hook as PostCommit. Nothing in the product writes a
+> script into the other three stages — no editor, no API, no import path.
 
-`ctx.Fail("…")` records a failure at PostCommit; refusing a submission outright needs PreInsert.
-`ctx.SetValue(…)` is **refused** at PostCommit rather than ignored, because a script that believes it
-rewrote a stored value and did not is a data bug that surfaces months later in a report. A PostCommit
-script can still compute a value — it just sends the result onward (to your table, an API, an email)
-instead of back into the stored submission.
+Two consequences worth being clear about:
+
+- **A script cannot refuse a submission today.** Refusing needs PreInsert. `ctx.Fail("…")` at
+  PostCommit records the run as failed; the row is already stored. To turn away unwelcome-but-valid
+  input, use the anti-spam settings and workflow rules.
+- **A script cannot rewrite a stored value today.** `ctx.SetValue` is *refused* at PostCommit rather
+  than quietly ignored, on purpose: a script that believes it rewrote a stored value and did not is
+  a data bug that surfaces months later in a report.
+
+A PostCommit script can still compute a value and send it onward — into your own table, to an API,
+into an email. It just does not go back into the submission.
+
+---
+
+## The three gates
+
+A script does not run until all three are satisfied, in this order.
+
+1. **A config file switch.** In `web.config` appSettings:
+
+   ```xml
+   <add key="MegaForm:AfterSubmitScriptEnabled" value="true" />
+   ```
+
+   Off on every install. A file rather than a settings screen on purpose: the right bar for "people
+   may run code on this server" is *can edit files on this server*.
+
+2. **A host account saves the script.** Superuser — not a site administrator, not module-edit
+   rights.
+
+3. **An approval hash over the source.** The stored hash must match the source for the script to
+   run. So a script that arrives inside imported data, a backup or a gallery template is inert until
+   a host on *that* site opens it and saves it.
+
+Ordinary form saves cannot introduce, alter or enable a script.
+
+---
+
+## Who is responsible
+
+The host owns what their scripts do, exactly as they own a module they install. A script has the
+application pool's identity: its database access, its file access, its network. Nothing here
+sandboxes that, and nothing pretends to.
+
+There is an opt-in strict mode that restores an older namespace deny-list. It is off by default.
+
+Everything on these pages is DNN: the gate is a DNN `web.config` key and the examples call DNN's own
+APIs.
 
 ---
 
 ## The recipes
 
-Each page below is one real job, with the script, the catalog entry it needs, and what the run
-record shows afterwards.
+Each page is one job, with the script and what the run record shows afterwards.
 
-Every status below was measured on a DNN 10.3.0 site running MegaForm 2.0.20, by submitting through a
-real form and reading the run record afterwards — not by reading the code.
+| Recipe | Status |
+|---|---|
+| [Write to your own database, across several tables](automation-custom-db.md) | runs — `SqlConnection`, `rows affected 1` |
+| [Push a submission to a CRM, ERP or any REST/SOAP API](automation-rest-crm.md) | runs — `HttpClient`, HTTP 200 |
+| [Send email, SMS or Telegram based on what was answered](automation-notifications.md) | email runs via `Mail.SendEmail`; SMS/Telegram are a call to the provider's API and are untested |
+| [Create a user and grant a role](automation-user-provisioning.md) | runs — real account created, role granted |
+| [Look up tax, exchange rate or shipping in real time](automation-realtime-pricing.md) | the lookup runs; writing the answer back into the submission needs PreInsert |
+| [Block a submission with a blacklist or fraud check](automation-fraud-check.md) | not configurable — needs PreInsert |
+| [Encrypt or normalise a field before it is stored](automation-field-encryption.md) | not configurable — needs PreInsert |
+| [Start an approval that routes itself](automation-approval-routing.md) | the workflow nodes do this with no code |
+| [Generate a PDF, Word or Excel document](automation-documents.md) | not implemented |
+| [Move an uploaded file into a secure folder](automation-file-routing.md) | not implemented |
+| [Publish an event to RabbitMQ, Kafka or SQS](automation-queue.md) | not implemented |
 
-| Recipe | Uses | Status |
-|---|---|---|
-| [Write to your own database, across several tables](automation-custom-db.md) | `ctx.Actions` | ✅ **runs** — `rows=1` in 11–53 ms |
-| [Push a submission to a CRM, ERP or any REST/SOAP API](automation-rest-crm.md) | `ctx.Api` | ✅ **runs** — `status=200`, 1 attempt, 642 ms |
-| [Send email, SMS or Telegram based on what was answered](automation-notifications.md) | `ctx.Notify` | ✅ **email runs** — delivered over SMTP. SMS/push need a named endpoint and are untested |
-| [Create a user and grant a role](automation-user-provisioning.md) | `ctx.Identity` | ✅ **runs** — real account created, role granted from the allow-list |
-| [Look up tax, exchange rate or shipping in real time](automation-realtime-pricing.md) | `ctx.Api` | 🟡 **partly** — the lookup runs; writing the result back into the submission needs PreInsert |
-| [Block a submission with a blacklist or fraud check](automation-fraud-check.md) | PreInsert + `ctx.Actions` | ❌ **not configurable** — needs PreInsert |
-| [Encrypt or normalise a field before it is stored](automation-field-encryption.md) | PreInsert + `ctx.SetValue` | ❌ **not configurable** — needs PreInsert |
-| [Start an approval that routes itself](automation-approval-routing.md) | `ctx.Workflow` | ❌ **not wired** |
-| [Generate a PDF, Word or Excel document](automation-documents.md) | `ctx.Documents` | ❌ **not wired** — `NotWiredException` at run time |
-| [Move an uploaded file into a secure folder](automation-file-routing.md) | `ctx.Files` | ❌ **not wired** — `NotWiredException` at run time |
-| [Publish an event to RabbitMQ, Kafka or SQS](automation-queue.md) | `ctx.Queue` | ❌ **not wired** — `NotWiredException` at run time |
+**Not implemented** means MegaForm ships nothing for it and nothing about it has been measured. A
+script is ordinary C#, so referencing your own library is not blocked — but you are on your own,
+and the recipe page says what exists instead.
 
-A **not wired** capability still compiles: the interface is part of the product, so a script naming it
-builds cleanly and then fails at run time with *"ctx.Documents is not available on this installation
-yet"*. That is deliberate — the alternative is a script that appears to work and quietly does nothing.
-
-**Not configurable** is a different thing and worth reading carefully: the engine implements the stage,
-but no part of the product can save a script into it yet. The recipe is accurate about what the engine
-does; you simply cannot switch it on from a site today.
-
-### Platform coverage
-
-The capability rail is wired on **DNN only**. On Oqtane the automation catalog exists but nothing else
-does — `ctx.Notify` and `ctx.Identity` are the throwing stubs there, no run or capability call is
-recorded, and an AsyncWorker script is dropped with a warning. Web and Umbraco have neither.
-
----
-
-## Before any of this works
-
-1. A host enables scripting in the server's config file — `MegaForm:AfterSubmitScriptEnabled`. It is
-   off on every install, and it is a file rather than a settings screen on purpose: the right bar for
-   "people may run code on this server" is *can edit files on the server*.
-2. A **host account** — not a site administrator, not module-edit permission — writes and saves the
-   script. Saving stamps an approval hash; the runtime refuses anything whose source does not match
-   it, which is why a script that arrives inside an imported form or a gallery template is inert
-   until a host on *that* site opens it and saves it.
-3. An administrator adds the named actions and endpoints the script will use.
-
-Full detail: [Run your own C# after a submission](/MegaFormDocsT?doc=int-csharp-script).
+Reference for the script surface itself: [Run your own C# after a
+submission](after-submit-script.md).

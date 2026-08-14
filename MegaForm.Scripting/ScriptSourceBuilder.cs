@@ -91,13 +91,28 @@ namespace MegaForm.Scripting
                 if (trimmed.Length == 0 || trimmed.StartsWith("//", StringComparison.Ordinal)) continue;
 
                 // A directive, not a `using (x) {` statement: no parenthesis before the semicolon.
-                if (trimmed.StartsWith("using ", StringComparison.Ordinal)
-                    && trimmed.EndsWith(";", StringComparison.Ordinal)
-                    && trimmed.IndexOf('(') < 0)
+                //
+                // The semicolon is found by SEARCHING rather than by requiring the line to end with
+                // one. Requiring it broke the most natural thing an author writes —
+                //     using DotNetNuke.Entities.Users;   // UserController lives here
+                // — because the trailing comment meant the line did not end in ';', so the directive
+                // was left in the method body and the script failed with "CS1001 Identifier
+                // expected", pointing at a line that is perfectly good C#.
+                if (trimmed.StartsWith("using ", StringComparison.Ordinal))
                 {
-                    hoisted.Append(trimmed).Append("\r\n");
-                    lines[i] = string.Empty;     // keep the line, drop its content
-                    continue;
+                    var semi = trimmed.IndexOf(';');
+                    // The parenthesis test tells a `using (resource)` STATEMENT from a directive, so
+                    // it must look only at the directive itself. Testing the whole line meant a
+                    // trailing comment decided it: `using System.Net.Http;  // new HttpClient()`
+                    // was read as a statement, left in the method body, and failed with
+                    // "CS1001 Identifier expected". Both halves of this — the semicolon search and
+                    // this substring — were found by compiling the documentation's own samples.
+                    if (semi > 0 && trimmed.Substring(0, semi).IndexOf('(') < 0)
+                    {
+                        hoisted.Append(trimmed.Substring(0, semi + 1)).Append("\r\n");
+                        lines[i] = string.Empty;     // keep the line, drop its content
+                        continue;
+                    }
                 }
 
                 seenCode = true;                 // directives may only lead
