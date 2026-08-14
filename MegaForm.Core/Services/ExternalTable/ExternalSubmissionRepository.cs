@@ -20,7 +20,7 @@ namespace MegaForm.Core.Services.ExternalTable
     /// Reads are live. There is no copy of the customer's data in MF_Submissions — only an anchor row
     /// per record we have shown, which exists so that a submission id can address it.
     /// </summary>
-    public class ExternalSubmissionRepository : ISubmissionRepository, ISubmissionOwnerFilterableRepository
+    public class ExternalSubmissionRepository : ISubmissionRepository, ISubmissionOwnerFilterableRepository, ISubmissionTypedQueryRepository
     {
         private readonly ISubmissionRepository _inner;
         private readonly IExternalBindingStore _bindings;
@@ -132,6 +132,38 @@ namespace MegaForm.Core.Services.ExternalTable
             }
 
             return (sqlItems, Math.Max(0, sqlPage.TotalCount));
+        }
+
+        public (List<SubmissionInfo> Items, int TotalCount) ListTyped(SubmissionListQuery query)
+        {
+            if (query == null) throw new ArgumentNullException(nameof(query));
+
+            var source = ExternalSourceContext.Source;
+            var binding = query.FormId > 0 && source != ExternalSourceScope.Json
+                ? _bindings.GetByForm(query.FormId)
+                : null;
+
+            if (binding == null && source != ExternalSourceScope.Sql)
+            {
+                var scope = ExternalSourceContext.Current;
+                if (scope != null) scope.AppliedSource = ExternalSourceScope.Json;
+                if (_inner is ISubmissionTypedQueryRepository typedRepository)
+                    return typedRepository.ListTyped(query);
+
+                if (query.FieldFilters != null && query.FieldFilters.Count > 0)
+                    throw new NotSupportedException("The active submission repository does not support typed field filters.");
+
+                return _inner.List(
+                    query.FormId, query.Status, query.Search, query.DateFrom, query.DateTo,
+                    query.PageIndex, query.PageSize);
+            }
+
+            if (query.FieldFilters != null && query.FieldFilters.Count > 0)
+                throw new NotSupportedException("Typed MegaForm field filters do not apply to an external table source.");
+
+            return List(
+                query.FormId, query.Status, query.Search, query.DateFrom, query.DateTo,
+                query.PageIndex, query.PageSize);
         }
 
         public (List<SubmissionInfo> Items, int TotalCount) ListOwnedBy(

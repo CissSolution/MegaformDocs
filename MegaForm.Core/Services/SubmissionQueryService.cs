@@ -11,7 +11,7 @@ namespace MegaForm.Core.Services
 {
     /// <summary>
     /// Shared submission query facade used by Web / DNN / Oqtane.
-    /// Sprint 1: unify response shape. Sprint 2: keep JSON-only storage compatible with DNN.
+    /// Typed-capable repositories execute field predicates before count and paging.
     /// </summary>
     public class SubmissionQueryService
     {
@@ -19,6 +19,7 @@ namespace MegaForm.Core.Services
         private readonly IFormRepository _forms;
         private readonly IFileRepository _files;
         private readonly ISubmissionDataStore _typedStore;
+        private readonly SubmissionDataResolver _dataResolver;
 
         public SubmissionQueryService(
             ISubmissionRepository submissions,
@@ -38,6 +39,7 @@ namespace MegaForm.Core.Services
             _forms = forms;
             _files = files;
             _typedStore = typedStore;
+            _dataResolver = new SubmissionDataResolver(typedStore);
         }
 
         /// <summary>[QueryKey250Fix v20260717-01] Ceiling for a server-trusted fetch (bound-query
@@ -52,9 +54,20 @@ namespace MegaForm.Core.Services
             if (query.PageSize > maxPageSize) query.PageSize = maxPageSize;
             if (query.PageIndex < 0) query.PageIndex = 0;
 
+            ValidateTypedFilters(query.FieldFilters);
+
             bool ownerFilterRequested = query.UserId.HasValue && query.UserId.Value > 0;
+            bool typedFiltersRequested = query.FieldFilters != null && query.FieldFilters.Count > 0;
+            bool typedRepositoryAvailable = _submissions is ISubmissionTypedQueryRepository;
+            if (typedFiltersRequested && !typedRepositoryAvailable)
+                throw new NotSupportedException("This submission repository does not support typed field filters.");
+
+            bool typedQueryRequested = !string.IsNullOrWhiteSpace(query.Search) || typedFiltersRequested;
+            bool typedQueryInSql = typedQueryRequested && typedRepositoryAvailable;
             bool ownerFilterInSql = ownerFilterRequested && _submissions is ISubmissionOwnerFilterableRepository;
-            var tuple = ownerFilterInSql
+            var tuple = typedQueryInSql
+                ? ((ISubmissionTypedQueryRepository)_submissions).ListTyped(query)
+                : ownerFilterInSql
                 // [OwnerRlsSql v20260722-01] SQL-level owner filter — TotalCount/paging stay exact.
                 ? ((ISubmissionOwnerFilterableRepository)_submissions).ListOwnedBy(
                     query.FormId,
@@ -80,7 +93,7 @@ namespace MegaForm.Core.Services
             // controller had before this change) — implement the capability interface on the
             // platform repo to get exact counts. Never triggers on Oqtane (EfSubmissionRepository
             // implements it); no current caller sets UserId on DNN/Web.
-            if (ownerFilterRequested && !ownerFilterInSql)
+            if (ownerFilterRequested && !ownerFilterInSql && !typedQueryInSql)
             {
                 tuple = (tuple.Items.Where(s => s.UserId == query.UserId.Value).ToList(), tuple.TotalCount);
             }
@@ -115,6 +128,14 @@ namespace MegaForm.Core.Services
                 }
             }
 
+            IDictionary<int, SubmissionDataDocument> typedDocuments = null;
+            var batchReader = _typedStore as ISubmissionDataBatchReader;
+            if (batchReader != null && tuple.Items != null && tuple.Items.Count > 0)
+            {
+                typedDocuments = batchReader.GetDataMany(
+                    tuple.Items.Select(item => item.SubmissionId).Distinct().ToList());
+            }
+
             return new SubmissionPagedResult<SubmissionListItem>
             {
                 Items = tuple.Items.Select(x => ToListItem(
@@ -124,12 +145,70 @@ namespace MegaForm.Core.Services
                         : (titlesByFormId != null && titlesByFormId.TryGetValue(x.FormId, out var t) ? t : string.Empty),
                     query.FormId > 0
                         ? singleSchema
-                        : (schemasByFormId != null && schemasByFormId.TryGetValue(x.FormId, out var s) ? s : null)
+                        : (schemasByFormId != null && schemasByFormId.TryGetValue(x.FormId, out var s) ? s : null),
+                    typedDocuments != null && typedDocuments.TryGetValue(x.SubmissionId, out var document)
+                        ? document.Data
+                        : null
                 )).ToList(),
                 TotalCount = tuple.TotalCount,
                 PageIndex = query.PageIndex,
                 PageSize = query.PageSize
             };
+        }
+
+        private static void ValidateTypedFilters(IEnumerable<SubmissionFieldFilter> filters)
+        {
+            if (filters == null) return;
+            foreach (var filter in filters)
+            {
+                if (filter == null)
+                    throw new ArgumentException("FieldFilters cannot contain null entries.", nameof(filters));
+                if (string.IsNullOrWhiteSpace(filter.FieldKey))
+                    throw new ArgumentException("Every typed field filter requires FieldKey.", nameof(filters));
+
+                var dataType = filter.DataType
+                    ?? (filter.NumberValue.HasValue ? SubmissionDataType.Number
+                    : filter.DateValue.HasValue ? SubmissionDataType.Date
+                    : filter.BooleanValue.HasValue ? SubmissionDataType.Boolean
+                    : SubmissionDataType.String);
+
+                if (dataType == SubmissionDataType.Json
+                    && filter.Operator != SubmissionFieldFilterOperator.IsEmpty
+                    && filter.Operator != SubmissionFieldFilterOperator.IsNotEmpty)
+                    throw new NotSupportedException("JSON field filters support only IsEmpty and IsNotEmpty. Query a normalized typed field for value comparisons.");
+
+                if (filter.Operator != SubmissionFieldFilterOperator.IsEmpty
+                    && filter.Operator != SubmissionFieldFilterOperator.IsNotEmpty)
+                {
+                    bool supported = dataType == SubmissionDataType.String || dataType == SubmissionDataType.LongText
+                        ? filter.Operator == SubmissionFieldFilterOperator.Equals
+                            || filter.Operator == SubmissionFieldFilterOperator.NotEquals
+                            || filter.Operator == SubmissionFieldFilterOperator.Contains
+                            || filter.Operator == SubmissionFieldFilterOperator.StartsWith
+                            || filter.Operator == SubmissionFieldFilterOperator.EndsWith
+                        : dataType == SubmissionDataType.Number || dataType == SubmissionDataType.Date
+                            ? filter.Operator == SubmissionFieldFilterOperator.Equals
+                                || filter.Operator == SubmissionFieldFilterOperator.NotEquals
+                                || filter.Operator == SubmissionFieldFilterOperator.GreaterThan
+                                || filter.Operator == SubmissionFieldFilterOperator.GreaterThanOrEqual
+                                || filter.Operator == SubmissionFieldFilterOperator.LessThan
+                                || filter.Operator == SubmissionFieldFilterOperator.LessThanOrEqual
+                            : dataType == SubmissionDataType.Boolean
+                                && (filter.Operator == SubmissionFieldFilterOperator.Equals
+                                    || filter.Operator == SubmissionFieldFilterOperator.NotEquals);
+                    if (!supported)
+                        throw new NotSupportedException("The selected operator is not valid for the field DataType.");
+                }
+
+                if ((dataType == SubmissionDataType.Number && !filter.NumberValue.HasValue)
+                    || (dataType == SubmissionDataType.Date && !filter.DateValue.HasValue)
+                    || (dataType == SubmissionDataType.Boolean && !filter.BooleanValue.HasValue))
+                {
+                    if (filter.Operator != SubmissionFieldFilterOperator.IsEmpty
+                        && filter.Operator != SubmissionFieldFilterOperator.IsNotEmpty)
+                        throw new ArgumentException("The selected field DataType requires its matching typed value.", nameof(filters));
+                }
+            }
         }
 
         public SubmissionDetailResult GetDetail(int submissionId)
@@ -140,18 +219,19 @@ namespace MegaForm.Core.Services
             var form = _forms.GetForm(submission.FormId);
             var schema = TryParseSchema(form != null ? form.SchemaJson : null);
 
-            var storedValues = _submissions.GetValues(submissionId) ?? new List<SubmissionValueInfo>();
-            var fieldSnapshots = storedValues
-                .Select(ParseSnapshot)
-                .Where(x => x != null)
-                .OrderBy(x => x.SortOrder)
-                .ThenBy(x => x.FieldLabel)
-                .ToList();
+            bool hasTypedData = _dataResolver.HasTypedData(submissionId);
+            var data = _dataResolver.GetData(submissionId, submission.DataJson);
+            var dataJson = data.Count > 0 ? JsonConvert.SerializeObject(data) : (submission.DataJson ?? "{}");
+
+            var fieldSnapshots = hasTypedData
+                ? BuildSnapshotsFromTypedRows(submissionId, data)
+                : BuildSnapshotsFromStoredValues(submissionId, schema, dataJson);
 
             bool hasSnapshot = fieldSnapshots.Count > 0;
             if (!hasSnapshot && schema != null)
             {
-                fieldSnapshots = MegaFormUtils.BuildSubmissionSnapshots(schema, submission.DataJson ?? "{}", true);
+                fieldSnapshots = MegaFormUtils.BuildSubmissionSnapshots(schema, dataJson, true);
+                hasSnapshot = fieldSnapshots.Count > 0;
             }
 
             return new SubmissionDetailResult
@@ -160,57 +240,56 @@ namespace MegaForm.Core.Services
                 Form = form,
                 Schema = schema,
                 Files = _files != null ? (_files.GetBySubmission(submissionId) ?? new List<FileInfo>()) : new List<FileInfo>(),
+                Data = data,
                 FlattenedValues = schema != null
-                    ? MegaFormUtils.FlattenSubmission(schema, submission.DataJson ?? "{}")
-                    : BuildFallbackFlatValues(submission.DataJson),
+                    ? MegaFormUtils.FlattenSubmission(schema, dataJson)
+                    : BuildFallbackFlatValuesFromDictionary(data),
                 FieldSnapshots = fieldSnapshots,
                 HasSnapshot = hasSnapshot
             };
         }
 
+        private List<SubmissionFieldSnapshot> BuildSnapshotsFromTypedRows(int submissionId, Dictionary<string, object> data)
+        {
+            var fields = _typedStore.GetFields(submissionId);
+            var list = new List<SubmissionFieldSnapshot>(fields.Count);
+            foreach (var f in fields)
+            {
+                if (f == null) continue;
+                list.Add(new SubmissionFieldSnapshot
+                {
+                    FieldKey = f.FieldKey,
+                    FieldLabel = f.LabelSnapshot,
+                    FieldType = f.FieldType,
+                    RawValue = data.TryGetValue(f.FieldKey, out var raw) ? raw?.ToString() : null,
+                    DisplayValue = f.DisplayValue,
+                    SortOrder = f.FieldOrder ?? 0
+                });
+            }
+            return list
+                .OrderBy(x => x.SortOrder)
+                .ThenBy(x => x.FieldLabel)
+                .ToList();
+        }
+
+        private List<SubmissionFieldSnapshot> BuildSnapshotsFromStoredValues(int submissionId, FormSchema schema, string dataJson)
+        {
+            var storedValues = _submissions.GetValues(submissionId) ?? new List<SubmissionValueInfo>();
+            return storedValues
+                .Select(ParseSnapshot)
+                .Where(x => x != null)
+                .OrderBy(x => x.SortOrder)
+                .ThenBy(x => x.FieldLabel)
+                .ToList();
+        }
+
         /// <summary>
-        /// Preview method for typed submission storage. Reconstructs the detail from
-        /// MF_SubmissionFields + typed value rows when a typed store is registered.
-        /// Falls back to the legacy JSON path when typed rows are unavailable.
+        /// OBSOLETE — <see cref="GetDetail(int)"/> now uses typed rows by default when available.
+        /// Kept for binary compatibility with existing callers.
         /// </summary>
+        [Obsolete("GetDetail now reads typed rows automatically. Use GetDetail instead.", false)]
         public SubmissionDetailResult GetDetailTyped(int submissionId)
         {
-            var submission = _submissions.Get(submissionId);
-            if (submission == null) return null;
-
-            var form = _forms.GetForm(submission.FormId);
-            var schema = TryParseSchema(form != null ? form.SchemaJson : null);
-
-            if (_typedStore != null && _typedStore.HasFields(submissionId))
-            {
-                var document = _typedStore.GetData(submissionId);
-                var reconstructor = new SubmissionDataReconstructor();
-                var data = reconstructor.Reconstruct(document) ?? new Dictionary<string, object>();
-
-                var snapshots = _typedStore.GetFields(submissionId)
-                    .Select(f => new SubmissionFieldSnapshot
-                    {
-                        FieldKey = f.FieldKey,
-                        FieldLabel = f.LabelSnapshot,
-                        FieldType = f.FieldType,
-                        RawValue = data.TryGetValue(f.FieldKey, out var raw) ? raw?.ToString() : null,
-                        DisplayValue = f.DisplayValue,
-                        SortOrder = f.FieldOrder ?? 0
-                    })
-                    .ToList();
-
-                return new SubmissionDetailResult
-                {
-                    Submission = submission,
-                    Form = form,
-                    Schema = schema,
-                    Files = _files != null ? (_files.GetBySubmission(submissionId) ?? new List<FileInfo>()) : new List<FileInfo>(),
-                    FlattenedValues = BuildFallbackFlatValuesFromDictionary(data),
-                    FieldSnapshots = snapshots,
-                    HasSnapshot = snapshots.Count > 0
-                };
-            }
-
             return GetDetail(submissionId);
         }
 
@@ -227,24 +306,26 @@ namespace MegaForm.Core.Services
 
         public SubmissionListItem ToListItem(SubmissionInfo submission, string formTitle = null, FormSchema schema = null)
         {
+            return ToListItem(submission, formTitle, schema, null);
+        }
+
+        private SubmissionListItem ToListItem(
+            SubmissionInfo submission,
+            string formTitle,
+            FormSchema schema,
+            Dictionary<string, object> resolvedData)
+        {
             if (submission == null) return null;
 
             string summary = string.Empty;
+            var data = resolvedData ?? _dataResolver.GetData(submission.SubmissionId, submission.DataJson);
             if (schema != null)
             {
-                summary = MegaFormUtils.BuildSubmissionSummary(schema, submission.DataJson ?? "{}", 200);
+                summary = MegaFormUtils.BuildSubmissionSummary(schema, JsonConvert.SerializeObject(data), 200);
             }
-            else if (!string.IsNullOrWhiteSpace(submission.DataJson))
+            else
             {
-                try
-                {
-                    var data = JsonConvert.DeserializeObject<Dictionary<string, object>>(submission.DataJson) ?? new Dictionary<string, object>();
-                    summary = string.Join("; ", data.Take(3).Select(kv => (kv.Key ?? "") + ": " + (kv.Value == null ? "" : kv.Value.ToString())));
-                }
-                catch
-                {
-                    summary = string.Empty;
-                }
+                summary = string.Join("; ", data.Take(3).Select(kv => (kv.Key ?? "") + ": " + (kv.Value == null ? "" : kv.Value.ToString())));
             }
 
             return new SubmissionListItem
@@ -260,7 +341,7 @@ namespace MegaForm.Core.Services
                 UserId = submission.UserId,
                 IpAddress = submission.IpAddress,
                 SummaryText = summary,
-                DataJson = submission.DataJson ?? "{}"
+                Data = data
             };
         }
 

@@ -46,7 +46,7 @@ namespace MegaForm.DNN.Data
     }
 
     /// <summary>Adapter: wraps static FormRepository -> ISubmissionRepository.</summary>
-    public class DnnSubmissionRepositoryAdapter : ISubmissionRepository
+    public class DnnSubmissionRepositoryAdapter : ISubmissionRepository, ISubmissionTypedQueryRepository, ISubmissionOwnerFilterableRepository
     {
         public int Insert(SubmissionInfo sub) => FormRepository.InsertSubmission(sub);
         public SubmissionInfo Get(int submissionId) => FormRepository.GetSubmission(submissionId);
@@ -56,6 +56,13 @@ namespace MegaForm.DNN.Data
             DateTime? dateFrom = null, DateTime? dateTo = null,
             int pageIndex = 0, int pageSize = 50) =>
             FormRepository.ListSubmissions(formId, status, search, dateFrom, dateTo, pageIndex, pageSize);
+        public (List<SubmissionInfo> Items, int TotalCount) ListTyped(SubmissionListQuery query) =>
+            FormRepository.ListSubmissionsTyped(query);
+        public (List<SubmissionInfo> Items, int TotalCount) ListOwnedBy(int formId, int userId,
+            string status = null, string search = null,
+            DateTime? dateFrom = null, DateTime? dateTo = null,
+            int pageIndex = 0, int pageSize = 50) =>
+            FormRepository.ListSubmissionsOwnedBy(formId, userId, status, search, dateFrom, dateTo, pageIndex, pageSize);
         public void UpdateStatus(int submissionId, string status) => FormRepository.UpdateSubmissionStatus(submissionId, status);
         public void UpdateData(int submissionId, string dataJson) => FormRepository.UpdateSubmissionData(submissionId, dataJson);
         public void Delete(int submissionId) => FormRepository.DeleteSubmission(submissionId);

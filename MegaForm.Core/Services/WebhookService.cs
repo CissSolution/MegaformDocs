@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using MegaForm.Core.Interfaces;
 using MegaForm.Core.Models;
+using MegaForm.Core.Services.TypedSubmission;
 using Newtonsoft.Json;
 
 namespace MegaForm.Core.Services
@@ -14,12 +15,14 @@ namespace MegaForm.Core.Services
     {
         private readonly IPhase2Repository _repo;
         private readonly ILogService _log;
+        private readonly SubmissionDataResolver _dataResolver;
         private static readonly HttpClient _http = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
 
-        public WebhookService(IPhase2Repository repo, ILogService log)
+        public WebhookService(IPhase2Repository repo, ILogService log, SubmissionDataResolver dataResolver = null)
         {
             _repo = repo;
             _log = log;
+            _dataResolver = dataResolver;
         }
 
         public async Task<bool> SendWebhookAsync(FormInfo form, SubmissionInfo submission)
@@ -33,6 +36,10 @@ namespace MegaForm.Core.Services
                 _log?.LogError("MegaForm.Webhook", $"Webhook blocked by SSRF guard ({ssrfReason}): {form.WebhookUrl}", null);
                 return false;
             }
+            var data = _dataResolver != null
+                ? _dataResolver.GetData(submission.SubmissionId, submission.DataJson)
+                : ParseDataJson(submission.DataJson);
+
             var payload = JsonConvert.SerializeObject(new
             {
                 @event = "submission.created",
@@ -41,7 +48,7 @@ namespace MegaForm.Core.Services
                 submissionId = submission.SubmissionId,
                 submittedOnUtc = submission.SubmittedOnUtc,
                 ipAddress = submission.IpAddress,
-                data = JsonConvert.DeserializeObject<Dictionary<string, object>>(submission.DataJson)
+                data = data
             });
 
             var logEntry = new WebhookLogInfo
@@ -92,6 +99,23 @@ namespace MegaForm.Core.Services
 
             try { _repo?.InsertWebhookLog(logEntry); } catch { }
             return logEntry.Success;
+        }
+
+        private static Dictionary<string, object> ParseDataJson(string dataJson)
+        {
+            var result = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+            if (string.IsNullOrWhiteSpace(dataJson)) return result;
+            try
+            {
+                var parsed = JsonConvert.DeserializeObject<Dictionary<string, object>>(dataJson);
+                if (parsed != null)
+                {
+                    foreach (var kv in parsed)
+                        result[kv.Key] = kv.Value;
+                }
+            }
+            catch { }
+            return result;
         }
 
         private static string ComputeHmacSha256(string message, string secret)

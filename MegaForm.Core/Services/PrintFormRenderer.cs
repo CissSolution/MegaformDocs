@@ -26,13 +26,68 @@ using Newtonsoft.Json;
 
 namespace MegaForm.Core.Services
 {
+    // [SubmissionPrint v20260713] Submission payload for the print renderer — when
+    // present, field boxes are filled with the submitted values and the page becomes
+    // a per-submission document (invoice/voucher) instead of a blank fill-in form.
+    public class PrintSubmissionData
+    {
+        public int SubmissionId { get; set; }
+        public string Status { get; set; }
+        public DateTime? SubmittedAtUtc { get; set; }
+        public string SubmittedBy { get; set; }
+        /// <summary>fieldKey → human display value (what the detail drawer shows).</summary>
+        public Dictionary<string, string> Display { get; set; }
+            = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        /// <summary>fieldKey → raw stored value (JSON for grids / multi-choice).</summary>
+        public Dictionary<string, string> Raw { get; set; }
+            = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        public static PrintSubmissionData FromDetail(SubmissionDetailResult detail, string submittedBy = null)
+        {
+            if (detail == null || detail.Submission == null) return null;
+            var data = new PrintSubmissionData
+            {
+                SubmissionId = detail.Submission.SubmissionId,
+                Status = detail.Submission.Status ?? string.Empty,
+                SubmittedAtUtc = detail.Submission.SubmittedOnUtc,
+                SubmittedBy = submittedBy ?? string.Empty,
+            };
+            if (detail.FieldSnapshots != null)
+            {
+                foreach (var snap in detail.FieldSnapshots)
+                {
+                    if (snap == null || string.IsNullOrWhiteSpace(snap.FieldKey)) continue;
+                    // Schemas have been seen with duplicated keys (fields + Fields) —
+                    // first snapshot wins, duplicates are ignored.
+                    if (!data.Display.ContainsKey(snap.FieldKey))
+                        data.Display[snap.FieldKey] = snap.DisplayValue ?? snap.RawValue ?? string.Empty;
+                    if (!data.Raw.ContainsKey(snap.FieldKey))
+                        data.Raw[snap.FieldKey] = snap.RawValue ?? string.Empty;
+                }
+            }
+            return data;
+        }
+    }
+
     public class PrintFormRenderer
     {
         // ── Entry point ─────────────────────────────────────────────────────
 
         public string RenderHtml(FormInfo form, FormSchema schema, string formBaseUrl)
         {
+            return RenderHtml(form, schema, formBaseUrl, null);
+        }
+
+        // [SubmissionPrint v20260713] data != null → merge the submission's values into
+        // the layout (filled lines, checked boxes, line-item rows, status stamp). A form
+        // without configured PrintSettings still prints ITS SUBMISSION with the default
+        // layout — a document must be printable even when the blank-form layout was
+        // never set up (the blank-form path keeps requiring Enabled).
+        public string RenderHtml(FormInfo form, FormSchema schema, string formBaseUrl, PrintSubmissionData data)
+        {
             var settings = schema?.Settings?.PrintSettings;
+            if (data != null && (settings == null || !settings.Enabled))
+                settings = new PrintSettings { Enabled = true, ShowRefNumber = true };
             if (settings == null || !settings.Enabled)
                 return "<p>Print layout is not enabled for this form.</p>";
 
@@ -52,14 +107,14 @@ namespace MegaForm.Core.Services
 
             // Header
             if (settings.HeaderEnabled)
-                sb.AppendLine(BuildHeader(form, schema, settings, formBaseUrl, accent));
+                sb.AppendLine(BuildHeader(form, schema, settings, formBaseUrl, accent, data));
 
             // Date / Ref row
-            if (settings.ShowDateField || settings.ShowRefNumber)
-                sb.AppendLine(BuildDateRefRow(settings));
+            if (settings.ShowDateField || settings.ShowRefNumber || data != null)
+                sb.AppendLine(BuildDateRefRow(settings, data));
 
             // Form fields
-            sb.AppendLine(BuildFields(schema, settings));
+            sb.AppendLine(BuildFields(schema, settings, data));
 
             // Signature areas
             if (settings.SignatureAreas != null && settings.SignatureAreas.Count > 0)
@@ -80,7 +135,7 @@ namespace MegaForm.Core.Services
         // ── Header ──────────────────────────────────────────────────────────
 
         private string BuildHeader(FormInfo form, FormSchema schema, PrintSettings s,
-            string formBaseUrl, string accent)
+            string formBaseUrl, string accent, PrintSubmissionData data = null)
         {
             var sb = new StringBuilder();
             sb.AppendLine("<div class=\"mf-print-header\">");
@@ -131,6 +186,15 @@ namespace MegaForm.Core.Services
             sb.AppendFormat("<h1 class=\"mf-print-form-title\">{0}</h1>", Escape(titleDisplay.ToUpperInvariant()));
             if (!string.IsNullOrWhiteSpace(s.PrintSubtitle))
                 sb.AppendFormat("<div class=\"mf-print-form-subtitle\">{0}</div>", Escape(s.PrintSubtitle));
+            // [SubmissionPrint v20260713] Status stamp — the one thing a reviewer looks
+            // for on a document (INVOICED / REJECTED / PENDING…).
+            if (data != null && !string.IsNullOrWhiteSpace(data.Status))
+            {
+                string tone = StampTone(data.Status);
+                sb.AppendFormat("<div class=\"mf-print-stamp mf-print-stamp--{0}\">{1}</div>",
+                    tone, Escape(data.Status.ToUpperInvariant()));
+                sb.AppendLine();
+            }
             sb.AppendLine("</div>"); // title-block
 
             // QR code
@@ -170,23 +234,50 @@ namespace MegaForm.Core.Services
 
         // ── Date / Ref Row ───────────────────────────────────────────────────
 
-        private string BuildDateRefRow(PrintSettings s)
+        private string BuildDateRefRow(PrintSettings s, PrintSubmissionData data = null)
         {
             var sb = new StringBuilder();
             sb.AppendLine("<div class=\"mf-print-meta-row\">");
-            if (s.ShowDateField)
-                sb.AppendLine("<div class=\"mf-print-meta-field\"><span class=\"mf-print-meta-label\">Date:</span><span class=\"mf-print-meta-line\"></span></div>");
-            if (s.ShowRefNumber)
-                sb.AppendFormat(
-                    "<div class=\"mf-print-meta-field\"><span class=\"mf-print-meta-label\">{0}</span><span class=\"mf-print-meta-line\"></span></div>",
-                    Escape(s.RefNumberLabel ?? "Ref #"));
+            if (s.ShowDateField || data != null)
+            {
+                string dateVal = data != null && data.SubmittedAtUtc.HasValue
+                    ? data.SubmittedAtUtc.Value.ToString("yyyy-MM-dd HH:mm") + " UTC"
+                    : null;
+                sb.AppendLine(MetaField("Date:", dateVal));
+            }
+            if (s.ShowRefNumber || data != null)
+            {
+                string refVal = data != null ? "SUB-" + data.SubmissionId : null;
+                sb.AppendLine(MetaField(s.RefNumberLabel ?? "Ref #", refVal));
+            }
+            if (data != null && !string.IsNullOrWhiteSpace(data.SubmittedBy))
+                sb.AppendLine(MetaField("Submitted by:", data.SubmittedBy));
             sb.AppendLine("</div>");
             return sb.ToString();
         }
 
+        private static string MetaField(string label, string value)
+        {
+            return string.Format(
+                "<div class=\"mf-print-meta-field\"><span class=\"mf-print-meta-label\">{0}</span><span class=\"mf-print-meta-line{1}\">{2}</span></div>",
+                Escape(label),
+                string.IsNullOrEmpty(value) ? "" : " mf-print-filled",
+                Escape(value ?? ""));
+        }
+
+        private static string StampTone(string status)
+        {
+            string st = (status ?? "").ToLowerInvariant();
+            if (st.Contains("invoic") || st.Contains("approv") || st.Contains("paid") || st.Contains("complete") || st.Contains("done"))
+                return "ok";
+            if (st.Contains("reject") || st.Contains("cancel") || st.Contains("fail") || st.Contains("spam"))
+                return "bad";
+            return "wait";
+        }
+
         // ── Fields ───────────────────────────────────────────────────────────
 
-        private string BuildFields(FormSchema schema, PrintSettings s)
+        private string BuildFields(FormSchema schema, PrintSettings s, PrintSubmissionData data = null)
         {
             if (schema?.Fields == null || schema.Fields.Count == 0)
                 return "<p class=\"mf-print-no-fields\">No fields defined.</p>";
@@ -194,11 +285,18 @@ namespace MegaForm.Core.Services
             var sb = new StringBuilder();
             sb.AppendLine("<div class=\"mf-print-fields\">");
 
+            // [SubmissionPrint v20260713] Builder-saved schemas can carry duplicated
+            // fields (the fields/Fields double-key trap) — printing a document twice
+            // over is worse than a blank form twice over, so dedupe by key here.
+            var seenKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
             foreach (var field in schema.Fields)
             {
                 if (field == null) continue;
 
                 string type = (field.Type ?? "").ToLowerInvariant();
+                if (data != null && !string.IsNullOrWhiteSpace(field.Key) && !seenKeys.Add(field.Key))
+                    continue;
 
                 // Page break / section header
                 if (type == "pagebreak")
@@ -242,7 +340,7 @@ namespace MegaForm.Core.Services
                         sb.AppendFormat("<div class=\"mf-print-col\" style=\"flex:{0}\">", col.Span > 0 ? col.Span : 1);
                         if (col.Fields != null)
                             foreach (var nested in col.Fields)
-                                sb.AppendLine(BuildSingleField(nested, s));
+                                sb.AppendLine(BuildSingleField(nested, s, data));
                         sb.AppendLine("</div>");
                     }
                     sb.AppendLine("</div>"); // mf-print-row
@@ -252,35 +350,97 @@ namespace MegaForm.Core.Services
                 // Signature field type → render signature box
                 if (type == "signature")
                 {
-                    sb.AppendLine(BuildSignatureField(field, s));
+                    sb.AppendLine(BuildSignatureField(field, s, data));
                     continue;
                 }
 
                 // Line items table
                 if (type == "lineitems" || type == "productlineitems" || type == "grid-repeater")
                 {
-                    sb.AppendLine(BuildLineItemsTable(field, s));
+                    sb.AppendLine(BuildLineItemsTable(field, s, data));
                     continue;
                 }
 
                 // Standard field
-                sb.AppendLine(BuildSingleField(field, s));
+                sb.AppendLine(BuildSingleField(field, s, data));
             }
 
             sb.AppendLine("</div>"); // mf-print-fields
             return sb.ToString();
         }
 
-        private string BuildSingleField(FormField field, PrintSettings s)
+        // ── Submission value lookup ──────────────────────────────────────────
+
+        private static string DisplayFor(PrintSubmissionData data, FormField field)
+        {
+            if (data == null || field == null || string.IsNullOrWhiteSpace(field.Key)) return null;
+            string v;
+            return data.Display.TryGetValue(field.Key, out v) ? v : null;
+        }
+
+        private static string RawFor(PrintSubmissionData data, FormField field)
+        {
+            if (data == null || field == null || string.IsNullOrWhiteSpace(field.Key)) return null;
+            string v;
+            return data.Raw.TryGetValue(field.Key, out v) ? v : null;
+        }
+
+        private static bool LooksLikeImage(string v)
+        {
+            if (string.IsNullOrWhiteSpace(v)) return false;
+            string t = v.Trim();
+            if (t.StartsWith("data:image/", StringComparison.OrdinalIgnoreCase)) return true;
+            if (!(t.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
+                || t.StartsWith("https://", StringComparison.OrdinalIgnoreCase)
+                || t.StartsWith("/", StringComparison.Ordinal))) return false;
+            int q = t.IndexOfAny(new[] { '?', '#' });
+            if (q >= 0) t = t.Substring(0, q);
+            return t.EndsWith(".png", StringComparison.OrdinalIgnoreCase)
+                || t.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase)
+                || t.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase)
+                || t.EndsWith(".gif", StringComparison.OrdinalIgnoreCase)
+                || t.EndsWith(".webp", StringComparison.OrdinalIgnoreCase)
+                || t.EndsWith(".svg", StringComparison.OrdinalIgnoreCase);
+        }
+
+        // Selected values of a choice field: raw JSON array, else the single raw value,
+        // else the display string split on commas (legacy snapshots).
+        private static HashSet<string> SelectedValues(PrintSubmissionData data, FormField field)
+        {
+            var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            string raw = RawFor(data, field);
+            if (!string.IsNullOrWhiteSpace(raw))
+            {
+                string t = raw.Trim();
+                if (t.StartsWith("["))
+                {
+                    try
+                    {
+                        var arr = JsonConvert.DeserializeObject<List<string>>(t);
+                        if (arr != null) { foreach (var x in arr) if (!string.IsNullOrWhiteSpace(x)) set.Add(x.Trim()); }
+                    }
+                    catch { }
+                }
+                if (set.Count == 0) set.Add(t);
+            }
+            string display = DisplayFor(data, field);
+            if (!string.IsNullOrWhiteSpace(display))
+                foreach (var part in display.Split(',')) { var p = part.Trim(); if (p.Length > 0) set.Add(p); }
+            return set;
+        }
+
+        private string BuildSingleField(FormField field, PrintSettings s, PrintSubmissionData data = null)
         {
             if (field == null) return "";
             string type  = (field.Type ?? "").ToLowerInvariant();
             string label = Escape(field.Label ?? "");
             string lineStyle = s.FieldLineStyle ?? "underline";
+            string display = DisplayFor(data, field);
 
-            // Checkbox / Radio — render option list
+            // Checkbox / Radio — render option list (submission → tick the chosen ones)
             if (type == "checkbox" || type == "radio" || type == "checkboxgroup")
             {
+                var selected = data != null ? SelectedValues(data, field) : null;
                 var sb2 = new StringBuilder();
                 sb2.AppendFormat("<div class=\"mf-print-field mf-print-field--check\">");
                 sb2.AppendFormat("<div class=\"mf-print-field-label\">{0}</div>", label);
@@ -289,8 +449,11 @@ namespace MegaForm.Core.Services
                 {
                     foreach (var opt in field.Options)
                     {
+                        bool isChecked = selected != null
+                            && (selected.Contains((opt.Value ?? "").Trim()) || selected.Contains((opt.Label ?? "").Trim()));
                         sb2.AppendFormat(
-                            "<span class=\"mf-print-check-opt\"><span class=\"mf-print-check-box\"></span>{0}</span>",
+                            "<span class=\"mf-print-check-opt\"><span class=\"mf-print-check-box{0}\"></span>{1}</span>",
+                            isChecked ? " is-checked" : "",
                             Escape(opt.Label ?? opt.Value ?? ""));
                     }
                 }
@@ -304,23 +467,38 @@ namespace MegaForm.Core.Services
                 return string.Format(
                     "<div class=\"mf-print-field mf-print-field--textarea\">"
                     + "<div class=\"mf-print-field-label\">{0}</div>"
-                    + "<div class=\"mf-print-field-area mf-print-field--{1}\"></div>"
+                    + "<div class=\"mf-print-field-area mf-print-field--{1}{2}\">{3}</div>"
                     + "</div>",
-                    label, Escape(lineStyle));
+                    label, Escape(lineStyle),
+                    string.IsNullOrEmpty(display) ? "" : " mf-print-filled",
+                    Escape(display ?? ""));
+            }
+
+            // Image-shaped value (photo upload, image widget) → render the picture
+            if (!string.IsNullOrEmpty(display) && LooksLikeImage(display))
+            {
+                return string.Format(
+                    "<div class=\"mf-print-field\">"
+                    + "<div class=\"mf-print-field-label\">{0}</div>"
+                    + "<img class=\"mf-print-value-img\" src=\"{1}\" alt=\"\"/>"
+                    + "</div>",
+                    label, Escape(display.Trim()));
             }
 
             // Standard single-line
             return string.Format(
                 "<div class=\"mf-print-field\">"
                 + "<div class=\"mf-print-field-label\">{0}</div>"
-                + "<div class=\"mf-print-field-line mf-print-field--{1}\"></div>"
+                + "<div class=\"mf-print-field-line mf-print-field--{1}{2}\">{3}</div>"
                 + "</div>",
-                label, Escape(lineStyle));
+                label, Escape(lineStyle),
+                string.IsNullOrEmpty(display) ? "" : " mf-print-filled",
+                Escape(display ?? ""));
         }
 
         // ── Line Items Table ─────────────────────────────────────────────────
 
-        private string BuildLineItemsTable(FormField field, PrintSettings s)
+        private string BuildLineItemsTable(FormField field, PrintSettings s, PrintSubmissionData data = null)
         {
             var sb = new StringBuilder();
             string label = Escape(field.Label ?? "Items");
@@ -328,11 +506,21 @@ namespace MegaForm.Core.Services
             sb.AppendFormat("<div class=\"mf-print-section-header mf-print-section--{0}\">{1}</div>",
                 Escape(s.SectionStyle ?? "filled-bar"), label);
 
+            // [SubmissionPrint v20260713] Submission value = JSON array of row objects.
+            List<Dictionary<string, object>> items = null;
+            string raw = RawFor(data, field);
+            if (!string.IsNullOrWhiteSpace(raw) && raw.TrimStart().StartsWith("["))
+            {
+                try { items = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(raw); }
+                catch { }
+            }
+
             sb.AppendLine("<table class=\"mf-print-table\">");
             sb.AppendLine("  <thead><tr>");
 
             // Determine columns from widgetProps or defaults
             var cols = new List<string> { "QTY", "Description", "Unit Price", "Amount" };
+            bool colsConfigured = false;
             if (field.WidgetProps != null)
             {
                 string colsJson = field.WidgetProps["columns"]?.ToString();
@@ -341,53 +529,133 @@ namespace MegaForm.Core.Services
                     try
                     {
                         var parsed = JsonConvert.DeserializeObject<List<string>>(colsJson);
-                        if (parsed != null && parsed.Count > 0) cols = parsed;
+                        if (parsed != null && parsed.Count > 0) { cols = parsed; colsConfigured = true; }
                     }
                     catch { }
                 }
+            }
+            // No configured headers but real row data → the row objects' own keys are
+            // the truth (a made-up default header would print values under wrong names).
+            if (!colsConfigured && items != null && items.Count > 0 && items[0] != null && items[0].Count > 0)
+            {
+                cols = new List<string>();
+                foreach (var k in items[0].Keys) cols.Add(HumanizeKey(k));
             }
 
             foreach (var c in cols)
                 sb.AppendFormat("    <th>{0}</th>", Escape(c));
             sb.AppendLine("  </tr></thead>");
 
-            // 8 empty data rows
             sb.AppendLine("  <tbody>");
-            for (int i = 0; i < 8; i++)
+            decimal subTotal = 0; bool hasAmount = false;
+            if (items != null && items.Count > 0)
             {
-                sb.AppendLine("  <tr>");
-                foreach (var _ in cols) sb.AppendLine("    <td></td>");
-                sb.AppendLine("  </tr>");
+                foreach (var item in items)
+                {
+                    sb.AppendLine("  <tr>");
+                    foreach (var c in cols)
+                    {
+                        string cell = CellFor(item, c);
+                        sb.AppendFormat("    <td>{0}</td>", Escape(cell));
+                        sb.AppendLine();
+                    }
+                    // Sum the last column when it is numeric (Amount by convention).
+                    decimal amt;
+                    string last = CellFor(item, cols[cols.Count - 1]);
+                    if (decimal.TryParse((last ?? "").Replace(",", ""), System.Globalization.NumberStyles.Any,
+                            System.Globalization.CultureInfo.InvariantCulture, out amt))
+                    { subTotal += amt; hasAmount = true; }
+                    sb.AppendLine("  </tr>");
+                }
+            }
+            else if (data != null && !string.IsNullOrWhiteSpace(DisplayFor(data, field)))
+            {
+                // Unparseable value → one row with the display text, better than 8 blanks.
+                sb.AppendFormat("  <tr><td colspan=\"{0}\">{1}</td></tr>", cols.Count, Escape(DisplayFor(data, field)));
+                sb.AppendLine();
+            }
+            else
+            {
+                // Blank form → 8 empty data rows to fill by hand
+                for (int i = 0; i < 8; i++)
+                {
+                    sb.AppendLine("  <tr>");
+                    foreach (var _ in cols) sb.AppendLine("    <td></td>");
+                    sb.AppendLine("  </tr>");
+                }
             }
             sb.AppendLine("  </tbody>");
 
             // Summary rows
+            string subTotalText = hasAmount ? subTotal.ToString("#,0.##", System.Globalization.CultureInfo.InvariantCulture) : "";
             sb.AppendLine("  <tfoot>");
-            sb.AppendFormat("  <tr class=\"mf-print-table-subtotal\"><td colspan=\"{0}\">Sub Total</td><td></td></tr>",
-                cols.Count - 1);
+            sb.AppendFormat("  <tr class=\"mf-print-table-subtotal\"><td colspan=\"{0}\">Sub Total</td><td>{1}</td></tr>",
+                cols.Count - 1, Escape(subTotalText));
             sb.AppendLine();
             sb.AppendFormat("  <tr><td colspan=\"{0}\">Tax</td><td></td></tr>", cols.Count - 1);
             sb.AppendLine();
-            sb.AppendFormat("  <tr class=\"mf-print-table-total\"><td colspan=\"{0}\">Total Amount</td><td></td></tr>",
-                cols.Count - 1);
+            sb.AppendFormat("  <tr class=\"mf-print-table-total\"><td colspan=\"{0}\">Total Amount</td><td>{1}</td></tr>",
+                cols.Count - 1, Escape(subTotalText));
             sb.AppendLine();
             sb.AppendLine("  </tfoot>");
             sb.AppendLine("</table>");
             return sb.ToString();
         }
 
+        private static string HumanizeKey(string key)
+        {
+            if (string.IsNullOrWhiteSpace(key)) return key ?? "";
+            var sb = new StringBuilder();
+            foreach (var ch in key.Replace('_', ' ').Replace('-', ' '))
+            {
+                if (char.IsUpper(ch) && sb.Length > 0 && sb[sb.Length - 1] != ' ') sb.Append(' ');
+                sb.Append(ch);
+            }
+            string t = sb.ToString().Trim();
+            return t.Length > 0 ? char.ToUpperInvariant(t[0]) + t.Substring(1) : t;
+        }
+
+        // Row-object value for a column header: exact key, else normalized
+        // (case/space/underscore-insensitive) match, else empty.
+        private static string CellFor(Dictionary<string, object> item, string col)
+        {
+            if (item == null || string.IsNullOrWhiteSpace(col)) return "";
+            object v;
+            if (item.TryGetValue(col, out v)) return v == null ? "" : Convert.ToString(v, System.Globalization.CultureInfo.InvariantCulture);
+            string want = Normalize(col);
+            foreach (var kv in item)
+                if (Normalize(kv.Key) == want)
+                    return kv.Value == null ? "" : Convert.ToString(kv.Value, System.Globalization.CultureInfo.InvariantCulture);
+            return "";
+        }
+
+        private static string Normalize(string sIn)
+        {
+            if (string.IsNullOrEmpty(sIn)) return "";
+            var sb = new StringBuilder();
+            foreach (var ch in sIn) if (char.IsLetterOrDigit(ch)) sb.Append(char.ToLowerInvariant(ch));
+            return sb.ToString();
+        }
+
         // ── Signature ────────────────────────────────────────────────────────
 
-        private string BuildSignatureField(FormField field, PrintSettings s)
+        private string BuildSignatureField(FormField field, PrintSettings s, PrintSubmissionData data = null)
         {
             string label = Escape(field.Label ?? "Signature");
+            string display = DisplayFor(data, field);
+            string boxInner = "";
+            if (!string.IsNullOrEmpty(display) && LooksLikeImage(display))
+                boxInner = string.Format("<img class=\"mf-print-sig-img\" src=\"{0}\" alt=\"\"/>", Escape(display.Trim()));
+            string dateLine = data != null && data.SubmittedAtUtc.HasValue
+                ? "Date: " + data.SubmittedAtUtc.Value.ToString("yyyy-MM-dd")
+                : "Date: _______________";
             return string.Format(
                 "<div class=\"mf-print-sig-field\">"
                 + "<div class=\"mf-print-sig-label\">{0}</div>"
-                + "<div class=\"mf-print-sig-box\"></div>"
-                + "<div class=\"mf-print-sig-date\">Date: _______________</div>"
+                + "<div class=\"mf-print-sig-box\">{1}</div>"
+                + "<div class=\"mf-print-sig-date\">{2}</div>"
                 + "</div>",
-                label);
+                label, boxInner, Escape(dateLine));
         }
 
         private string BuildSignatureRow(PrintSettings s)
@@ -627,6 +895,59 @@ body {{
 .mf-print-html-block {{ margin: 8px 0; font-size: 9pt; color: #475569; }}
 .mf-print-spacer {{ height: 16px; }}
 .mf-print-page-break {{ page-break-before: always; margin-top: 20px; }}
+
+/* ── Submission values ([SubmissionPrint v20260713]) ── */
+.mf-print-field-line.mf-print-filled,
+.mf-print-field-area.mf-print-filled {{
+  height: auto;
+  min-height: 18px;
+  padding: 2px 4px 3px;
+  font-weight: 600;
+  color: #0f172a;
+  white-space: pre-wrap;
+  word-break: break-word;
+}}
+.mf-print-field-area.mf-print-filled {{ min-height: 54px; }}
+.mf-print-meta-line.mf-print-filled {{
+  height: auto;
+  min-height: 14px;
+  font-weight: 600;
+  color: #0f172a;
+  padding: 0 4px 2px;
+}}
+.mf-print-check-box.is-checked {{
+  background: {8};
+  border-color: {8};
+  position: relative;
+}}
+.mf-print-check-box.is-checked::after {{
+  content: '\2713';
+  position: absolute;
+  inset: 0;
+  color: #fff;
+  font-size: 9px;
+  line-height: 12px;
+  text-align: center;
+  font-weight: 700;
+}}
+.mf-print-value-img {{ max-width: 220px; max-height: 140px; display: block; border: 1px solid #e2e8f0; border-radius: 3px; }}
+.mf-print-sig-img {{ max-width: 100%; max-height: 52px; display: block; margin: 2px auto; }}
+.mf-print-stamp {{
+  display: inline-block;
+  margin-top: 8px;
+  padding: 3px 14px;
+  border: 2.5px solid #64748b;
+  border-radius: 4px;
+  color: #64748b;
+  font-size: 12pt;
+  font-weight: 800;
+  letter-spacing: .14em;
+  transform: rotate(-4deg);
+  text-transform: uppercase;
+}}
+.mf-print-stamp--ok  {{ border-color: #047857; color: #047857; }}
+.mf-print-stamp--bad {{ border-color: #b91c1c; color: #b91c1c; }}
+.mf-print-stamp--wait {{ border-color: #b45309; color: #b45309; }}
 
 /* ── Line items table ───────────────── */
 .mf-print-table {{

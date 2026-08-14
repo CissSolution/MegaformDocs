@@ -79,6 +79,8 @@ MegaForm.Sdk.PagedResult<T>.PageSize.set -> void
 MegaForm.Sdk.PagedResult<T>.TotalCount.get -> int
 MegaForm.Sdk.PagedResult<T>.TotalCount.set -> void
 MegaForm.Sdk.SubmissionDto
+MegaForm.Sdk.SubmissionDto.Data.get -> System.Collections.Generic.Dictionary<string!, object!>!
+MegaForm.Sdk.SubmissionDto.Data.set -> void
 MegaForm.Sdk.SubmissionDto.DataJson.get -> string?
 MegaForm.Sdk.SubmissionDto.DataJson.set -> void
 MegaForm.Sdk.SubmissionDto.FormId.get -> int
@@ -293,10 +295,47 @@ MegaForm.Sdk.SubmissionSearchQuery.DateFrom.get -> System.DateTime?
 MegaForm.Sdk.SubmissionSearchQuery.DateFrom.set -> void
 MegaForm.Sdk.SubmissionSearchQuery.DateTo.get -> System.DateTime?
 MegaForm.Sdk.SubmissionSearchQuery.DateTo.set -> void
+MegaForm.Sdk.SubmissionSearchQuery.FieldFilters.get -> System.Collections.Generic.IReadOnlyList<MegaForm.Sdk.SubmissionFieldFilter!>!
+MegaForm.Sdk.SubmissionSearchQuery.FieldFilters.set -> void
 MegaForm.Sdk.SubmissionSearchQuery.Page.get -> int
 MegaForm.Sdk.SubmissionSearchQuery.Page.set -> void
 MegaForm.Sdk.SubmissionSearchQuery.PageSize.get -> int
 MegaForm.Sdk.SubmissionSearchQuery.PageSize.set -> void
+MegaForm.Sdk.SubmissionFieldDataType
+MegaForm.Sdk.SubmissionFieldDataType.Boolean = 4 -> MegaForm.Sdk.SubmissionFieldDataType
+MegaForm.Sdk.SubmissionFieldDataType.Date = 3 -> MegaForm.Sdk.SubmissionFieldDataType
+MegaForm.Sdk.SubmissionFieldDataType.Json = 5 -> MegaForm.Sdk.SubmissionFieldDataType
+MegaForm.Sdk.SubmissionFieldDataType.LongText = 1 -> MegaForm.Sdk.SubmissionFieldDataType
+MegaForm.Sdk.SubmissionFieldDataType.Number = 2 -> MegaForm.Sdk.SubmissionFieldDataType
+MegaForm.Sdk.SubmissionFieldDataType.String = 0 -> MegaForm.Sdk.SubmissionFieldDataType
+MegaForm.Sdk.SubmissionFieldFilter
+MegaForm.Sdk.SubmissionFieldFilter.BooleanValue.get -> bool?
+MegaForm.Sdk.SubmissionFieldFilter.BooleanValue.set -> void
+MegaForm.Sdk.SubmissionFieldFilter.DataType.get -> MegaForm.Sdk.SubmissionFieldDataType?
+MegaForm.Sdk.SubmissionFieldFilter.DataType.set -> void
+MegaForm.Sdk.SubmissionFieldFilter.DateValue.get -> System.DateTime?
+MegaForm.Sdk.SubmissionFieldFilter.DateValue.set -> void
+MegaForm.Sdk.SubmissionFieldFilter.FieldKey.get -> string!
+MegaForm.Sdk.SubmissionFieldFilter.FieldKey.set -> void
+MegaForm.Sdk.SubmissionFieldFilter.NumberValue.get -> decimal?
+MegaForm.Sdk.SubmissionFieldFilter.NumberValue.set -> void
+MegaForm.Sdk.SubmissionFieldFilter.Operator.get -> MegaForm.Sdk.SubmissionFieldFilterOperator
+MegaForm.Sdk.SubmissionFieldFilter.Operator.set -> void
+MegaForm.Sdk.SubmissionFieldFilter.SubmissionFieldFilter() -> void
+MegaForm.Sdk.SubmissionFieldFilter.TextValue.get -> string?
+MegaForm.Sdk.SubmissionFieldFilter.TextValue.set -> void
+MegaForm.Sdk.SubmissionFieldFilterOperator
+MegaForm.Sdk.SubmissionFieldFilterOperator.Contains = 2 -> MegaForm.Sdk.SubmissionFieldFilterOperator
+MegaForm.Sdk.SubmissionFieldFilterOperator.EndsWith = 4 -> MegaForm.Sdk.SubmissionFieldFilterOperator
+MegaForm.Sdk.SubmissionFieldFilterOperator.Equals = 0 -> MegaForm.Sdk.SubmissionFieldFilterOperator
+MegaForm.Sdk.SubmissionFieldFilterOperator.GreaterThan = 5 -> MegaForm.Sdk.SubmissionFieldFilterOperator
+MegaForm.Sdk.SubmissionFieldFilterOperator.GreaterThanOrEqual = 6 -> MegaForm.Sdk.SubmissionFieldFilterOperator
+MegaForm.Sdk.SubmissionFieldFilterOperator.IsEmpty = 9 -> MegaForm.Sdk.SubmissionFieldFilterOperator
+MegaForm.Sdk.SubmissionFieldFilterOperator.IsNotEmpty = 10 -> MegaForm.Sdk.SubmissionFieldFilterOperator
+MegaForm.Sdk.SubmissionFieldFilterOperator.LessThan = 7 -> MegaForm.Sdk.SubmissionFieldFilterOperator
+MegaForm.Sdk.SubmissionFieldFilterOperator.LessThanOrEqual = 8 -> MegaForm.Sdk.SubmissionFieldFilterOperator
+MegaForm.Sdk.SubmissionFieldFilterOperator.NotEquals = 1 -> MegaForm.Sdk.SubmissionFieldFilterOperator
+MegaForm.Sdk.SubmissionFieldFilterOperator.StartsWith = 3 -> MegaForm.Sdk.SubmissionFieldFilterOperator
 MegaForm.Sdk.SubmissionListItemDto
 MegaForm.Sdk.SubmissionListItemDto.SubmissionListItemDto() -> void
 MegaForm.Sdk.SubmissionListItemDto.SubmissionId.get -> int
@@ -321,6 +360,8 @@ MegaForm.Sdk.SubmissionListItemDto.IpAddress.get -> string?
 MegaForm.Sdk.SubmissionListItemDto.IpAddress.set -> void
 MegaForm.Sdk.SubmissionListItemDto.SummaryText.get -> string?
 MegaForm.Sdk.SubmissionListItemDto.SummaryText.set -> void
+MegaForm.Sdk.SubmissionListItemDto.Data.get -> System.Collections.Generic.Dictionary<string!, object!>!
+MegaForm.Sdk.SubmissionListItemDto.Data.set -> void
 MegaForm.Sdk.SubmissionListItemDto.DataJson.get -> string?
 MegaForm.Sdk.SubmissionListItemDto.DataJson.set -> void
 MegaForm.Sdk.SubmissionDetailDto

@@ -14,12 +14,10 @@ namespace MegaForm.DNN.Data
     /// dbo.MF_SubmissionValue* tables) using raw SqlConnection/SqlCommand — the same access
     /// pattern as FormRepository / SubmissionIndexerService.
     ///
-    /// DNN is PARALLEL-WRITE: typed rows are written alongside the full MF_Submissions.DataJson.
-    /// <see cref="SupportsDataJsonCollapse"/> is false because DNN readers still consume DataJson
-    /// directly (there is no read-side reconstruction bridge yet), so the submit pipeline must NOT
-    /// collapse DataJson to "{}" on DNN.
+    /// DNN readers reconstruct submission field data from these rows, so the legacy
+    /// submission-wide DataJson column may remain collapsed.
     /// </summary>
-    public sealed class DnnSubmissionDataStore : ISubmissionDataStore
+    public sealed class DnnSubmissionDataStore : ISubmissionDataStore, ISubmissionDataBatchReader
     {
         private readonly Func<DbConnection> _connectionFactory;
         private readonly SubmissionFieldNormalizer _normalizer = new SubmissionFieldNormalizer();
@@ -30,7 +28,7 @@ namespace MegaForm.DNN.Data
         }
 
         // DNN reads still depend on DataJson — do NOT collapse the legacy payload here.
-        public bool SupportsDataJsonCollapse => false;
+        public bool SupportsDataJsonCollapse => true;
 
         private DbConnection Open()
         {
@@ -274,6 +272,164 @@ namespace MegaForm.DNN.Data
                 using (var rd = cmd.ExecuteReader())
                     while (rd.Read()) onRow(rd);
             }
+        }
+
+        // ── batch reads (ISubmissionDataBatchReader) ─────────────────────────
+
+        /// <summary>
+        /// [PerfFix 2026-08-07] Batch typed read — one query per table for the whole id set.
+        /// The per-record path costs 1 (fields) + 6 (value tables) queries PER FIELD: a blog
+        /// listing of 39 posts with ~57 typed fields each fired ~2,300 round trips per named
+        /// query (~24s TTFB on the live /Blogs page, which runs three named queries). This
+        /// loads the same documents in 7 queries per 500-id chunk.
+        /// </summary>
+        public IDictionary<int, SubmissionDataDocument> GetDataMany(IReadOnlyCollection<int> submissionIds)
+        {
+            var result = new Dictionary<int, SubmissionDataDocument>();
+            if (submissionIds == null || submissionIds.Count == 0) return result;
+
+            var ids = new List<int>();
+            var seen = new HashSet<int>();
+            foreach (var id in submissionIds)
+                if (id > 0 && seen.Add(id)) ids.Add(id);
+            if (ids.Count == 0) return result;
+
+            using (var conn = Open())
+            {
+                // SQL Server caps a command at 2100 parameters; 500 keeps 4x headroom.
+                const int chunkSize = 500;
+                for (var offset = 0; offset < ids.Count; offset += chunkSize)
+                {
+                    var chunk = ids.GetRange(offset, Math.Min(chunkSize, ids.Count - offset));
+                    var fields = ReadFieldsMany(conn, chunk);
+                    if (fields.Count == 0) continue;
+
+                    // Value tables carry SubmissionId, so the whole chunk reads in one query per table.
+                    var strings   = ReadValuesMany(conn, "MF_SubmissionValueString",   chunk);
+                    var longTexts = ReadValuesMany(conn, "MF_SubmissionValueLongText", chunk);
+                    var numbers   = ReadValuesMany(conn, "MF_SubmissionValueNumber",   chunk);
+                    var dates     = ReadValuesMany(conn, "MF_SubmissionValueDate",     chunk);
+                    var booleans  = ReadValuesMany(conn, "MF_SubmissionValueBoolean",  chunk);
+                    var jsons     = ReadValuesMany(conn, "MF_SubmissionValueJson",     chunk);
+
+                    var bySubmission = new Dictionary<int, List<SubmissionFieldRecord>>();
+                    foreach (var f in fields)
+                    {
+                        List<SubmissionFieldRecord> list;
+                        if (!bySubmission.TryGetValue(f.SubmissionId, out list))
+                            bySubmission[f.SubmissionId] = list = new List<SubmissionFieldRecord>();
+                        list.Add(f);
+                    }
+
+                    var reconstructor = new SubmissionDataReconstructor();
+                    foreach (var pair in bySubmission)
+                    {
+                        var doc = new SubmissionDataDocument
+                        {
+                            SubmissionId = pair.Key,
+                            FormId = pair.Value.Count > 0 ? pair.Value[0].FormId : 0,
+                            Fields = pair.Value,
+                            FieldValues = new Dictionary<long, TypedFieldValues>()
+                        };
+                        foreach (var f in pair.Value)
+                        {
+                            var tv = new TypedFieldValues();
+                            FillValues(strings,   f.SubmissionFieldId, v => tv.StringValues.Add((string)v));
+                            FillValues(longTexts, f.SubmissionFieldId, v => tv.LongTextValues.Add((string)v));
+                            FillValues(numbers,   f.SubmissionFieldId, v => tv.NumberValues.Add((decimal?)v));
+                            FillValues(dates,     f.SubmissionFieldId, v => tv.DateValues.Add((DateTime?)v));
+                            FillValues(booleans,  f.SubmissionFieldId, v => tv.BooleanValues.Add(v != null && (bool)v));
+                            FillValues(jsons,     f.SubmissionFieldId, v => tv.JsonValues.Add((string)v));
+                            doc.FieldValues[f.SubmissionFieldId] = tv;
+                        }
+                        doc.Data = reconstructor.Reconstruct(doc);
+                        result[pair.Key] = doc;
+                    }
+                }
+            }
+            return result;
+        }
+
+        private static string BuildInParameters(DbCommand cmd, List<int> ids)
+        {
+            var names = new string[ids.Count];
+            for (var i = 0; i < ids.Count; i++)
+            {
+                names[i] = "@p" + i;
+                AddParam(cmd, names[i], ids[i]);
+            }
+            return string.Join(",", names);
+        }
+
+        private static List<SubmissionFieldRecord> ReadFieldsMany(DbConnection conn, List<int> submissionIds)
+        {
+            var list = new List<SubmissionFieldRecord>();
+            using (var cmd = conn.CreateCommand())
+            {
+                cmd.CommandText =
+                    "SELECT SubmissionFieldId, SubmissionId, FormId, FormFieldId, FieldKey, FieldId, FieldAlias, " +
+                    "FieldType, DataType, LabelSnapshot, PageIndex, FieldOrder, DisplayValue, HasValue, IsSensitive, " +
+                    "CreatedOnUtc, UpdatedOnUtc FROM dbo.MF_SubmissionFields WHERE SubmissionId IN (" +
+                    BuildInParameters(cmd, submissionIds) +
+                    ") ORDER BY SubmissionId, ISNULL(PageIndex,0), ISNULL(FieldOrder,0), SubmissionFieldId;";
+                using (var rd = cmd.ExecuteReader())
+                {
+                    while (rd.Read())
+                    {
+                        list.Add(new SubmissionFieldRecord
+                        {
+                            SubmissionFieldId = rd.GetInt64(0),
+                            SubmissionId = rd.GetInt32(1),
+                            FormId = rd.GetInt32(2),
+                            FormFieldId = rd.IsDBNull(3) ? (long?)null : rd.GetInt64(3),
+                            FieldKey = rd.IsDBNull(4) ? null : rd.GetString(4),
+                            FieldId = rd.IsDBNull(5) ? null : rd.GetString(5),
+                            FieldAlias = rd.IsDBNull(6) ? null : rd.GetString(6),
+                            FieldType = rd.IsDBNull(7) ? null : rd.GetString(7),
+                            DataType = rd.IsDBNull(8) ? null : rd.GetString(8),
+                            LabelSnapshot = rd.IsDBNull(9) ? null : rd.GetString(9),
+                            PageIndex = rd.IsDBNull(10) ? (int?)null : rd.GetInt32(10),
+                            FieldOrder = rd.IsDBNull(11) ? (int?)null : rd.GetInt32(11),
+                            DisplayValue = rd.IsDBNull(12) ? null : rd.GetString(12),
+                            HasValue = !rd.IsDBNull(13) && rd.GetBoolean(13),
+                            IsSensitive = !rd.IsDBNull(14) && rd.GetBoolean(14),
+                            CreatedOnUtc = rd.IsDBNull(15) ? DateTime.UtcNow : rd.GetDateTime(15),
+                            UpdatedOnUtc = rd.IsDBNull(16) ? (DateTime?)null : rd.GetDateTime(16)
+                        });
+                    }
+                }
+            }
+            return list;
+        }
+
+        private static Dictionary<long, List<object>> ReadValuesMany(DbConnection conn, string table, List<int> submissionIds)
+        {
+            var map = new Dictionary<long, List<object>>();
+            using (var cmd = conn.CreateCommand())
+            {
+                cmd.CommandText = "SELECT SubmissionFieldId, Value FROM dbo." + table +
+                    " WHERE SubmissionId IN (" + BuildInParameters(cmd, submissionIds) +
+                    ") ORDER BY SubmissionFieldId, Ordinal;";
+                using (var rd = cmd.ExecuteReader())
+                {
+                    while (rd.Read())
+                    {
+                        var fieldId = rd.GetInt64(0);
+                        List<object> values;
+                        if (!map.TryGetValue(fieldId, out values))
+                            map[fieldId] = values = new List<object>();
+                        values.Add(rd.IsDBNull(1) ? null : rd.GetValue(1));
+                    }
+                }
+            }
+            return map;
+        }
+
+        private static void FillValues(Dictionary<long, List<object>> map, long fieldId, Action<object> add)
+        {
+            List<object> values;
+            if (map.TryGetValue(fieldId, out values))
+                foreach (var v in values) add(v);
         }
 
         // The typed value getters are rarely used on DNN (reads go through DataJson today) but are

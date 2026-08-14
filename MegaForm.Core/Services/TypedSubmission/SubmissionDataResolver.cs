@@ -29,7 +29,7 @@ namespace MegaForm.Core.Services.TypedSubmission
         /// </summary>
         public Dictionary<string, object> GetData(int submissionId, string dataJsonFallback)
         {
-            if (_typedStore != null && _typedStore.SupportsDataJsonCollapse)
+            if (_typedStore != null)
             {
                 try
                 {
@@ -91,7 +91,7 @@ namespace MegaForm.Core.Services.TypedSubmission
         /// </summary>
         public bool HasTypedData(int submissionId)
         {
-            if (_typedStore == null || !_typedStore.SupportsDataJsonCollapse)
+            if (_typedStore == null)
                 return false;
 
             try

@@ -35,6 +35,42 @@ namespace MegaForm.Core.Models
         /// still ONE bounded SQL page (OFFSET/FETCH pushed down), per CLAUDE.md bounded-read rule 11.
         /// </summary>
         public bool TrustedFetch { get; set; }
+
+        /// <summary>
+        /// Typed field predicates. Repositories implementing ISubmissionTypedQueryRepository
+        /// evaluate every predicate in storage before count and paging (AND semantics).
+        /// </summary>
+        public List<SubmissionFieldFilter> FieldFilters { get; set; } = new List<SubmissionFieldFilter>();
+    }
+
+    public enum SubmissionFieldFilterOperator
+    {
+        Equals,
+        NotEquals,
+        Contains,
+        StartsWith,
+        EndsWith,
+        GreaterThan,
+        GreaterThanOrEqual,
+        LessThan,
+        LessThanOrEqual,
+        IsEmpty,
+        IsNotEmpty
+    }
+
+    /// <summary>
+    /// One strongly typed field predicate. DataType may be omitted when exactly one typed value
+    /// property is populated; text is the default for compatibility with select/radio controls.
+    /// </summary>
+    public class SubmissionFieldFilter
+    {
+        public string FieldKey { get; set; }
+        public SubmissionDataType? DataType { get; set; }
+        public SubmissionFieldFilterOperator Operator { get; set; } = SubmissionFieldFilterOperator.Equals;
+        public string TextValue { get; set; }
+        public decimal? NumberValue { get; set; }
+        public DateTime? DateValue { get; set; }
+        public bool? BooleanValue { get; set; }
     }
 
     public class SubmissionListItem
@@ -50,6 +86,8 @@ namespace MegaForm.Core.Models
         public int? UserId { get; set; }
         public string IpAddress { get; set; }
         public string SummaryText { get; set; }
+        public Dictionary<string, object> Data { get; set; } = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+        [Obsolete("Use Data. DataJson is a legacy compatibility mirror and may be collapsed to {} on typed-first hosts.", false)]
         public string DataJson { get; set; }
     }
 
@@ -71,6 +109,7 @@ namespace MegaForm.Core.Models
         public FormInfo Form { get; set; }
         public FormSchema Schema { get; set; }
         public List<FileInfo> Files { get; set; } = new List<FileInfo>();
+        public Dictionary<string, object> Data { get; set; } = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
         public List<KeyValuePair<string, string>> FlattenedValues { get; set; } = new List<KeyValuePair<string, string>>();
         public List<SubmissionFieldSnapshot> FieldSnapshots { get; set; } = new List<SubmissionFieldSnapshot>();
         public bool HasSnapshot { get; set; }

@@ -2564,7 +2564,7 @@ namespace MegaForm.Oqtane.Server.Controllers
                      FormId = item.FormId,
                      UserId = item.UserId,
                      Status = item.Status,
-                     DataJson = item.DataJson
+                     DataJson = JsonConvert.SerializeObject(item.Data ?? new Dictionary<string, object>())
                  }, actor, permissions)).ToList()
                 : resultItems.ToList();
             var visibleTotal = visibleItems.Count;
@@ -2583,7 +2583,7 @@ namespace MegaForm.Oqtane.Server.Controllers
                             FormId = x.FormId,
                             UserId = x.UserId,
                             Status = x.Status,
-                            DataJson = x.DataJson,
+                            DataJson = JsonConvert.SerializeObject(x.Data ?? new Dictionary<string, object>()),
                             SubmittedOnUtc = x.SubmittedOnUtc,
                             IpAddress = x.IpAddress,
                             IsSpam = x.IsSpam
@@ -2684,6 +2684,19 @@ namespace MegaForm.Oqtane.Server.Controllers
             var rawValue = ReadJsonString(definition, "value", "Value");
             var expectedValue = ResolveBoundQueryExpectedValue(source, rawValue, actor);
             var requiresFieldFilter = !string.IsNullOrWhiteSpace(fieldKey) && !string.IsNullOrWhiteSpace(expectedValue);
+            SubmissionFieldFilter typedFieldFilter = null;
+            if (requiresFieldFilter && !TryBuildBoundTypedFilter(form, fieldKey, expectedValue, out typedFieldFilter))
+            {
+                return new SubmissionPagedResult<SubmissionListItem>
+                {
+                    Items = new List<SubmissionListItem>(),
+                    TotalCount = 0,
+                    PageIndex = Math.Max(0, query.PageIndex),
+                    PageSize = query.PageSize > 0 ? query.PageSize : 25
+                };
+            }
+
+            var requiresPostProcessing = IsConfiguredAppListViewQuery(queryKey);
 
             var fetchQuery = new SubmissionListQuery
             {
@@ -2692,8 +2705,8 @@ namespace MegaForm.Oqtane.Server.Controllers
                 Search = query.Search,
                 DateFrom = query.DateFrom,
                 DateTo = query.DateTo,
-                PageIndex = 0,
-                PageSize = 5000,
+                PageIndex = requiresPostProcessing ? 0 : query.PageIndex,
+                PageSize = requiresPostProcessing ? 5000 : query.PageSize,
                 // [OwnerRlsSql v20260722-02] Propagate the server-set owner predicate into the
                 // bound-query fetch as well — otherwise an "own"-scoped actor holding a queryKey
                 // would fetch UNFILTERED rows here while the per-row RLS filter is skipped
@@ -2705,23 +2718,22 @@ namespace MegaForm.Oqtane.Server.Controllers
                 // the newest 250 rows. TrustedFetch is ADMIN-only (server-set, never
                 // client-controlled): the anonymous public-queryKey path keeps the strict 250 cap
                 // per bounded-read rule 11 (anonymous = strictest cap).
-                TrustedFetch = IsSubmissionAdmin(actor)
+                TrustedFetch = IsSubmissionAdmin(actor),
+                FieldFilters = typedFieldFilter != null
+                    ? new List<SubmissionFieldFilter> { typedFieldFilter }
+                    : new List<SubmissionFieldFilter>()
             };
 
             var loaded = _submissionQueries.List(fetchQuery);
+            if (!requiresPostProcessing)
+                return loaded;
+
             var filtered = loaded.Items ?? new List<SubmissionListItem>();
 
             if (!string.IsNullOrWhiteSpace(queryStatus))
             {
                 filtered = filtered
                     .Where(item => string.Equals(item?.Status ?? string.Empty, queryStatus, StringComparison.OrdinalIgnoreCase))
-                    .ToList();
-            }
-
-            if (requiresFieldFilter)
-            {
-                filtered = filtered
-                    .Where(item => MatchesSubmissionField(item, fieldKey, expectedValue))
                     .ToList();
             }
 
@@ -2742,6 +2754,108 @@ namespace MegaForm.Oqtane.Server.Controllers
                 PageIndex = safePageIndex,
                 PageSize = pageSizeValue
             };
+        }
+
+        private static bool IsConfiguredAppListViewQuery(string queryKey)
+        {
+            switch ((queryKey ?? string.Empty).Trim().ToLowerInvariant())
+            {
+                case "public-posts":
+                case "recent-posts":
+                case "all-posts":
+                case "featured-posts":
+                case "blog-archive":
+                case "archive-posts":
+                case "archived-posts":
+                case "rss-feed":
+                case "newsletter-candidates":
+                case "editorial-review":
+                case "seo-review":
+                case "legal-review":
+                case "ready-to-publish":
+                case "scheduled-posts":
+                case "publish-calendar":
+                case "content-calendar":
+                case "seo-gaps":
+                case "popular-posts":
+                case "popular-home-posts":
+                case "recent-timeline-posts":
+                case "draft-posts":
+                case "my-drafts":
+                case "comment-moderation":
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        private static bool TryBuildBoundTypedFilter(FormInfo form, string fieldKey, string expectedValue, out SubmissionFieldFilter filter)
+        {
+            filter = null;
+            FormSchema schema;
+            try
+            {
+                schema = string.IsNullOrWhiteSpace(form?.SchemaJson)
+                    ? null
+                    : JsonConvert.DeserializeObject<FormSchema>(form.SchemaJson);
+            }
+            catch
+            {
+                return false;
+            }
+
+            var field = MegaFormUtils.FlattenFields(schema?.Fields ?? new List<FormField>())
+                .FirstOrDefault(candidate => string.Equals(candidate?.Key, fieldKey, StringComparison.OrdinalIgnoreCase));
+            if (field == null) return false;
+
+            var dataType = new MegaForm.Core.Services.TypedSubmission.SubmissionFieldNormalizer().ResolveDataType(field);
+            filter = new SubmissionFieldFilter
+            {
+                FieldKey = field.Key,
+                DataType = dataType,
+                Operator = SubmissionFieldFilterOperator.Equals
+            };
+
+            if (dataType == SubmissionDataType.String || dataType == SubmissionDataType.LongText)
+            {
+                filter.TextValue = expectedValue;
+                return true;
+            }
+            if (dataType == SubmissionDataType.Number
+                && decimal.TryParse(expectedValue, NumberStyles.Number, CultureInfo.InvariantCulture, out var number))
+            {
+                filter.NumberValue = number;
+                return true;
+            }
+            if (dataType == SubmissionDataType.Date
+                && DateTime.TryParse(expectedValue, CultureInfo.InvariantCulture,
+                    DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out var date))
+            {
+                filter.DateValue = date;
+                return true;
+            }
+            if (dataType == SubmissionDataType.Boolean)
+            {
+                var normalized = (expectedValue ?? string.Empty).Trim();
+                if (bool.TryParse(normalized, out var boolean))
+                {
+                    filter.BooleanValue = boolean;
+                    return true;
+                }
+                if (normalized == "1" || normalized.Equals("yes", StringComparison.OrdinalIgnoreCase))
+                {
+                    filter.BooleanValue = true;
+                    return true;
+                }
+                if (normalized == "0" || normalized.Equals("no", StringComparison.OrdinalIgnoreCase))
+                {
+                    filter.BooleanValue = false;
+                    return true;
+                }
+            }
+
+            filter = null;
+            return false;
         }
 
         private static List<SubmissionListItem> ApplyConfiguredAppListViewQuery(IEnumerable<SubmissionListItem> source, string queryKey)
@@ -2894,9 +3008,9 @@ namespace MegaForm.Oqtane.Server.Controllers
 
         private static JObject SubmissionData(SubmissionListItem item)
         {
-            if (item == null || string.IsNullOrWhiteSpace(item.DataJson))
+            if (item?.Data == null || item.Data.Count == 0)
                 return new JObject();
-            return ParseObject(item.DataJson);
+            return JObject.FromObject(item.Data);
         }
 
         private static string JsonString(SubmissionListItem item, string field)
@@ -2961,25 +3075,6 @@ namespace MegaForm.Oqtane.Server.Controllers
             return rawValue ?? string.Empty;
         }
 
-        private static bool MatchesSubmissionField(SubmissionListItem item, string fieldKey, string expectedValue)
-        {
-            if (item == null || string.IsNullOrWhiteSpace(fieldKey) || string.IsNullOrWhiteSpace(expectedValue))
-                return false;
-
-            var data = ParseObject(item.DataJson);
-            if (data == null || !data.Properties().Any())
-                return false;
-
-            var match = data.Properties().FirstOrDefault(prop => string.Equals(prop.Name, fieldKey, StringComparison.OrdinalIgnoreCase));
-            if (match == null || match.Value == null)
-                return false;
-
-            var actual = match.Value.Type == JTokenType.String
-                ? match.Value.Value<string>()
-                : match.Value.ToString(Newtonsoft.Json.Formatting.None);
-            return string.Equals((actual ?? string.Empty).Trim(), expectedValue.Trim(), StringComparison.OrdinalIgnoreCase);
-        }
-
         [HttpGet("Submissions/{submissionId}")]
         [AllowAnonymous]
         public IActionResult GetSubmission(int submissionId)
@@ -3001,22 +3096,14 @@ namespace MegaForm.Oqtane.Server.Controllers
                 openTasksBySubmission.TryGetValue(detail.Submission.SubmissionId, out var openTasks) ? openTasks : null);
             // [SubmissionDetailData v20260518-10] `values` is FlattenedValues (label/value list).
             // Detail-shell Data tab keys by field KEY → also return parsed `data` dict.
-            Dictionary<string, object> parsedData = null;
-            try
-            {
-                if (!string.IsNullOrWhiteSpace(detail.Submission?.DataJson))
-                    parsedData = JsonConvert.DeserializeObject<Dictionary<string, object>>(detail.Submission.DataJson);
-            }
-            catch { }
-
             return Ok(new
             {
-                submission = ToSubmissionDto(detail.Submission, availableActions),
+                submission = ToSubmissionDto(detail.Submission, availableActions, detail.Data),
                 form = detail.Form,
                 schema = detail.Schema,
                 files = detail.Files,
                 values = detail.FlattenedValues,
-                data = parsedData ?? new Dictionary<string, object>(),
+                data = detail.Data ?? new Dictionary<string, object>(),
                 fieldSnapshots = detail.FieldSnapshots,
                 hasSnapshot = detail.HasSnapshot,
                 workflowDetail = detail.WorkflowDetail
@@ -3157,7 +3244,7 @@ namespace MegaForm.Oqtane.Server.Controllers
                         FormId = item.FormId,
                         UserId = item.UserId,
                         Status = item.Status,
-                        DataJson = item.DataJson
+                        DataJson = JsonConvert.SerializeObject(item.Data ?? new Dictionary<string, object>())
                     }, actor))
                     .ToList();
                 result.TotalCount = result.Items.Count;
@@ -4584,11 +4671,14 @@ namespace MegaForm.Oqtane.Server.Controllers
                 .ToList();
         }
 
-        private static SubmissionDto ToSubmissionDto(MegaForm.Core.Models.SubmissionInfo s, List<SubmissionActionDto> availableActions = null) => new SubmissionDto
+        private static SubmissionDto ToSubmissionDto(
+            MegaForm.Core.Models.SubmissionInfo s,
+            List<SubmissionActionDto> availableActions = null,
+            Dictionary<string, object> data = null) => new SubmissionDto
         {
             SubmissionId = s.SubmissionId,
             FormId = s.FormId,
-            DataJson = s.DataJson,
+            Data = data ?? new Dictionary<string, object>(),
             Status = s.Status,
             IsSpam = s.IsSpam,
             SubmittedOnUtc = s.SubmittedOnUtc,
@@ -4601,7 +4691,7 @@ namespace MegaForm.Oqtane.Server.Controllers
         {
             SubmissionId = s.SubmissionId,
             FormId = s.FormId,
-            DataJson = s.DataJson,
+            Data = s.Data ?? new Dictionary<string, object>(),
             Status = s.Status,
             IsSpam = s.IsSpam,
             SubmittedOnUtc = s.SubmittedOnUtc,

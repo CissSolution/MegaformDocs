@@ -54,6 +54,8 @@ namespace MegaForm.Oqtane.Shared.Models
     {
         public int SubmissionId { get; set; }
         public int FormId { get; set; }
+        public Dictionary<string, object> Data { get; set; } = new();
+        [Obsolete("Use Data. DataJson is retained only for wire compatibility.", false)]
         public string DataJson { get; set; }
         public string Status { get; set; } = "New";
         public bool IsSpam { get; set; }

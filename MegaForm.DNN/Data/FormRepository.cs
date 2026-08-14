@@ -189,6 +189,20 @@ namespace MegaForm.DNN.Data
             DateTime? dateFrom = null, DateTime? dateTo = null,
             int pageIndex = 0, int pageSize = 50)
         {
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                return ListSubmissionsTyped(new SubmissionListQuery
+                {
+                    FormId = formId,
+                    Status = status,
+                    Search = search,
+                    DateFrom = dateFrom,
+                    DateTo = dateTo,
+                    PageIndex = pageIndex,
+                    PageSize = pageSize
+                });
+            }
+
             var list = new List<SubmissionInfo>();
             int total = 0;
             pageIndex = Math.Max(0, pageIndex);
@@ -219,21 +233,11 @@ namespace MegaForm.DNN.Data
             }
 
             var where = new List<string> { "1 = 1" };
-            var searchTerm = string.IsNullOrWhiteSpace(search) ? null : search.Trim();
-            var searchLike = searchTerm != null ? "%" + searchTerm + "%" : null;
-            int exactSubmissionId = 0;
-            var hasExactSubmissionId = !string.IsNullOrWhiteSpace(searchTerm) && int.TryParse(searchTerm, out exactSubmissionId) && exactSubmissionId > 0;
             var effectiveDateTo = dateTo.HasValue ? dateTo.Value.Date.AddDays(1) : (DateTime?)null;
 
             if (!string.IsNullOrWhiteSpace(status)) where.Add("s.[Status] = @Status");
             if (dateFrom.HasValue) where.Add("s.SubmittedOnUtc >= @DateFrom");
             if (effectiveDateTo.HasValue) where.Add("s.SubmittedOnUtc < @DateTo");
-            if (!string.IsNullOrWhiteSpace(searchTerm))
-            {
-                where.Add(hasExactSubmissionId
-                    ? "(s.SubmissionId = @ExactSubmissionId OR ISNULL(s.IpAddress, '') LIKE @SearchLike OR ISNULL(s.[Status], '') LIKE @SearchLike OR EXISTS (SELECT 1 FROM dbo.MF_SubmissionValues v WHERE v.SubmissionId = s.SubmissionId AND (ISNULL(v.FieldKey, '') LIKE @SearchLike OR ISNULL(v.FieldValue, '') LIKE @SearchLike)))"
-                    : "(ISNULL(s.IpAddress, '') LIKE @SearchLike OR ISNULL(s.[Status], '') LIKE @SearchLike OR EXISTS (SELECT 1 FROM dbo.MF_SubmissionValues v WHERE v.SubmissionId = s.SubmissionId AND (ISNULL(v.FieldKey, '') LIKE @SearchLike OR ISNULL(v.FieldValue, '') LIKE @SearchLike)))");
-            }
 
             var whereSql = string.Join(" AND ", where);
             var listSql = @"
@@ -259,11 +263,6 @@ WHERE " + whereSql + ";";
                     if (!string.IsNullOrWhiteSpace(status)) listCmd.Parameters.AddWithValue("@Status", status);
                     if (dateFrom.HasValue) listCmd.Parameters.AddWithValue("@DateFrom", dateFrom.Value);
                     if (effectiveDateTo.HasValue) listCmd.Parameters.AddWithValue("@DateTo", effectiveDateTo.Value);
-                    if (!string.IsNullOrWhiteSpace(searchTerm))
-                    {
-                        listCmd.Parameters.AddWithValue("@SearchLike", searchLike);
-                        if (hasExactSubmissionId) listCmd.Parameters.AddWithValue("@ExactSubmissionId", exactSubmissionId);
-                    }
                     using (var reader = listCmd.ExecuteReader())
                     {
                         while (reader.Read()) list.Add(MapSubmission(reader));
@@ -276,11 +275,6 @@ WHERE " + whereSql + ";";
                     if (!string.IsNullOrWhiteSpace(status)) countCmd.Parameters.AddWithValue("@Status", status);
                     if (dateFrom.HasValue) countCmd.Parameters.AddWithValue("@DateFrom", dateFrom.Value);
                     if (effectiveDateTo.HasValue) countCmd.Parameters.AddWithValue("@DateTo", effectiveDateTo.Value);
-                    if (!string.IsNullOrWhiteSpace(searchTerm))
-                    {
-                        countCmd.Parameters.AddWithValue("@SearchLike", searchLike);
-                        if (hasExactSubmissionId) countCmd.Parameters.AddWithValue("@ExactSubmissionId", exactSubmissionId);
-                    }
                     total = Convert.ToInt32(countCmd.ExecuteScalar() ?? 0);
                 }
             }
@@ -295,6 +289,21 @@ WHERE " + whereSql + ";";
             if (formId <= 0 || userId <= 0)
                 return (new List<SubmissionInfo>(), 0);
 
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                return ListSubmissionsTyped(new SubmissionListQuery
+                {
+                    FormId = formId,
+                    UserId = userId,
+                    Status = status,
+                    Search = search,
+                    DateFrom = dateFrom,
+                    DateTo = dateTo,
+                    PageIndex = pageIndex,
+                    PageSize = pageSize
+                });
+            }
+
             pageIndex = Math.Max(0, pageIndex);
             pageSize = pageSize > 0 ? Math.Min(pageSize, 5000) : 50;
             var where = new List<string> { "s.FormId = @FormId", "s.UserId = @UserId" };
@@ -302,9 +311,6 @@ WHERE " + whereSql + ";";
             if (!string.IsNullOrWhiteSpace(status)) where.Add("s.[Status] = @Status");
             if (dateFrom.HasValue) where.Add("s.SubmittedOnUtc >= @DateFrom");
             if (effectiveDateTo.HasValue) where.Add("s.SubmittedOnUtc < @DateTo");
-            if (!string.IsNullOrWhiteSpace(search))
-                where.Add("(ISNULL(s.DataJson, '') LIKE @Search OR ISNULL(s.IpAddress, '') LIKE @Search OR ISNULL(s.[Status], '') LIKE @Search)");
-
             var whereSql = string.Join(" AND ", where);
             var listSql = "SELECT s.* FROM dbo.MF_Submissions s WHERE " + whereSql
                 + " ORDER BY s.SubmittedOnUtc DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;";
@@ -316,7 +322,7 @@ WHERE " + whereSql + ";";
                 conn.Open();
                 using (var cmd = new SqlCommand(listSql, conn))
                 {
-                    AddOwnedListParameters(cmd, formId, userId, status, search, dateFrom, effectiveDateTo);
+                    AddOwnedListParameters(cmd, formId, userId, status, dateFrom, effectiveDateTo);
                     cmd.Parameters.AddWithValue("@Offset", pageIndex * pageSize);
                     cmd.Parameters.AddWithValue("@PageSize", pageSize);
                     using (var reader = cmd.ExecuteReader())
@@ -325,19 +331,18 @@ WHERE " + whereSql + ";";
 
                 using (var cmd = new SqlCommand(countSql, conn))
                 {
-                    AddOwnedListParameters(cmd, formId, userId, status, search, dateFrom, effectiveDateTo);
+                    AddOwnedListParameters(cmd, formId, userId, status, dateFrom, effectiveDateTo);
                     return (items, Convert.ToInt32(cmd.ExecuteScalar()));
                 }
             }
         }
 
         private static void AddOwnedListParameters(SqlCommand cmd, int formId, int userId,
-            string status, string search, DateTime? dateFrom, DateTime? dateTo)
+            string status, DateTime? dateFrom, DateTime? dateTo)
         {
             cmd.Parameters.AddWithValue("@FormId", formId);
             cmd.Parameters.AddWithValue("@UserId", userId);
             if (!string.IsNullOrWhiteSpace(status)) cmd.Parameters.AddWithValue("@Status", status);
-            if (!string.IsNullOrWhiteSpace(search)) cmd.Parameters.AddWithValue("@Search", "%" + search.Trim() + "%");
             if (dateFrom.HasValue) cmd.Parameters.AddWithValue("@DateFrom", dateFrom.Value);
             if (dateTo.HasValue) cmd.Parameters.AddWithValue("@DateTo", dateTo.Value);
         }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using MegaForm.Core.Interfaces;
@@ -103,7 +104,7 @@ namespace MegaForm.Oqtane.Server.Data
         }
     }
 
-    public class EfSubmissionRepository : ISubmissionRepository
+    public class EfSubmissionRepository : ISubmissionRepository, ISubmissionOwnerFilterableRepository, ISubmissionTypedQueryRepository
     {
         private readonly IDbContextFactory<MegaFormDbContext> _dbContextFactory;
         // [TypedStorage 2026-07-17] When typed storage is primary, MF_Submissions.DataJson is
@@ -172,27 +173,208 @@ namespace MegaForm.Oqtane.Server.Data
         public (List<SubmissionInfo> Items, int TotalCount) List(int formId, string status = null, string search = null,
             DateTime? dateFrom = null, DateTime? dateTo = null, int pageIndex = 0, int pageSize = 50)
         {
+            return ListCore(formId, null, status, search, dateFrom, dateTo, pageIndex, pageSize);
+        }
+
+        // [OwnerRlsSql v20260722-01] ISubmissionOwnerFilterableRepository: same list with the
+        // "owned by userId" predicate pushed into SQL (both the page select and the capped count),
+        // so owner-scoped lists (RLS scope "own", My-Submissions) get exact TotalCount/paging.
+        public (List<SubmissionInfo> Items, int TotalCount) ListOwnedBy(int formId, int userId,
+            string status = null, string search = null,
+            DateTime? dateFrom = null, DateTime? dateTo = null, int pageIndex = 0, int pageSize = 50)
+        {
+            return ListCore(formId, userId, status, search, dateFrom, dateTo, pageIndex, pageSize);
+        }
+
+        public (List<SubmissionInfo> Items, int TotalCount) ListTyped(SubmissionListQuery query)
+        {
+            if (query == null) throw new ArgumentNullException(nameof(query));
+            using var db = _dbContextFactory.CreateDbContext();
+
+            var q = db.Submissions.AsQueryable();
+            if (query.FormId > 0) q = q.Where(s => s.FormId == query.FormId);
+            if (query.UserId.HasValue && query.UserId.Value > 0) q = q.Where(s => s.UserId == query.UserId.Value);
+            if (!string.IsNullOrWhiteSpace(query.Status)) q = q.Where(s => s.Status == query.Status);
+            if (query.DateFrom.HasValue) q = q.Where(s => s.SubmittedOnUtc >= query.DateFrom.Value);
+            if (query.DateTo.HasValue)
+            {
+                var endExclusive = query.DateTo.Value.Date.AddDays(1);
+                q = q.Where(s => s.SubmittedOnUtc < endExclusive);
+            }
+
+            q = ApplyTypedSearch(db, q, query.Search);
+            foreach (var filter in query.FieldFilters ?? new List<SubmissionFieldFilter>())
+                q = ApplyTypedFilter(db, q, filter);
+
+            const int countCap = 10001;
+            var total = q.Take(countCap).Count();
+            if (total >= countCap)
+            {
+                total = countCap - 1;
+                var scope = MegaForm.Core.Services.ExternalTable.ExternalSourceContext.Current;
+                if (scope != null) scope.TotalIsBounded = true;
+            }
+
+            var pageIndex = Math.Max(0, query.PageIndex);
+            var pageSize = query.PageSize > 0 ? Math.Min(query.PageSize, 5000) : 50;
+            var items = q.OrderByDescending(s => s.SubmittedOnUtc).ThenByDescending(s => s.SubmissionId)
+                .Skip(pageIndex * pageSize).Take(pageSize).ToList();
+            return (items, total);
+        }
+
+        private static IQueryable<SubmissionInfo> ApplyTypedSearch(MegaFormDbContext db, IQueryable<SubmissionInfo> query, string search)
+        {
+            if (string.IsNullOrWhiteSpace(search)) return query;
+
+            var term = search.Trim();
+            var pattern = "%" + EscapeLike(term) + "%";
+            var hasId = int.TryParse(term, NumberStyles.Integer, CultureInfo.InvariantCulture, out var submissionId) && submissionId > 0;
+            var hasNumber = decimal.TryParse(term, NumberStyles.Number, CultureInfo.InvariantCulture, out var number);
+            var hasDate = DateTime.TryParse(term, CultureInfo.InvariantCulture,
+                DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out var date);
+            var hasBoolean = bool.TryParse(term, out var boolean);
+
+            return query.Where(s =>
+                (hasId && s.SubmissionId == submissionId)
+                || EF.Functions.Like(s.IpAddress ?? string.Empty, pattern, "~")
+                || EF.Functions.Like(s.Status ?? string.Empty, pattern, "~")
+                || db.SubmissionFields.Any(f => f.SubmissionId == s.SubmissionId && !f.IsSensitive
+                    && (EF.Functions.Like(f.FieldKey ?? string.Empty, pattern, "~")
+                        || EF.Functions.Like(f.DisplayValue ?? string.Empty, pattern, "~")))
+                || db.SubmissionValueString.Any(v => v.SubmissionId == s.SubmissionId
+                    && EF.Functions.Like(v.Value ?? string.Empty, pattern, "~")
+                    && db.SubmissionFields.Any(f => f.SubmissionFieldId == v.SubmissionFieldId && !f.IsSensitive))
+                || db.SubmissionValueLongText.Any(v => v.SubmissionId == s.SubmissionId
+                    && EF.Functions.Like(v.Value ?? string.Empty, pattern, "~")
+                    && db.SubmissionFields.Any(f => f.SubmissionFieldId == v.SubmissionFieldId && !f.IsSensitive))
+                || (hasNumber && db.SubmissionValueNumber.Any(v => v.SubmissionId == s.SubmissionId && v.Value == number
+                    && db.SubmissionFields.Any(f => f.SubmissionFieldId == v.SubmissionFieldId && !f.IsSensitive)))
+                || (hasDate && db.SubmissionValueDate.Any(v => v.SubmissionId == s.SubmissionId && v.Value == date
+                    && db.SubmissionFields.Any(f => f.SubmissionFieldId == v.SubmissionFieldId && !f.IsSensitive)))
+                || (hasBoolean && db.SubmissionValueBoolean.Any(v => v.SubmissionId == s.SubmissionId && v.Value == boolean
+                    && db.SubmissionFields.Any(f => f.SubmissionFieldId == v.SubmissionFieldId && !f.IsSensitive))));
+        }
+
+        private static IQueryable<SubmissionInfo> ApplyTypedFilter(MegaFormDbContext db, IQueryable<SubmissionInfo> query, SubmissionFieldFilter filter)
+        {
+            var key = filter.FieldKey.Trim();
+            if (filter.Operator == SubmissionFieldFilterOperator.IsEmpty)
+                return query.Where(s => db.SubmissionFields.Any(f => f.SubmissionId == s.SubmissionId && f.FieldKey == key && !f.HasValue));
+            if (filter.Operator == SubmissionFieldFilterOperator.IsNotEmpty)
+                return query.Where(s => db.SubmissionFields.Any(f => f.SubmissionId == s.SubmissionId && f.FieldKey == key && f.HasValue));
+
+            var dataType = ResolveFilterDataType(filter);
+            if (dataType == SubmissionDataType.String)
+                return ApplyStringFilter(db, query, filter, key, false);
+            if (dataType == SubmissionDataType.LongText)
+                return ApplyStringFilter(db, query, filter, key, true);
+            if (dataType == SubmissionDataType.Number)
+                return ApplyNumberFilter(db, query, filter, key);
+            if (dataType == SubmissionDataType.Date)
+                return ApplyDateFilter(db, query, filter, key);
+            if (dataType == SubmissionDataType.Boolean)
+            {
+                var value = filter.BooleanValue.Value;
+                if (filter.Operator == SubmissionFieldFilterOperator.NotEquals)
+                    return query.Where(s => db.SubmissionFields.Any(f => f.SubmissionId == s.SubmissionId && f.FieldKey == key)
+                        && !db.SubmissionValueBoolean.Any(v => v.SubmissionId == s.SubmissionId && v.FieldKey == key && v.Value == value));
+                return query.Where(s => db.SubmissionValueBoolean.Any(v => v.SubmissionId == s.SubmissionId && v.FieldKey == key && v.Value == value));
+            }
+            throw new NotSupportedException("JSON values cannot be compared as strings. Use a normalized typed field.");
+        }
+
+        private static IQueryable<SubmissionInfo> ApplyStringFilter(MegaFormDbContext db, IQueryable<SubmissionInfo> query, SubmissionFieldFilter filter, string key, bool longText)
+        {
+            var value = filter.TextValue ?? string.Empty;
+            if (filter.Operator == SubmissionFieldFilterOperator.NotEquals)
+            {
+                return longText
+                    ? query.Where(s => db.SubmissionFields.Any(f => f.SubmissionId == s.SubmissionId && f.FieldKey == key)
+                        && !db.SubmissionValueLongText.Any(v => v.SubmissionId == s.SubmissionId && v.FieldKey == key && v.Value == value))
+                    : query.Where(s => db.SubmissionFields.Any(f => f.SubmissionId == s.SubmissionId && f.FieldKey == key)
+                        && !db.SubmissionValueString.Any(v => v.SubmissionId == s.SubmissionId && v.FieldKey == key && v.Value == value));
+            }
+            if (filter.Operator == SubmissionFieldFilterOperator.Equals)
+                return longText
+                    ? query.Where(s => db.SubmissionValueLongText.Any(v => v.SubmissionId == s.SubmissionId && v.FieldKey == key && v.Value == value))
+                    : query.Where(s => db.SubmissionValueString.Any(v => v.SubmissionId == s.SubmissionId && v.FieldKey == key && v.Value == value));
+
+            var pattern = BuildLikePattern(value, filter.Operator);
+            return longText
+                ? query.Where(s => db.SubmissionValueLongText.Any(v => v.SubmissionId == s.SubmissionId && v.FieldKey == key && EF.Functions.Like(v.Value ?? string.Empty, pattern, "~")))
+                : query.Where(s => db.SubmissionValueString.Any(v => v.SubmissionId == s.SubmissionId && v.FieldKey == key && EF.Functions.Like(v.Value ?? string.Empty, pattern, "~")));
+        }
+
+        private static IQueryable<SubmissionInfo> ApplyNumberFilter(MegaFormDbContext db, IQueryable<SubmissionInfo> query, SubmissionFieldFilter filter, string key)
+        {
+            var value = filter.NumberValue.Value;
+            if (filter.Operator == SubmissionFieldFilterOperator.NotEquals)
+                return query.Where(s => db.SubmissionFields.Any(f => f.SubmissionId == s.SubmissionId && f.FieldKey == key)
+                    && !db.SubmissionValueNumber.Any(v => v.SubmissionId == s.SubmissionId && v.FieldKey == key && v.Value == value));
+            if (filter.Operator == SubmissionFieldFilterOperator.GreaterThan)
+                return query.Where(s => db.SubmissionValueNumber.Any(v => v.SubmissionId == s.SubmissionId && v.FieldKey == key && v.Value > value));
+            if (filter.Operator == SubmissionFieldFilterOperator.GreaterThanOrEqual)
+                return query.Where(s => db.SubmissionValueNumber.Any(v => v.SubmissionId == s.SubmissionId && v.FieldKey == key && v.Value >= value));
+            if (filter.Operator == SubmissionFieldFilterOperator.LessThan)
+                return query.Where(s => db.SubmissionValueNumber.Any(v => v.SubmissionId == s.SubmissionId && v.FieldKey == key && v.Value < value));
+            if (filter.Operator == SubmissionFieldFilterOperator.LessThanOrEqual)
+                return query.Where(s => db.SubmissionValueNumber.Any(v => v.SubmissionId == s.SubmissionId && v.FieldKey == key && v.Value <= value));
+            return query.Where(s => db.SubmissionValueNumber.Any(v => v.SubmissionId == s.SubmissionId && v.FieldKey == key && v.Value == value));
+        }
+
+        private static IQueryable<SubmissionInfo> ApplyDateFilter(MegaFormDbContext db, IQueryable<SubmissionInfo> query, SubmissionFieldFilter filter, string key)
+        {
+            var value = filter.DateValue.Value;
+            if (filter.Operator == SubmissionFieldFilterOperator.NotEquals)
+                return query.Where(s => db.SubmissionFields.Any(f => f.SubmissionId == s.SubmissionId && f.FieldKey == key)
+                    && !db.SubmissionValueDate.Any(v => v.SubmissionId == s.SubmissionId && v.FieldKey == key && v.Value == value));
+            if (filter.Operator == SubmissionFieldFilterOperator.GreaterThan)
+                return query.Where(s => db.SubmissionValueDate.Any(v => v.SubmissionId == s.SubmissionId && v.FieldKey == key && v.Value > value));
+            if (filter.Operator == SubmissionFieldFilterOperator.GreaterThanOrEqual)
+                return query.Where(s => db.SubmissionValueDate.Any(v => v.SubmissionId == s.SubmissionId && v.FieldKey == key && v.Value >= value));
+            if (filter.Operator == SubmissionFieldFilterOperator.LessThan)
+                return query.Where(s => db.SubmissionValueDate.Any(v => v.SubmissionId == s.SubmissionId && v.FieldKey == key && v.Value < value));
+            if (filter.Operator == SubmissionFieldFilterOperator.LessThanOrEqual)
+                return query.Where(s => db.SubmissionValueDate.Any(v => v.SubmissionId == s.SubmissionId && v.FieldKey == key && v.Value <= value));
+            return query.Where(s => db.SubmissionValueDate.Any(v => v.SubmissionId == s.SubmissionId && v.FieldKey == key && v.Value == value));
+        }
+
+        private static SubmissionDataType ResolveFilterDataType(SubmissionFieldFilter filter)
+        {
+            if (filter.DataType.HasValue) return filter.DataType.Value;
+            if (filter.NumberValue.HasValue) return SubmissionDataType.Number;
+            if (filter.DateValue.HasValue) return SubmissionDataType.Date;
+            if (filter.BooleanValue.HasValue) return SubmissionDataType.Boolean;
+            return SubmissionDataType.String;
+        }
+
+        private static string BuildLikePattern(string value, SubmissionFieldFilterOperator op)
+        {
+            var escaped = EscapeLike(value);
+            if (op == SubmissionFieldFilterOperator.Contains) return "%" + escaped + "%";
+            if (op == SubmissionFieldFilterOperator.StartsWith) return escaped + "%";
+            if (op == SubmissionFieldFilterOperator.EndsWith) return "%" + escaped;
+            throw new NotSupportedException("The selected operator is not valid for text fields.");
+        }
+
+        private static string EscapeLike(string value)
+            => (value ?? string.Empty).Replace("~", "~~").Replace("%", "~%").Replace("_", "~_").Replace("[", "~[");
+
+        private (List<SubmissionInfo> Items, int TotalCount) ListCore(int formId, int? userId, string status, string search,
+            DateTime? dateFrom, DateTime? dateTo, int pageIndex, int pageSize)
+        {
             using var db = _dbContextFactory.CreateDbContext();
             var q = db.Submissions.Where(s => s.FormId == formId);
+            if (userId.HasValue) q = q.Where(s => s.UserId == userId.Value);
             if (!string.IsNullOrEmpty(status)) q = q.Where(s => s.Status == status);
             if (dateFrom.HasValue) q = q.Where(s => s.SubmittedOnUtc >= dateFrom.Value);
             if (dateTo.HasValue) q = q.Where(s => s.SubmittedOnUtc <= dateTo.Value);
             if (!string.IsNullOrEmpty(search))
             {
-                // [TypedStorage 2026-07-17] New Oqtane submissions collapse DataJson to "{}", so a
-                // DataJson LIKE would never match a field value. Search the typed field DisplayValue
-                // as well (EXISTS subquery → sargable-ish, indexed by SubmissionId). Hybrid OR keeps
-                // legacy full-DataJson rows searchable during migration.
-                var term = search;
-                if (_typedStore != null)
-                    q = q.Where(s => s.DataJson.Contains(term)
-                        || db.SubmissionFields.Any(f => f.SubmissionId == s.SubmissionId
-                            && f.DisplayValue != null && f.DisplayValue.Contains(term)));
-                else
-                    q = q.Where(s => s.DataJson.Contains(term));
+                q = ApplyTypedSearch(db, q, search);
             }
             // [BoundedCount v20260717-01] COUNT(*) over the full predicate ran on EVERY page request;
-            // on a very large form (or with the non-sargable DataJson LIKE search) the count IS the
+            // on a very large form (especially with broad free-text search) the count IS the
             // slow part. Cap the counted scan — SELECT COUNT(*) FROM (SELECT TOP (10001) …) — so
             // ≤10 000 stays exact and beyond that we report the 10 000 floor and flag
             // TotalIsBounded through the ambient source scope; the pager already renders "N+"
@@ -206,11 +388,7 @@ namespace MegaForm.Oqtane.Server.Data
                 if (scope != null) scope.TotalIsBounded = true;
             }
             var items = q.OrderByDescending(s => s.SubmittedOnUtc).Skip(pageIndex * pageSize).Take(pageSize).ToList();
-            // [TypedStorage 2026-07-17] Rehydrate the collapsed DataJson for the page rows so the
-            // dashboard summary column (ToListItem) reflects typed storage. Only the current page is
-            // hydrated (≤ pageSize rows). NOTE: the `DataJson.Contains(search)` predicate above still
-            // targets the collapsed column — free-text search is a Phase-4 follow-up (switch to a
-            // typed-value join) and is not covered while typed storage is primary.
+            // Keep legacy readers operational while the public list contract moves to Data.
             foreach (var it in items) HydrateDataJson(it);
             return (items, total);
         }

@@ -47,6 +47,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using MegaForm.Core.Interfaces;
 using MegaForm.Core.Models;
+using MegaForm.Core.Services.TypedSubmission;
 using Newtonsoft.Json.Linq;
 
 namespace MegaForm.Core.Services
@@ -80,6 +81,7 @@ namespace MegaForm.Core.Services
         // but no optionsConnectionKey (legacy data or builder UX bug), fall
         // back to this alias before silently returning [].
         private readonly string _defaultConnectionKey;
+        private readonly SubmissionDataResolver _dataResolver;
 
         public FieldOptionsService(IConnectionRegistry registry, IFormRepository formRepo)
             : this(registry, formRepo, null, null)
@@ -91,11 +93,12 @@ namespace MegaForm.Core.Services
         {
         }
 
-        public FieldOptionsService(IConnectionRegistry registry, IFormRepository formRepo, ISubmissionRepository submissionRepo, string defaultConnectionKey)
+        public FieldOptionsService(IConnectionRegistry registry, IFormRepository formRepo, ISubmissionRepository submissionRepo, string defaultConnectionKey, SubmissionDataResolver dataResolver = null)
         {
             _registry = registry;
             _formRepo = formRepo;
             _submissionRepo = submissionRepo;
+            _dataResolver = dataResolver;
             // [DefaultConnFallback2 2026-07-14] Oqtane + Web construct this service via the
             // 2-arg overload, so defaultConnectionKey arrived null and EVERY sql-sourced field
             // without an explicit optionsConnectionKey returned [] — a dropdown that renders
@@ -352,8 +355,15 @@ namespace MegaForm.Core.Services
 
                 foreach (var sub in page.Items ?? new System.Collections.Generic.List<SubmissionInfo>())
                 {
+                    var typedData = _dataResolver != null
+                        ? _dataResolver.GetData(sub.SubmissionId, sub.DataJson)
+                        : null;
                     JObject data = null;
-                    if (!string.IsNullOrWhiteSpace(sub.DataJson))
+                    if (typedData != null)
+                    {
+                        data = JObject.FromObject(typedData);
+                    }
+                    else if (!string.IsNullOrWhiteSpace(sub.DataJson))
                     {
                         try { data = JObject.Parse(sub.DataJson); } catch { data = null; }
                     }

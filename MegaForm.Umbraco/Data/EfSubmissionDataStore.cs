@@ -2,43 +2,44 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using MegaForm.Core.Interfaces;
 using MegaForm.Core.Models;
 using MegaForm.Core.Services.TypedSubmission;
 
-namespace MegaForm.Oqtane.Server.Data
+namespace MegaForm.Umbraco.Data
 {
     /// <summary>
-    /// EF Core implementation of <see cref="ISubmissionDataStore"/> for Oqtane.
-    /// Persists Umbraco Forms-style typed submission rows — MF_SubmissionFields plus
-    /// the six MF_SubmissionValue* tables — in parallel with the legacy
-    /// MF_Submissions.DataJson payload. Phase 1 is write-only: readers still use
-    /// DataJson, so a failure here is fail-soft (see SubmissionProcessor).
-    /// Mirrors the InMemory contract in MegaForm.Sdk.Tests/TypedSubmissionStorageTests.cs.
+    /// EF Core implementation of <see cref="ISubmissionDataStore"/> for the Umbraco host.
+    /// Mirrors the Oqtane store and reconstructs submission field data from typed rows, so the
+    /// legacy submission-wide DataJson column may remain collapsed.
     /// </summary>
     public class EfSubmissionDataStore : ISubmissionDataStore, ISubmissionDataBatchReader
     {
-        private readonly IDbContextFactory<MegaFormDbContext> _dbContextFactory;
+        private readonly IServiceProvider _serviceProvider;
         private readonly SubmissionFieldNormalizer _normalizer = new SubmissionFieldNormalizer();
 
-        public EfSubmissionDataStore(IDbContextFactory<MegaFormDbContext> dbContextFactory)
+        public EfSubmissionDataStore(IServiceProvider serviceProvider)
         {
-            _dbContextFactory = dbContextFactory;
+            _serviceProvider = serviceProvider;
         }
 
-        // Oqtane reconstructs DataJson from typed rows on read (EfSubmissionRepository.HydrateDataJson),
-        // so it is safe to collapse the stored MF_Submissions.DataJson to "{}" after a typed write.
+        /// <summary>
+        /// Umbraco still reads DataJson directly, so never collapse it after a typed write.
+        /// </summary>
         public bool SupportsDataJsonCollapse => true;
 
         public bool HasFields(int submissionId)
         {
-            using var db = _dbContextFactory.CreateDbContext();
+            using var scope = _serviceProvider.CreateScope();
+            using var db = scope.ServiceProvider.GetRequiredService<MegaFormDbContext>();
             return db.SubmissionFields.AsNoTracking().Any(f => f.SubmissionId == submissionId);
         }
 
         public IReadOnlyList<SubmissionFieldRecord> GetFields(int submissionId)
         {
-            using var db = _dbContextFactory.CreateDbContext();
+            using var scope = _serviceProvider.CreateScope();
+            using var db = scope.ServiceProvider.GetRequiredService<MegaFormDbContext>();
             return db.SubmissionFields.AsNoTracking()
                 .Where(f => f.SubmissionId == submissionId)
                 .OrderBy(f => f.PageIndex).ThenBy(f => f.FieldOrder).ThenBy(f => f.SubmissionFieldId)
@@ -47,7 +48,8 @@ namespace MegaForm.Oqtane.Server.Data
 
         public SubmissionDataDocument GetData(int submissionId)
         {
-            using var db = _dbContextFactory.CreateDbContext();
+            using var scope = _serviceProvider.CreateScope();
+            using var db = scope.ServiceProvider.GetRequiredService<MegaFormDbContext>();
 
             var fields = db.SubmissionFields.AsNoTracking()
                 .Where(f => f.SubmissionId == submissionId)
@@ -68,14 +70,12 @@ namespace MegaForm.Oqtane.Server.Data
                 return doc;
             }
 
-            // Six bulk reads (one per typed table) keyed by SubmissionId, then grouped
-            // in memory by SubmissionFieldId — avoids an N+1 query per field.
-            var strings   = db.SubmissionValueString.AsNoTracking().Where(v => v.SubmissionId == submissionId).ToList();
+            var strings = db.SubmissionValueString.AsNoTracking().Where(v => v.SubmissionId == submissionId).ToList();
             var longTexts = db.SubmissionValueLongText.AsNoTracking().Where(v => v.SubmissionId == submissionId).ToList();
-            var numbers   = db.SubmissionValueNumber.AsNoTracking().Where(v => v.SubmissionId == submissionId).ToList();
-            var dates     = db.SubmissionValueDate.AsNoTracking().Where(v => v.SubmissionId == submissionId).ToList();
-            var booleans  = db.SubmissionValueBoolean.AsNoTracking().Where(v => v.SubmissionId == submissionId).ToList();
-            var jsons     = db.SubmissionValueJson.AsNoTracking().Where(v => v.SubmissionId == submissionId).ToList();
+            var numbers = db.SubmissionValueNumber.AsNoTracking().Where(v => v.SubmissionId == submissionId).ToList();
+            var dates = db.SubmissionValueDate.AsNoTracking().Where(v => v.SubmissionId == submissionId).ToList();
+            var booleans = db.SubmissionValueBoolean.AsNoTracking().Where(v => v.SubmissionId == submissionId).ToList();
+            var jsons = db.SubmissionValueJson.AsNoTracking().Where(v => v.SubmissionId == submissionId).ToList();
 
             foreach (var f in fields)
             {
@@ -105,7 +105,8 @@ namespace MegaForm.Oqtane.Server.Data
             var ids = submissionIds.Where(i => i > 0).Distinct().ToList();
             if (ids.Count == 0) return result;
 
-            using var db = _dbContextFactory.CreateDbContext();
+            using var scope = _serviceProvider.CreateScope();
+            using var db = scope.ServiceProvider.GetRequiredService<MegaFormDbContext>();
 
             var fields = db.SubmissionFields.AsNoTracking()
                 .Where(f => ids.Contains(f.SubmissionId))
@@ -150,42 +151,48 @@ namespace MegaForm.Oqtane.Server.Data
 
         public IReadOnlyList<SubmissionValueStringRecord> GetStringValues(long submissionFieldId)
         {
-            using var db = _dbContextFactory.CreateDbContext();
+            using var scope = _serviceProvider.CreateScope();
+            using var db = scope.ServiceProvider.GetRequiredService<MegaFormDbContext>();
             return db.SubmissionValueString.AsNoTracking()
                 .Where(v => v.SubmissionFieldId == submissionFieldId).OrderBy(v => v.Ordinal).ToList();
         }
 
         public IReadOnlyList<SubmissionValueLongTextRecord> GetLongTextValues(long submissionFieldId)
         {
-            using var db = _dbContextFactory.CreateDbContext();
+            using var scope = _serviceProvider.CreateScope();
+            using var db = scope.ServiceProvider.GetRequiredService<MegaFormDbContext>();
             return db.SubmissionValueLongText.AsNoTracking()
                 .Where(v => v.SubmissionFieldId == submissionFieldId).OrderBy(v => v.Ordinal).ToList();
         }
 
         public IReadOnlyList<SubmissionValueNumberRecord> GetNumberValues(long submissionFieldId)
         {
-            using var db = _dbContextFactory.CreateDbContext();
+            using var scope = _serviceProvider.CreateScope();
+            using var db = scope.ServiceProvider.GetRequiredService<MegaFormDbContext>();
             return db.SubmissionValueNumber.AsNoTracking()
                 .Where(v => v.SubmissionFieldId == submissionFieldId).OrderBy(v => v.Ordinal).ToList();
         }
 
         public IReadOnlyList<SubmissionValueDateRecord> GetDateValues(long submissionFieldId)
         {
-            using var db = _dbContextFactory.CreateDbContext();
+            using var scope = _serviceProvider.CreateScope();
+            using var db = scope.ServiceProvider.GetRequiredService<MegaFormDbContext>();
             return db.SubmissionValueDate.AsNoTracking()
                 .Where(v => v.SubmissionFieldId == submissionFieldId).OrderBy(v => v.Ordinal).ToList();
         }
 
         public IReadOnlyList<SubmissionValueBooleanRecord> GetBooleanValues(long submissionFieldId)
         {
-            using var db = _dbContextFactory.CreateDbContext();
+            using var scope = _serviceProvider.CreateScope();
+            using var db = scope.ServiceProvider.GetRequiredService<MegaFormDbContext>();
             return db.SubmissionValueBoolean.AsNoTracking()
                 .Where(v => v.SubmissionFieldId == submissionFieldId).OrderBy(v => v.Ordinal).ToList();
         }
 
         public IReadOnlyList<SubmissionValueJsonRecord> GetJsonValues(long submissionFieldId)
         {
-            using var db = _dbContextFactory.CreateDbContext();
+            using var scope = _serviceProvider.CreateScope();
+            using var db = scope.ServiceProvider.GetRequiredService<MegaFormDbContext>();
             return db.SubmissionValueJson.AsNoTracking()
                 .Where(v => v.SubmissionFieldId == submissionFieldId).OrderBy(v => v.Ordinal).ToList();
         }
@@ -193,13 +200,15 @@ namespace MegaForm.Oqtane.Server.Data
         public void InsertFields(int submissionId, int formId, IEnumerable<SubmissionFieldWrite> fields)
         {
             if (fields == null) return;
-            using var db = _dbContextFactory.CreateDbContext();
+            using var scope = _serviceProvider.CreateScope();
+            using var db = scope.ServiceProvider.GetRequiredService<MegaFormDbContext>();
             InsertFieldsCore(db, submissionId, formId, fields);
         }
 
         public void ReplaceFields(int submissionId, int formId, IEnumerable<SubmissionFieldWrite> fields)
         {
-            using var db = _dbContextFactory.CreateDbContext();
+            using var scope = _serviceProvider.CreateScope();
+            using var db = scope.ServiceProvider.GetRequiredService<MegaFormDbContext>();
             using var tx = db.Database.BeginTransaction();
 
             DeleteFieldsCore(db, submissionId);
@@ -213,7 +222,8 @@ namespace MegaForm.Oqtane.Server.Data
 
         public void DeleteFields(int submissionId)
         {
-            using var db = _dbContextFactory.CreateDbContext();
+            using var scope = _serviceProvider.CreateScope();
+            using var db = scope.ServiceProvider.GetRequiredService<MegaFormDbContext>();
             DeleteFieldsCore(db, submissionId);
             db.SaveChanges();
         }
@@ -252,8 +262,6 @@ namespace MegaForm.Oqtane.Server.Data
                 pending.Add((field, typed));
             }
 
-            // First SaveChanges assigns SubmissionFieldId identities to every field row;
-            // the value rows then reference those generated ids.
             db.SaveChanges();
 
             foreach (var (field, typed) in pending)

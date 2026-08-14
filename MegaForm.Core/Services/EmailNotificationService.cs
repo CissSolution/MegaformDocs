@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using MegaForm.Core.Interfaces;
 using MegaForm.Core.Models;
+using MegaForm.Core.Services.TypedSubmission;
 using MegaForm.Core.Utilities;
 using MegaForm.Core.Workflow;
 using Newtonsoft.Json;
@@ -13,11 +14,13 @@ namespace MegaForm.Core.Services
     {
         private readonly IEmailSender _email;
         private readonly ILogService _log;
+        private readonly SubmissionDataResolver _dataResolver;
 
-        public EmailNotificationService(IEmailSender email, ILogService log)
+        public EmailNotificationService(IEmailSender email, ILogService log, SubmissionDataResolver dataResolver = null)
         {
             _email = email ?? throw new ArgumentNullException(nameof(email));
             _log = log;
+            _dataResolver = dataResolver;
         }
 
         // ── [Recovered June-15 from MegaForm.Core.dll] Default task-email templates ──
@@ -64,6 +67,28 @@ namespace MegaForm.Core.Services
             return sb.ToString();
         }
 
+        // [CloudReady A2 v20260806] Default overdue-reminder templates. Sent exactly
+        // ONCE per task by the host timer scanner (guarded by MF_WorkflowTasks.EscalatedAtUtc).
+        public static string GetTaskOverdueReminderDefaultSubject(WorkflowTaskInstance task)
+        {
+            return $"[MegaForm] Task overdue: {task?.NodeLabel ?? "Approval"} (Submission #{task?.SubmissionId})";
+        }
+
+        public static string GetTaskOverdueReminderDefaultBody(WorkflowTaskInstance task, string reviewUrl = null)
+        {
+            var sb = new StringBuilder("<html><body style='font-family:-apple-system,sans-serif;'>");
+            sb.AppendLine("<h2 style='color:#dc2626;'>A task is overdue</h2>");
+            sb.AppendLine($"<p><strong>Task:</strong> {System.Net.WebUtility.HtmlEncode(task?.NodeLabel ?? "Approval")}</p>");
+            sb.AppendLine($"<p><strong>Submission:</strong> #{task?.SubmissionId}</p>");
+            sb.AppendLine($"<p><strong>Form:</strong> #{task?.FormId}</p>");
+            if (task != null && task.DueAt.HasValue)
+                sb.AppendLine($"<p><strong>Was due:</strong> {task.DueAt.Value:yyyy-MM-dd HH:mm} UTC</p>");
+            if (!string.IsNullOrWhiteSpace(reviewUrl))
+                sb.AppendLine($"<p><a href='{System.Net.WebUtility.HtmlEncode(reviewUrl)}' style='color:#6366f1;'>Open task</a></p>");
+            sb.AppendLine("<hr/><p style='font-size:12px;color:#999;'>Sent by MegaForm</p></body></html>");
+            return sb.ToString();
+        }
+
         public void SendAdminNotification(FormInfo form, SubmissionInfo submission, FormSchema schema)
         {
             if (string.IsNullOrWhiteSpace(form.NotifyEmails)) return;
@@ -88,8 +113,8 @@ namespace MegaForm.Core.Services
             if (!form.AutoresponderEnabled || string.IsNullOrWhiteSpace(form.AutoresponderEmailField)) return;
             try
             {
-                var data = JsonConvert.DeserializeObject<Dictionary<string, object>>(submission.DataJson);
-                if (data == null) return;
+                var data = ResolveData(submission);
+                if (data == null || data.Count == 0) return;
                 string to = data.ContainsKey(form.AutoresponderEmailField) ? data[form.AutoresponderEmailField]?.ToString() : null;
                 if (string.IsNullOrWhiteSpace(to)) return;
 
@@ -114,7 +139,7 @@ namespace MegaForm.Core.Services
         public string ReplaceTokens(string template, FormInfo form, SubmissionInfo submission, FormSchema schema)
         {
             if (string.IsNullOrEmpty(template)) return template;
-            var data = JsonConvert.DeserializeObject<Dictionary<string, object>>(submission.DataJson) ?? new Dictionary<string, object>();
+            var data = ResolveData(submission);
             template = template.Replace("{{submission_id}}", submission.SubmissionId.ToString());
             template = template.Replace("{{form_title}}", form.Title ?? "");
             template = template.Replace("{{submitted_date}}", submission.SubmittedOnUtc.ToString("yyyy-MM-dd HH:mm:ss"));
@@ -144,19 +169,19 @@ namespace MegaForm.Core.Services
 
         private string BuildAdminEmail(FormInfo form, SubmissionInfo submission, FormSchema schema)
         {
-            var data = JsonConvert.DeserializeObject<Dictionary<string, object>>(submission.DataJson);
+            var data = ResolveData(submission);
             var sb = new StringBuilder();
             sb.AppendLine("<html><body style='font-family:-apple-system,sans-serif;'>");
             sb.AppendLine($"<h2 style='color:#6366f1;'>New Submission — {Enc(form.Title)}</h2>");
             sb.AppendLine($"<p><strong>ID:</strong> {submission.SubmissionId} | <strong>Date:</strong> {submission.SubmittedOnUtc:yyyy-MM-dd HH:mm} UTC | <strong>IP:</strong> {Enc(submission.IpAddress)}</p><hr/>");
-            sb.AppendLine(BuildFieldsTable(schema, data ?? new Dictionary<string, object>()));
+            sb.AppendLine(BuildFieldsTable(schema, data));
             sb.AppendLine("<hr/><p style='font-size:12px;color:#999;'>Sent by MegaForm</p></body></html>");
             return sb.ToString();
         }
 
         private string BuildAutoresponderEmail(FormInfo form, SubmissionInfo submission, FormSchema schema)
         {
-            var data = JsonConvert.DeserializeObject<Dictionary<string, object>>(submission.DataJson);
+            var data = ResolveData(submission);
             var sb = new StringBuilder();
             sb.AppendLine("<html><body style='font-family:-apple-system,sans-serif;'>");
             sb.AppendLine("<h2 style='color:#6366f1;'>Thank you!</h2>");
@@ -164,11 +189,28 @@ namespace MegaForm.Core.Services
             if (!string.IsNullOrWhiteSpace(form.SuccessMessage))
                 sb.AppendLine($"<p>{Enc(form.SuccessMessage)}</p>");
             sb.AppendLine("<h3>Your Answers</h3>");
-            sb.AppendLine(BuildFieldsTable(schema, data ?? new Dictionary<string, object>()));
+            sb.AppendLine(BuildFieldsTable(schema, data));
             sb.AppendLine("<p style='font-size:12px;color:#999;'>Automated email — do not reply.</p></body></html>");
             return sb.ToString();
         }
 
         private static string Enc(string v) => System.Net.WebUtility.HtmlEncode(v ?? "");
+
+        private Dictionary<string, object> ResolveData(SubmissionInfo submission)
+        {
+            if (submission == null) return new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+            if (_dataResolver != null)
+                return _dataResolver.GetData(submission.SubmissionId, submission.DataJson);
+
+            try
+            {
+                return JsonConvert.DeserializeObject<Dictionary<string, object>>(submission.DataJson)
+                    ?? new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+            }
+            catch
+            {
+                return new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+            }
+        }
     }
 }

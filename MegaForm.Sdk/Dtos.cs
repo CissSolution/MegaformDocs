@@ -114,7 +114,11 @@ namespace MegaForm.Sdk
         /// <summary>Id of the form this submission belongs to.</summary>
         public int FormId { get; set; }
 
-        /// <summary>Submitted field values as a JSON string.</summary>
+        /// <summary>Submitted field values as a typed dictionary. Prefer this over DataJson.</summary>
+        public Dictionary<string, object> Data { get; set; } = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>Legacy compatibility mirror. New code should use Data.</summary>
+        [Obsolete("Use Data. DataJson is a legacy compatibility mirror and may be collapsed to {} on typed-first hosts.", false)]
         public string? DataJson { get; set; }
 
         /// <summary>Submission status, e.g. "new", "approved", "rejected".</summary>
@@ -304,6 +308,44 @@ namespace MegaForm.Sdk
         public DateTime? DateTo { get; set; }
         public int Page { get; set; } = 1;
         public int PageSize { get; set; } = 50;
+        public IReadOnlyList<SubmissionFieldFilter> FieldFilters { get; set; } = Array.Empty<SubmissionFieldFilter>();
+    }
+
+    public enum SubmissionFieldDataType
+    {
+        String,
+        LongText,
+        Number,
+        Date,
+        Boolean,
+        Json
+    }
+
+    public enum SubmissionFieldFilterOperator
+    {
+        Equals,
+        NotEquals,
+        Contains,
+        StartsWith,
+        EndsWith,
+        GreaterThan,
+        GreaterThanOrEqual,
+        LessThan,
+        LessThanOrEqual,
+        IsEmpty,
+        IsNotEmpty
+    }
+
+    /// <summary>A typed field predicate evaluated in storage before count and paging.</summary>
+    public sealed class SubmissionFieldFilter
+    {
+        public string FieldKey { get; set; } = string.Empty;
+        public SubmissionFieldDataType? DataType { get; set; }
+        public SubmissionFieldFilterOperator Operator { get; set; } = SubmissionFieldFilterOperator.Equals;
+        public string? TextValue { get; set; }
+        public decimal? NumberValue { get; set; }
+        public DateTime? DateValue { get; set; }
+        public bool? BooleanValue { get; set; }
     }
 
     /// <summary>Dashboard-friendly submission list row.</summary>
@@ -320,6 +362,8 @@ namespace MegaForm.Sdk
         public int? UserId { get; set; }
         public string? IpAddress { get; set; }
         public string? SummaryText { get; set; }
+        public Dictionary<string, object> Data { get; set; } = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+        [Obsolete("Use Data. DataJson is a legacy compatibility mirror and may be collapsed to {} on typed-first hosts.", false)]
         public string? DataJson { get; set; }
     }
 

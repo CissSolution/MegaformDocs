@@ -697,7 +697,7 @@ namespace MegaForm.Sdk
                     PageSize = pageSize
                 });
 
-            var service = new SubmissionQueryService(_submissions, _forms, _files);
+            var service = new SubmissionQueryService(_submissions, _forms, _files, _typedStore);
             var result = service.List(new SubmissionListQuery
             {
                 FormId = query.FormId,
@@ -706,7 +706,10 @@ namespace MegaForm.Sdk
                 DateFrom = query.DateFrom,
                 DateTo = query.DateTo,
                 PageIndex = pageIndex,
-                PageSize = pageSize
+                PageSize = pageSize,
+                FieldFilters = (query.FieldFilters ?? Array.Empty<SubmissionFieldFilter>())
+                    .Select(ToCoreFilter)
+                    .ToList()
             });
 
             var items = (result.Items ?? new List<SubmissionListItem>())
@@ -723,11 +726,28 @@ namespace MegaForm.Sdk
             });
         }
 
+        private static MegaForm.Core.Models.SubmissionFieldFilter ToCoreFilter(SubmissionFieldFilter filter)
+        {
+            if (filter == null) throw new ArgumentException("FieldFilters cannot contain null entries.", nameof(filter));
+            return new MegaForm.Core.Models.SubmissionFieldFilter
+            {
+                FieldKey = filter.FieldKey,
+                DataType = filter.DataType.HasValue
+                    ? (MegaForm.Core.Models.SubmissionDataType?)(int)filter.DataType.Value
+                    : null,
+                Operator = (MegaForm.Core.Models.SubmissionFieldFilterOperator)(int)filter.Operator,
+                TextValue = filter.TextValue,
+                NumberValue = filter.NumberValue,
+                DateValue = filter.DateValue,
+                BooleanValue = filter.BooleanValue
+            };
+        }
+
         /// <inheritdoc/>
         public Task<SubmissionDetailDto?> GetDetailAsync(int submissionId, MegaFormScope? scope = null, CancellationToken cancellationToken = default)
         {
             var portalId = ResolvePortalId(scope);
-            var service = new SubmissionQueryService(_submissions, _forms, _files);
+            var service = new SubmissionQueryService(_submissions, _forms, _files, _typedStore);
             var detail = service.GetDetail(submissionId);
             if (detail == null || detail.Submission == null || !IsFormInPortal(detail.Submission.FormId, portalId))
                 return Task.FromResult<SubmissionDetailDto?>(null);
@@ -1047,21 +1067,30 @@ namespace MegaForm.Sdk
                 .ToList();
         }
 
-        private SubmissionDetailDto ToDetailDto(SubmissionDetailResult detail) => new SubmissionDetailDto
+        private SubmissionDetailDto ToDetailDto(SubmissionDetailResult detail)
         {
-            Submission = detail.Submission == null ? null : ToDto(detail.Submission),
-            Form = detail.Form == null ? null : ToDto(detail.Form, 0),
-            Schema = detail.Form == null ? new FormSchemaInfo() : Parse(detail.Form.SchemaJson ?? string.Empty),
-            Files = (detail.Files ?? new List<FileInfo>()).Select(ToDto).ToList(),
-            Values = (detail.FlattenedValues ?? new List<KeyValuePair<string, string>>())
-                .Select(kv => new SubmissionValueDto { Key = kv.Key, Value = kv.Value })
-                .ToList(),
-            FieldSnapshots = (detail.FieldSnapshots ?? new List<SubmissionFieldSnapshot>())
-                .Select(ToDto)
-                .ToList(),
-            HasSnapshot = detail.HasSnapshot,
-            Workflow = ToDto(detail.WorkflowDetail)
-        };
+            var submission = detail.Submission == null ? null : ToDto(detail.Submission);
+            if (submission != null && detail.Data != null)
+            {
+                submission.Data = new Dictionary<string, object>(detail.Data, StringComparer.OrdinalIgnoreCase);
+            }
+
+            return new SubmissionDetailDto
+            {
+                Submission = submission,
+                Form = detail.Form == null ? null : ToDto(detail.Form, 0),
+                Schema = detail.Form == null ? new FormSchemaInfo() : Parse(detail.Form.SchemaJson ?? string.Empty),
+                Files = (detail.Files ?? new List<FileInfo>()).Select(ToDto).ToList(),
+                Values = (detail.FlattenedValues ?? new List<KeyValuePair<string, string>>())
+                    .Select(kv => new SubmissionValueDto { Key = kv.Key, Value = kv.Value })
+                    .ToList(),
+                FieldSnapshots = (detail.FieldSnapshots ?? new List<SubmissionFieldSnapshot>())
+                    .Select(ToDto)
+                    .ToList(),
+                HasSnapshot = detail.HasSnapshot,
+                Workflow = ToDto(detail.WorkflowDetail)
+            };
+        }
 
         private InboxTaskResultDto ToDto(WorkflowTaskOperationResult r) => new InboxTaskResultDto
         {
@@ -1081,6 +1110,7 @@ namespace MegaForm.Sdk
             IsAdmin = actor.IsAdmin || actor.IsSuperUser
         };
 
+#pragma warning disable CS0618
         private static SubmissionListItemDto ToDto(SubmissionListItem item) => new SubmissionListItemDto
         {
             SubmissionId = item.SubmissionId,
@@ -1094,6 +1124,9 @@ namespace MegaForm.Sdk
             UserId = item.UserId,
             IpAddress = item.IpAddress,
             SummaryText = item.SummaryText,
+            Data = new Dictionary<string, object>(
+                item.Data ?? new Dictionary<string, object>(),
+                StringComparer.OrdinalIgnoreCase),
             DataJson = item.DataJson
         };
 
@@ -1199,11 +1232,32 @@ namespace MegaForm.Sdk
         {
             SubmissionId = s.SubmissionId,
             FormId = s.FormId,
+            Data = ParseDataDictionary(s.DataJson),
             DataJson = s.DataJson,
             Status = s.Status,
             IsSpam = s.IsSpam,
             UserId = s.UserId,
             SubmittedOnUtc = s.SubmittedOnUtc
         };
+#pragma warning restore CS0618
+
+        private static Dictionary<string, object> ParseDataDictionary(string dataJson)
+        {
+            var data = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+            if (string.IsNullOrWhiteSpace(dataJson)) return data;
+            try
+            {
+                var parsed = JsonConvert.DeserializeObject<Dictionary<string, object>>(dataJson);
+                if (parsed != null)
+                {
+                    foreach (var kv in parsed)
+                        data[kv.Key] = kv.Value;
+                }
+            }
+            catch
+            {
+            }
+            return data;
+        }
     }
 }

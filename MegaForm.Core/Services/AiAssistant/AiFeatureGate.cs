@@ -5,17 +5,23 @@ namespace MegaForm.Core.Services.AiAssistant
 {
     /// <summary>
     /// Canonical gate that decides whether the MegaForm AI Form Assistant is
-    /// available on the current install. The product policy (set by the
-    /// project owner 2026-05-27) is that AI features ship dark and only
-    /// activate when a developer drops a `dev.lock` marker file at a
-    /// well-known location — same convention MegaForm already uses for the
-    /// builder's HasDevLock / HasDemoLock toggles.
+    /// available on the current install.
     ///
-    /// Both DNN (FormView.ascx.cs + AiAssistantController) and Oqtane
-    /// (Index.razor + AiAssistantController) MUST call IsEnabled() before
-    /// rendering UI or returning data, so the gate stays consistent.
+    /// [ProductionUnlocksAi v20260726] PRODUCT RULE (owner, 2026-07-26):
+    /// **a PRODUCTION-licensed install runs AI; a TRIAL never does.** AI is part of
+    /// what a license buys, so a paying install must not need a hidden marker file
+    /// to switch it on — a fresh production install answering
+    /// "AI assistant disabled (no dev.lock)" was the bug, not the feature.
     ///
-    /// Search order:
+    /// `dev.lock` survives ONLY as the escape hatch for an UNLICENSED developer
+    /// machine (building from source, no license.lic). It can never unlock a
+    /// customer trial, because a trial package ships no dev.lock and the trial
+    /// path also withholds the API key server-side.
+    ///
+    /// Call <see cref="IsAvailable"/> for the gate. <see cref="IsEnabled"/> is the
+    /// raw dev.lock file probe and stays public only for diagnostics.
+    ///
+    /// dev.lock search order:
     ///   1. Explicit candidate paths passed by the caller (portal home dir,
     ///      site home dir) — DNN passes PortalSettings.HomeDirectoryMapPath,
     ///      Oqtane passes the site PhysicalPath. First match wins.
@@ -26,6 +32,25 @@ namespace MegaForm.Core.Services.AiAssistant
     public static class AiFeatureGate
     {
         private const string LockFileName = "dev.lock";
+
+        /// <summary>
+        /// The gate every AI surface (controllers, boot scripts, Razor views) must call.
+        /// Production licence ⇒ allowed. Otherwise only an unlicensed DEV machine carrying
+        /// dev.lock is allowed; a trial install is refused.
+        /// </summary>
+        public static bool IsAvailable(params string[] extraCandidatePaths)
+        {
+            try
+            {
+                if (LicenseService.IsProductionLicensed()) return true;
+            }
+            catch
+            {
+                // Licence probe failure must not hand AI to an unlicensed install —
+                // fall through to the dev.lock check, which is the safe default.
+            }
+            return IsEnabled(extraCandidatePaths);
+        }
 
         public static bool IsEnabled(params string[] extraCandidatePaths)
         {
