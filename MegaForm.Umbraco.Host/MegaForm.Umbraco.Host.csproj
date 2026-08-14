@@ -26,9 +26,9 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <!-- Remove RazorCompileOnBuild and RazorCompileOnPublish when not using ModelsMode InMemoryAuto -->
-    <RazorCompileOnBuild>false</RazorCompileOnBuild>
-    <RazorCompileOnPublish>false</RazorCompileOnPublish>
+    <!-- Umbraco 17 host runs without the development-mode runtime compiler. -->
+    <RazorCompileOnBuild>true</RazorCompileOnBuild>
+    <RazorCompileOnPublish>true</RazorCompileOnPublish>
   </PropertyGroup>
 
 </Project>
