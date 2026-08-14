@@ -25,7 +25,7 @@ namespace MegaForm.Umbraco.Data
         }
 
         /// <summary>
-        /// Umbraco still reads DataJson directly, so never collapse it after a typed write.
+        /// Umbraco reconstructs submission data through the typed resolver on supported read paths.
         /// </summary>
         public bool SupportsDataJsonCollapse => true;
 

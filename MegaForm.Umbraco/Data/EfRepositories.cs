@@ -22,10 +22,18 @@ namespace MegaForm.Umbraco.Data
         public List<FormInfo> ListForms(int portalId, string status = null, string search = null,
             int pageIndex = 0, int pageSize = 20)
         {
-            var q = _db.Forms.AsNoTracking().Where(f => f.PortalId == portalId);
+            // Umbraco runs as a single-site host; PortalId can be -1, 0 or the root content node id
+            // depending on how the form was created. Treat non-positive portal ids as "all sites".
+            var q = portalId > 0
+                ? _db.Forms.AsNoTracking().Where(f => f.PortalId == portalId)
+                : _db.Forms.AsNoTracking();
             if (!string.IsNullOrEmpty(status)) q = q.Where(f => f.Status == status);
             if (!string.IsNullOrEmpty(search)) q = q.Where(f => f.Title.Contains(search));
-            return q.OrderByDescending(f => f.CreatedOnUtc).Skip(pageIndex * pageSize).Take(pageSize).ToList();
+            var ordered = q.OrderByDescending(f => f.CreatedOnUtc);
+            // pageSize <= 0 means "all forms" (used by report overviews).
+            return pageSize > 0
+                ? ordered.Skip(pageIndex * pageSize).Take(pageSize).ToList()
+                : ordered.ToList();
         }
 
         public int SaveForm(FormInfo form)

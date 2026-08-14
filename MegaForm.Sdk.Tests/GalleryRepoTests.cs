@@ -114,13 +114,44 @@ namespace MegaForm.Sdk.Tests
             }
             public AiKnowledgeEntry GetEntryById(int id) => Entries.FirstOrDefault(x => x.Id == id);
             public IEnumerable<string> ListKinds(int? portalId) => Entries.Select(x => x.Kind).Distinct();
+            public int Inserts, Updates;
+
+            /// <summary>
+            /// [SeedMergeIdempotence v20260812] Keyed on Id, with a unique Slug — because that is
+            /// what every real store does (DNN AiKnowledgeRepository.cs:143 `if (id == 0)` INSERT,
+            /// Oqtane OqtaneAiKnowledgeService.cs:122, Web WebAiKnowledgeService.cs:203, all behind
+            /// UNIQUE(Slug, PortalId)).
+            ///
+            /// This fake used to upsert BY SLUG, so Merge_IsIdempotent_ViaUpsert below passed while
+            /// production did the opposite: the merger handed over a fresh entity with Id 0, the
+            /// store INSERTED, and the unique index rejected it. The test was green and the
+            /// behaviour it named did not exist. A fake may simplify a dependency; it must not
+            /// contradict it.
+            /// </summary>
             public int UpsertEntry(AiKnowledgeEntry entry, int? userId)
             {
-                var existing = Entries.FirstOrDefault(x => x.Slug == entry.Slug);
-                if (existing != null) { existing.Body = entry.Body; existing.Version++; return existing.Id; }
-                entry.Id = Entries.Count + 1;
-                Entries.Add(entry);
-                return entry.Id;
+                if (entry.Id == 0)
+                {
+                    if (Entries.Any(x => string.Equals(x.Slug, entry.Slug, StringComparison.OrdinalIgnoreCase)
+                                         && x.PortalId == entry.PortalId))
+                        throw new InvalidOperationException("UNIQUE constraint UQ_MF_AI_Knowledge_Slug violated for '" + entry.Slug + "'.");
+                    entry.Id = Entries.Count + 1;
+                    Entries.Add(entry);
+                    Inserts++;
+                    return entry.Id;
+                }
+
+                var existing = Entries.FirstOrDefault(x => x.Id == entry.Id);
+                if (existing == null) return 0;
+                existing.Kind = entry.Kind;
+                existing.Title = entry.Title;
+                existing.Summary = entry.Summary;
+                existing.Body = entry.Body;
+                existing.Tags = entry.Tags;
+                existing.Examples = entry.Examples;
+                existing.Version++;
+                Updates++;
+                return existing.Id;
             }
             public void DeleteEntry(int id, int? userId) { }
             public IEnumerable<AiKnowledgeHistory> ListEntryHistory(int knowledgeId, int top) => new AiKnowledgeHistory[0];
@@ -166,10 +197,168 @@ namespace MegaForm.Sdk.Tests
             var seed = @"{ ""entries"": [ { ""Slug"": ""a"", ""Kind"": ""widget"", ""Body"": ""v1"" } ] }";
             var svc = new FakeKbService();
             AiKnowledgeSeedMerger.Merge(seed, svc, null);
-            AiKnowledgeSeedMerger.Merge(seed.Replace("v1", "v2"), svc, null);
+            var second = AiKnowledgeSeedMerger.Merge(seed.Replace("v1", "v2"), svc, null);
 
+            Assert.True(second.Success, string.Join("; ", second.Errors));
             Assert.Single(svc.Entries);
             Assert.Equal("v2", svc.Entries[0].Body);   // updated in place, not duplicated
+            Assert.Equal(1, svc.Inserts);              // the second pass must NOT insert
+            Assert.Equal(1, svc.Updates);
+        }
+
+        /// <summary>
+        /// [KbPerTemplate v20260812] A template's knowledge bundle, shaped as build-gallery.mjs
+        /// publishes it: the CREATE corpus and the REFINE contract on SEPARATE slugs, because a
+        /// slug holds exactly one row of one Kind and GetTemplateGuide rejects anything whose Kind
+        /// is not template_guide.
+        /// </summary>
+        private const string TemplateKbSeed = @"{
+          ""entries"": [
+            { ""Slug"": ""gallery-euro-youth-application"", ""Kind"": ""form_template"",
+              ""Title"": ""Euro Youth Application"", ""Body"": ""{}"",
+              ""Tags"": ""form_template,application"", ""Examples"": ""[{}]"" },
+            { ""Slug"": ""tpl-euro-youth-application"", ""Kind"": ""template_guide"",
+              ""Title"": ""Euro Youth Application"",
+              ""Body"": ""{\""guide_file\"": \""euro-youth-application.guide.md\""}"",
+              ""Tags"": ""premium,template-guide"" }
+          ], ""templates"": [], ""rules"": [] }";
+
+        [Fact]
+        public void Merge_TemplateKb_Reinstall_DoesNotDuplicateOrFail()
+        {
+            var svc = new FakeKbService();
+
+            var first = AiKnowledgeSeedMerger.Merge(TemplateKbSeed, svc, null);
+            var second = AiKnowledgeSeedMerger.Merge(TemplateKbSeed, svc, null);
+
+            // Reinstalling a gallery template merges its knowledge again — that has to be a
+            // no-op update, not a unique-constraint failure reported as "0 rows written".
+            Assert.True(first.Success, string.Join("; ", first.Errors));
+            Assert.True(second.Success, string.Join("; ", second.Errors));
+            Assert.Equal(2, second.Entries);
+            Assert.Equal(2, svc.Entries.Count);
+            Assert.Equal(2, svc.Inserts);
+            Assert.Equal(2, svc.Updates);
+        }
+
+        /// <summary>
+        /// [KbPerTemplate v20260812] The WIRE CONTRACT between tools/gallery/build-gallery.mjs and
+        /// GalleryInstallService.InstallKnowledgeAsync. Written in the exact camelCase shape the
+        /// publisher emits — if either side is renamed, this fails instead of a template installing
+        /// with silently empty knowledge (the bundle would deserialize to a null Seed and the
+        /// install would report "carries no knowledge" on a site nobody is watching).
+        /// </summary>
+        private const string PublishedBundleJson = @"{
+          ""kbVersion"": 1,
+          ""slug"": ""euro-youth-application"",
+          ""seed"": {
+            ""entries"": [
+              { ""Slug"": ""gallery-euro-youth-application"", ""Kind"": ""form_template"",
+                ""Title"": ""Euro Youth Application"", ""Body"": ""{}"", ""Examples"": ""[{}]"" },
+              { ""Slug"": ""tpl-euro-youth-application"", ""Kind"": ""template_guide"",
+                ""Title"": ""Euro Youth Application"",
+                ""Body"": ""{\""guide_file\"": \""euro-youth-application.guide.md\""}"" }
+            ],
+            ""templates"": [],
+            ""rules"": []
+          },
+          ""resources"": [
+            { ""path"": ""kb/TemplateGuides/euro-youth-application.guide.md"",
+              ""sha256"": ""c87517b9092faf85b69cdc23549a5cbfa5b0100276164e51c9efa4a0474ae144"",
+              ""sizeBytes"": 6973 },
+            { ""path"": ""kb/TemplateGuides/euro-youth-application.facts.json"",
+              ""sha256"": ""6caf21d0cfa4f2241225382ea395462179de4b77b01a427c0ff2d2c154752e24"",
+              ""sizeBytes"": 5657 }
+          ]
+        }";
+
+        [Fact]
+        public void PublishedBundle_Deserializes_AndMergesThroughTheSamePath()
+        {
+            var bundle = Newtonsoft.Json.JsonConvert.DeserializeObject<KbTemplateBundle>(PublishedBundleJson);
+
+            Assert.NotNull(bundle);
+            Assert.Equal(1, bundle.KbVersion);
+            Assert.Equal("euro-youth-application", bundle.Slug);
+            Assert.NotNull(bundle.Seed);
+            Assert.Equal(2, bundle.Resources.Count);
+
+            // Resources must be usable by DownloadFileAsync: a repo-relative path that survives
+            // sanitisation, and a 64-char sha256 (it refuses unverifiable downloads outright).
+            foreach (var r in bundle.Resources)
+            {
+                Assert.NotNull(GalleryRepositoryService.SanitizeRelativePath(r.Path));
+                Assert.Equal(64, r.Sha256.Length);
+                Assert.True(r.SizeBytes > 0);
+            }
+
+            // The seed sub-document is handed to the merger verbatim — no bespoke parser.
+            var svc = new FakeKbService();
+            var result = AiKnowledgeSeedMerger.Merge(
+                bundle.Seed.ToString(Newtonsoft.Json.Formatting.None), svc, null);
+
+            Assert.True(result.Success, string.Join("; ", result.Errors));
+            Assert.Equal(2, result.Entries);
+        }
+
+        [Fact]
+        public void PublishedManifestEntry_CarriesTheKbPointer()
+        {
+            // One entry as manifest.json publishes it, trimmed to the KB fields.
+            var json = @"{ ""slug"": ""euro-youth-application"", ""file"": ""templates/euro-youth-application.json"",
+                           ""sha256"": ""aa"", ""kb"": ""kb/templates/euro-youth-application.json"",
+                           ""kbSha256"": ""4aebb4fafb241ce4f10c7a0363e69ed4b9d49497ef70336d903a3b3564b19b12"",
+                           ""kbSizeBytes"": 72116 }";
+
+            var info = Newtonsoft.Json.JsonConvert.DeserializeObject<GalleryRepoTemplateInfo>(json);
+
+            Assert.Equal("kb/templates/euro-youth-application.json", info.Kb);
+            Assert.Equal(64, info.KbSha256.Length);
+            Assert.Equal(72116, info.KbSizeBytes);
+            Assert.NotNull(GalleryRepositoryService.SanitizeRelativePath(info.Kb));
+        }
+
+        [Fact]
+        public void ManifestWithoutKbPointer_IsNotAFailure()
+        {
+            // A gallery published before the KB channel existed simply has no pointer; the install
+            // must treat that as "nothing to do", never as an error.
+            var info = Newtonsoft.Json.JsonConvert.DeserializeObject<GalleryRepoTemplateInfo>(
+                @"{ ""slug"": ""old-template"", ""file"": ""templates/old-template.json"" }");
+
+            Assert.Null(info.Kb);
+            Assert.Null(info.KbSha256);
+        }
+
+        [Fact]
+        public void Merge_TemplateKb_KeepsCreateAndGuideOnSeparateSlugs()
+        {
+            var svc = new FakeKbService();
+            AiKnowledgeSeedMerger.Merge(TemplateKbSeed, svc, null);
+
+            var create = svc.GetEntryBySlug("gallery-euro-youth-application", null);
+            var guide = svc.GetEntryBySlug("tpl-euro-youth-application", null);
+            Assert.Equal("form_template", create.Kind);
+            Assert.Equal("template_guide", guide.Kind);
+        }
+
+        [Fact]
+        public void Merge_OverwritesStaleKnowledgeAlreadyOnTheSite()
+        {
+            var svc = new FakeKbService();
+            svc.UpsertEntry(new AiKnowledgeEntry
+            {
+                Slug = "gallery-euro-youth-application",
+                Kind = "form_template",
+                Title = "STALE",
+                Body = "{}",
+            }, null);
+
+            var result = AiKnowledgeSeedMerger.Merge(TemplateKbSeed, svc, null);
+
+            Assert.True(result.Success, string.Join("; ", result.Errors));
+            Assert.Equal("Euro Youth Application", svc.GetEntryBySlug("gallery-euro-youth-application", null).Title);
+            Assert.Equal(2, svc.Entries.Count);
         }
 
         [Fact]

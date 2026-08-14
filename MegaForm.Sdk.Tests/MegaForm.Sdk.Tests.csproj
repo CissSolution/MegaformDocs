@@ -13,11 +13,19 @@
     <PackageReference Include="xunit" Version="2.9.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
+    <!-- [Automation v2] A real DbConnection for the named-DB-action tests. Asserting that an
+         action resolves is not the same as asserting it RUNS, and the second one is the claim the
+         feature makes. SQLite in-memory keeps that honest without a SQL Server in CI. -->
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.10" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\MegaForm.Sdk\MegaForm.Sdk.csproj" />
     <ProjectReference Include="..\MegaForm.Core\MegaForm.Core.csproj" />
+    <!-- [AfterSubmitScript v20260813-01] The scripting add-on is loaded by reflection at
+         runtime, but the tests reference it directly: the deny-list is the security boundary
+         of the feature, so it needs assertions that run in CI, not a manual read. -->
+    <ProjectReference Include="..\MegaForm.Scripting\MegaForm.Scripting.csproj" />
   </ItemGroup>
 
   <ItemGroup>

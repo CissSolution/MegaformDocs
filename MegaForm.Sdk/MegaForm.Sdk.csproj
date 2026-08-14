@@ -24,7 +24,9 @@
     <RepositoryUrl>https://github.com/megaform/MegaFormSolution.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>megaform;forms;sdk;dotnet;oqtane;dnn;umbraco;workflow</PackageTags>
+    <PackageReleaseNotes>Stable 1.0.0 release: programmatic SDK facade for MegaForm. Supports forms, submissions, files, inbox/workflow, gallery, apps and records across net472/net8/net9/net10.</PackageReleaseNotes>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
 
     <!-- [API stability §C-Layer4] Validate the package on pack: ensures every target
          framework (net8/9/10) exposes a consistent public API. Once 0.1.0-preview is

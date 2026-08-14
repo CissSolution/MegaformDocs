@@ -149,7 +149,9 @@ namespace MegaForm.Sdk
                 Description = request.Description,
                 SchemaJson = string.IsNullOrWhiteSpace(request.SchemaJson) ? "{\"fields\":[]}" : request.SchemaJson,
                 Status = string.IsNullOrWhiteSpace(request.Status) ? "draft" : request.Status,
-                RequireAuth = request.RequireAuth
+                RequireAuth = request.RequireAuth,
+                ThemeJson = request.ThemeJson,
+                SettingsJson = request.SettingsJson
             };
             var newId = _forms.SaveForm(form);
             var saved = _forms.GetForm(newId);
@@ -213,6 +215,8 @@ namespace MegaForm.Sdk
             if (request.SchemaJson != null) form.SchemaJson = request.SchemaJson;
             if (request.Status != null) form.Status = request.Status;
             if (request.RequireAuth.HasValue) form.RequireAuth = request.RequireAuth.Value;
+            if (request.ThemeJson != null) form.ThemeJson = request.ThemeJson;
+            if (request.SettingsJson != null) form.SettingsJson = request.SettingsJson;
 
             _forms.SaveForm(form);
             var saved = _forms.GetForm(formId);

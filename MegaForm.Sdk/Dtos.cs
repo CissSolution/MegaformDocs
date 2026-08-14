@@ -87,6 +87,12 @@ namespace MegaForm.Sdk
 
         /// <summary>Whether the form requires an authenticated user.</summary>
         public bool RequireAuth { get; set; }
+
+        /// <summary>Optional theme JSON. Defaults to the host theme when null.</summary>
+        public string? ThemeJson { get; set; }
+
+        /// <summary>Optional form settings JSON.</summary>
+        public string? SettingsJson { get; set; }
     }
 
     /// <summary>Filter/paging options for listing forms.</summary>
@@ -240,6 +246,12 @@ namespace MegaForm.Sdk
 
         /// <summary>New require-auth flag, or null to leave unchanged (nullable distinguishes "no change" from "set false").</summary>
         public bool? RequireAuth { get; set; }
+
+        /// <summary>New theme JSON, or null to leave unchanged.</summary>
+        public string? ThemeJson { get; set; }
+
+        /// <summary>New settings JSON, or null to leave unchanged.</summary>
+        public string? SettingsJson { get; set; }
     }
 
     /// <summary>A page of results plus the total count for the query.</summary>

@@ -7,8 +7,12 @@ MegaForm.Sdk.CreateFormRequest.RequireAuth.get -> bool
 MegaForm.Sdk.CreateFormRequest.RequireAuth.set -> void
 MegaForm.Sdk.CreateFormRequest.SchemaJson.get -> string?
 MegaForm.Sdk.CreateFormRequest.SchemaJson.set -> void
+MegaForm.Sdk.CreateFormRequest.SettingsJson.get -> string?
+MegaForm.Sdk.CreateFormRequest.SettingsJson.set -> void
 MegaForm.Sdk.CreateFormRequest.Status.get -> string?
 MegaForm.Sdk.CreateFormRequest.Status.set -> void
+MegaForm.Sdk.CreateFormRequest.ThemeJson.get -> string?
+MegaForm.Sdk.CreateFormRequest.ThemeJson.set -> void
 MegaForm.Sdk.CreateFormRequest.Title.get -> string!
 MegaForm.Sdk.CreateFormRequest.Title.set -> void
 MegaForm.Sdk.FormDto
@@ -180,6 +184,10 @@ MegaForm.Sdk.UpdateFormRequest.Status.get -> string?
 MegaForm.Sdk.UpdateFormRequest.Status.set -> void
 MegaForm.Sdk.UpdateFormRequest.RequireAuth.get -> bool?
 MegaForm.Sdk.UpdateFormRequest.RequireAuth.set -> void
+MegaForm.Sdk.UpdateFormRequest.SettingsJson.get -> string?
+MegaForm.Sdk.UpdateFormRequest.SettingsJson.set -> void
+MegaForm.Sdk.UpdateFormRequest.ThemeJson.get -> string?
+MegaForm.Sdk.UpdateFormRequest.ThemeJson.set -> void
 MegaForm.Sdk.IMegaFormClient.Schema.get -> MegaForm.Sdk.ISchemaApi!
 MegaForm.Sdk.ISchemaApi
 MegaForm.Sdk.ISchemaApi.Parse(string! schemaJson) -> MegaForm.Sdk.FormSchemaInfo!

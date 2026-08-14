@@ -76,6 +76,11 @@ namespace MegaForm.Umbraco.Data
         public DbSet<FormRelationInfo> FormRelations { get; set; }
         public DbSet<SubmissionLinkInfo> SubmissionLinks { get; set; }
 
+        // [ATBE P1] Forms bound to a table in a CUSTOMER database, and the anchor rows that let a
+        // MegaForm submission id address one of that table's records. See UmbracoExternalTableStores.cs.
+        public DbSet<ExternalBindingRow> ExternalBindings { get; set; }
+        public DbSet<ExternalRowMapRow> ExternalRowMap { get; set; }
+
         protected override void OnModelCreating(ModelBuilder b)
         {
             b.Entity<FormInfo>(e => {
@@ -293,6 +298,10 @@ namespace MegaForm.Umbraco.Data
                 e.Property(x => x.Status).HasDefaultValue("running");
                 e.Property(x => x.CurrentNodeId).HasDefaultValue("");
                 e.Property(x => x.ErrorMessage).HasDefaultValue("");
+                // [CloudReady A2 v20260806] Timer columns + scanner index (fresh installs
+                // get these from the model; existing sites from AddWorkflowTimerColumnsMigration).
+                e.Property(x => x.LeaseOwner).HasMaxLength(64).IsRequired(false);
+                e.HasIndex(x => new { x.Status, x.WaitUntilUtc }).HasDatabaseName("IX_MF_WorkflowExecutions_Status_WaitUntilUtc");
             });
 
             b.Entity<WebUserRow>(e => {
@@ -582,6 +591,30 @@ namespace MegaForm.Umbraco.Data
                 e.Property(x => x.TriggerType).HasMaxLength(40).HasDefaultValue("on_submit");
                 e.Property(x => x.AppliedBy).HasMaxLength(200).HasDefaultValue("");
             });
+
+            // [ATBE P1] External-table binding + anchor map. Fresh installs get these tables
+            // from this model (CreateTables); existing sites get them from
+            // AddExternalTableTablesMigration.
+            b.Entity<ExternalBindingRow>(e => {
+                e.ToTable("MF_ExternalBinding"); e.HasKey(x => x.FormId);
+                e.Property(x => x.FormId).ValueGeneratedNever();
+                e.Property(x => x.ConnectionKey).HasMaxLength(100);
+                e.Property(x => x.DatabaseType).HasMaxLength(50);
+                e.Property(x => x.SchemaName).HasMaxLength(128);
+                e.Property(x => x.TableName).HasMaxLength(128);
+                e.Property(x => x.ProfileJson).HasColumnType(TextType);
+                e.Property(x => x.ProfileHash).HasMaxLength(80);
+                e.Property(x => x.Mode).HasMaxLength(20);
+            });
+
+            b.Entity<ExternalRowMapRow>(e => {
+                e.ToTable("MF_ExternalRowMap"); e.HasKey(x => x.SubmissionId);
+                e.Property(x => x.SubmissionId).ValueGeneratedNever();   // the anchor id comes from MF_Submissions
+                e.Property(x => x.RowKeyHash).HasMaxLength(64).IsRequired();
+                e.Property(x => x.RowKeyJson).HasMaxLength(900).IsRequired();
+                // The database, not application code, is what guarantees one anchor per customer row.
+                e.HasIndex(x => new { x.FormId, x.RowKeyHash }).IsUnique();
+            });
         }
     }
 
@@ -606,6 +639,10 @@ namespace MegaForm.Umbraco.Data
         public string CurrentNodeId { get; set; }
         public string ContextJson { get; set; }
         public string ErrorMessage { get; set; }
+        // [CloudReady A2 v20260806] Durable timer: Delay wake time + timer-scanner lease.
+        public DateTime? WaitUntilUtc { get; set; }
+        public string LeaseOwner { get; set; }
+        public DateTime? LeaseUntilUtc { get; set; }
     }
 
     public class UniqueIdCounterRow
@@ -670,6 +707,8 @@ namespace MegaForm.Umbraco.Data
         public DateTime? ClaimedAt { get; set; }
         public DateTime? DueAt { get; set; }
         public DateTime? CompletedAt { get; set; }
+        // [CloudReady A2 v20260806] One-shot overdue reminder marker.
+        public DateTime? EscalatedAtUtc { get; set; }
     }
 
     public class WorkflowTaskActionRow

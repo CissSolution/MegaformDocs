@@ -1,8 +1,6 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using MegaForm.Core.Interfaces;
 using MegaForm.Core.Models;
 
@@ -95,85 +93,39 @@ namespace MegaForm.DNN.Data
     /// </summary>
     public class DnnPhase2RepositoryAdapter : IPhase2Repository
     {
-        // Temporary bridge until DNN gets canonical MF_Apps / MF_AppQueries tables.
-        private static int _nextAppId = 0;
-        private static int _nextQueryId = 0;
-        private static readonly ConcurrentDictionary<int, AppDefinitionInfo> _apps = new ConcurrentDictionary<int, AppDefinitionInfo>();
-        private static readonly ConcurrentDictionary<int, AppQueryDefinitionInfo> _queries = new ConcurrentDictionary<int, AppQueryDefinitionInfo>();
-
         // App foundation
         public List<string> GetAppScopes(int portalId) =>
-            _apps.Values
-                .Where(a => a.PortalId == portalId && !string.IsNullOrWhiteSpace(a.AppScope))
+            FormRepository.ListAppDefinitions(portalId)
+                .Where(a => !string.IsNullOrWhiteSpace(a.AppScope))
                 .Select(a => a.AppScope)
                 .Concat(FormRepository.GetAppScopes(portalId))
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .OrderBy(s => s)
                 .ToList();
 
-        public List<AppDefinitionInfo> ListAppDefinitions(int portalId, string appScope = null)
-        {
-            var query = _apps.Values.Where(a => a.PortalId == portalId);
-            if (!string.IsNullOrWhiteSpace(appScope))
-                query = query.Where(a => string.Equals(a.AppScope, appScope.Trim(), StringComparison.OrdinalIgnoreCase));
-
-            return query
-                .OrderBy(a => a.SortOrder)
-                .ThenBy(a => a.AppName)
-                .ToList();
-        }
+        public List<AppDefinitionInfo> ListAppDefinitions(int portalId, string appScope = null) =>
+            FormRepository.ListAppDefinitions(portalId, appScope);
 
         public AppDefinitionInfo GetAppDefinition(int portalId, string appKey) =>
-            _apps.Values.FirstOrDefault(a =>
-                a.PortalId == portalId &&
-                string.Equals(a.AppKey, appKey ?? string.Empty, StringComparison.OrdinalIgnoreCase));
+            FormRepository.GetAppDefinition(portalId, appKey);
 
-        public int SaveAppDefinition(AppDefinitionInfo app)
-        {
-            if (app == null) return 0;
-            if (app.AppId <= 0)
-            {
-                app.AppId = Interlocked.Increment(ref _nextAppId);
-                if (app.CreatedOnUtc == default(DateTime)) app.CreatedOnUtc = DateTime.UtcNow;
-            }
-            app.ModifiedOnUtc = DateTime.UtcNow;
-            _apps[app.AppId] = app;
-            return app.AppId;
-        }
+        public int SaveAppDefinition(AppDefinitionInfo app) =>
+            FormRepository.SaveAppDefinition(app);
 
-        public void DeleteAppDefinition(int appId)
-        {
-            _apps.TryRemove(appId, out _);
-            foreach (var query in _queries.Values.Where(q => q.AppId == appId).ToList())
-                _queries.TryRemove(query.QueryId, out _);
-        }
+        public void DeleteAppDefinition(int appId) =>
+            FormRepository.DeleteAppDefinition(appId);
 
         public List<AppQueryDefinitionInfo> ListAppQueries(int appId) =>
-            _queries.Values
-                .Where(q => q.AppId == appId)
-                .OrderBy(q => q.SortOrder)
-                .ThenBy(q => q.QueryName)
-                .ToList();
+            FormRepository.ListAppQueries(appId);
 
         public AppQueryDefinitionInfo GetAppQuery(int appId, string queryKey) =>
-            _queries.Values.FirstOrDefault(q =>
-                q.AppId == appId &&
-                string.Equals(q.QueryKey, queryKey ?? string.Empty, StringComparison.OrdinalIgnoreCase));
+            FormRepository.GetAppQuery(appId, queryKey);
 
-        public int SaveAppQuery(AppQueryDefinitionInfo query)
-        {
-            if (query == null) return 0;
-            if (query.QueryId <= 0)
-            {
-                query.QueryId = Interlocked.Increment(ref _nextQueryId);
-                if (query.CreatedOnUtc == default(DateTime)) query.CreatedOnUtc = DateTime.UtcNow;
-            }
-            query.ModifiedOnUtc = DateTime.UtcNow;
-            _queries[query.QueryId] = query;
-            return query.QueryId;
-        }
+        public int SaveAppQuery(AppQueryDefinitionInfo query) =>
+            FormRepository.SaveAppQuery(query);
 
-        public void DeleteAppQuery(int queryId) => _queries.TryRemove(queryId, out _);
+        public void DeleteAppQuery(int queryId) =>
+            FormRepository.DeleteAppQuery(queryId);
 
         // Views
         public List<FormViewInfo> GetFormViews(int formId) => FormRepository.GetFormViews(formId);

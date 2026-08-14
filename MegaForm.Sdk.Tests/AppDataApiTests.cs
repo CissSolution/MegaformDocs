@@ -173,6 +173,57 @@ namespace MegaForm.Sdk.Tests
                 item.FileName == "ada.png");
         }
 
+        [Fact]
+        public async Task Named_query_uses_batch_reader_when_store_supports_it()
+        {
+            var forms = new InMemoryFormRepository();
+            var submissions = new InMemorySubmissionRepository();
+            var typed = new BatchAppTypedStore();
+            var formId = forms.SaveForm(new FormInfo
+            {
+                PortalId = 7,
+                AppScope = "blog",
+                Title = "Posts",
+                Status = "published",
+                SchemaJson = "{\"fields\":[{\"key\":\"title\",\"type\":\"Text\"}]}"
+            });
+            var typedId = submissions.Insert(new SubmissionInfo
+            {
+                FormId = formId,
+                Status = "Submitted",
+                DataJson = "{\"title\":\"Legacy\",\"status\":\"draft\"}",
+                SubmittedOnUtc = DateTime.UtcNow
+            });
+            typed.Seed(typedId, formId, new Dictionary<string, object>
+            {
+                ["title"] = "Typed published",
+                ["status"] = "published"
+            });
+            var legacyId = submissions.Insert(new SubmissionInfo
+            {
+                FormId = formId,
+                Status = "Submitted",
+                DataJson = "{\"title\":\"Legacy published\",\"status\":\"published\"}",
+                SubmittedOnUtc = DateTime.UtcNow.AddMinutes(1)
+            });
+
+            var client = MegaFormClient.CreateApplicationClient(
+                forms, submissions, null, null, null, null, null, null, NewPhase2(formId), typed);
+
+            var result = await client.Queries.ExecuteAsync(
+                "blog-starter", "public-posts", new AppQueryRequest(), Scope);
+
+            Assert.Equal(1, typed.GetDataManyCalls);
+            Assert.Equal(0, typed.PerRecordCalls);
+            Assert.Equal(2, result.Items.Count);
+            var typedRecord = Assert.Single(result.Items, r => r.SubmissionId == typedId);
+            Assert.True(typedRecord.IsTyped);
+            Assert.Equal("Typed published", typedRecord.Data["title"]);
+            var legacyRecord = Assert.Single(result.Items, r => r.SubmissionId == legacyId);
+            Assert.False(legacyRecord.IsTyped);
+            Assert.Equal("Legacy published", legacyRecord.Data["title"]);
+        }
+
         private static IPhase2Repository NewPhase2(int formId)
         {
             var proxy = DispatchProxy.Create<IPhase2Repository, AppPhase2Proxy>();
@@ -267,6 +318,67 @@ namespace MegaForm.Sdk.Tests
             public void ReplaceFields(int submissionId, int formId, IEnumerable<SubmissionFieldWrite> fields) =>
                 Seed(submissionId, formId, fields.ToDictionary(x => x.FieldKey, x => x.Value, StringComparer.OrdinalIgnoreCase));
 
+            public void DeleteFields(int submissionId) => _documents.Remove(submissionId);
+            public IReadOnlyList<SubmissionValueStringRecord> GetStringValues(long submissionFieldId) => Array.Empty<SubmissionValueStringRecord>();
+            public IReadOnlyList<SubmissionValueLongTextRecord> GetLongTextValues(long submissionFieldId) => Array.Empty<SubmissionValueLongTextRecord>();
+            public IReadOnlyList<SubmissionValueNumberRecord> GetNumberValues(long submissionFieldId) => Array.Empty<SubmissionValueNumberRecord>();
+            public IReadOnlyList<SubmissionValueDateRecord> GetDateValues(long submissionFieldId) => Array.Empty<SubmissionValueDateRecord>();
+            public IReadOnlyList<SubmissionValueBooleanRecord> GetBooleanValues(long submissionFieldId) => Array.Empty<SubmissionValueBooleanRecord>();
+            public IReadOnlyList<SubmissionValueJsonRecord> GetJsonValues(long submissionFieldId) => Array.Empty<SubmissionValueJsonRecord>();
+        }
+
+        /// <summary>
+        /// Batch-capable store double. Counts batch vs per-record calls so tests can prove the
+        /// query service never falls back to per-record reads when ISubmissionDataBatchReader
+        /// is available (the N+1 regression guard for the 2026-08-07 perf fix).
+        /// </summary>
+        private sealed class BatchAppTypedStore : ISubmissionDataStore, ISubmissionDataBatchReader
+        {
+            private readonly Dictionary<int, SubmissionDataDocument> _documents = new Dictionary<int, SubmissionDataDocument>();
+            public bool SupportsDataJsonCollapse => false;
+            public int GetDataManyCalls { get; private set; }
+            public int PerRecordCalls { get; private set; }
+
+            public void Seed(int submissionId, int formId, Dictionary<string, object> data)
+            {
+                _documents[submissionId] = new SubmissionDataDocument
+                {
+                    SubmissionId = submissionId,
+                    FormId = formId,
+                    Data = new Dictionary<string, object>(data, StringComparer.OrdinalIgnoreCase),
+                    Fields = data.Select((pair, index) => new SubmissionFieldRecord
+                    {
+                        SubmissionFieldId = index + 1,
+                        SubmissionId = submissionId,
+                        FormId = formId,
+                        FieldKey = pair.Key,
+                        FieldType = "Text",
+                        DataType = "string",
+                        FieldOrder = index
+                    }).ToList()
+                };
+            }
+
+            public IDictionary<int, SubmissionDataDocument> GetDataMany(IReadOnlyCollection<int> submissionIds)
+            {
+                GetDataManyCalls++;
+                var result = new Dictionary<int, SubmissionDataDocument>();
+                foreach (var id in submissionIds)
+                {
+                    SubmissionDataDocument doc;
+                    if (_documents.TryGetValue(id, out doc)) result[id] = doc;
+                }
+                return result;
+            }
+
+            public SubmissionDataDocument GetData(int submissionId) { PerRecordCalls++; return _documents[submissionId]; }
+            public IReadOnlyList<SubmissionFieldRecord> GetFields(int submissionId) => _documents[submissionId].Fields;
+            public bool HasFields(int submissionId) { PerRecordCalls++; return _documents.ContainsKey(submissionId); }
+
+            public void InsertFields(int submissionId, int formId, IEnumerable<SubmissionFieldWrite> fields) =>
+                ReplaceFields(submissionId, formId, fields);
+            public void ReplaceFields(int submissionId, int formId, IEnumerable<SubmissionFieldWrite> fields) =>
+                Seed(submissionId, formId, fields.ToDictionary(x => x.FieldKey, x => x.Value, StringComparer.OrdinalIgnoreCase));
             public void DeleteFields(int submissionId) => _documents.Remove(submissionId);
             public IReadOnlyList<SubmissionValueStringRecord> GetStringValues(long submissionFieldId) => Array.Empty<SubmissionValueStringRecord>();
             public IReadOnlyList<SubmissionValueLongTextRecord> GetLongTextValues(long submissionFieldId) => Array.Empty<SubmissionValueLongTextRecord>();

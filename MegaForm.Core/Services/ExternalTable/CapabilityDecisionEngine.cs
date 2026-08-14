@@ -44,84 +44,86 @@ namespace MegaForm.Core.Services.ExternalTable
             };
 
             // ---- Axis E: object + environment -------------------------------------------------
+            // [i18n 2026-07-13] Reason texts are ENGLISH (RULE: no hard-coded Vietnamese
+            // defaults). Codes stay stable — a future localized client can map Code → text.
             if (p.Object.SchemaCollision)
             {
                 vote(Unsupported, "SCHEMA_COLLISION",
-                    "Có nhiều bảng cùng tên '" + p.Object.Name + "' ở các schema khác nhau (" + string.Join(", ", p.Object.CollidingSchemas) + "). MegaForm không đoán.",
-                    "Chọn rõ schema rồi dò lại.", "error");
+                    "Multiple tables named '" + p.Object.Name + "' exist in different schemas (" + string.Join(", ", p.Object.CollidingSchemas) + "). MegaForm will not guess.",
+                    "Pick an explicit schema and probe again.", "error");
                 Finalize(p, caps, mode);
                 return;
             }
             if (p.Object.Type == "UNKNOWN")
             {
                 vote(Unsupported, "OBJECT_NOT_FOUND",
-                    "Không tìm thấy bảng/view này, hoặc tài khoản DB không nhìn thấy nó.",
-                    "Kiểm tra tên bảng và quyền của tài khoản kết nối.", "error");
+                    "This table/view was not found, or the DB account cannot see it.",
+                    "Check the table name and the connection account's permissions.", "error");
                 Finalize(p, caps, mode);
                 return;
             }
             if (p.Columns.Count == 0)
             {
                 vote(Unsupported, "NO_COLUMNS_VISIBLE",
-                    "Không đọc được cột nào. Tài khoản DB có thể bị chặn đọc metadata.",
-                    "Cấp quyền VIEW DEFINITION (hoặc SELECT) trên bảng cho tài khoản kết nối.", "error");
+                    "No columns could be read. The DB account may be blocked from reading metadata.",
+                    "Grant VIEW DEFINITION (or SELECT) on the table to the connection account.", "error");
                 Finalize(p, caps, mode);
                 return;
             }
             if (!p.Permissions.Select)
             {
                 vote(Unsupported, "PERM_NO_SELECT",
-                    "Tài khoản DB không có quyền SELECT trên " + p.Object.Schema + "." + p.Object.Name + ".",
-                    "Cấp quyền SELECT rồi dò lại.", "error");
+                    "The DB account has no SELECT permission on " + p.Object.Schema + "." + p.Object.Name + ".",
+                    "Grant SELECT and probe again.", "error");
                 Finalize(p, caps, mode);
                 return;
             }
 
             if (p.Object.Type == "VIEW")
                 vote(ReadOnly, "OBJECT_IS_VIEW",
-                    "Đối tượng này là VIEW — MegaForm chỉ đọc, không ghi.",
-                    "Bind vào bảng gốc nếu cần gửi biểu mẫu.", "info");
+                    "This object is a VIEW — MegaForm reads it, never writes.",
+                    "Bind to the underlying table if submissions are needed.", "info");
 
             if (string.Equals(p.Connection.Updateability, "READ_ONLY", StringComparison.OrdinalIgnoreCase))
                 vote(ReadOnly, "DB_READ_ONLY",
-                    "Database đang ở chế độ READ_ONLY (replica hoặc ApplicationIntent=ReadOnly) — quyền ghi có cũng vô nghĩa.",
-                    "Trỏ connection vào primary nếu cần ghi.", "warning");
+                    "The database is READ_ONLY (replica or ApplicationIntent=ReadOnly) — write permissions are meaningless here.",
+                    "Point the connection at the primary if writes are needed.", "warning");
 
             if (p.Connection.Provider != "SqlServer" && p.Coverage.MetadataLevel != "L2")
                 vote(ReadOnly, "PROVIDER_METADATA_LIMITED",
-                    "Provider " + p.Connection.Provider + " chưa đọc đủ metadata (khoá/identity/default) để ghi an toàn.",
-                    "Dùng SQL Server, hoặc khai báo khoá thủ công.", "warning");
+                    "Provider " + p.Connection.Provider + " does not expose enough metadata (keys/identity/defaults) for safe writes.",
+                    "Use SQL Server, or declare the key manually.", "warning");
 
             if (p.Connection.IsDbOwner)
                 caps.Reasons.Add(new CapabilityReason
                 {
                     Code = "RLS_DBO_BYPASS",
-                    Message = "Tài khoản kết nối là db_owner — nếu bảng có Row-Level Security thì RLS BỊ BỎ QUA và MegaForm sẽ thấy toàn bộ dữ liệu.",
-                    HowToFix = "Hạ quyền tài khoản ứng dụng xuống mức tối thiểu (SELECT/INSERT/UPDATE trên đúng bảng cần).",
+                    Message = "The connection account is db_owner — if the table has Row-Level Security, RLS IS BYPASSED and MegaForm sees ALL data.",
+                    HowToFix = "Downgrade the app account to least privilege (SELECT/INSERT/UPDATE on just the tables it needs).",
                     Severity = "warning",
                 });
 
             // ---- Axis W: permissions ----------------------------------------------------------
             if (!p.Permissions.Insert)
                 vote(ReadOnly, "PERM_NO_INSERT",
-                    "Tài khoản DB chỉ có quyền đọc — không gửi được biểu mẫu mới.",
-                    "Cấp quyền INSERT trên bảng này để bật gửi biểu mẫu.", "info");
+                    "The DB account is read-only — new submissions cannot be written.",
+                    "Grant INSERT on this table to enable submissions.", "info");
 
             if (!p.Permissions.Update)
                 vote(InsertOnly, "PERM_NO_UPDATE",
-                    "Không sửa được bản ghi: tài khoản DB không có quyền UPDATE.",
-                    "Cấp quyền UPDATE nếu muốn sửa dữ liệu cũ. (Trạng thái Đã đọc/Lưu trữ vẫn dùng được — MegaForm lưu riêng, không ghi vào bảng của bạn.)", "info");
+                    "Records cannot be edited: the DB account has no UPDATE permission.",
+                    "Grant UPDATE to edit existing data. (Read/Archive status still works — MegaForm stores it separately, never in your table.)", "info");
 
             // ---- Axis K: key ------------------------------------------------------------------
             if (!p.Key.Trusted)
             {
                 var detail = p.Key.Source == "none"
-                    ? "Bảng không có khoá chính hoặc unique index đáng tin."
-                    : "Khoá phát hiện được không đáng tin (mẫu " + p.Key.Verified.Sampled + " dòng: "
-                      + p.Key.Verified.Duplicates + " trùng, " + p.Key.Verified.Nulls + " null).";
+                    ? "The table has no trusted primary key or unique index."
+                    : "The detected key is not trusted (sample of " + p.Key.Verified.Sampled + " rows: "
+                      + p.Key.Verified.Duplicates + " duplicates, " + p.Key.Verified.Nulls + " nulls).";
                 vote(InsertOnly, "NO_TRUSTED_KEY",
-                    detail + " MegaForm không thể định danh an toàn một dòng → tắt Xem chi tiết/Sửa/Xoá.",
-                    "Thêm PRIMARY KEY hoặc UNIQUE INDEX (cột NOT NULL) rồi bấm Dò lại.", "warning");
+                    detail + " MegaForm cannot safely address a single row → View detail/Edit/Delete are disabled.",
+                    "Add a PRIMARY KEY or UNIQUE INDEX (on a NOT NULL column) and probe again.", "warning");
             }
 
             // ---- Axis C: columns --------------------------------------------------------------
@@ -130,17 +132,17 @@ namespace MegaForm.Core.Services.ExternalTable
                 .ToList();
             if (blocking.Count > 0)
                 vote(ReadOnly, "UNSUPPORTED_REQUIRED_COLUMN",
-                    "Cột bắt buộc " + string.Join(", ", blocking.Select(c => c.Name + " (" + c.SqlType + ")"))
-                    + " có kiểu MegaForm không biểu diễn được → không thể INSERT hợp lệ.",
-                    "Cho cột này một DEFAULT ở DB, hoặc cho phép NULL, rồi dò lại.", "error");
+                    "Required column(s) " + string.Join(", ", blocking.Select(c => c.Name + " (" + c.SqlType + ")"))
+                    + " use types MegaForm cannot represent → no valid INSERT is possible.",
+                    "Give the column a DB DEFAULT, or make it NULLable, then probe again.", "error");
 
             var encrypted = p.Columns.Where(c => c.IsEncrypted).ToList();
             if (encrypted.Count > 0)
                 caps.Reasons.Add(new CapabilityReason
                 {
                     Code = "ALWAYS_ENCRYPTED_COLUMNS",
-                    Message = "Cột mã hoá (Always Encrypted): " + string.Join(", ", encrypted.Select(c => c.Name)) + " — không lọc/sắp xếp được.",
-                    HowToFix = "Bật 'Column Encryption Setting=Enabled' trên connection nếu cần đọc/ghi các cột này.",
+                    Message = "Encrypted columns (Always Encrypted): " + string.Join(", ", encrypted.Select(c => c.Name)) + " — they cannot be filtered or sorted.",
+                    HowToFix = "Enable 'Column Encryption Setting=Enabled' on the connection if these columns must be read/written.",
                     Severity = "warning",
                 });
 
@@ -148,16 +150,16 @@ namespace MegaForm.Core.Services.ExternalTable
                 caps.Reasons.Add(new CapabilityReason
                 {
                     Code = "INSTEAD_OF_TRIGGER",
-                    Message = "Bảng có INSTEAD OF trigger — SCOPE_IDENTITY() sẽ trả sai khoá; MegaForm chuyển sang OUTPUT..INTO.",
-                    HowToFix = "Không cần làm gì; chỉ cần biết rằng dữ liệu ghi vào có thể bị trigger biến đổi.",
+                    Message = "The table has an INSTEAD OF trigger — SCOPE_IDENTITY() would return the wrong key; MegaForm switches to OUTPUT..INTO.",
+                    HowToFix = "Nothing to do; just be aware the trigger may transform written data.",
                     Severity = "warning",
                 });
             else if (p.Object.TriggerKnowledge == "unknown")
                 caps.Reasons.Add(new CapabilityReason
                 {
                     Code = "TRIGGER_UNKNOWN",
-                    Message = "Không đọc được danh sách trigger của bảng — MegaForm giả định CÓ trigger (fail-safe) và dùng OUTPUT..INTO.",
-                    HowToFix = "Cấp quyền đọc sys.triggers nếu muốn chẩn đoán chính xác.",
+                    Message = "Could not read the table's trigger list — MegaForm assumes a trigger EXISTS (fail-safe) and uses OUTPUT..INTO.",
+                    HowToFix = "Grant read on sys.triggers for a precise diagnosis.",
                     Severity = "info",
                 });
 
@@ -170,16 +172,16 @@ namespace MegaForm.Core.Services.ExternalTable
                 caps.Reasons.Add(new CapabilityReason
                 {
                     Code = "NO_TIME_COLUMN",
-                    Message = "Không tìm thấy cột thời gian → danh sách sắp xếp theo khoá giảm dần thay vì theo ngày.",
-                    HowToFix = "Chỉ định cột ngày thủ công nếu bảng có (tên không theo quy ước).",
+                    Message = "No time column was found → lists sort by key descending instead of by date.",
+                    HowToFix = "Point at a date column manually if the table has one (unconventional name).",
                     Severity = "info",
                 });
             else if (!p.Semantics.Time.ConfirmedByAdmin)
                 caps.Reasons.Add(new CapabilityReason
                 {
                     Code = "TIME_COLUMN_NEEDS_CONFIRM",
-                    Message = "Cột thời gian đề xuất: " + p.Semantics.Time.Name + " (" + p.Semantics.Time.Evidence + "). Múi giờ (UTC hay giờ địa phương) máy KHÔNG suy ra được.",
-                    HowToFix = "Xác nhận cột và múi giờ — chọn sai sẽ lệch giờ trên toàn bộ dashboard.",
+                    Message = "Proposed time column: " + p.Semantics.Time.Name + " (" + p.Semantics.Time.Evidence + "). The machine CANNOT infer the timezone (UTC vs local).",
+                    HowToFix = "Confirm the column and timezone — a wrong choice shifts every time shown on the dashboard.",
                     Severity = "warning",
                 });
 
@@ -189,8 +191,8 @@ namespace MegaForm.Core.Services.ExternalTable
                 caps.Reasons.Add(new CapabilityReason
                 {
                     Code = "BIG_TABLE_FILTER_REQUIRED",
-                    Message = "Bảng rất lớn (≈" + p.Size.ApproxRows.ToString("N0") + " dòng) — bắt buộc chọn bộ lọc trước khi xem danh sách; không hiển thị tổng số chính xác.",
-                    HowToFix = "Không cần làm gì — đây là cách duy nhất để không quét toàn bảng.",
+                    Message = "Very large table (≈" + p.Size.ApproxRows.ToString("N0") + " rows) — a filter is required before listing; exact totals are not shown.",
+                    HowToFix = "Nothing to do — this is the only way to avoid scanning the whole table.",
                     Severity = "info",
                 });
 
@@ -201,8 +203,8 @@ namespace MegaForm.Core.Services.ExternalTable
                 caps.Reasons.Add(new CapabilityReason
                 {
                     Code = "NO_INDEX_FOR_SORT",
-                    Message = "Cột " + sortTarget.Name + " chưa có index — sắp xếp theo cột này sẽ quét toàn bộ ≈" + p.Size.ApproxRows.ToString("N0") + " dòng.",
-                    HowToFix = "CREATE INDEX IX_" + p.Object.Name + "_" + sortTarget.Name + " ON " + p.Object.Schema + "." + p.Object.Name + " (" + sortTarget.Name + " DESC);  — script gợi ý cho DBA, MegaForm KHÔNG tự chạy DDL.",
+                    Message = "Column " + sortTarget.Name + " has no index — sorting by it scans all ≈" + p.Size.ApproxRows.ToString("N0") + " rows.",
+                    HowToFix = "CREATE INDEX IX_" + p.Object.Name + "_" + sortTarget.Name + " ON " + p.Object.Schema + "." + p.Object.Name + " (" + sortTarget.Name + " DESC);  — a suggested script for your DBA; MegaForm NEVER runs DDL itself.",
                     Severity = "warning",
                 });
 
