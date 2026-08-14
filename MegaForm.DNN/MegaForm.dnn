@@ -1,6 +1,6 @@
 ﻿<dotnetnuke type="Package" version="5.0">
   <packages>
-    <package name="MegaForm" type="Module" version="02.00.019">
+    <package name="MegaForm" type="Module" version="02.00.020">
       <friendlyName>MegaForm</friendlyName>
       <description>Dynamic Form Builder Module for DNN - drag-and-drop builder, conditional logic, webhooks, anti-spam, email notifications, workflows, Save and Continue, Row/Column layout.</description>
       <iconFile>~/DesktopModules/MegaForm/Images/module-icon.png</iconFile>
@@ -183,6 +183,36 @@
                  + AWSSDK.Core + AWSSDK.S3 are 0.73 MB that only an S3-mirroring install executes.
                  DnnServiceLocator resolves the provider by reflection, so the module works with or
                  without the add-on and the two can be installed in either order. -->
+            <!-- [ScriptingBundled 2026-08-14] After-Submit C# Script engine, +12 MB, bundled on the
+                 owner's call. Before this the engine shipped in NO package: every site installed
+                 from the zip hit the fail-closed branch "Script compiler is not installed on this
+                 server", and the capability had only ever run where these DLLs were hand-copied.
+
+                 ONLY these three Roslyn pieces are shipped. Roslyn 4.10's net472 output is 17
+                 assemblies / 18 MB, but a stock DNN 10.3 bin already carries ten of them
+                 (System.Collections.Immutable, System.Memory, System.Buffers, System.Numerics.Vectors,
+                 System.Runtime.CompilerServices.Unsafe, System.Threading.Tasks.Extensions,
+                 System.ValueTuple, System.Text.Encoding.CodePages, System.Text.Json, Newtonsoft.Json)
+                 at NEWER versions. Shipping our older copies over DNN's would repeat the Azure
+                 mistake described above: DNN scans every bin assembly at startup, and a downgraded
+                 framework assembly is how a site loses its Control Bar for the life of the app
+                 domain. Verified absent from DNN 10.3.0 (megaclean008) before choosing this set. -->
+            <assembly>
+              <name>MegaForm.Scripting.dll</name>
+              <path>bin</path>
+            </assembly>
+            <assembly>
+              <name>Microsoft.CodeAnalysis.dll</name>
+              <path>bin</path>
+            </assembly>
+            <assembly>
+              <name>Microsoft.CodeAnalysis.CSharp.dll</name>
+              <path>bin</path>
+            </assembly>
+            <assembly>
+              <name>System.Reflection.Metadata.dll</name>
+              <path>bin</path>
+            </assembly>
           </assemblies>
         </component>
         <component type="ResourceFile">

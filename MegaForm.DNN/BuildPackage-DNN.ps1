@@ -365,6 +365,48 @@ if ($dapperDll -and (Test-Path $dapperDll)) {
     Write-Host '  + bin\Dapper.dll'
 }
 
+# [ScriptingBundled 2026-08-14] The after-submit C# script engine, bundled into the module package
+# on the owner's call (+12 MB). Until now MegaForm.Scripting shipped in NO package at all: the
+# capability was built, tested and documented, but every site installed from the zip took the
+# fail-closed branch in AfterSubmitScriptService.Run — "Script compiler is not installed on this
+# server" — and the feature had only ever run where the DLLs were hand-copied.
+#
+# SHIP EXACTLY THESE FOUR. The net472 build output is 18 MB across 17 assemblies, but DNN 10.3
+# already carries ten of them (System.Collections.Immutable, System.Memory, System.Buffers,
+# System.Numerics.Vectors, System.Runtime.CompilerServices.Unsafe, System.Threading.Tasks.Extensions,
+# System.ValueTuple, System.Text.Encoding.CodePages, System.Text.Json, Newtonsoft.Json) at NEWER
+# versions than Roslyn 4.10 was built against. Shipping our older copies over DNN's would be the
+# same mistake as the Azure chain above: DNN scans every bin assembly at startup, and a downgraded
+# framework assembly is exactly how a site loses its Control Bar for the life of the app domain.
+# The three Roslyn pieces below are genuinely absent from a stock DNN bin - verified against
+# megaclean008 (DNN 10.3.0) before choosing this set.
+$scriptingSrcDir = @(
+    "$SOLUTION_DIR\MegaForm.Scripting\bin\$Configuration\net472",
+    "$SOLUTION_DIR\MegaForm.Scripting\bin\Release\net472",
+    "$SOLUTION_DIR\MegaForm.Scripting\bin\Debug\net472"
+) | Where-Object { Test-Path (Join-Path $_ 'MegaForm.Scripting.dll') } | Select-Object -First 1
+
+$scriptingDlls = @('MegaForm.Scripting.dll', 'Microsoft.CodeAnalysis.dll',
+                   'Microsoft.CodeAnalysis.CSharp.dll', 'System.Reflection.Metadata.dll')
+if ($scriptingSrcDir) {
+    $scriptingBytes = 0
+    foreach ($name in $scriptingDlls) {
+        $src = Join-Path $scriptingSrcDir $name
+        if (Test-Path $src) {
+            Copy-Item $src "$STAGING\bin\" -Force
+            $scriptingBytes += (Get-Item $src).Length
+        } else {
+            Write-Warning ("Scripting: thieu {0} trong {1}" -f $name, $scriptingSrcDir)
+        }
+    }
+    Write-Host ('  + bin\ scripting engine: {0} DLL, {1:N1} MB' -f $scriptingDlls.Count, ($scriptingBytes / 1MB))
+} else {
+    # Not fatal here - the manifest/zip parity check at the end of this script is what actually
+    # stops a package that declares these and does not carry them.
+    Write-Warning 'MegaForm.Scripting net472 khong tim thay - tinh nang After-Submit C# Script se KHONG cai duoc.'
+    Write-Warning '  Build truoc: dotnet build MegaForm.Scripting\MegaForm.Scripting.csproj -c Release -f net472'
+}
+
 # [CloudStorage v20260723-01] Cloud storage provider DLLs (Google Drive rides on the framework
 # HttpClient; Amazon S3 ships its SDK). Copied from the DNN build output (they flow there via the
 # MegaForm.Integrations.CloudStorage project reference).
