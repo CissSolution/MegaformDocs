@@ -210,7 +210,7 @@ namespace MegaForm.Umbraco.Migrations
 
             var content = _contentService.Create(contentName, -1, alias, -1);
             content.SetValue("megaFormPicker", contactForm.FormId.ToString());
-            _contentService.SaveAndPublish(content, "*", -1);
+            _contentService.SaveAndPublish(content, -1);
             _logger.LogInformation("[MegaForm.Umbraco] Created sample content page '{ContentName}' (id={ContentId}) using MegaForm '{FormTitle}'.", contentName, content.Id, contactForm.Title);
         }
     }

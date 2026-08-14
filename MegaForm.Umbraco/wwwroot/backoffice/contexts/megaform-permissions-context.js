@@ -1,5 +1,5 @@
 /**
- * MegaForm permission context for the Umbraco 14+ Bellissima backoffice.
+ * MegaForm permission context for the Umbraco 17 Bellissima backoffice.
  *
  * Loads the current user's effective MegaForm permissions from the server once
  * and exposes synchronous helpers to check coarse and granular permissions.

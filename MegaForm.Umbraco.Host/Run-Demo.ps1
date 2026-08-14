@@ -51,7 +51,7 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 # 3. Run the compiled DLL directly (avoids dotnet-run file-lock issues).
-$dll = "$root\bin\Debug\net8.0\MegaForm.Umbraco.Host.dll"
+$dll = "$root\bin\Debug\net10.0\MegaForm.Umbraco.Host.dll"
 if (-not (Test-Path $dll)) {
     Write-Host "Could not find built DLL: $dll" -ForegroundColor Red
     exit 1

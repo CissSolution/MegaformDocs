@@ -1,6 +1,6 @@
 # MegaForm for Umbraco — Local Demo Host
 
-This is a self-contained Umbraco 14 website used to develop and demonstrate the `MegaForm.Umbraco` package.
+This is a self-contained Umbraco 17 LTS website used to develop and demonstrate the `MegaForm.Umbraco` package.
 
 ## Run the demo
 

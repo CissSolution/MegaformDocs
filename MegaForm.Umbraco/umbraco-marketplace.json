@@ -1,7 +1,7 @@
 {
   "$schema": "https://marketplace.umbraco.com/umbraco-marketplace-schema.json",
   "Title": "MegaForm for Umbraco",
-  "Description": "Cross-platform, AI-assisted form builder for Umbraco 14+. Build multi-step forms with conditional logic, payment widgets, workflows, and submissions — all schema-driven and headless-friendly.",
+  "Description": "Cross-platform, AI-assisted form builder for Umbraco 17 LTS. Build multi-step forms with conditional logic, payment widgets, workflows, and submissions — all schema-driven and headless-friendly.",
   "Category": "Editor Tools",
   "AlternateCategory": "Developer Tools",
   "PackageType": "Package",
@@ -16,9 +16,9 @@
     "multi-step",
     "headless",
     "bellissima",
-    "umbraco 14",
-    "umbraco 15",
-    "umbraco 16"
+    "umbraco 17",
+    "lts",
+    ".net 10"
   ],
   "AuthorDetails": {
     "Name": "MegaForm Team",

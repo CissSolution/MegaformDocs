@@ -26,4 +26,4 @@ echo   User: admin@local  /  Password: Admin123456!
 echo Demo pages:  %URLS%/demo
 echo Press Ctrl+C to stop.
 
-dotnet "%~dp0bin\Debug\net8.0\MegaForm.Umbraco.Host.dll" --urls %URLS%
+dotnet "%~dp0bin\Debug\net10.0\MegaForm.Umbraco.Host.dll" --urls %URLS%

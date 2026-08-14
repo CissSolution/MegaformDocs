@@ -1,6 +1,6 @@
 # MegaForm for Umbraco
 
-MegaForm is a cross-platform, schema-driven form builder. This package adds first-class Umbraco 14+ (Bellissima) support with a native backoffice section, property editor, content app, and public render components.
+MegaForm is a cross-platform, schema-driven form builder. This package adds first-class Umbraco 17 LTS (Bellissima) support with a native backoffice section, property editor, content app, and public render components.
 
 ## Features
 
@@ -15,8 +15,8 @@ MegaForm is a cross-platform, schema-driven form builder. This package adds firs
 
 ## Requirements
 
-- Umbraco 14, 15, or 16 (`Umbraco.Cms.Web.Common`)
-- .NET 8 or later
+- Umbraco 17 LTS (`Umbraco.Cms.Web.Common` 17.6.1 or later)
+- .NET 10 or later
 
 ## Quick start
 

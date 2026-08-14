@@ -135,8 +135,11 @@ namespace MegaForm.Umbraco.Composers
 
             // ── Authorization policy that accepts both the Umbraco backoffice cookie
             // (used by shared TS UI hosted in iframes) and the OpenIddict Bearer token
-            // (used by the Umbraco 14+ backoffice SPA / management API).
-            builder.Services.AddAuthorization(options =>
+            // (used by the Umbraco 17 backoffice SPA / management API).
+            // Umbraco 17 owns the authorization service lifetimes used by singleton
+            // server-event authorizers. MegaForm only contributes policies here;
+            // calling AddAuthorization again would replace that lifetime contract.
+            builder.Services.Configure<AuthorizationOptions>(options =>
             {
                 options.AddPolicy("MegaFormBackOffice", policy =>
                 {
@@ -167,7 +170,10 @@ namespace MegaForm.Umbraco.Composers
             });
 
             // ── MegaForm granular permission service and authorization handler
-            builder.Services.AddScoped<IAuthorizationHandler, MegaFormPermissionAuthorizationHandler>();
+            // Umbraco's singleton server-event authorizers resolve all authorization
+            // handlers. Keep this handler singleton and resolve request-scoped MegaForm
+            // permission services from HttpContext only while handling a request.
+            builder.Services.AddSingleton<IAuthorizationHandler, MegaFormPermissionAuthorizationHandler>();
             builder.Services.AddScoped<IMegaFormPermissionService, MegaFormPermissionService>();
 
             // ── Member integration (public-facing members, not backoffice users)

@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace MegaForm.Umbraco.Permissions
 {
@@ -13,14 +14,10 @@ namespace MegaForm.Umbraco.Permissions
     public class MegaFormPermissionAuthorizationHandler
         : AuthorizationHandler<MegaFormPermissionRequirement>
     {
-        private readonly IMegaFormPermissionService _permissionService;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public MegaFormPermissionAuthorizationHandler(
-            IMegaFormPermissionService permissionService,
-            IHttpContextAccessor httpContextAccessor)
+        public MegaFormPermissionAuthorizationHandler(IHttpContextAccessor httpContextAccessor)
         {
-            _permissionService = permissionService;
             _httpContextAccessor = httpContextAccessor;
         }
 
@@ -35,23 +32,24 @@ namespace MegaForm.Umbraco.Permissions
                 return Task.CompletedTask;
             }
 
+            var permissionService = httpContext.RequestServices.GetRequiredService<IMegaFormPermissionService>();
             bool authorized;
             if (!string.IsNullOrWhiteSpace(requirement.FormIdParameterName))
             {
                 var formId = GetIntParameter(httpContext, requirement.FormIdParameterName);
                 if (formId.HasValue)
                 {
-                    authorized = _permissionService.HasPermission(requirement.PermissionLetter, formId.Value);
+                    authorized = permissionService.HasPermission(requirement.PermissionLetter, formId.Value);
                 }
                 else
                 {
                     // Parameter missing: fall back to global permission.
-                    authorized = _permissionService.HasPermission(requirement.PermissionLetter);
+                    authorized = permissionService.HasPermission(requirement.PermissionLetter);
                 }
             }
             else
             {
-                authorized = _permissionService.HasPermission(requirement.PermissionLetter);
+                authorized = permissionService.HasPermission(requirement.PermissionLetter);
             }
 
             if (authorized)

@@ -2,7 +2,7 @@ namespace MegaForm.Umbraco.Permissions
 {
     /// <summary>
     /// Permission identifiers and context identifiers for MegaForm in Umbraco.
-    /// Umbraco 14+ stores permissions as opaque strings, so we use namespaced
+    /// Umbraco 17 stores permissions as opaque strings, so we use namespaced
     /// values to avoid collisions with built-in actions (e.g. "Umb.Document.Read").
     /// </summary>
     public static class MegaFormPermissionConstants

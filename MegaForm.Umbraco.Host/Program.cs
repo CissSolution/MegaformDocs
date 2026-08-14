@@ -3,8 +3,6 @@ using MegaForm.Umbraco.Extensions;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllersWithViews();
-
 builder.Services.Configure<OpenIddictServerAspNetCoreOptions>(options =>
 {
     options.DisableTransportSecurityRequirement = true;
