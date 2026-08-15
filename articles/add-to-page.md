@@ -6,6 +6,12 @@ running live — where a low rating reveals a follow-up question.
 
 ## 1. Add the MegaForm module to a page
 
+> **Already have the form?** You do not need to place an empty module first. In
+> **Admin → MegaForm**, the **Add To Page** button on any form lets you pick the page and the pane
+> directly — see [Create a Form on Oqtane](oqtane-create-form.md#4-put-the-form-on-the-page-you-want).
+> The walkthrough below is the other direction: start with an empty module on a page, then build
+> the form into it with AI.
+
 On any page, open Oqtane's **Control Panel** (the ⚙ in the top bar, in edit mode). Under
 **Module Management**, choose **MegaForm** and click **Add Module To Page**:
 

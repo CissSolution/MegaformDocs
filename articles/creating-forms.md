@@ -22,6 +22,11 @@ Click **New Form** to open the five-step **Form Wizard** (Setup → Fields → W
 Publish). Name the form, add fields from the field-type gallery — the live preview builds up as
 you go — then publish. The form is immediately available on its Oqtane page, ready to fill in.
 
+> Starting from the Admin area instead? **Admin → MegaForm → Create Form** opens this same wizard.
+> Picking a template fills the form name in for you, and the last step lands you on the **live
+> form** rather than in the editor. See [Create a Form on Oqtane](oqtane-create-form.md) for that
+> route end to end, including how to choose which page and pane the form goes on.
+
 ![Using the wizard to build a simple contact form, ending with the published form live on an Oqtane page](../images/01-wizard-simple-form.gif)
 
 **Steps shown**
