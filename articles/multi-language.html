@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Multi-language (built-in) | MegaForm Documentation </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Multi-language (built-in) | MegaForm Documentation ">
+      
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/main/articles/multi-language.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="MegaForm">
+            MegaForm
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="multi-language-built-in">Multi-language (built-in)</h1>
+
+<p>MegaForm is multilingual out of the box, on two independent layers:</p>
+<ol>
+<li><strong>Your forms</strong> — one form can carry translations for its title, description, field labels,
+help texts, placeholders, and option lists. Visitors see the form in their language and can
+switch languages right on the page.</li>
+<li><strong>The product UI</strong> — the Form Builder, dashboards, and admin screens themselves can be
+displayed in the administrator's preferred language.</li>
+</ol>
+<p>No extra module or third-party service is required for either layer.</p>
+<h2 id="translated-forms">Translated forms</h2>
+<h3 id="how-visitors-experience-it">How visitors experience it</h3>
+<p>When a form declares more than one supported language, the rendered page shows a small
+<strong>🌐 language strip</strong> above the form. Clicking a language reloads the form with every
+translated text — title, labels, help, placeholders, options — in that language. The choice is
+carried in the URL (<code>?locale=fr-FR</code>), so a link can point straight to a specific language
+version of the form.</p>
+<p>Texts that have no translation for the selected language fall back to the form's default
+language, so a partially translated form still renders completely. The selected language is
+also applied to the built-in chrome (buttons, validation messages) from the shared language
+catalog described below.</p>
+<h3 id="how-authors-add-translations">How authors add translations</h3>
+<p>Translations live inside the form itself (the template JSON carries a <code>translations</code> map per
+locale, at form level and per field — see the
+<a href="form-template-json.html">Template JSON Reference</a>). In practice you fill them in one of these
+ways:</p>
+<ul>
+<li><strong>Ask the AI assistant</strong> — <em>&quot;translate this form to French and German&quot;</em> — and review the
+result before applying, like any other <a href="ai-form-designer.html">AI Form Designer</a> change.</li>
+<li><strong>Edit the template JSON</strong> directly for full control, or import/export forms with their
+translations included — translations travel with the form.</li>
+</ul>
+<p>Then list the languages the form should offer in the form's settings
+(<code>supportedLanguages</code>, e.g. <code>[&quot;en-US&quot;, &quot;fr-FR&quot;, &quot;de-DE&quot;]</code>) and pick its <code>defaultLanguage</code>.</p>
+<h2 id="the-admin-ui-in-your-language">The admin UI in your language</h2>
+<p>Every screen — the Form Builder, dashboards, submissions, and settings — can be shown in the
+administrator's own language. Pick a <strong>Display language</strong> and the whole interface switches
+instantly:</p>
+<p><img src="../images/09-language-switch.gif" alt="Switching the admin UI display language: English → French → German"></p>
+<p>Administrators manage product-UI languages from the <strong>Languages</strong> screen on the Form
+Dashboard:</p>
+<ul>
+<li><strong>19 languages</strong> are available out of the box — English, Spanish, French, German,
+Portuguese (BR), Italian, Dutch, Polish, Russian, Turkish, Arabic, Vietnamese, Thai,
+Indonesian, Hindi, Japanese, Korean, and Chinese (Simplified &amp; Traditional).
+Right-to-left scripts (Arabic) are supported.</li>
+<li>The editor is organised in <strong>tabs by area</strong> (Dashboard, Builder, Widgets, Controls, …) and
+works &quot;copy from English → translate&quot;: you always see the source string next to your
+translation.</li>
+<li><strong>Translate (AI)</strong> fills every untranslated string automatically using the site's configured
+AI provider — review and adjust afterwards. Manual editing works without any AI provider.</li>
+<li>Each administrator picks their own <strong>display language</strong>; the choice does not affect what
+site visitors see.</li>
+</ul>
+<h2 id="quick-checklist">Quick checklist</h2>
+<table>
+<thead>
+<tr>
+<th>Goal</th>
+<th>Where</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Offer a public form in 3 languages</td>
+<td>Form settings → <code>supportedLanguages</code> + translations (AI or template JSON)</td>
+</tr>
+<tr>
+<td>Deep-link a specific language</td>
+<td>Append <code>?locale=de-DE</code> to the form page URL</td>
+</tr>
+<tr>
+<td>Switch the builder/dashboard language</td>
+<td>Form Dashboard → <strong>Languages</strong> → display language</td>
+</tr>
+<tr>
+<td>Translate the admin UI to a new language</td>
+<td>Form Dashboard → <strong>Languages</strong> → pick language → translate (or <strong>Translate (AI)</strong>)</td>
+</tr>
+</tbody>
+</table>
+
+</article>
+
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          MegaForm — forms, submissions, workflows & AI. © 2026 MegaForm.
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

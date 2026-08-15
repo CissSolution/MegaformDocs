@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Module Settings &amp; Theme | MegaForm Documentation </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Module Settings &amp; Theme | MegaForm Documentation ">
+      
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/main/articles/settings-pane.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="MegaForm">
+            MegaForm
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="module-settings--theme">Module Settings &amp; Theme</h1>
+
+<p>Every MegaForm module on an Oqtane page has a <strong>⚙ Settings</strong> button (visible to administrators,
+next to <em>Form Builder</em> and <em>Form Dashboard</em>). It opens the MegaForm settings pane — the fastest
+way to control <strong>which form the page shows</strong> and <strong>how it looks</strong>, without opening the builder.</p>
+<p><img src="../images/05-settings-pane.gif" alt="Choosing the form and switching the theme preset from the settings pane"></p>
+<p>The pane has three tabs: <strong>Module form</strong>, <strong>Theme &amp; Layout</strong>, and <strong>Current Form settings</strong>.
+The <strong>Save module settings</strong> button is always visible, whatever tab you are on.</p>
+<h2 id="module-form--choose-what-the-page-displays">Module form — choose what the page displays</h2>
+<p>The <em>Module form</em> tab lists every published form on the site. Pick one and save — the page now
+renders that form. The same form can be shown by several modules on different pages, and a
+module can be re-pointed at any time without touching the form itself.</p>
+<h2 id="theme--layout">Theme &amp; Layout</h2>
+<h3 id="theme-presets">Theme presets</h3>
+<p>Pick from the built-in presets — <em>Default, Ocean, Forest, Sunset, Lavender, Midnight, Rose,
+Amber, Slate, Emerald, Coral, Cyber, Carbon, Arctic, Berry, Earth</em> — and the form recolors
+instantly, including the premium templates.</p>
+<p>Each preset shows its <strong>editable colour palette</strong> right on the card: click a swatch to adjust
+the primary / text / background / border colours for <em>this module</em> without leaving the pane.
+Unsaved changes apply when you press <strong>Save module settings</strong>.</p>
+<h3 id="layout">Layout</h3>
+<ul>
+<li><strong>Max width</strong> — 480 / 640 / 768 / 960 / Full, controlling how wide the form renders.</li>
+<li><strong>Field spacing</strong> — a slider for the vertical rhythm between fields.</li>
+<li><strong>Hide form header</strong> — suppress the form's title + description when the page already
+provides its own heading.</li>
+</ul>
+<h3 id="typography--corners">Typography &amp; corners</h3>
+<ul>
+<li><strong>Body font / Heading font</strong>, <strong>base text size</strong>, and <strong>line height</strong>.</li>
+<li><strong>Corner radius</strong> — preset steps or a custom pixel value.</li>
+</ul>
+<h3 id="page-integration">Page integration</h3>
+<p>For forms embedded inline in a content page, <em>Typography source</em> and <em>Color source</em> can be set
+to <strong>Inherit from page</strong>, so the form borrows the host skin's font and colours instead of its
+own.</p>
+<div class="TIP">
+<h5>Tip</h5>
+<p>Module settings are <strong>per module</strong>, not per form: the same form can look different on two
+pages. Form-level design (fields, layout blocks, custom shells) lives in the
+<a href="form-builder.html">Form Builder</a>; a full theme editor is available there under <strong>Design</strong>.</p>
+</div>
+
+</article>
+
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          MegaForm — forms, submissions, workflows & AI. © 2026 MegaForm.
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

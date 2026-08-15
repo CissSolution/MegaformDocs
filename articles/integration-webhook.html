@@ -16,7 +16,7 @@
       <meta name="docfx:rel" content="../">
       
       
-      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/feature/typed-submission-storage-core/Docs/docfx/articles/integration-webhook.md/#L1">
+      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/main/articles/integration-webhook.md/#L1">
       <meta name="loc:inThisArticle" content="In this article">
       <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
       <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
@@ -93,7 +93,6 @@ Odoo, an internal API gateway, an iPaaS such as Zapier or Make, or a bespoke int
 the other system is a <strong>database</strong> rather than an API, use
 <a href="integration-sql-insert.html">Write submissions into an existing SQL table</a> instead.</p>
 <p>Everything below is configured in the builder — no code, no deployment.</p>
-<p><img src="../images/31-webhook-crm.gif" alt="Webhook to CRM"></p>
 <hr>
 <h2 id="1-where-the-node-lives">1. Where the node lives</h2>
 <ol>
@@ -140,7 +139,7 @@ is <code>Webhook</code> — the name that appears in exported JSON and in messag
 <h2 id="3-payload--three-modes">3. Payload — three modes</h2>
 <p><strong>Send all form fields</strong> (default). Every field goes out as one flat JSON object, keyed by field key.
 Nothing to configure; the panel shows a live preview.</p>
-<pre><code class="lang-json">{ &quot;full_name&quot;: &quot;Nguyen Van A&quot;, &quot;email&quot;: &quot;a@example.com&quot;, &quot;phone&quot;: &quot;0900000000&quot;, &quot;message&quot;: &quot;Xin chào&quot; }
+<pre><code class="lang-json">{ &quot;full_name&quot;: &quot;Alex Morgan&quot;, &quot;email&quot;: &quot;alex.morgan@example.com&quot;, &quot;phone&quot;: &quot;+1 555 0142&quot;, &quot;message&quot;: &quot;Hello&quot; }
 </code></pre>
 <p><strong>Map selected fields.</strong> Pick exactly which fields leave the building and what each is called on the
 other side. The <strong>JSON key / path</strong> accepts dot notation, which builds nested objects — this is how
@@ -167,7 +166,7 @@ you match a CRM's expected shape:</p>
 </tr>
 </tbody>
 </table>
-<pre><code class="lang-json">{ &quot;customer&quot;: { &quot;name&quot;: &quot;Nguyen Van A&quot;, &quot;email&quot;: &quot;a@example.com&quot;, &quot;phone&quot;: &quot;0900000000&quot; } }
+<pre><code class="lang-json">{ &quot;customer&quot;: { &quot;name&quot;: &quot;Alex Morgan&quot;, &quot;email&quot;: &quot;alex.morgan@example.com&quot;, &quot;phone&quot;: &quot;+1 555 0142&quot; } }
 </code></pre>
 <p>Three shortcuts sit above the table: <strong>Auto-map fields</strong> (one row per field, same names),
 <strong>Preset: CRM lead</strong> (matches name/email/phone keys into <code>customer.*</code>), and <strong>Add row</strong>.
@@ -330,43 +329,26 @@ URL built from an untrusted field can reach anything the server can reach. Prefe
 expose the CRM through a reverse proxy on a public hostname; use the flag when that is not an option.</p>
 <hr>
 <h2 id="8-testing-before-you-trust-it">8. Testing before you trust it</h2>
-<p>A local mock endpoint ships with the repo so you can watch the traffic and try each auth mode without
-touching the real CRM:</p>
-<pre><code class="lang-bash">node tools/mock-crm/mock-crm-server.mjs        # http://localhost:5199
-</code></pre>
-<table>
-<thead>
-<tr>
-<th>Endpoint</th>
-<th>Authentication</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>POST /crm/leads</code></td>
-<td>none</td>
-</tr>
-<tr>
-<td><code>POST /crm/leads-secure</code></td>
-<td><code>Authorization: Bearer demo-bearer-token-2026</code></td>
-</tr>
-<tr>
-<td><code>POST /crm/leads-apikey</code></td>
-<td><code>X-Api-Key: demo-api-key-2026</code></td>
-</tr>
-<tr>
-<td><code>POST /crm/leads-basic</code></td>
-<td>Basic <code>megaform:demo-pass-2026</code></td>
-</tr>
-<tr>
-<td><code>POST /erp/orders</code></td>
-<td>none — replies with <code>orderNo</code> and a <code>status</code> you can route on</td>
-</tr>
-</tbody>
-</table>
-<p>Open <code>http://localhost:5199/</code> in a second tab: it lists every request received, refreshes itself, and
-marks rejected ones in red, so a wrong token is obvious. Because it is on loopback, the host needs
-<code>MEGAFORM_ALLOW_PRIVATE_WEBHOOKS=1</code> (§7).</p>
+<p>Point the node at an endpoint you control before you point it at the real CRM — your CRM vendor's
+sandbox, a staging endpoint of your own, or a throwaway inspection URL from any request-bin style
+service. Then submit the form once for real and compare what arrives against the live preview the
+payload panel showed you.</p>
+<p>Three things worth checking on that first run, because each fails in a way the next one hides:</p>
+<ol>
+<li><strong>The body matches the preview.</strong> If you used <em>Map selected fields</em>, confirm the nested shape
+arrived as the dot-notation paths described (§3), not flattened.</li>
+<li><strong>The credential arrived.</strong> Look at the request headers your endpoint received, not just its
+status code — a CRM that answers <code>200</code> to an unauthenticated call will happily hide a missing
+token until the day it stops.</li>
+<li><strong>The retry behaved.</strong> Make the endpoint answer <code>500</code> once on purpose and watch the retry
+arrive with the same body (§5).</li>
+</ol>
+<div class="NOTE">
+<h5>Note</h5>
+<p>A test endpoint on the same machine as the site — <code>localhost</code>, <code>127.0.0.1</code>, or a private network
+address — is refused by the SSRF guard unless the host sets <code>MEGAFORM_ALLOW_PRIVATE_WEBHOOKS=1</code>
+(§7). Reaching for a loopback endpoint is the usual reason a first test appears to do nothing.</p>
+</div>
 <hr>
 <h2 id="9-node-json-for-reference">9. Node JSON, for reference</h2>
 <p>The builder writes this; you rarely type it. Useful when reviewing an exported workflow.</p>

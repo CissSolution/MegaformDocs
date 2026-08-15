@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>From a blank page to a working form | MegaForm Documentation </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="From a blank page to a working form | MegaForm Documentation ">
+      
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/main/articles/add-to-page.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="MegaForm">
+            MegaForm
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="from-a-blank-page-to-a-working-form">From a blank page to a working form</h1>
+
+<p>This walkthrough goes end-to-end on Oqtane: start on an empty page, add the MegaForm module,
+let the AI build a <strong>product feedback form</strong> with <strong>display logic</strong>, and finish with the form
+running live — where a low rating reveals a follow-up question.</p>
+<h2 id="1-add-the-megaform-module-to-a-page">1. Add the MegaForm module to a page</h2>
+<p>On any page, open Oqtane's <strong>Control Panel</strong> (the ⚙ in the top bar, in edit mode). Under
+<strong>Module Management</strong>, choose <strong>MegaForm</strong> and click <strong>Add Module To Page</strong>:</p>
+<p><img src="../images/oq-add-module.png" alt="Oqtane Control Panel: pick MegaForm under Module Management and click Add Module To Page"></p>
+<p>An empty MegaForm module appears on the page, ready to fill with a form.</p>
+<h2 id="2-build-the-form-with-ai--including-display-logic">2. Build the form with AI — including display logic</h2>
+<p>Open the module's <strong>Form Dashboard</strong> and click <strong>✨ Create with AI</strong> (or use the AI bubble in
+the Form Builder). Describe the form <em>and</em> the conditional behaviour you want — the assistant
+generates the fields <strong>and</strong> the display logic, then you <strong>Save &amp; Use Now</strong> to make it live:</p>
+<p><img src="../images/10-ai-feedback-logic.gif" alt="Describing a product feedback form with conditional logic to the AI; the finished form runs live and reveals the comment box when the rating is low"></p>
+<blockquote>
+<p><em>&quot;A product feedback form: a star rating 'How would you rate our product?', and a comment box
+'What could we improve?' that only appears when the rating is 3 stars or lower. Include name
+and email.&quot;</em></p>
+</blockquote>
+<h2 id="3-display-logic-conditional-visibility">3. Display logic (conditional visibility)</h2>
+<p>The example above asks the AI to make one field <strong>conditional</strong> — the <em>&quot;What could we improve?&quot;</em>
+box only shows when the rating is low. On the finished form:</p>
+<ul>
+<li>Rate <strong>4–5 stars</strong> → the comment box stays hidden.</li>
+<li>Rate <strong>1–3 stars</strong> → the comment box appears.</li>
+</ul>
+<p>You can add or change this yourself in the <strong>Form Builder</strong>: select a field, turn on
+<strong>&quot;Only show when…&quot;</strong>, and add a condition (e.g. <em>rating</em> <strong>is less than</strong> <em>4</em>). Conditions can
+combine multiple rules with <em>And</em> / <em>Or</em>, and the same engine can also make fields <strong>required</strong>
+or <strong>set values</strong> based on other answers. The rules run in the live form instantly — no page
+reload.</p>
+<h2 id="4-the-result-a-working-form">4. The result: a working form</h2>
+<p>The finished feedback form is live on the page, collecting submissions into
+<a href="submissions-inbox.html">Submissions &amp; My Inbox</a>. From here you can theme it, translate it, add a
+<a href="workflow.html">workflow</a>, or connect it to <a href="storage-options.html">storage</a> — all covered in the
+rest of this guide.</p>
+
+</article>
+
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          MegaForm — forms, submissions, workflows & AI. © 2026 MegaForm.
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

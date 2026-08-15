@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Drag &amp; Drop and Layout (Rows / Columns) | MegaForm Documentation </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Drag &amp; Drop and Layout (Rows / Columns) | MegaForm Documentation ">
+      
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/main/articles/drag-drop-layout.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="MegaForm">
+            MegaForm
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="drag--drop-and-layout-rows--columns">Drag &amp; Drop and Layout (Rows / Columns)</h1>
+
+<p>The Form Builder canvas is fully drag-and-drop: pull controls in from the palette, reorder
+them by dragging, and use the <strong>Row / Columns</strong> control to place fields side by side.</p>
+<h2 id="adding-controls-click-or-drag">Adding controls: click or drag</h2>
+<p>Two ways to add any control from the palette:</p>
+<ul>
+<li><strong>Click</strong> a tile — the field is appended to the end of the form.</li>
+<li><strong>Drag</strong> a tile onto the canvas — a ghost tile follows your cursor and the field is
+inserted where you drop it.</li>
+</ul>
+<p><img src="../images/11-drag-drop-build.gif" alt="Dragging Input, Choice Cards and Rating tiles from the palette onto the canvas, then reordering by drag"></p>
+<p>Each field added this way gets sensible defaults (label, key, options) that you then refine
+in the <strong>Design</strong> rail on the right — see the
+<a href="widgets-reference.html">Controls &amp; Widgets Reference</a> for what every tile does.</p>
+<h2 id="drag-to-move-reorder">Drag to move (reorder)</h2>
+<p>Every field on the canvas has a <strong>⋮⋮ drag handle</strong> on its left edge. Grab it and drag the
+field up or down — the other fields animate out of the way, and the new order is saved with
+the form. Next to the handle you'll also find quick actions to <strong>duplicate</strong> and <strong>delete</strong>
+the field, and clicking any field selects it for editing in the right rail.</p>
+<blockquote>
+<p>Tip: you can also copy/paste fields with <strong>Ctrl+C / Ctrl+V</strong> and duplicate with <strong>Ctrl+D</strong>
+while a field is selected.</p>
+</blockquote>
+<h2 id="rows--columns-side-by-side-layout">Rows &amp; columns: side-by-side layout</h2>
+<p>Forms read better when related short fields share a line. Drop the <strong>Row / Columns</strong> control
+(Layout tab) onto the canvas, pick a column layout, then drag fields from the palette
+straight into each column:</p>
+<p><img src="../images/12-rows-columns.gif" alt="Dropping a Row onto the canvas, switching it to 3 columns, and dragging Dropdown, Date and Time fields into the columns"></p>
+<p>The layout picker in the row header offers: <strong>1</strong>, <strong>2</strong>, <strong>3</strong> or <strong>4</strong> equal columns, plus
+asymmetric splits — <strong>⅔ + ⅓</strong>, <strong>⅓ + ⅔</strong>, <strong>¼ + ¾</strong> and <strong>¾ + ¼</strong>. You can change the
+layout at any time; existing fields flow into the remaining columns.</p>
+<p>A few rules to know:</p>
+<ul>
+<li><strong>Add fields to a row from the palette</strong> — drag a tile directly into a column (&quot;Drop
+field&quot; placeholders show you where). Fields already sitting at the top level of the canvas
+are reordered on the canvas itself; build rows from palette tiles.</li>
+<li>Fields <strong>inside</strong> a row can be dragged between its columns.</li>
+<li>Rows cannot be nested inside other rows.</li>
+<li>On small screens the columns stack automatically — the published form stays responsive.</li>
+</ul>
+<h3 id="field-width--the-lightweight-alternative">Field width — the lightweight alternative</h3>
+<p>For a quick two-column feel without a Row, select any field and set its <strong>Width</strong> in the
+Design rail: Full (100%), Half (50%), Third (33%), Two-Thirds (66%) or Quarter (25%).
+Adjacent fields with partial widths share the same line.</p>
+<h3 id="flex-grid-12-col">Flex Grid (12-col)</h3>
+<p>For free-form layouts, the <strong>Flex Grid</strong> control creates a 12-column CSS grid; use the
+in-cell <strong>+ Add</strong> button to place fields in any cell and span them across columns. Rows are
+simpler and cover most forms — reach for the grid when you need pixel-precise dashboards or
+dense intake sheets.</p>
+<h2 id="multi-page-forms">Multi-page forms</h2>
+<p>Long form? Drop a <strong>Section Break</strong> (Layout tab) where a new page should start and tick
+<strong>Start new page here</strong>. The published form becomes a multi-step wizard with Previous/Next
+buttons and a progress indicator. Combine with the review-before-submit option in
+<a href="after-submission.html">After Submission</a> so respondents can check all answers on one screen.</p>
+<h2 id="where-to-go-next">Where to go next</h2>
+<ul>
+<li>What every palette tile does: <a href="widgets-reference.html">Controls &amp; Widgets Reference</a></li>
+<li>Confirmation screens, emails and notifications: <a href="after-submission.html">After Submission</a></li>
+<li>The rest of the builder (tabs, theming, rules): <a href="form-builder.html">Form Builder</a></li>
+</ul>
+
+</article>
+
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          MegaForm — forms, submissions, workflows & AI. © 2026 MegaForm.
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

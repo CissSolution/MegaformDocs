@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>After Submission: Confirmation, Emails &amp; Notifications | MegaForm Documentation </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="After Submission: Confirmation, Emails &amp; Notifications | MegaForm Documentation ">
+      
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/main/articles/after-submission.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="MegaForm">
+            MegaForm
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="after-submission-confirmation-emails--notifications">After Submission: Confirmation, Emails &amp; Notifications</h1>
+
+<p>What should happen the moment a visitor presses <strong>Submit</strong>? MegaForm gives you a full
+post-submit toolbox: an in-form confirmation screen (or redirect), a thank-you email to the
+respondent, an alert email to your team, a file download, webhooks and analytics events.</p>
+<p>Everything below is configured in the <strong>Form Builder → Settings tab</strong> (right rail), so each
+form has its own behaviour.</p>
+<h2 id="the-confirmation-experience">The confirmation experience</h2>
+<p>This is what the respondent sees by default — a rich confirmation card shown in place of the
+form:</p>
+<p><img src="../images/oq-as-confirmation-live.png" alt="Live confirmation screen: success check, message, submission ID, answer summary and action buttons"></p>
+<p>Under <strong>Confirmation</strong> in the Settings tab you choose one of three <strong>confirmation types</strong>:</p>
+<ul>
+<li><strong>Message</strong> — show a confirmation card in the form (no redirect).</li>
+<li><strong>Page / Redirect</strong> — send the respondent straight to another page or URL.</li>
+<li><strong>Message, then redirect</strong> — show the message, then redirect after a configurable delay
+(with a &quot;Redirecting shortly…&quot; notice).</li>
+</ul>
+<p><img src="../images/oq-as-confirmation.png" alt="Confirmation settings: review step, confirmation type, success title and message with token chips"></p>
+<p>The <strong>Success Title</strong> and <strong>Confirmation Message</strong> support formatting (bold, lists, links)
+and <strong>token chips</strong> — click a chip such as <code>{{submission:id}}</code>, <code>{{form:title}}</code> or
+<code>{{submission:url}}</code> to insert it into the message.</p>
+<p>Optional extras on the same card:</p>
+<ul>
+<li><strong>Review before submit</strong> — respondents see all their answers on one screen (and can go
+back to edit) before the final Submit. Great for long or multi-step forms.</li>
+<li><strong>Submission Details</strong> — show the <strong>submission ID</strong> (a reference number the respondent can
+quote), an <strong>answer summary</strong> (with empty answers hidden if you like) and a
+<strong>&quot;Submit another response&quot;</strong> button.</li>
+<li><strong>CTA buttons</strong> — up to two custom buttons (primary + secondary) linking anywhere, e.g.
+&quot;Back to homepage&quot; or &quot;Book a call&quot;.</li>
+</ul>
+<h3 id="redirect-url">Redirect URL</h3>
+<p><img src="../images/oq-as-redirect.png" alt="Redirect card: URL, delay in seconds and redirect notice"></p>
+<p>Toggle <strong>Redirect URL</strong> on and combine it with the confirmation type above for an immediate
+or delayed redirect — useful for thank-you landing pages and conversion tracking.</p>
+<h2 id="emails">Emails</h2>
+<h3 id="respondent-email-autoresponder">Respondent email (autoresponder)</h3>
+<p>Send the person who submitted the form a confirmation email. The recipient address is pulled
+automatically from the form's email field; you control the From name, Reply-To, subject and
+a formatted body:</p>
+<p><img src="../images/oq-as-respondent-email.png" alt="Respondent Email Notification card: from name, reply-to, subject and rich-text body"></p>
+<h3 id="admin-notification">Admin notification</h3>
+<p>Under <strong>Notifications</strong>, enter the address (or addresses) that should be alerted on every new
+submission — the email includes the submitted answers:</p>
+<p><img src="../images/oq-as-notifications.png" alt="Notifications, Webhook and Custom URL settings groups"></p>
+<blockquote>
+<p>Emails are sent through your site's configured SMTP server (Oqtane host settings → SMTP).
+If nothing arrives, check the SMTP configuration and the site logs first.</p>
+</blockquote>
+<h2 id="give-something-back-a-download">Give something back: a download</h2>
+<p>Toggle <strong>Provide a Download</strong> to offer a file — a PDF guide, brochure, ebook or voucher —
+right on the confirmation screen:</p>
+<p><img src="../images/oq-as-download.png" alt="Provide a Download card: button label, file URL, filename"></p>
+<h2 id="push-the-data-somewhere-else">Push the data somewhere else</h2>
+<p>The same Settings tab wires post-submit integrations:</p>
+<ul>
+<li><strong>Webhook</strong> — POST the submission as JSON to any URL (outgoing URLs are validated
+server-side against SSRF).</li>
+<li><strong>Custom URL</strong> — forward the submission to your own API endpoint (POST or PUT, with
+optional metadata: id, timestamp, form id).</li>
+<li><strong>Google Analytics</strong> — fire a configurable GA event on each successful submit.</li>
+<li><strong>Database insert / Google Sheets</strong> — write each submission into your own database table
+or a spreadsheet; see <a href="storage-options.html">Storage &amp; Integrations</a>.</li>
+</ul>
+<h2 id="what-happens-automatically">What happens automatically</h2>
+<p>Independent of the settings above, every successful submit:</p>
+<ol>
+<li><strong>Stores the submission</strong> — browse, filter, export and manage columns in
+<a href="submissions-inbox.html">Submissions &amp; My Inbox</a>.</li>
+<li><strong>Runs the form's workflow</strong> (if one is attached) — approvals, service tasks, user tasks
+in My Inbox; see <a href="workflow.html">Workflow</a>.</li>
+<li><strong>Applies anti-spam and rate limits</strong> configured for the form (honeypot, per-window
+submission caps).</li>
+</ol>
+<h2 id="quick-checklist">Quick checklist</h2>
+<table>
+<thead>
+<tr>
+<th>Goal</th>
+<th>Where</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Change the thank-you text</td>
+<td>Settings → Confirmation → Success Title / Message</td>
+</tr>
+<tr>
+<td>Redirect to a landing page</td>
+<td>Settings → Confirmation Type + Redirect URL</td>
+</tr>
+<tr>
+<td>Email the respondent</td>
+<td>Settings → Respondent Email Notification</td>
+</tr>
+<tr>
+<td>Alert your team</td>
+<td>Settings → Notifications → Admin Email</td>
+</tr>
+<tr>
+<td>Offer a brochure download</td>
+<td>Settings → Provide a Download</td>
+</tr>
+<tr>
+<td>Send data to another system</td>
+<td>Settings → Webhook / Custom URL, or <a href="storage-options.html">Storage &amp; Integrations</a></td>
+</tr>
+<tr>
+<td>Review &amp; approve submissions</td>
+<td><a href="submissions-inbox.html">Submissions &amp; My Inbox</a> + <a href="workflow.html">Workflow</a></td>
+</tr>
+</tbody>
+</table>
+
+</article>
+
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          MegaForm — forms, submissions, workflows & AI. © 2026 MegaForm.
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

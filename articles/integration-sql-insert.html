@@ -16,7 +16,7 @@
       <meta name="docfx:rel" content="../">
       
       
-      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/feature/typed-submission-storage-core/Docs/docfx/articles/integration-sql-insert.md/#L1">
+      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/main/articles/integration-sql-insert.md/#L1">
       <meta name="loc:inThisArticle" content="In this article">
       <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
       <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
@@ -131,10 +131,17 @@ below — you do not need a new connection at all: use the built-in <code>Dashbo
 </blockquote>
 <hr>
 <h2 id="2-create-the-target-table">2. Create the target table</h2>
-<p>Any table works. The sample schema used throughout these docs ships in the repository as
-<code>Docs/samples/sql/megaform-demo-crm-erp.sql</code> — run it against the site database and you get
-<code>CRM_Leads</code>, <code>CRM_Customers</code>, <code>ERP_SalesOrders</code>, <code>ERP_OrderLines</code> and a stored procedure:</p>
-<pre><code class="lang-bash">sqlcmd -S .\SQLEXPRESS -d &lt;YourDatabase&gt; -E -I -i Docs/samples/sql/megaform-demo-crm-erp.sql
+<p>Any table works. The examples below write to a <code>CRM_Leads</code> table; create something like it in the
+database you want the submissions to land in:</p>
+<pre><code class="lang-sql">CREATE TABLE CRM_Leads (
+    LeadId      int IDENTITY(1,1) PRIMARY KEY,
+    FullName    nvarchar(200)  NULL,
+    Email       nvarchar(200)  NULL,
+    Phone       nvarchar(50)   NULL,
+    Message     nvarchar(max)  NULL,
+    Source      nvarchar(50)   NULL DEFAULT 'website',
+    CreatedUtc  datetime2      NOT NULL DEFAULT SYSUTCDATETIME()
+);
 </code></pre>
 <blockquote>
 <p>Make every column the form writes <strong>nullable, or give it a default</strong>. The insert is fail-soft
@@ -276,8 +283,7 @@ value.</p>
 <p><strong>Not yet enabled on Oqtane.</strong> Oqtane registers a reviewed subset of workflow node executors, and
 the Database node is not in it — a workflow containing one fails at that node with <em>&quot;No executor
 registered for node type 'Database'&quot;</em>. On Oqtane, use Form Settings → Database (§3), which is fully
-supported there. The sample stored procedure <code>usp_CRM_InsertLead</code> in the demo schema is there for
-the hosts that do run the node.</p>
+supported there.</p>
 </blockquote>
 <hr>
 <h2 id="6-fail-soft--read-this-before-you-rely-on-the-row-being-there">6. Fail-soft — read this before you rely on the row being there</h2>

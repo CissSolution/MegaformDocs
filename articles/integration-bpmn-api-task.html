@@ -16,7 +16,7 @@
       <meta name="docfx:rel" content="../">
       
       
-      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/feature/typed-submission-storage-core/Docs/docfx/articles/integration-bpmn-api-task.md/#L1">
+      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/main/articles/integration-bpmn-api-task.md/#L1">
       <meta name="loc:inThisArticle" content="In this article">
       <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
       <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
@@ -94,7 +94,6 @@ minutes, no code.</p>
 palette lists it under <em>User and Service Tasks</em> as <strong>Service Task</strong>, with an <code>API</code> badge; its
 internal type is <code>Webhook</code>, which is the name you will see in exported JSON and in error messages.
 Everything on <a href="integration-webhook.html">Push submissions to a CRM or ERP over HTTP</a> applies to it.</p>
-<p><img src="../images/33-bpmn-api-task.gif" alt="BPMN API service task"></p>
 <hr>
 <h2 id="1-the-form">1. The form</h2>
 <p>Builder → <strong>New form</strong> → add four fields and set their keys. Keys are what the service task maps, so
@@ -249,18 +248,25 @@ until the workflow is applied.
 URL is required.&quot;</em>, which is the intended behaviour: a node that cannot run should not be live.</p>
 <hr>
 <h2 id="6-try-it-end-to-end">6. Try it end to end</h2>
-<p>The repo ships a mock ERP so this is testable without a real system:</p>
-<pre><code class="lang-bash">node tools/mock-crm/mock-crm-server.mjs          # http://localhost:5199
+<p>Point the task at an endpoint you control — your ERP vendor's sandbox, a staging service of your
+own, or a throwaway inspection URL — and make it answer the shape the response routes in §4 branch
+on. For this walkthrough that is an order number plus a status, for example:</p>
+<pre><code class="lang-json">{ &quot;orderNo&quot;: &quot;SO-10842&quot;, &quot;status&quot;: &quot;approved&quot; }
 </code></pre>
-<p>Point the node at <code>http://localhost:5199/erp/orders</code>. It replies with an order number and a status
-(<code>approved</code> under 10,000, <code>needs_approval</code> above), which is exactly the shape the response routes in
-§4 branch on. Open <code>http://localhost:5199/</code> to watch requests land.</p>
-<p>Loopback is blocked by the SSRF guard, so the host needs <code>MEGAFORM_ALLOW_PRIVATE_WEBHOOKS=1</code> —
-see <a href="integration-webhook.html#7-calling-a-crm-that-is-on-your-own-network">Calling a CRM on your own network</a>.</p>
-<p>A ready-made version of this form is seeded by:</p>
-<pre><code class="lang-bash">node tools/samples/seed-integration-demos.mjs
-</code></pre>
-<p>which creates <em>Demo 3 — Order intake (BPMN API task)</em> alongside the two CRM demos.</p>
+<p>Then submit the form once and follow it through:</p>
+<ol>
+<li>The workflow reaches the API task and the request lands on your endpoint.</li>
+<li>The reply's <code>status</code> decides the branch — return <code>approved</code> on one run and <code>needs_approval</code> on
+the next, and confirm the two runs take different paths.</li>
+<li>The mapped values from the reply appear on the submission (§4).</li>
+</ol>
+<div class="NOTE">
+<h5>Note</h5>
+<p>An endpoint on loopback or a private network address is refused by the SSRF guard unless the host
+sets <code>MEGAFORM_ALLOW_PRIVATE_WEBHOOKS=1</code> — see
+<a href="integration-webhook.html#7-calling-a-crm-that-is-on-your-own-network">Calling a CRM on your own network</a>.
+This is the usual reason a first test looks like the task never fired.</p>
+</div>
 <hr>
 <h2 id="7-when-the-task-does-not-fire">7. When the task does not fire</h2>
 <p>Work down this list; each item is something that has actually happened.</p>

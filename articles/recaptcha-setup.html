@@ -16,7 +16,7 @@
       <meta name="docfx:rel" content="../">
       
       
-      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/feature/typed-submission-storage-core/Docs/docfx/articles/recaptcha-setup.md/#L1">
+      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/main/articles/recaptcha-setup.md/#L1">
       <meta name="loc:inThisArticle" content="In this article">
       <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
       <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
@@ -102,7 +102,7 @@ submission is accepted without any CAPTCHA check, no matter what keys are config
 </ol>
 <p>The reverse also holds: a form with a Captcha field but no site key renders a visible warning
 instead of a challenge, and a form with a Captcha field but no secret key refuses every submission.
-Both cases are covered under <a href="#what-can-go-wrong">What can go wrong</a>.</p>
+Both cases are covered under <a href="#what-happens-when-the-form-is-submitted">What happens when the form is submitted</a>.</p>
 <h2 id="step-1--get-a-key-pair-from-the-provider">Step 1 — Get a key pair from the provider</h2>
 <p>For Google reCAPTCHA, register the site at Google's reCAPTCHA admin console and choose <strong>v2
 (&quot;I'm not a robot&quot; checkbox)</strong> or <strong>v3</strong>. You get two strings:</p>
@@ -191,11 +191,11 @@ the form flow — plan the layout around it the way you would around any other f
 form a token. Measured on a live public page, the widget host element for v3 renders <strong>0 px high</strong> —
 the form reserves no space at all. The only visible artefact is Google's own badge in the page
 corner, measured at <strong>256 × 60</strong>.</p>
-<p><img src="/Portals/0/MegaFormBlogs/docs/megaform-recaptcha-v3-form.png" alt="A live public form protected by reCAPTCHA v3: two fields and the submit button, with no CAPTCHA
+<p><img src="../images/42-recaptcha-v3-form.png" alt="A live public form protected by reCAPTCHA v3: two fields and the submit button, with no CAPTCHA
 box and no gap between the last field and the button — the protection is there, and it takes no
 layout space"></p>
 <p>Nothing on that form announces the check. The whole of it is the badge, bottom right of the page:</p>
-<p><img src="/Portals/0/MegaFormBlogs/docs/megaform-recaptcha-v3-badge.png" alt="Google's reCAPTCHA badge in the page corner, the only visible sign that v3 is
+<p><img src="../images/43-recaptcha-v3-badge.png" alt="Google's reCAPTCHA badge in the page corner, the only visible sign that v3 is
 active"></p>
 <div class="NOTE">
 <h5>Note</h5>

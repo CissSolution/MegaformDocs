@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Configuring the AI Assistant | MegaForm Documentation </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Configuring the AI Assistant | MegaForm Documentation ">
+      
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/main/articles/ai-configuration.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="MegaForm">
+            MegaForm
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="configuring-the-ai-assistant">Configuring the AI Assistant</h1>
+
+<p>The <a href="ai-form-designer.html">AI Form Designer</a> works with <strong>your own</strong> AI account. A site
+administrator sets it up once, and every admin on the site then shares the same configuration.
+Nothing is sent to MegaForm's servers — requests go straight from your site to the AI provider
+you choose.</p>
+<h2 id="where-the-settings-live">Where the settings live</h2>
+<p>Open <strong>Form Dashboard → Settings → AI Settings</strong>:</p>
+<p><img src="../images/oq-ai-settings.png" alt="The AI Settings panel: provider, base URL, model, and a masked API key"></p>
+<h2 id="the-fields">The fields</h2>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Enable AI Assistant</strong></td>
+<td>Master switch. When on, the AI chatbot appears in the Form Builder and the <em>Create with AI</em> button appears on the dashboard. Turn it off to hide AI entirely.</td>
+</tr>
+<tr>
+<td><strong>Provider</strong></td>
+<td>Pick your AI provider — <strong>OpenAI</strong>, <strong>Anthropic (Claude)</strong>, <strong>OpenRouter</strong>, <strong>Kimi (Moonshot)</strong>, or any <strong>OpenAI-compatible</strong> endpoint. Choosing a provider auto-fills the Base URL and a default model.</td>
+</tr>
+<tr>
+<td><strong>Base URL</strong></td>
+<td>The provider's API endpoint (e.g. <code>https://api.openai.com/v1</code>). Leave blank to use the provider default. Point this at a local/self-hosted OpenAI-compatible server if you run your own.</td>
+</tr>
+<tr>
+<td><strong>Model</strong></td>
+<td>The model to use (e.g. <code>gpt-4o</code>). Leave blank to use the provider default.</td>
+</tr>
+<tr>
+<td><strong>API Key</strong></td>
+<td>Your provider API key. It is <strong>stored on the server</strong> and only ever returned to administrators. The field is masked; click the 👁 icon to reveal it while typing.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="steps">Steps</h2>
+<ol>
+<li>Toggle <strong>Enable AI Assistant</strong> on.</li>
+<li>Choose your <strong>Provider</strong> — the Base URL and Model fill in automatically. Adjust the model if
+you want a different one.</li>
+<li>Paste your <strong>API Key</strong>. Use the <strong>Get … API key →</strong> link under the field to create one on the
+provider's site if you don't have one yet.</li>
+<li>Click <strong>Test</strong> to verify the key, base URL, and model can reach the provider — you'll get an
+<em>OK</em> or a clear error.</li>
+<li>Click <strong>Save AI Settings</strong>.</li>
+</ol>
+<p>That's it — open any form in the Form Builder and the AI bubble is ready, or use <strong>✨ Create
+with AI</strong> on the dashboard.</p>
+<h2 id="good-to-know">Good to know</h2>
+<ul>
+<li><strong>Security.</strong> The API key never leaves your server except back to signed-in administrators;
+it is not exposed to page visitors or in the public form runtime.</li>
+<li><strong>Shared per site.</strong> The provider, model, and key are shared by all admins on the site — one
+setup covers everyone.</li>
+<li><strong>Cost.</strong> Requests are billed by your AI provider against your own account, so you stay in
+control of usage and spend.</li>
+<li><strong>Trial installations</strong> show the assistant but keep it locked — a production license unlocks
+it.</li>
+</ul>
+<h2 id="choosing-a-model">Choosing a model</h2>
+<p><code>gpt-4o</code> (OpenAI) and <code>claude-*</code> (Anthropic) both work well for form generation. Larger,
+more capable models produce better multi-field forms, premium layouts, and SQL-aware designs;
+smaller models are cheaper but may need more precise prompts. See
+<a href="ai-prompts-form-design.html">AI Prompts for Form Design</a> for prompt patterns that get good
+results on any model.</p>
+
+</article>
+
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          MegaForm — forms, submissions, workflows & AI. © 2026 MegaForm.
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

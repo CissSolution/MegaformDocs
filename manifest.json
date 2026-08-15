@@ -1,5 +1,5 @@
 {
-  "source_base_path": "E:/DNNDEFENDER AND AI DESIGNES/AI DESIGNES/MegaFormSolution_280_Oqtane_um/Docs/docfx",
+  "source_base_path": "/home/runner/work/MegaformDocs/MegaformDocs",
   "xrefmap": "xrefmap.yml",
   "files": [
     {
@@ -706,11 +706,31 @@
       "type": "Toc",
       "source_relative_path": "api/toc.yml",
       "output": {
-        ".html": {
-          "relative_path": "api/toc.html"
-        },
         ".json": {
           "relative_path": "api/toc.json"
+        },
+        ".html": {
+          "relative_path": "api/toc.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/add-to-page.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/add-to-page.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/after-submission.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/after-submission.html"
         }
       },
       "version": ""
@@ -721,6 +741,16 @@
       "output": {
         ".html": {
           "relative_path": "articles/after-submit-script.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/ai-configuration.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/ai-configuration.html"
         }
       },
       "version": ""
@@ -837,6 +867,16 @@
     },
     {
       "type": "Conceptual",
+      "source_relative_path": "articles/drag-drop-layout.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/drag-drop-layout.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
       "source_relative_path": "articles/erp-end-to-end.md",
       "output": {
         ".html": {
@@ -937,6 +977,16 @@
     },
     {
       "type": "Conceptual",
+      "source_relative_path": "articles/multi-language.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/multi-language.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
       "source_relative_path": "articles/oqtane-after-submit-script.md",
       "output": {
         ".html": {
@@ -1027,10 +1077,30 @@
     },
     {
       "type": "Conceptual",
+      "source_relative_path": "articles/settings-pane.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/settings-pane.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
       "source_relative_path": "articles/standalone-host.md",
       "output": {
         ".html": {
           "relative_path": "articles/standalone-host.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/storage-options.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/storage-options.html"
         }
       },
       "version": ""
@@ -1046,14 +1116,34 @@
       "version": ""
     },
     {
+      "type": "Conceptual",
+      "source_relative_path": "articles/submissions-inbox.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/submissions-inbox.html"
+        }
+      },
+      "version": ""
+    },
+    {
       "type": "Toc",
       "source_relative_path": "articles/toc.yml",
       "output": {
-        ".html": {
-          "relative_path": "articles/toc.html"
-        },
         ".json": {
           "relative_path": "articles/toc.json"
+        },
+        ".html": {
+          "relative_path": "articles/toc.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/widgets-reference.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/widgets-reference.html"
         }
       },
       "version": ""
@@ -1130,6 +1220,46 @@
     },
     {
       "type": "Resource",
+      "source_relative_path": "images/05-settings-pane.gif",
+      "output": {
+        "resource": {
+          "relative_path": "images/05-settings-pane.gif"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/05-settings-pane.gif_",
+      "output": {
+        "resource": {
+          "relative_path": "images/05-settings-pane.gif_"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/07-submissions.gif",
+      "output": {
+        "resource": {
+          "relative_path": "images/07-submissions.gif"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/07-submissions.gif_",
+      "output": {
+        "resource": {
+          "relative_path": "images/07-submissions.gif_"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
       "source_relative_path": "images/08-field-permissions.gif",
       "output": {
         "resource": {
@@ -1140,10 +1270,50 @@
     },
     {
       "type": "Resource",
+      "source_relative_path": "images/09-language-switch.gif",
+      "output": {
+        "resource": {
+          "relative_path": "images/09-language-switch.gif"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/09-language-switch.gif_",
+      "output": {
+        "resource": {
+          "relative_path": "images/09-language-switch.gif_"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
       "source_relative_path": "images/09-workflow-library-multi-form.gif",
       "output": {
         "resource": {
           "relative_path": "images/09-workflow-library-multi-form.gif"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/10-ai-feedback-logic.gif",
+      "output": {
+        "resource": {
+          "relative_path": "images/10-ai-feedback-logic.gif"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/10-ai-feedback-logic.gif_",
+      "output": {
+        "resource": {
+          "relative_path": "images/10-ai-feedback-logic.gif_"
         }
       },
       "version": ""
@@ -1164,6 +1334,46 @@
       "output": {
         "resource": {
           "relative_path": "images/11-advanced-filter.gif"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/11-drag-drop-build.gif",
+      "output": {
+        "resource": {
+          "relative_path": "images/11-drag-drop-build.gif"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/11-drag-drop-build.gif_",
+      "output": {
+        "resource": {
+          "relative_path": "images/11-drag-drop-build.gif_"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/12-rows-columns.gif",
+      "output": {
+        "resource": {
+          "relative_path": "images/12-rows-columns.gif"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/12-rows-columns.gif_",
+      "output": {
+        "resource": {
+          "relative_path": "images/12-rows-columns.gif_"
         }
       },
       "version": ""
@@ -1240,30 +1450,10 @@
     },
     {
       "type": "Resource",
-      "source_relative_path": "images/31-webhook-crm.gif",
-      "output": {
-        "resource": {
-          "relative_path": "images/31-webhook-crm.gif"
-        }
-      },
-      "version": ""
-    },
-    {
-      "type": "Resource",
       "source_relative_path": "images/32-sql-insert-lead.gif",
       "output": {
         "resource": {
           "relative_path": "images/32-sql-insert-lead.gif"
-        }
-      },
-      "version": ""
-    },
-    {
-      "type": "Resource",
-      "source_relative_path": "images/33-bpmn-api-task.gif",
-      "output": {
-        "resource": {
-          "relative_path": "images/33-bpmn-api-task.gif"
         }
       },
       "version": ""
@@ -1330,10 +1520,190 @@
     },
     {
       "type": "Resource",
+      "source_relative_path": "images/42-recaptcha-v3-form.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/42-recaptcha-v3-form.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
       "source_relative_path": "images/42-script-denied.png",
       "output": {
         "resource": {
           "relative_path": "images/42-script-denied.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/43-recaptcha-v3-badge.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/43-recaptcha-v3-badge.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/oq-add-module.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/oq-add-module.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/oq-add-module.png_",
+      "output": {
+        "resource": {
+          "relative_path": "images/oq-add-module.png_"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/oq-ai-settings.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/oq-ai-settings.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/oq-ai-settings.png_",
+      "output": {
+        "resource": {
+          "relative_path": "images/oq-ai-settings.png_"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/oq-as-confirmation-live.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/oq-as-confirmation-live.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/oq-as-confirmation-live.png_",
+      "output": {
+        "resource": {
+          "relative_path": "images/oq-as-confirmation-live.png_"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/oq-as-confirmation.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/oq-as-confirmation.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/oq-as-confirmation.png_",
+      "output": {
+        "resource": {
+          "relative_path": "images/oq-as-confirmation.png_"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/oq-as-download.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/oq-as-download.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/oq-as-download.png_",
+      "output": {
+        "resource": {
+          "relative_path": "images/oq-as-download.png_"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/oq-as-notifications.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/oq-as-notifications.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/oq-as-notifications.png_",
+      "output": {
+        "resource": {
+          "relative_path": "images/oq-as-notifications.png_"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/oq-as-redirect.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/oq-as-redirect.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/oq-as-redirect.png_",
+      "output": {
+        "resource": {
+          "relative_path": "images/oq-as-redirect.png_"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/oq-as-respondent-email.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/oq-as-respondent-email.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/oq-as-respondent-email.png_",
+      "output": {
+        "resource": {
+          "relative_path": "images/oq-as-respondent-email.png_"
         }
       },
       "version": ""
@@ -1360,6 +1730,166 @@
     },
     {
       "type": "Resource",
+      "source_relative_path": "images/oq-my-inbox.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/oq-my-inbox.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/oq-my-inbox.png_",
+      "output": {
+        "resource": {
+          "relative_path": "images/oq-my-inbox.png_"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/oq-palette-basic.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/oq-palette-basic.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/oq-palette-basic.png_",
+      "output": {
+        "resource": {
+          "relative_path": "images/oq-palette-basic.png_"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/oq-palette-layout.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/oq-palette-layout.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/oq-palette-layout.png_",
+      "output": {
+        "resource": {
+          "relative_path": "images/oq-palette-layout.png_"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/oq-palette-widgets.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/oq-palette-widgets.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/oq-palette-widgets.png_",
+      "output": {
+        "resource": {
+          "relative_path": "images/oq-palette-widgets.png_"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/oq-storage-database.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/oq-storage-database.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/oq-storage-database.png_",
+      "output": {
+        "resource": {
+          "relative_path": "images/oq-storage-database.png_"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/oq-storage-gsheets.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/oq-storage-gsheets.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/oq-storage-gsheets.png_",
+      "output": {
+        "resource": {
+          "relative_path": "images/oq-storage-gsheets.png_"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/oq-submissions-grid.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/oq-submissions-grid.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/oq-submissions-grid.png_",
+      "output": {
+        "resource": {
+          "relative_path": "images/oq-submissions-grid.png_"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/oq-submissions.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/oq-submissions.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/oq-submissions.png_",
+      "output": {
+        "resource": {
+          "relative_path": "images/oq-submissions.png_"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
       "source_relative_path": "images/oqtane-builder.png",
       "output": {
         "resource": {
@@ -1380,20 +1910,460 @@
     },
     {
       "type": "Resource",
-      "source_relative_path": "images/oqtane-sdk-download.png",
+      "source_relative_path": "images/wg-address.png",
       "output": {
         "resource": {
-          "relative_path": "images/oqtane-sdk-download.png"
+          "relative_path": "images/wg-address.png"
         }
       },
       "version": ""
     },
     {
       "type": "Resource",
-      "source_relative_path": "images/oqtane-sdk-listview.png",
+      "source_relative_path": "images/wg-address.png_",
       "output": {
         "resource": {
-          "relative_path": "images/oqtane-sdk-listview.png"
+          "relative_path": "images/wg-address.png_"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/wg-cards.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/wg-cards.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/wg-cards.png_",
+      "output": {
+        "resource": {
+          "relative_path": "images/wg-cards.png_"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/wg-checkbox.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/wg-checkbox.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/wg-checkbox.png_",
+      "output": {
+        "resource": {
+          "relative_path": "images/wg-checkbox.png_"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/wg-chips.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/wg-chips.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/wg-chips.png_",
+      "output": {
+        "resource": {
+          "relative_path": "images/wg-chips.png_"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/wg-content-slider.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/wg-content-slider.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/wg-content-slider.png_",
+      "output": {
+        "resource": {
+          "relative_path": "images/wg-content-slider.png_"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/wg-date-range.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/wg-date-range.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/wg-date-range.png_",
+      "output": {
+        "resource": {
+          "relative_path": "images/wg-date-range.png_"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/wg-datepicker.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/wg-datepicker.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/wg-datepicker.png_",
+      "output": {
+        "resource": {
+          "relative_path": "images/wg-datepicker.png_"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/wg-dob.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/wg-dob.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/wg-dob.png_",
+      "output": {
+        "resource": {
+          "relative_path": "images/wg-dob.png_"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/wg-dropdown.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/wg-dropdown.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/wg-dropdown.png_",
+      "output": {
+        "resource": {
+          "relative_path": "images/wg-dropdown.png_"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/wg-email-confirm.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/wg-email-confirm.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/wg-email-confirm.png_",
+      "output": {
+        "resource": {
+          "relative_path": "images/wg-email-confirm.png_"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/wg-file.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/wg-file.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/wg-file.png_",
+      "output": {
+        "resource": {
+          "relative_path": "images/wg-file.png_"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/wg-image-choice.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/wg-image-choice.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/wg-image-choice.png_",
+      "output": {
+        "resource": {
+          "relative_path": "images/wg-image-choice.png_"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/wg-input-fullname.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/wg-input-fullname.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/wg-input-fullname.png_",
+      "output": {
+        "resource": {
+          "relative_path": "images/wg-input-fullname.png_"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/wg-map.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/wg-map.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/wg-map.png_",
+      "output": {
+        "resource": {
+          "relative_path": "images/wg-map.png_"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/wg-mccombo.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/wg-mccombo.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/wg-mccombo.png_",
+      "output": {
+        "resource": {
+          "relative_path": "images/wg-mccombo.png_"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/wg-money.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/wg-money.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/wg-money.png_",
+      "output": {
+        "resource": {
+          "relative_path": "images/wg-money.png_"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/wg-phone.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/wg-phone.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/wg-phone.png_",
+      "output": {
+        "resource": {
+          "relative_path": "images/wg-phone.png_"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/wg-radio.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/wg-radio.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/wg-radio.png_",
+      "output": {
+        "resource": {
+          "relative_path": "images/wg-radio.png_"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/wg-rating.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/wg-rating.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/wg-rating.png_",
+      "output": {
+        "resource": {
+          "relative_path": "images/wg-rating.png_"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/wg-signature.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/wg-signature.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/wg-signature.png_",
+      "output": {
+        "resource": {
+          "relative_path": "images/wg-signature.png_"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/wg-time.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/wg-time.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/wg-time.png_",
+      "output": {
+        "resource": {
+          "relative_path": "images/wg-time.png_"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/wg-uniqueid.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/wg-uniqueid.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/wg-uniqueid.png_",
+      "output": {
+        "resource": {
+          "relative_path": "images/wg-uniqueid.png_"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/wg-video.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/wg-video.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/wg-video.png_",
+      "output": {
+        "resource": {
+          "relative_path": "images/wg-video.png_"
         }
       },
       "version": ""
@@ -1412,11 +2382,11 @@
       "type": "Toc",
       "source_relative_path": "toc.yml",
       "output": {
-        ".html": {
-          "relative_path": "toc.html"
-        },
         ".json": {
           "relative_path": "toc.json"
+        },
+        ".html": {
+          "relative_path": "toc.html"
         }
       },
       "version": ""

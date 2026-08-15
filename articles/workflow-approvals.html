@@ -16,7 +16,7 @@
       <meta name="docfx:rel" content="../">
       
       
-      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/feature/typed-submission-storage-core/Docs/docfx/articles/workflow-approvals.md/#L1">
+      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/main/articles/workflow-approvals.md/#L1">
       <meta name="loc:inThisArticle" content="In this article">
       <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
       <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
@@ -95,14 +95,14 @@ signed in along the way — nobody assigns anything by hand:</p>
 <p><img src="../images/10-inbox-approval.gif" alt="An employee submits, the task appears in the manager's inbox to claim and approve, then the second step lands in the finance user's inbox"></p>
 <p><strong>Steps shown</strong></p>
 <ol>
-<li>An employee (<em>emp.hoa</em>) fills in the <em>Account setup</em> form and submits.</li>
+<li>An employee (<em>jo.employee</em>) fills in the <em>Account setup</em> form and submits.</li>
 <li>The workflow's first Approval step names the <strong>Manager</strong> role, so the task appears in
-<em>mgr.nam</em>'s <strong>My Inbox</strong> — with the form name, step label, a due date from the step's SLA and
+<em>alex.manager</em>'s <strong>My Inbox</strong> — with the form name, step label, a due date from the step's SLA and
 a priority flag. The manager opens it (the right-hand pane shows every form response), clicks
 <strong>Claim</strong> — the <em>Assigned to Me</em> counter ticks up — then <strong>Approve</strong>, writes an optional
 approval note, and <strong>Confirm Approval</strong>.</li>
 <li>The moment step 1 completes, the workflow creates the <strong>step 2</strong> task for the <strong>Finance</strong>
-role: it is already waiting in <em>fin.lan</em>'s inbox. Finance approves the same way, and the
+role: it is already waiting in <em>sam.finance</em>'s inbox. Finance approves the same way, and the
 submission's status badge reads <strong>Approved</strong>.</li>
 </ol>
 <p>The inbox is a three-pane workboard: folders and per-form filters on the left (<em>Inbox, Assigned to
