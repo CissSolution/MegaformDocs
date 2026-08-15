@@ -29,8 +29,6 @@ This is the exact scenario proven on both Oqtane and DNN: an external module rea
 data through **only** the public `IMegaFormClient` and renders a list view with file-download
 links.
 
-![MegaForm SDK list view rendered by an external consumer](images/oqtane-sdk-listview.png)
-
 ## Start here
 
 | Guide | What it covers |
@@ -48,5 +46,7 @@ links.
 | [Form Builder](articles/form-builder.md) | Build and design forms visually |
 | [Workflow](articles/workflow.md) | Automate business processes around submissions |
 | [AI Form Designer](articles/ai-form-designer.md) | Design forms with the AI assistant |
+| [Template JSON Reference](articles/form-template-json.md) | Complete schema for MegaForm templates |
+| [AI Prompts for Form Design](articles/ai-prompts-form-design.md) | Prompts that preserve design while editing fields and logic |
 | [API Stability](articles/api-stability.md) | How the contract is kept from breaking |
 | [API Reference](api/index.md) | Generated reference for every public type |

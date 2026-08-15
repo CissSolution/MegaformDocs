@@ -7,8 +7,6 @@ This page documents the live demo that ships with MegaForm: a Blazor component t
 submissions, and files through only `IMegaFormClient`, and renders a list view with download
 links. It opens by URL at **`/?mfpanel=sdkdemo&formId=N`**.
 
-![Oqtane SDK list view — 47 form pills, 10 submissions, parsed columns, Files column](../images/oqtane-sdk-listview.png)
-
 ## 1. Register the SDK
 
 The MegaForm Oqtane server registers the repositories, storage, and the SDK in its
@@ -19,7 +17,7 @@ services.AddScoped<IFormRepository, EfFormRepository>();
 services.AddScoped<ISubmissionRepository, EfSubmissionRepository>();
 services.AddScoped<MegaForm.Core.Interfaces.IFileRepository, EfFileRepository>();
 services.AddScoped<IStorageService, OqtaneStorageService>();
-MegaFormSdkServiceCollectionExtensions.AddMegaFormSdk(services);
+services.AddMegaFormSdk();
 ```
 
 ## 2. Inject it into a component

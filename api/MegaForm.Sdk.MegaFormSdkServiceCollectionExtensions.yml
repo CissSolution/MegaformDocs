@@ -14,8 +14,12 @@ items:
   fullName: MegaForm.Sdk.MegaFormSdkServiceCollectionExtensions
   type: Class
   source:
+    remote:
+      path: MegaForm.Sdk/ServiceCollectionExtensions.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: MegaFormSdkServiceCollectionExtensions
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\ServiceCollectionExtensions.cs
+    path: ../../MegaForm.Sdk/ServiceCollectionExtensions.cs
     startLine: 9
   assemblies:
   - MegaForm.Sdk
@@ -48,8 +52,12 @@ items:
   fullName: MegaForm.Sdk.MegaFormSdkServiceCollectionExtensions.AddMegaFormSdk(Microsoft.Extensions.DependencyInjection.IServiceCollection)
   type: Method
   source:
+    remote:
+      path: MegaForm.Sdk/ServiceCollectionExtensions.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: AddMegaFormSdk
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\ServiceCollectionExtensions.cs
+    path: ../../MegaForm.Sdk/ServiceCollectionExtensions.cs
     startLine: 17
   assemblies:
   - MegaForm.Sdk

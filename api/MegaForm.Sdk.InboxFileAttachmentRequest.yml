@@ -1,0 +1,588 @@
+### YamlMime:ManagedReference
+items:
+- uid: MegaForm.Sdk.InboxFileAttachmentRequest
+  commentId: T:MegaForm.Sdk.InboxFileAttachmentRequest
+  id: InboxFileAttachmentRequest
+  parent: MegaForm.Sdk
+  children:
+  - MegaForm.Sdk.InboxFileAttachmentRequest.Content
+  - MegaForm.Sdk.InboxFileAttachmentRequest.ContentType
+  - MegaForm.Sdk.InboxFileAttachmentRequest.FieldKey
+  - MegaForm.Sdk.InboxFileAttachmentRequest.FileName
+  - MegaForm.Sdk.InboxFileAttachmentRequest.SizeBytes
+  - MegaForm.Sdk.InboxFileAttachmentRequest.TaskId
+  langs:
+  - csharp
+  - vb
+  name: InboxFileAttachmentRequest
+  nameWithType: InboxFileAttachmentRequest
+  fullName: MegaForm.Sdk.InboxFileAttachmentRequest
+  type: Class
+  source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: InboxFileAttachmentRequest
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 442
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  summary: File attachment request for a workflow inbox task.
+  example: []
+  syntax:
+    content: public sealed class InboxFileAttachmentRequest
+    content.vb: Public NotInheritable Class InboxFileAttachmentRequest
+  inheritance:
+  - System.Object
+  inheritedMembers:
+  - System.Object.Equals(System.Object)
+  - System.Object.Equals(System.Object,System.Object)
+  - System.Object.GetHashCode
+  - System.Object.GetType
+  - System.Object.ReferenceEquals(System.Object,System.Object)
+  - System.Object.ToString
+- uid: MegaForm.Sdk.InboxFileAttachmentRequest.TaskId
+  commentId: P:MegaForm.Sdk.InboxFileAttachmentRequest.TaskId
+  id: TaskId
+  parent: MegaForm.Sdk.InboxFileAttachmentRequest
+  langs:
+  - csharp
+  - vb
+  name: TaskId
+  nameWithType: InboxFileAttachmentRequest.TaskId
+  fullName: MegaForm.Sdk.InboxFileAttachmentRequest.TaskId
+  type: Property
+  source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: TaskId
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 444
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public string TaskId { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property TaskId As String
+  overload: MegaForm.Sdk.InboxFileAttachmentRequest.TaskId*
+- uid: MegaForm.Sdk.InboxFileAttachmentRequest.FieldKey
+  commentId: P:MegaForm.Sdk.InboxFileAttachmentRequest.FieldKey
+  id: FieldKey
+  parent: MegaForm.Sdk.InboxFileAttachmentRequest
+  langs:
+  - csharp
+  - vb
+  name: FieldKey
+  nameWithType: InboxFileAttachmentRequest.FieldKey
+  fullName: MegaForm.Sdk.InboxFileAttachmentRequest.FieldKey
+  type: Property
+  source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: FieldKey
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 445
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public string FieldKey { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property FieldKey As String
+  overload: MegaForm.Sdk.InboxFileAttachmentRequest.FieldKey*
+- uid: MegaForm.Sdk.InboxFileAttachmentRequest.FileName
+  commentId: P:MegaForm.Sdk.InboxFileAttachmentRequest.FileName
+  id: FileName
+  parent: MegaForm.Sdk.InboxFileAttachmentRequest
+  langs:
+  - csharp
+  - vb
+  name: FileName
+  nameWithType: InboxFileAttachmentRequest.FileName
+  fullName: MegaForm.Sdk.InboxFileAttachmentRequest.FileName
+  type: Property
+  source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: FileName
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 446
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public string FileName { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property FileName As String
+  overload: MegaForm.Sdk.InboxFileAttachmentRequest.FileName*
+- uid: MegaForm.Sdk.InboxFileAttachmentRequest.ContentType
+  commentId: P:MegaForm.Sdk.InboxFileAttachmentRequest.ContentType
+  id: ContentType
+  parent: MegaForm.Sdk.InboxFileAttachmentRequest
+  langs:
+  - csharp
+  - vb
+  name: ContentType
+  nameWithType: InboxFileAttachmentRequest.ContentType
+  fullName: MegaForm.Sdk.InboxFileAttachmentRequest.ContentType
+  type: Property
+  source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: ContentType
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 447
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public string ContentType { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property ContentType As String
+  overload: MegaForm.Sdk.InboxFileAttachmentRequest.ContentType*
+- uid: MegaForm.Sdk.InboxFileAttachmentRequest.Content
+  commentId: P:MegaForm.Sdk.InboxFileAttachmentRequest.Content
+  id: Content
+  parent: MegaForm.Sdk.InboxFileAttachmentRequest
+  langs:
+  - csharp
+  - vb
+  name: Content
+  nameWithType: InboxFileAttachmentRequest.Content
+  fullName: MegaForm.Sdk.InboxFileAttachmentRequest.Content
+  type: Property
+  source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: Content
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 448
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public Stream Content { get; set; }
+    parameters: []
+    return:
+      type: System.IO.Stream
+    content.vb: Public Property Content As Stream
+  overload: MegaForm.Sdk.InboxFileAttachmentRequest.Content*
+- uid: MegaForm.Sdk.InboxFileAttachmentRequest.SizeBytes
+  commentId: P:MegaForm.Sdk.InboxFileAttachmentRequest.SizeBytes
+  id: SizeBytes
+  parent: MegaForm.Sdk.InboxFileAttachmentRequest
+  langs:
+  - csharp
+  - vb
+  name: SizeBytes
+  nameWithType: InboxFileAttachmentRequest.SizeBytes
+  fullName: MegaForm.Sdk.InboxFileAttachmentRequest.SizeBytes
+  type: Property
+  source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: SizeBytes
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 449
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public long? SizeBytes { get; set; }
+    parameters: []
+    return:
+      type: System.Nullable{System.Int64}
+    content.vb: Public Property SizeBytes As Long?
+  overload: MegaForm.Sdk.InboxFileAttachmentRequest.SizeBytes*
+references:
+- uid: MegaForm.Sdk
+  commentId: N:MegaForm.Sdk
+  href: MegaForm.html
+  name: MegaForm.Sdk
+  nameWithType: MegaForm.Sdk
+  fullName: MegaForm.Sdk
+  spec.csharp:
+  - uid: MegaForm
+    name: MegaForm
+    href: MegaForm.html
+  - name: .
+  - uid: MegaForm.Sdk
+    name: Sdk
+    href: MegaForm.Sdk.html
+  spec.vb:
+  - uid: MegaForm
+    name: MegaForm
+    href: MegaForm.html
+  - name: .
+  - uid: MegaForm.Sdk
+    name: Sdk
+    href: MegaForm.Sdk.html
+- uid: System.Object
+  commentId: T:System.Object
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object
+  name: object
+  nameWithType: object
+  fullName: object
+  nameWithType.vb: Object
+  fullName.vb: Object
+  name.vb: Object
+- uid: System.Object.Equals(System.Object)
+  commentId: M:System.Object.Equals(System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  name: Equals(object)
+  nameWithType: object.Equals(object)
+  fullName: object.Equals(object)
+  nameWithType.vb: Object.Equals(Object)
+  fullName.vb: Object.Equals(Object)
+  name.vb: Equals(Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.Equals(System.Object,System.Object)
+  commentId: M:System.Object.Equals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  name: Equals(object, object)
+  nameWithType: object.Equals(object, object)
+  fullName: object.Equals(object, object)
+  nameWithType.vb: Object.Equals(Object, Object)
+  fullName.vb: Object.Equals(Object, Object)
+  name.vb: Equals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.GetHashCode
+  commentId: M:System.Object.GetHashCode
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  name: GetHashCode()
+  nameWithType: object.GetHashCode()
+  fullName: object.GetHashCode()
+  nameWithType.vb: Object.GetHashCode()
+  fullName.vb: Object.GetHashCode()
+  spec.csharp:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+- uid: System.Object.GetType
+  commentId: M:System.Object.GetType
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  name: GetType()
+  nameWithType: object.GetType()
+  fullName: object.GetType()
+  nameWithType.vb: Object.GetType()
+  fullName.vb: Object.GetType()
+  spec.csharp:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+- uid: System.Object.ReferenceEquals(System.Object,System.Object)
+  commentId: M:System.Object.ReferenceEquals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  name: ReferenceEquals(object, object)
+  nameWithType: object.ReferenceEquals(object, object)
+  fullName: object.ReferenceEquals(object, object)
+  nameWithType.vb: Object.ReferenceEquals(Object, Object)
+  fullName.vb: Object.ReferenceEquals(Object, Object)
+  name.vb: ReferenceEquals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.ToString
+  commentId: M:System.Object.ToString
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  name: ToString()
+  nameWithType: object.ToString()
+  fullName: object.ToString()
+  nameWithType.vb: Object.ToString()
+  fullName.vb: Object.ToString()
+  spec.csharp:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+- uid: System
+  commentId: N:System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System
+  nameWithType: System
+  fullName: System
+- uid: MegaForm.Sdk.InboxFileAttachmentRequest.TaskId*
+  commentId: Overload:MegaForm.Sdk.InboxFileAttachmentRequest.TaskId
+  href: MegaForm.Sdk.InboxFileAttachmentRequest.html#MegaForm_Sdk_InboxFileAttachmentRequest_TaskId
+  name: TaskId
+  nameWithType: InboxFileAttachmentRequest.TaskId
+  fullName: MegaForm.Sdk.InboxFileAttachmentRequest.TaskId
+- uid: System.String
+  commentId: T:System.String
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.string
+  name: string
+  nameWithType: string
+  fullName: string
+  nameWithType.vb: String
+  fullName.vb: String
+  name.vb: String
+- uid: MegaForm.Sdk.InboxFileAttachmentRequest.FieldKey*
+  commentId: Overload:MegaForm.Sdk.InboxFileAttachmentRequest.FieldKey
+  href: MegaForm.Sdk.InboxFileAttachmentRequest.html#MegaForm_Sdk_InboxFileAttachmentRequest_FieldKey
+  name: FieldKey
+  nameWithType: InboxFileAttachmentRequest.FieldKey
+  fullName: MegaForm.Sdk.InboxFileAttachmentRequest.FieldKey
+- uid: MegaForm.Sdk.InboxFileAttachmentRequest.FileName*
+  commentId: Overload:MegaForm.Sdk.InboxFileAttachmentRequest.FileName
+  href: MegaForm.Sdk.InboxFileAttachmentRequest.html#MegaForm_Sdk_InboxFileAttachmentRequest_FileName
+  name: FileName
+  nameWithType: InboxFileAttachmentRequest.FileName
+  fullName: MegaForm.Sdk.InboxFileAttachmentRequest.FileName
+- uid: MegaForm.Sdk.InboxFileAttachmentRequest.ContentType*
+  commentId: Overload:MegaForm.Sdk.InboxFileAttachmentRequest.ContentType
+  href: MegaForm.Sdk.InboxFileAttachmentRequest.html#MegaForm_Sdk_InboxFileAttachmentRequest_ContentType
+  name: ContentType
+  nameWithType: InboxFileAttachmentRequest.ContentType
+  fullName: MegaForm.Sdk.InboxFileAttachmentRequest.ContentType
+- uid: MegaForm.Sdk.InboxFileAttachmentRequest.Content*
+  commentId: Overload:MegaForm.Sdk.InboxFileAttachmentRequest.Content
+  href: MegaForm.Sdk.InboxFileAttachmentRequest.html#MegaForm_Sdk_InboxFileAttachmentRequest_Content
+  name: Content
+  nameWithType: InboxFileAttachmentRequest.Content
+  fullName: MegaForm.Sdk.InboxFileAttachmentRequest.Content
+- uid: System.IO.Stream
+  commentId: T:System.IO.Stream
+  parent: System.IO
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.io.stream
+  name: Stream
+  nameWithType: Stream
+  fullName: System.IO.Stream
+- uid: System.IO
+  commentId: N:System.IO
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System.IO
+  nameWithType: System.IO
+  fullName: System.IO
+  spec.csharp:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.IO
+    name: IO
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.io
+  spec.vb:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.IO
+    name: IO
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.io
+- uid: MegaForm.Sdk.InboxFileAttachmentRequest.SizeBytes*
+  commentId: Overload:MegaForm.Sdk.InboxFileAttachmentRequest.SizeBytes
+  href: MegaForm.Sdk.InboxFileAttachmentRequest.html#MegaForm_Sdk_InboxFileAttachmentRequest_SizeBytes
+  name: SizeBytes
+  nameWithType: InboxFileAttachmentRequest.SizeBytes
+  fullName: MegaForm.Sdk.InboxFileAttachmentRequest.SizeBytes
+- uid: System.Nullable{System.Int64}
+  commentId: T:System.Nullable{System.Int64}
+  parent: System
+  definition: System.Nullable`1
+  href: https://learn.microsoft.com/dotnet/api/system.int64
+  name: long?
+  nameWithType: long?
+  fullName: long?
+  nameWithType.vb: Long?
+  fullName.vb: Long?
+  name.vb: Long?
+  spec.csharp:
+  - uid: System.Int64
+    name: long
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int64
+  - name: '?'
+  spec.vb:
+  - uid: System.Int64
+    name: Long
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.int64
+  - name: '?'
+- uid: System.Nullable`1
+  commentId: T:System.Nullable`1
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.nullable-1
+  name: Nullable<T>
+  nameWithType: Nullable<T>
+  fullName: System.Nullable<T>
+  nameWithType.vb: Nullable(Of T)
+  fullName.vb: System.Nullable(Of T)
+  name.vb: Nullable(Of T)
+  spec.csharp:
+  - uid: System.Nullable`1
+    name: Nullable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.nullable-1
+  - name: <
+  - name: T
+  - name: '>'
+  spec.vb:
+  - uid: System.Nullable`1
+    name: Nullable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.nullable-1
+  - name: (
+  - name: Of
+  - name: " "
+  - name: T
+  - name: )

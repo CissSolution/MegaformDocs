@@ -17,8 +17,12 @@ items:
   fullName: MegaForm.Sdk.MegaFormSdk
   type: Class
   source:
+    remote:
+      path: MegaForm.Sdk/MegaFormSdk.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: MegaFormSdk
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\MegaFormSdk.cs
+    path: ../../MegaForm.Sdk/MegaFormSdk.cs
     startLine: 21
   assemblies:
   - MegaForm.Sdk
@@ -66,8 +70,12 @@ items:
   fullName: MegaForm.Sdk.MegaFormSdk.IsInitialized
   type: Property
   source:
+    remote:
+      path: MegaForm.Sdk/MegaFormSdk.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: IsInitialized
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\MegaFormSdk.cs
+    path: ../../MegaForm.Sdk/MegaFormSdk.cs
     startLine: 26
   assemblies:
   - MegaForm.Sdk
@@ -93,8 +101,12 @@ items:
   fullName: MegaForm.Sdk.MegaFormSdk.Initialize(System.IServiceProvider)
   type: Method
   source:
+    remote:
+      path: MegaForm.Sdk/MegaFormSdk.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: Initialize
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\MegaFormSdk.cs
+    path: ../../MegaForm.Sdk/MegaFormSdk.cs
     startLine: 29
   assemblies:
   - MegaForm.Sdk
@@ -120,8 +132,12 @@ items:
   fullName: MegaForm.Sdk.MegaFormSdk.RunAsync<T>(System.Func<MegaForm.Sdk.IMegaFormClient, System.Threading.Tasks.Task<T>>)
   type: Method
   source:
+    remote:
+      path: MegaForm.Sdk/MegaFormSdk.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: RunAsync
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\MegaFormSdk.cs
+    path: ../../MegaForm.Sdk/MegaFormSdk.cs
     startLine: 35
   assemblies:
   - MegaForm.Sdk
@@ -154,8 +170,12 @@ items:
   fullName: MegaForm.Sdk.MegaFormSdk.RunAsync(System.Func<MegaForm.Sdk.IMegaFormClient, System.Threading.Tasks.Task>)
   type: Method
   source:
+    remote:
+      path: MegaForm.Sdk/MegaFormSdk.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: RunAsync
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\MegaFormSdk.cs
+    path: ../../MegaForm.Sdk/MegaFormSdk.cs
     startLine: 46
   assemblies:
   - MegaForm.Sdk

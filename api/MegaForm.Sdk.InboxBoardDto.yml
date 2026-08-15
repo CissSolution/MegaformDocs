@@ -1,0 +1,614 @@
+### YamlMime:ManagedReference
+items:
+- uid: MegaForm.Sdk.InboxBoardDto
+  commentId: T:MegaForm.Sdk.InboxBoardDto
+  id: InboxBoardDto
+  parent: MegaForm.Sdk
+  children:
+  - MegaForm.Sdk.InboxBoardDto.Completed
+  - MegaForm.Sdk.InboxBoardDto.GeneratedAtUtc
+  - MegaForm.Sdk.InboxBoardDto.InProgress
+  - MegaForm.Sdk.InboxBoardDto.Incoming
+  - MegaForm.Sdk.InboxBoardDto.Kpis
+  - MegaForm.Sdk.InboxBoardDto.User
+  langs:
+  - csharp
+  - vb
+  name: InboxBoardDto
+  nameWithType: InboxBoardDto
+  fullName: MegaForm.Sdk.InboxBoardDto
+  type: Class
+  source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: InboxBoardDto
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 379
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  summary: Inbox board split into incoming, in-progress, and completed lanes.
+  example: []
+  syntax:
+    content: public sealed class InboxBoardDto
+    content.vb: Public NotInheritable Class InboxBoardDto
+  inheritance:
+  - System.Object
+  inheritedMembers:
+  - System.Object.Equals(System.Object)
+  - System.Object.Equals(System.Object,System.Object)
+  - System.Object.GetHashCode
+  - System.Object.GetType
+  - System.Object.ReferenceEquals(System.Object,System.Object)
+  - System.Object.ToString
+- uid: MegaForm.Sdk.InboxBoardDto.User
+  commentId: P:MegaForm.Sdk.InboxBoardDto.User
+  id: User
+  parent: MegaForm.Sdk.InboxBoardDto
+  langs:
+  - csharp
+  - vb
+  name: User
+  nameWithType: InboxBoardDto.User
+  fullName: MegaForm.Sdk.InboxBoardDto.User
+  type: Property
+  source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: User
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 381
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public InboxUserDto User { get; set; }
+    parameters: []
+    return:
+      type: MegaForm.Sdk.InboxUserDto
+    content.vb: Public Property User As InboxUserDto
+  overload: MegaForm.Sdk.InboxBoardDto.User*
+- uid: MegaForm.Sdk.InboxBoardDto.Kpis
+  commentId: P:MegaForm.Sdk.InboxBoardDto.Kpis
+  id: Kpis
+  parent: MegaForm.Sdk.InboxBoardDto
+  langs:
+  - csharp
+  - vb
+  name: Kpis
+  nameWithType: InboxBoardDto.Kpis
+  fullName: MegaForm.Sdk.InboxBoardDto.Kpis
+  type: Property
+  source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: Kpis
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 382
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public InboxKpiDto Kpis { get; set; }
+    parameters: []
+    return:
+      type: MegaForm.Sdk.InboxKpiDto
+    content.vb: Public Property Kpis As InboxKpiDto
+  overload: MegaForm.Sdk.InboxBoardDto.Kpis*
+- uid: MegaForm.Sdk.InboxBoardDto.Incoming
+  commentId: P:MegaForm.Sdk.InboxBoardDto.Incoming
+  id: Incoming
+  parent: MegaForm.Sdk.InboxBoardDto
+  langs:
+  - csharp
+  - vb
+  name: Incoming
+  nameWithType: InboxBoardDto.Incoming
+  fullName: MegaForm.Sdk.InboxBoardDto.Incoming
+  type: Property
+  source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: Incoming
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 383
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public IReadOnlyList<InboxTaskDto> Incoming { get; set; }
+    parameters: []
+    return:
+      type: System.Collections.Generic.IReadOnlyList{MegaForm.Sdk.InboxTaskDto}
+    content.vb: Public Property Incoming As IReadOnlyList(Of InboxTaskDto)
+  overload: MegaForm.Sdk.InboxBoardDto.Incoming*
+- uid: MegaForm.Sdk.InboxBoardDto.InProgress
+  commentId: P:MegaForm.Sdk.InboxBoardDto.InProgress
+  id: InProgress
+  parent: MegaForm.Sdk.InboxBoardDto
+  langs:
+  - csharp
+  - vb
+  name: InProgress
+  nameWithType: InboxBoardDto.InProgress
+  fullName: MegaForm.Sdk.InboxBoardDto.InProgress
+  type: Property
+  source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: InProgress
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 384
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public IReadOnlyList<InboxTaskDto> InProgress { get; set; }
+    parameters: []
+    return:
+      type: System.Collections.Generic.IReadOnlyList{MegaForm.Sdk.InboxTaskDto}
+    content.vb: Public Property InProgress As IReadOnlyList(Of InboxTaskDto)
+  overload: MegaForm.Sdk.InboxBoardDto.InProgress*
+- uid: MegaForm.Sdk.InboxBoardDto.Completed
+  commentId: P:MegaForm.Sdk.InboxBoardDto.Completed
+  id: Completed
+  parent: MegaForm.Sdk.InboxBoardDto
+  langs:
+  - csharp
+  - vb
+  name: Completed
+  nameWithType: InboxBoardDto.Completed
+  fullName: MegaForm.Sdk.InboxBoardDto.Completed
+  type: Property
+  source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: Completed
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 385
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public IReadOnlyList<InboxTaskDto> Completed { get; set; }
+    parameters: []
+    return:
+      type: System.Collections.Generic.IReadOnlyList{MegaForm.Sdk.InboxTaskDto}
+    content.vb: Public Property Completed As IReadOnlyList(Of InboxTaskDto)
+  overload: MegaForm.Sdk.InboxBoardDto.Completed*
+- uid: MegaForm.Sdk.InboxBoardDto.GeneratedAtUtc
+  commentId: P:MegaForm.Sdk.InboxBoardDto.GeneratedAtUtc
+  id: GeneratedAtUtc
+  parent: MegaForm.Sdk.InboxBoardDto
+  langs:
+  - csharp
+  - vb
+  name: GeneratedAtUtc
+  nameWithType: InboxBoardDto.GeneratedAtUtc
+  fullName: MegaForm.Sdk.InboxBoardDto.GeneratedAtUtc
+  type: Property
+  source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: GeneratedAtUtc
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 386
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public DateTime GeneratedAtUtc { get; set; }
+    parameters: []
+    return:
+      type: System.DateTime
+    content.vb: Public Property GeneratedAtUtc As Date
+  overload: MegaForm.Sdk.InboxBoardDto.GeneratedAtUtc*
+references:
+- uid: MegaForm.Sdk
+  commentId: N:MegaForm.Sdk
+  href: MegaForm.html
+  name: MegaForm.Sdk
+  nameWithType: MegaForm.Sdk
+  fullName: MegaForm.Sdk
+  spec.csharp:
+  - uid: MegaForm
+    name: MegaForm
+    href: MegaForm.html
+  - name: .
+  - uid: MegaForm.Sdk
+    name: Sdk
+    href: MegaForm.Sdk.html
+  spec.vb:
+  - uid: MegaForm
+    name: MegaForm
+    href: MegaForm.html
+  - name: .
+  - uid: MegaForm.Sdk
+    name: Sdk
+    href: MegaForm.Sdk.html
+- uid: System.Object
+  commentId: T:System.Object
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object
+  name: object
+  nameWithType: object
+  fullName: object
+  nameWithType.vb: Object
+  fullName.vb: Object
+  name.vb: Object
+- uid: System.Object.Equals(System.Object)
+  commentId: M:System.Object.Equals(System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  name: Equals(object)
+  nameWithType: object.Equals(object)
+  fullName: object.Equals(object)
+  nameWithType.vb: Object.Equals(Object)
+  fullName.vb: Object.Equals(Object)
+  name.vb: Equals(Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.Equals(System.Object,System.Object)
+  commentId: M:System.Object.Equals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  name: Equals(object, object)
+  nameWithType: object.Equals(object, object)
+  fullName: object.Equals(object, object)
+  nameWithType.vb: Object.Equals(Object, Object)
+  fullName.vb: Object.Equals(Object, Object)
+  name.vb: Equals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.GetHashCode
+  commentId: M:System.Object.GetHashCode
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  name: GetHashCode()
+  nameWithType: object.GetHashCode()
+  fullName: object.GetHashCode()
+  nameWithType.vb: Object.GetHashCode()
+  fullName.vb: Object.GetHashCode()
+  spec.csharp:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+- uid: System.Object.GetType
+  commentId: M:System.Object.GetType
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  name: GetType()
+  nameWithType: object.GetType()
+  fullName: object.GetType()
+  nameWithType.vb: Object.GetType()
+  fullName.vb: Object.GetType()
+  spec.csharp:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+- uid: System.Object.ReferenceEquals(System.Object,System.Object)
+  commentId: M:System.Object.ReferenceEquals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  name: ReferenceEquals(object, object)
+  nameWithType: object.ReferenceEquals(object, object)
+  fullName: object.ReferenceEquals(object, object)
+  nameWithType.vb: Object.ReferenceEquals(Object, Object)
+  fullName.vb: Object.ReferenceEquals(Object, Object)
+  name.vb: ReferenceEquals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.ToString
+  commentId: M:System.Object.ToString
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  name: ToString()
+  nameWithType: object.ToString()
+  fullName: object.ToString()
+  nameWithType.vb: Object.ToString()
+  fullName.vb: Object.ToString()
+  spec.csharp:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+- uid: System
+  commentId: N:System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System
+  nameWithType: System
+  fullName: System
+- uid: MegaForm.Sdk.InboxBoardDto.User*
+  commentId: Overload:MegaForm.Sdk.InboxBoardDto.User
+  href: MegaForm.Sdk.InboxBoardDto.html#MegaForm_Sdk_InboxBoardDto_User
+  name: User
+  nameWithType: InboxBoardDto.User
+  fullName: MegaForm.Sdk.InboxBoardDto.User
+- uid: MegaForm.Sdk.InboxUserDto
+  commentId: T:MegaForm.Sdk.InboxUserDto
+  parent: MegaForm.Sdk
+  href: MegaForm.Sdk.InboxUserDto.html
+  name: InboxUserDto
+  nameWithType: InboxUserDto
+  fullName: MegaForm.Sdk.InboxUserDto
+- uid: MegaForm.Sdk.InboxBoardDto.Kpis*
+  commentId: Overload:MegaForm.Sdk.InboxBoardDto.Kpis
+  href: MegaForm.Sdk.InboxBoardDto.html#MegaForm_Sdk_InboxBoardDto_Kpis
+  name: Kpis
+  nameWithType: InboxBoardDto.Kpis
+  fullName: MegaForm.Sdk.InboxBoardDto.Kpis
+- uid: MegaForm.Sdk.InboxKpiDto
+  commentId: T:MegaForm.Sdk.InboxKpiDto
+  parent: MegaForm.Sdk
+  href: MegaForm.Sdk.InboxKpiDto.html
+  name: InboxKpiDto
+  nameWithType: InboxKpiDto
+  fullName: MegaForm.Sdk.InboxKpiDto
+- uid: MegaForm.Sdk.InboxBoardDto.Incoming*
+  commentId: Overload:MegaForm.Sdk.InboxBoardDto.Incoming
+  href: MegaForm.Sdk.InboxBoardDto.html#MegaForm_Sdk_InboxBoardDto_Incoming
+  name: Incoming
+  nameWithType: InboxBoardDto.Incoming
+  fullName: MegaForm.Sdk.InboxBoardDto.Incoming
+- uid: System.Collections.Generic.IReadOnlyList{MegaForm.Sdk.InboxTaskDto}
+  commentId: T:System.Collections.Generic.IReadOnlyList{MegaForm.Sdk.InboxTaskDto}
+  parent: System.Collections.Generic
+  definition: System.Collections.Generic.IReadOnlyList`1
+  href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ireadonlylist-1
+  name: IReadOnlyList<InboxTaskDto>
+  nameWithType: IReadOnlyList<InboxTaskDto>
+  fullName: System.Collections.Generic.IReadOnlyList<MegaForm.Sdk.InboxTaskDto>
+  nameWithType.vb: IReadOnlyList(Of InboxTaskDto)
+  fullName.vb: System.Collections.Generic.IReadOnlyList(Of MegaForm.Sdk.InboxTaskDto)
+  name.vb: IReadOnlyList(Of InboxTaskDto)
+  spec.csharp:
+  - uid: System.Collections.Generic.IReadOnlyList`1
+    name: IReadOnlyList
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ireadonlylist-1
+  - name: <
+  - uid: MegaForm.Sdk.InboxTaskDto
+    name: InboxTaskDto
+    href: MegaForm.Sdk.InboxTaskDto.html
+  - name: '>'
+  spec.vb:
+  - uid: System.Collections.Generic.IReadOnlyList`1
+    name: IReadOnlyList
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ireadonlylist-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: MegaForm.Sdk.InboxTaskDto
+    name: InboxTaskDto
+    href: MegaForm.Sdk.InboxTaskDto.html
+  - name: )
+- uid: System.Collections.Generic.IReadOnlyList`1
+  commentId: T:System.Collections.Generic.IReadOnlyList`1
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ireadonlylist-1
+  name: IReadOnlyList<T>
+  nameWithType: IReadOnlyList<T>
+  fullName: System.Collections.Generic.IReadOnlyList<T>
+  nameWithType.vb: IReadOnlyList(Of T)
+  fullName.vb: System.Collections.Generic.IReadOnlyList(Of T)
+  name.vb: IReadOnlyList(Of T)
+  spec.csharp:
+  - uid: System.Collections.Generic.IReadOnlyList`1
+    name: IReadOnlyList
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ireadonlylist-1
+  - name: <
+  - name: T
+  - name: '>'
+  spec.vb:
+  - uid: System.Collections.Generic.IReadOnlyList`1
+    name: IReadOnlyList
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.ireadonlylist-1
+  - name: (
+  - name: Of
+  - name: " "
+  - name: T
+  - name: )
+- uid: System.Collections.Generic
+  commentId: N:System.Collections.Generic
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System.Collections.Generic
+  nameWithType: System.Collections.Generic
+  fullName: System.Collections.Generic
+  spec.csharp:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Collections
+    name: Collections
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections
+  - name: .
+  - uid: System.Collections.Generic
+    name: Generic
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic
+  spec.vb:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Collections
+    name: Collections
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections
+  - name: .
+  - uid: System.Collections.Generic
+    name: Generic
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic
+- uid: MegaForm.Sdk.InboxBoardDto.InProgress*
+  commentId: Overload:MegaForm.Sdk.InboxBoardDto.InProgress
+  href: MegaForm.Sdk.InboxBoardDto.html#MegaForm_Sdk_InboxBoardDto_InProgress
+  name: InProgress
+  nameWithType: InboxBoardDto.InProgress
+  fullName: MegaForm.Sdk.InboxBoardDto.InProgress
+- uid: MegaForm.Sdk.InboxBoardDto.Completed*
+  commentId: Overload:MegaForm.Sdk.InboxBoardDto.Completed
+  href: MegaForm.Sdk.InboxBoardDto.html#MegaForm_Sdk_InboxBoardDto_Completed
+  name: Completed
+  nameWithType: InboxBoardDto.Completed
+  fullName: MegaForm.Sdk.InboxBoardDto.Completed
+- uid: MegaForm.Sdk.InboxBoardDto.GeneratedAtUtc*
+  commentId: Overload:MegaForm.Sdk.InboxBoardDto.GeneratedAtUtc
+  href: MegaForm.Sdk.InboxBoardDto.html#MegaForm_Sdk_InboxBoardDto_GeneratedAtUtc
+  name: GeneratedAtUtc
+  nameWithType: InboxBoardDto.GeneratedAtUtc
+  fullName: MegaForm.Sdk.InboxBoardDto.GeneratedAtUtc
+- uid: System.DateTime
+  commentId: T:System.DateTime
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.datetime
+  name: DateTime
+  nameWithType: DateTime
+  fullName: System.DateTime
+  nameWithType.vb: Date
+  fullName.vb: Date
+  name.vb: Date

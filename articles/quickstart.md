@@ -5,8 +5,6 @@ render them as a list — in about 20 lines.
 
 ## The goal
 
-![SDK list view with a download link](../images/oqtane-sdk-download.png)
-
 ## Step 1 — get a client + a scope
 
 ```csharp
@@ -75,6 +73,96 @@ foreach (var s in page.Items)
 }
 sb.Append("</table>");
 ```
+
+## Sample: load a form by id or name and print its data
+
+This sample finds a form (by id if you know it, or by name if you only have the title), reads its
+schema, then prints every submission with the field values you care about.
+
+```csharp
+using System;
+using System.Text.Json;
+using MegaForm.Sdk;
+
+public async Task RenderFormDataAsync(IMegaFormClient client, MegaFormScope scope,
+    int? formId = null, string? formName = null)
+{
+    // 1. Resolve the form.
+    FormDto? form = null;
+
+    if (formId.HasValue)
+    {
+        form = await client.Forms.GetFormAsync(formId.Value, scope);
+    }
+    else if (!string.IsNullOrWhiteSpace(formName))
+    {
+        var forms = await client.Forms.ListFormsAsync(
+            new FormQuery { Search = formName, PageSize = 20 }, scope);
+        form = forms.Items.FirstOrDefault(f =>
+            string.Equals(f.Title, formName, StringComparison.OrdinalIgnoreCase));
+    }
+
+    if (form is null)
+    {
+        Console.WriteLine("Form not found.");
+        return;
+    }
+
+    Console.WriteLine($"Form: #{form.FormId} {form.Title}");
+    Console.WriteLine($"Submissions: {form.SubmissionCount}");
+
+    // 2. Parse the schema so we know which fields exist and how to label them.
+    var schema = client.Schema.ParseForm(form);
+    var inputFields = schema.Fields.Where(f => f.IsInputField && !f.Hidden).ToList();
+
+    Console.WriteLine($"Fields: {string.Join(", ", inputFields.Select(f => f.Key))}");
+
+    // 3. Read the submissions.
+    var page = await client.Submissions.FindAsync(
+        new SubmissionQuery { FormId = form.FormId, PageSize = 100 }, scope);
+
+    Console.WriteLine($"Loaded {page.Items.Count} of {page.TotalCount} submissions\n");
+
+    // 4. Print each row.
+    foreach (var submission in page.Items)
+    {
+        Console.WriteLine($"Submission #{submission.SubmissionId} — {submission.SubmittedOnUtc:yyyy-MM-dd HH:mm} — {submission.Status}");
+
+        using var doc = JsonDocument.Parse(submission.DataJson ?? "{}");
+        foreach (var field in inputFields)
+        {
+            if (doc.RootElement.TryGetProperty(field.Key ?? string.Empty, out var element))
+            {
+                var value = element.ValueKind == JsonValueKind.String
+                    ? element.GetString()
+                    : element.GetRawText();
+                Console.WriteLine($"  {field.Label ?? field.Key}: {value}");
+            }
+        }
+        Console.WriteLine();
+    }
+}
+```
+
+Usage:
+
+```csharp
+// By form id
+await RenderFormDataAsync(client, scope, formId: 42);
+
+// By form name
+await RenderFormDataAsync(client, scope, formName: "Contact Us");
+```
+
+Key points:
+
+- **Form id** is the fastest path — `GetFormAsync` returns the form directly.
+- **Form name** is useful when the id is not hard-coded. `ListFormsAsync` with `Search` filters by
+  title/description, then the sample picks the first exact title match.
+- `Schema.ParseForm` gives you field labels, types, and which fields are inputs, so you can render
+  columns dynamically instead of guessing keys from `DataJson`.
+- `DataJson` is a JSON object keyed by `field.Key`. The sample handles both string and non-string
+  values; on DNN (net472) replace `System.Text.Json` with `Newtonsoft.Json.Linq.JObject`.
 
 Next: see the platform-specific consumers — [Oqtane](oqtane-consumer.md) and
 [DNN Razor Host](dnn-razor-host.md).

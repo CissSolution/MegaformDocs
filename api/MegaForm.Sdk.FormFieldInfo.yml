@@ -26,9 +26,13 @@ items:
   fullName: MegaForm.Sdk.FormFieldInfo
   type: Class
   source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: FormFieldInfo
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 246
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 524
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -58,9 +62,13 @@ items:
   fullName: MegaForm.Sdk.FormFieldInfo.Key
   type: Property
   source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: Key
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 249
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 527
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -85,9 +93,13 @@ items:
   fullName: MegaForm.Sdk.FormFieldInfo.Type
   type: Property
   source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: Type
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 252
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 530
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -112,9 +124,13 @@ items:
   fullName: MegaForm.Sdk.FormFieldInfo.Label
   type: Property
   source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: Label
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 255
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 533
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -139,9 +155,13 @@ items:
   fullName: MegaForm.Sdk.FormFieldInfo.Placeholder
   type: Property
   source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: Placeholder
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 258
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 536
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -166,9 +186,13 @@ items:
   fullName: MegaForm.Sdk.FormFieldInfo.HelpText
   type: Property
   source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: HelpText
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 261
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 539
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -193,9 +217,13 @@ items:
   fullName: MegaForm.Sdk.FormFieldInfo.Required
   type: Property
   source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: Required
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 264
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 542
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -220,9 +248,13 @@ items:
   fullName: MegaForm.Sdk.FormFieldInfo.ReadOnly
   type: Property
   source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: ReadOnly
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 267
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 545
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -247,9 +279,13 @@ items:
   fullName: MegaForm.Sdk.FormFieldInfo.Hidden
   type: Property
   source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: Hidden
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 270
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 548
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -274,9 +310,13 @@ items:
   fullName: MegaForm.Sdk.FormFieldInfo.Width
   type: Property
   source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: Width
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 273
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 551
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -301,9 +341,13 @@ items:
   fullName: MegaForm.Sdk.FormFieldInfo.Order
   type: Property
   source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: Order
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 276
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 554
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -328,9 +372,13 @@ items:
   fullName: MegaForm.Sdk.FormFieldInfo.IsInputField
   type: Property
   source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: IsInputField
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 279
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 557
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -355,9 +403,13 @@ items:
   fullName: MegaForm.Sdk.FormFieldInfo.Options
   type: Property
   source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: Options
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 282
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 560
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -382,9 +434,13 @@ items:
   fullName: MegaForm.Sdk.FormFieldInfo.Validation
   type: Property
   source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: Validation
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 285
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 563
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk

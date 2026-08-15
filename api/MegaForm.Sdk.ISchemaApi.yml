@@ -15,9 +15,13 @@ items:
   fullName: MegaForm.Sdk.ISchemaApi
   type: Interface
   source:
+    remote:
+      path: MegaForm.Sdk/IMegaFormClient.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: ISchemaApi
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\IMegaFormClient.cs
-    startLine: 27
+    path: ../../MegaForm.Sdk/IMegaFormClient.cs
+    startLine: 36
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -40,9 +44,13 @@ items:
   fullName: MegaForm.Sdk.ISchemaApi.Parse(string)
   type: Method
   source:
+    remote:
+      path: MegaForm.Sdk/IMegaFormClient.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: Parse
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\IMegaFormClient.cs
-    startLine: 34
+    path: ../../MegaForm.Sdk/IMegaFormClient.cs
+    startLine: 43
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -77,9 +85,13 @@ items:
   fullName: MegaForm.Sdk.ISchemaApi.ParseForm(MegaForm.Sdk.FormDto)
   type: Method
   source:
+    remote:
+      path: MegaForm.Sdk/IMegaFormClient.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: ParseForm
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\IMegaFormClient.cs
-    startLine: 37
+    path: ../../MegaForm.Sdk/IMegaFormClient.cs
+    startLine: 46
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk

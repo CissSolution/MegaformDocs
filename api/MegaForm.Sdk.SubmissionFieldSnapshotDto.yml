@@ -1,0 +1,560 @@
+### YamlMime:ManagedReference
+items:
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto
+  commentId: T:MegaForm.Sdk.SubmissionFieldSnapshotDto
+  id: SubmissionFieldSnapshotDto
+  parent: MegaForm.Sdk
+  children:
+  - MegaForm.Sdk.SubmissionFieldSnapshotDto.DisplayValue
+  - MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldKey
+  - MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldLabel
+  - MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldType
+  - MegaForm.Sdk.SubmissionFieldSnapshotDto.IsLegacyFallback
+  - MegaForm.Sdk.SubmissionFieldSnapshotDto.RawValue
+  - MegaForm.Sdk.SubmissionFieldSnapshotDto.SortOrder
+  langs:
+  - csharp
+  - vb
+  name: SubmissionFieldSnapshotDto
+  nameWithType: SubmissionFieldSnapshotDto
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto
+  type: Class
+  source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: SubmissionFieldSnapshotDto
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 346
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  summary: Stored field snapshot captured at submit time.
+  example: []
+  syntax:
+    content: public sealed class SubmissionFieldSnapshotDto
+    content.vb: Public NotInheritable Class SubmissionFieldSnapshotDto
+  inheritance:
+  - System.Object
+  inheritedMembers:
+  - System.Object.Equals(System.Object)
+  - System.Object.Equals(System.Object,System.Object)
+  - System.Object.GetHashCode
+  - System.Object.GetType
+  - System.Object.ReferenceEquals(System.Object,System.Object)
+  - System.Object.ToString
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldKey
+  commentId: P:MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldKey
+  id: FieldKey
+  parent: MegaForm.Sdk.SubmissionFieldSnapshotDto
+  langs:
+  - csharp
+  - vb
+  name: FieldKey
+  nameWithType: SubmissionFieldSnapshotDto.FieldKey
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldKey
+  type: Property
+  source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: FieldKey
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 348
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public string? FieldKey { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property FieldKey As String
+  overload: MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldKey*
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldLabel
+  commentId: P:MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldLabel
+  id: FieldLabel
+  parent: MegaForm.Sdk.SubmissionFieldSnapshotDto
+  langs:
+  - csharp
+  - vb
+  name: FieldLabel
+  nameWithType: SubmissionFieldSnapshotDto.FieldLabel
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldLabel
+  type: Property
+  source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: FieldLabel
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 349
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public string? FieldLabel { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property FieldLabel As String
+  overload: MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldLabel*
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldType
+  commentId: P:MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldType
+  id: FieldType
+  parent: MegaForm.Sdk.SubmissionFieldSnapshotDto
+  langs:
+  - csharp
+  - vb
+  name: FieldType
+  nameWithType: SubmissionFieldSnapshotDto.FieldType
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldType
+  type: Property
+  source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: FieldType
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 350
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public string? FieldType { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property FieldType As String
+  overload: MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldType*
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto.RawValue
+  commentId: P:MegaForm.Sdk.SubmissionFieldSnapshotDto.RawValue
+  id: RawValue
+  parent: MegaForm.Sdk.SubmissionFieldSnapshotDto
+  langs:
+  - csharp
+  - vb
+  name: RawValue
+  nameWithType: SubmissionFieldSnapshotDto.RawValue
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto.RawValue
+  type: Property
+  source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: RawValue
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 351
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public string? RawValue { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property RawValue As String
+  overload: MegaForm.Sdk.SubmissionFieldSnapshotDto.RawValue*
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto.DisplayValue
+  commentId: P:MegaForm.Sdk.SubmissionFieldSnapshotDto.DisplayValue
+  id: DisplayValue
+  parent: MegaForm.Sdk.SubmissionFieldSnapshotDto
+  langs:
+  - csharp
+  - vb
+  name: DisplayValue
+  nameWithType: SubmissionFieldSnapshotDto.DisplayValue
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto.DisplayValue
+  type: Property
+  source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: DisplayValue
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 352
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public string? DisplayValue { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property DisplayValue As String
+  overload: MegaForm.Sdk.SubmissionFieldSnapshotDto.DisplayValue*
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto.SortOrder
+  commentId: P:MegaForm.Sdk.SubmissionFieldSnapshotDto.SortOrder
+  id: SortOrder
+  parent: MegaForm.Sdk.SubmissionFieldSnapshotDto
+  langs:
+  - csharp
+  - vb
+  name: SortOrder
+  nameWithType: SubmissionFieldSnapshotDto.SortOrder
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto.SortOrder
+  type: Property
+  source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: SortOrder
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 353
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public int SortOrder { get; set; }
+    parameters: []
+    return:
+      type: System.Int32
+    content.vb: Public Property SortOrder As Integer
+  overload: MegaForm.Sdk.SubmissionFieldSnapshotDto.SortOrder*
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto.IsLegacyFallback
+  commentId: P:MegaForm.Sdk.SubmissionFieldSnapshotDto.IsLegacyFallback
+  id: IsLegacyFallback
+  parent: MegaForm.Sdk.SubmissionFieldSnapshotDto
+  langs:
+  - csharp
+  - vb
+  name: IsLegacyFallback
+  nameWithType: SubmissionFieldSnapshotDto.IsLegacyFallback
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto.IsLegacyFallback
+  type: Property
+  source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: IsLegacyFallback
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 354
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public bool IsLegacyFallback { get; set; }
+    parameters: []
+    return:
+      type: System.Boolean
+    content.vb: Public Property IsLegacyFallback As Boolean
+  overload: MegaForm.Sdk.SubmissionFieldSnapshotDto.IsLegacyFallback*
+references:
+- uid: MegaForm.Sdk
+  commentId: N:MegaForm.Sdk
+  href: MegaForm.html
+  name: MegaForm.Sdk
+  nameWithType: MegaForm.Sdk
+  fullName: MegaForm.Sdk
+  spec.csharp:
+  - uid: MegaForm
+    name: MegaForm
+    href: MegaForm.html
+  - name: .
+  - uid: MegaForm.Sdk
+    name: Sdk
+    href: MegaForm.Sdk.html
+  spec.vb:
+  - uid: MegaForm
+    name: MegaForm
+    href: MegaForm.html
+  - name: .
+  - uid: MegaForm.Sdk
+    name: Sdk
+    href: MegaForm.Sdk.html
+- uid: System.Object
+  commentId: T:System.Object
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object
+  name: object
+  nameWithType: object
+  fullName: object
+  nameWithType.vb: Object
+  fullName.vb: Object
+  name.vb: Object
+- uid: System.Object.Equals(System.Object)
+  commentId: M:System.Object.Equals(System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  name: Equals(object)
+  nameWithType: object.Equals(object)
+  fullName: object.Equals(object)
+  nameWithType.vb: Object.Equals(Object)
+  fullName.vb: Object.Equals(Object)
+  name.vb: Equals(Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.Equals(System.Object,System.Object)
+  commentId: M:System.Object.Equals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  name: Equals(object, object)
+  nameWithType: object.Equals(object, object)
+  fullName: object.Equals(object, object)
+  nameWithType.vb: Object.Equals(Object, Object)
+  fullName.vb: Object.Equals(Object, Object)
+  name.vb: Equals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.GetHashCode
+  commentId: M:System.Object.GetHashCode
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  name: GetHashCode()
+  nameWithType: object.GetHashCode()
+  fullName: object.GetHashCode()
+  nameWithType.vb: Object.GetHashCode()
+  fullName.vb: Object.GetHashCode()
+  spec.csharp:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+- uid: System.Object.GetType
+  commentId: M:System.Object.GetType
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  name: GetType()
+  nameWithType: object.GetType()
+  fullName: object.GetType()
+  nameWithType.vb: Object.GetType()
+  fullName.vb: Object.GetType()
+  spec.csharp:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+- uid: System.Object.ReferenceEquals(System.Object,System.Object)
+  commentId: M:System.Object.ReferenceEquals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  name: ReferenceEquals(object, object)
+  nameWithType: object.ReferenceEquals(object, object)
+  fullName: object.ReferenceEquals(object, object)
+  nameWithType.vb: Object.ReferenceEquals(Object, Object)
+  fullName.vb: Object.ReferenceEquals(Object, Object)
+  name.vb: ReferenceEquals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.ToString
+  commentId: M:System.Object.ToString
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  name: ToString()
+  nameWithType: object.ToString()
+  fullName: object.ToString()
+  nameWithType.vb: Object.ToString()
+  fullName.vb: Object.ToString()
+  spec.csharp:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+- uid: System
+  commentId: N:System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System
+  nameWithType: System
+  fullName: System
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldKey*
+  commentId: Overload:MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldKey
+  href: MegaForm.Sdk.SubmissionFieldSnapshotDto.html#MegaForm_Sdk_SubmissionFieldSnapshotDto_FieldKey
+  name: FieldKey
+  nameWithType: SubmissionFieldSnapshotDto.FieldKey
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldKey
+- uid: System.String
+  commentId: T:System.String
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.string
+  name: string
+  nameWithType: string
+  fullName: string
+  nameWithType.vb: String
+  fullName.vb: String
+  name.vb: String
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldLabel*
+  commentId: Overload:MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldLabel
+  href: MegaForm.Sdk.SubmissionFieldSnapshotDto.html#MegaForm_Sdk_SubmissionFieldSnapshotDto_FieldLabel
+  name: FieldLabel
+  nameWithType: SubmissionFieldSnapshotDto.FieldLabel
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldLabel
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldType*
+  commentId: Overload:MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldType
+  href: MegaForm.Sdk.SubmissionFieldSnapshotDto.html#MegaForm_Sdk_SubmissionFieldSnapshotDto_FieldType
+  name: FieldType
+  nameWithType: SubmissionFieldSnapshotDto.FieldType
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto.FieldType
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto.RawValue*
+  commentId: Overload:MegaForm.Sdk.SubmissionFieldSnapshotDto.RawValue
+  href: MegaForm.Sdk.SubmissionFieldSnapshotDto.html#MegaForm_Sdk_SubmissionFieldSnapshotDto_RawValue
+  name: RawValue
+  nameWithType: SubmissionFieldSnapshotDto.RawValue
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto.RawValue
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto.DisplayValue*
+  commentId: Overload:MegaForm.Sdk.SubmissionFieldSnapshotDto.DisplayValue
+  href: MegaForm.Sdk.SubmissionFieldSnapshotDto.html#MegaForm_Sdk_SubmissionFieldSnapshotDto_DisplayValue
+  name: DisplayValue
+  nameWithType: SubmissionFieldSnapshotDto.DisplayValue
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto.DisplayValue
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto.SortOrder*
+  commentId: Overload:MegaForm.Sdk.SubmissionFieldSnapshotDto.SortOrder
+  href: MegaForm.Sdk.SubmissionFieldSnapshotDto.html#MegaForm_Sdk_SubmissionFieldSnapshotDto_SortOrder
+  name: SortOrder
+  nameWithType: SubmissionFieldSnapshotDto.SortOrder
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto.SortOrder
+- uid: System.Int32
+  commentId: T:System.Int32
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.int32
+  name: int
+  nameWithType: int
+  fullName: int
+  nameWithType.vb: Integer
+  fullName.vb: Integer
+  name.vb: Integer
+- uid: MegaForm.Sdk.SubmissionFieldSnapshotDto.IsLegacyFallback*
+  commentId: Overload:MegaForm.Sdk.SubmissionFieldSnapshotDto.IsLegacyFallback
+  href: MegaForm.Sdk.SubmissionFieldSnapshotDto.html#MegaForm_Sdk_SubmissionFieldSnapshotDto_IsLegacyFallback
+  name: IsLegacyFallback
+  nameWithType: SubmissionFieldSnapshotDto.IsLegacyFallback
+  fullName: MegaForm.Sdk.SubmissionFieldSnapshotDto.IsLegacyFallback
+- uid: System.Boolean
+  commentId: T:System.Boolean
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.boolean
+  name: bool
+  nameWithType: bool
+  fullName: bool
+  nameWithType.vb: Boolean
+  fullName.vb: Boolean
+  name.vb: Boolean

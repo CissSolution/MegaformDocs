@@ -14,9 +14,13 @@ items:
   fullName: MegaForm.Sdk.FormSchemaInfo
   type: Class
   source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: FormSchemaInfo
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 239
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 517
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -53,9 +57,13 @@ items:
   fullName: MegaForm.Sdk.FormSchemaInfo.Fields
   type: Property
   source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: Fields
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 242
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 520
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk

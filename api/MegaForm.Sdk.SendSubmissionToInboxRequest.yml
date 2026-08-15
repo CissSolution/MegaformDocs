@@ -1,0 +1,477 @@
+### YamlMime:ManagedReference
+items:
+- uid: MegaForm.Sdk.SendSubmissionToInboxRequest
+  commentId: T:MegaForm.Sdk.SendSubmissionToInboxRequest
+  id: SendSubmissionToInboxRequest
+  parent: MegaForm.Sdk
+  children:
+  - MegaForm.Sdk.SendSubmissionToInboxRequest.Comment
+  - MegaForm.Sdk.SendSubmissionToInboxRequest.FormId
+  - MegaForm.Sdk.SendSubmissionToInboxRequest.SubmissionId
+  - MegaForm.Sdk.SendSubmissionToInboxRequest.TargetUser
+  - MegaForm.Sdk.SendSubmissionToInboxRequest.Title
+  langs:
+  - csharp
+  - vb
+  name: SendSubmissionToInboxRequest
+  nameWithType: SendSubmissionToInboxRequest
+  fullName: MegaForm.Sdk.SendSubmissionToInboxRequest
+  type: Class
+  source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: SendSubmissionToInboxRequest
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 453
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  summary: Request to route a submission into a user's inbox without a prebuilt workflow.
+  example: []
+  syntax:
+    content: public sealed class SendSubmissionToInboxRequest
+    content.vb: Public NotInheritable Class SendSubmissionToInboxRequest
+  inheritance:
+  - System.Object
+  inheritedMembers:
+  - System.Object.Equals(System.Object)
+  - System.Object.Equals(System.Object,System.Object)
+  - System.Object.GetHashCode
+  - System.Object.GetType
+  - System.Object.ReferenceEquals(System.Object,System.Object)
+  - System.Object.ToString
+- uid: MegaForm.Sdk.SendSubmissionToInboxRequest.FormId
+  commentId: P:MegaForm.Sdk.SendSubmissionToInboxRequest.FormId
+  id: FormId
+  parent: MegaForm.Sdk.SendSubmissionToInboxRequest
+  langs:
+  - csharp
+  - vb
+  name: FormId
+  nameWithType: SendSubmissionToInboxRequest.FormId
+  fullName: MegaForm.Sdk.SendSubmissionToInboxRequest.FormId
+  type: Property
+  source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: FormId
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 455
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public int FormId { get; set; }
+    parameters: []
+    return:
+      type: System.Int32
+    content.vb: Public Property FormId As Integer
+  overload: MegaForm.Sdk.SendSubmissionToInboxRequest.FormId*
+- uid: MegaForm.Sdk.SendSubmissionToInboxRequest.SubmissionId
+  commentId: P:MegaForm.Sdk.SendSubmissionToInboxRequest.SubmissionId
+  id: SubmissionId
+  parent: MegaForm.Sdk.SendSubmissionToInboxRequest
+  langs:
+  - csharp
+  - vb
+  name: SubmissionId
+  nameWithType: SendSubmissionToInboxRequest.SubmissionId
+  fullName: MegaForm.Sdk.SendSubmissionToInboxRequest.SubmissionId
+  type: Property
+  source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: SubmissionId
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 456
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public int SubmissionId { get; set; }
+    parameters: []
+    return:
+      type: System.Int32
+    content.vb: Public Property SubmissionId As Integer
+  overload: MegaForm.Sdk.SendSubmissionToInboxRequest.SubmissionId*
+- uid: MegaForm.Sdk.SendSubmissionToInboxRequest.TargetUser
+  commentId: P:MegaForm.Sdk.SendSubmissionToInboxRequest.TargetUser
+  id: TargetUser
+  parent: MegaForm.Sdk.SendSubmissionToInboxRequest
+  langs:
+  - csharp
+  - vb
+  name: TargetUser
+  nameWithType: SendSubmissionToInboxRequest.TargetUser
+  fullName: MegaForm.Sdk.SendSubmissionToInboxRequest.TargetUser
+  type: Property
+  source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: TargetUser
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 457
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public string TargetUser { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property TargetUser As String
+  overload: MegaForm.Sdk.SendSubmissionToInboxRequest.TargetUser*
+- uid: MegaForm.Sdk.SendSubmissionToInboxRequest.Title
+  commentId: P:MegaForm.Sdk.SendSubmissionToInboxRequest.Title
+  id: Title
+  parent: MegaForm.Sdk.SendSubmissionToInboxRequest
+  langs:
+  - csharp
+  - vb
+  name: Title
+  nameWithType: SendSubmissionToInboxRequest.Title
+  fullName: MegaForm.Sdk.SendSubmissionToInboxRequest.Title
+  type: Property
+  source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: Title
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 458
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public string? Title { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property Title As String
+  overload: MegaForm.Sdk.SendSubmissionToInboxRequest.Title*
+- uid: MegaForm.Sdk.SendSubmissionToInboxRequest.Comment
+  commentId: P:MegaForm.Sdk.SendSubmissionToInboxRequest.Comment
+  id: Comment
+  parent: MegaForm.Sdk.SendSubmissionToInboxRequest
+  langs:
+  - csharp
+  - vb
+  name: Comment
+  nameWithType: SendSubmissionToInboxRequest.Comment
+  fullName: MegaForm.Sdk.SendSubmissionToInboxRequest.Comment
+  type: Property
+  source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: Comment
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 459
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public string? Comment { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property Comment As String
+  overload: MegaForm.Sdk.SendSubmissionToInboxRequest.Comment*
+references:
+- uid: MegaForm.Sdk
+  commentId: N:MegaForm.Sdk
+  href: MegaForm.html
+  name: MegaForm.Sdk
+  nameWithType: MegaForm.Sdk
+  fullName: MegaForm.Sdk
+  spec.csharp:
+  - uid: MegaForm
+    name: MegaForm
+    href: MegaForm.html
+  - name: .
+  - uid: MegaForm.Sdk
+    name: Sdk
+    href: MegaForm.Sdk.html
+  spec.vb:
+  - uid: MegaForm
+    name: MegaForm
+    href: MegaForm.html
+  - name: .
+  - uid: MegaForm.Sdk
+    name: Sdk
+    href: MegaForm.Sdk.html
+- uid: System.Object
+  commentId: T:System.Object
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object
+  name: object
+  nameWithType: object
+  fullName: object
+  nameWithType.vb: Object
+  fullName.vb: Object
+  name.vb: Object
+- uid: System.Object.Equals(System.Object)
+  commentId: M:System.Object.Equals(System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  name: Equals(object)
+  nameWithType: object.Equals(object)
+  fullName: object.Equals(object)
+  nameWithType.vb: Object.Equals(Object)
+  fullName.vb: Object.Equals(Object)
+  name.vb: Equals(Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.Equals(System.Object,System.Object)
+  commentId: M:System.Object.Equals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  name: Equals(object, object)
+  nameWithType: object.Equals(object, object)
+  fullName: object.Equals(object, object)
+  nameWithType.vb: Object.Equals(Object, Object)
+  fullName.vb: Object.Equals(Object, Object)
+  name.vb: Equals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.GetHashCode
+  commentId: M:System.Object.GetHashCode
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  name: GetHashCode()
+  nameWithType: object.GetHashCode()
+  fullName: object.GetHashCode()
+  nameWithType.vb: Object.GetHashCode()
+  fullName.vb: Object.GetHashCode()
+  spec.csharp:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+- uid: System.Object.GetType
+  commentId: M:System.Object.GetType
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  name: GetType()
+  nameWithType: object.GetType()
+  fullName: object.GetType()
+  nameWithType.vb: Object.GetType()
+  fullName.vb: Object.GetType()
+  spec.csharp:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+- uid: System.Object.ReferenceEquals(System.Object,System.Object)
+  commentId: M:System.Object.ReferenceEquals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  name: ReferenceEquals(object, object)
+  nameWithType: object.ReferenceEquals(object, object)
+  fullName: object.ReferenceEquals(object, object)
+  nameWithType.vb: Object.ReferenceEquals(Object, Object)
+  fullName.vb: Object.ReferenceEquals(Object, Object)
+  name.vb: ReferenceEquals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.ToString
+  commentId: M:System.Object.ToString
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  name: ToString()
+  nameWithType: object.ToString()
+  fullName: object.ToString()
+  nameWithType.vb: Object.ToString()
+  fullName.vb: Object.ToString()
+  spec.csharp:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+- uid: System
+  commentId: N:System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System
+  nameWithType: System
+  fullName: System
+- uid: MegaForm.Sdk.SendSubmissionToInboxRequest.FormId*
+  commentId: Overload:MegaForm.Sdk.SendSubmissionToInboxRequest.FormId
+  href: MegaForm.Sdk.SendSubmissionToInboxRequest.html#MegaForm_Sdk_SendSubmissionToInboxRequest_FormId
+  name: FormId
+  nameWithType: SendSubmissionToInboxRequest.FormId
+  fullName: MegaForm.Sdk.SendSubmissionToInboxRequest.FormId
+- uid: System.Int32
+  commentId: T:System.Int32
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.int32
+  name: int
+  nameWithType: int
+  fullName: int
+  nameWithType.vb: Integer
+  fullName.vb: Integer
+  name.vb: Integer
+- uid: MegaForm.Sdk.SendSubmissionToInboxRequest.SubmissionId*
+  commentId: Overload:MegaForm.Sdk.SendSubmissionToInboxRequest.SubmissionId
+  href: MegaForm.Sdk.SendSubmissionToInboxRequest.html#MegaForm_Sdk_SendSubmissionToInboxRequest_SubmissionId
+  name: SubmissionId
+  nameWithType: SendSubmissionToInboxRequest.SubmissionId
+  fullName: MegaForm.Sdk.SendSubmissionToInboxRequest.SubmissionId
+- uid: MegaForm.Sdk.SendSubmissionToInboxRequest.TargetUser*
+  commentId: Overload:MegaForm.Sdk.SendSubmissionToInboxRequest.TargetUser
+  href: MegaForm.Sdk.SendSubmissionToInboxRequest.html#MegaForm_Sdk_SendSubmissionToInboxRequest_TargetUser
+  name: TargetUser
+  nameWithType: SendSubmissionToInboxRequest.TargetUser
+  fullName: MegaForm.Sdk.SendSubmissionToInboxRequest.TargetUser
+- uid: System.String
+  commentId: T:System.String
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.string
+  name: string
+  nameWithType: string
+  fullName: string
+  nameWithType.vb: String
+  fullName.vb: String
+  name.vb: String
+- uid: MegaForm.Sdk.SendSubmissionToInboxRequest.Title*
+  commentId: Overload:MegaForm.Sdk.SendSubmissionToInboxRequest.Title
+  href: MegaForm.Sdk.SendSubmissionToInboxRequest.html#MegaForm_Sdk_SendSubmissionToInboxRequest_Title
+  name: Title
+  nameWithType: SendSubmissionToInboxRequest.Title
+  fullName: MegaForm.Sdk.SendSubmissionToInboxRequest.Title
+- uid: MegaForm.Sdk.SendSubmissionToInboxRequest.Comment*
+  commentId: Overload:MegaForm.Sdk.SendSubmissionToInboxRequest.Comment
+  href: MegaForm.Sdk.SendSubmissionToInboxRequest.html#MegaForm_Sdk_SendSubmissionToInboxRequest_Comment
+  name: Comment
+  nameWithType: SendSubmissionToInboxRequest.Comment
+  fullName: MegaForm.Sdk.SendSubmissionToInboxRequest.Comment

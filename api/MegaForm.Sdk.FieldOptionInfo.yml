@@ -16,9 +16,13 @@ items:
   fullName: MegaForm.Sdk.FieldOptionInfo
   type: Class
   source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: FieldOptionInfo
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 314
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 592
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -48,9 +52,13 @@ items:
   fullName: MegaForm.Sdk.FieldOptionInfo.Label
   type: Property
   source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: Label
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 317
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 595
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -75,9 +83,13 @@ items:
   fullName: MegaForm.Sdk.FieldOptionInfo.Value
   type: Property
   source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: Value
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 320
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 598
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -102,9 +114,13 @@ items:
   fullName: MegaForm.Sdk.FieldOptionInfo.Selected
   type: Property
   source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: Selected
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 323
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 601
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk

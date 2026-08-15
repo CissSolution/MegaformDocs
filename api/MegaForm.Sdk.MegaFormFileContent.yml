@@ -16,9 +16,13 @@ items:
   fullName: MegaForm.Sdk.MegaFormFileContent
   type: Class
   source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: MegaFormFileContent
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 150
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 174
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -48,9 +52,13 @@ items:
   fullName: MegaForm.Sdk.MegaFormFileContent.FileName
   type: Property
   source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: FileName
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 153
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 177
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -75,9 +83,13 @@ items:
   fullName: MegaForm.Sdk.MegaFormFileContent.ContentType
   type: Property
   source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: ContentType
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 156
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 180
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk
@@ -102,9 +114,13 @@ items:
   fullName: MegaForm.Sdk.MegaFormFileContent.Content
   type: Property
   source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: Content
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
-    startLine: 159
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 183
   assemblies:
   - MegaForm.Sdk
   namespace: MegaForm.Sdk

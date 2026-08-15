@@ -185,8 +185,8 @@ public class SdkDemoController : DnnApiController
     public async Task<HttpResponseMessage> Download(int submissionId, int fileId)
     {
         var scope   = new MegaFormScope { PortalId = PortalSettings.PortalId };
-        var content = await DnnServiceLocator.Instance.Mega.Files
-            .OpenAsync(submissionId, fileId, scope);
+        var content = await MegaFormSdk.RunAsync(c =>
+            c.Files.OpenAsync(submissionId, fileId, scope));
         if (content is null) return Request.CreateResponse(HttpStatusCode.NotFound);
 
         var resp = new HttpResponseMessage(HttpStatusCode.OK)

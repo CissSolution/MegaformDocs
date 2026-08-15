@@ -5,8 +5,16 @@ items:
   id: MegaFormScope
   parent: MegaForm.Sdk
   children:
+  - MegaForm.Sdk.MegaFormScope.DisplayName
+  - MegaForm.Sdk.MegaFormScope.IpAddress
+  - MegaForm.Sdk.MegaFormScope.IsAdmin
+  - MegaForm.Sdk.MegaFormScope.IsAuthenticated
+  - MegaForm.Sdk.MegaFormScope.IsSuperUser
   - MegaForm.Sdk.MegaFormScope.PortalId
+  - MegaForm.Sdk.MegaFormScope.Roles
+  - MegaForm.Sdk.MegaFormScope.UserEmail
   - MegaForm.Sdk.MegaFormScope.UserId
+  - MegaForm.Sdk.MegaFormScope.UserName
   langs:
   - csharp
   - vb
@@ -15,8 +23,12 @@ items:
   fullName: MegaForm.Sdk.MegaFormScope
   type: Class
   source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: MegaFormScope
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
+    path: ../../MegaForm.Sdk/Dtos.cs
     startLine: 11
   assemblies:
   - MegaForm.Sdk
@@ -54,8 +66,12 @@ items:
   fullName: MegaForm.Sdk.MegaFormScope.PortalId
   type: Property
   source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: PortalId
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
+    path: ../../MegaForm.Sdk/Dtos.cs
     startLine: 14
   assemblies:
   - MegaForm.Sdk
@@ -81,8 +97,12 @@ items:
   fullName: MegaForm.Sdk.MegaFormScope.UserId
   type: Property
   source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
     id: UserId
-    path: e:\DNNDEFENDER AND AI DESIGNES\AI DESIGNES\MegaFormSolution_280_Oqtane_um\MegaForm.Sdk\Dtos.cs
+    path: ../../MegaForm.Sdk/Dtos.cs
     startLine: 17
   assemblies:
   - MegaForm.Sdk
@@ -96,6 +116,254 @@ items:
       type: System.Int32
     content.vb: Public Property UserId As Integer
   overload: MegaForm.Sdk.MegaFormScope.UserId*
+- uid: MegaForm.Sdk.MegaFormScope.UserName
+  commentId: P:MegaForm.Sdk.MegaFormScope.UserName
+  id: UserName
+  parent: MegaForm.Sdk.MegaFormScope
+  langs:
+  - csharp
+  - vb
+  name: UserName
+  nameWithType: MegaFormScope.UserName
+  fullName: MegaForm.Sdk.MegaFormScope.UserName
+  type: Property
+  source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: UserName
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 20
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  summary: Acting username, used by workflow inbox matching when available.
+  example: []
+  syntax:
+    content: public string? UserName { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property UserName As String
+  overload: MegaForm.Sdk.MegaFormScope.UserName*
+- uid: MegaForm.Sdk.MegaFormScope.DisplayName
+  commentId: P:MegaForm.Sdk.MegaFormScope.DisplayName
+  id: DisplayName
+  parent: MegaForm.Sdk.MegaFormScope
+  langs:
+  - csharp
+  - vb
+  name: DisplayName
+  nameWithType: MegaFormScope.DisplayName
+  fullName: MegaForm.Sdk.MegaFormScope.DisplayName
+  type: Property
+  source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: DisplayName
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 23
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  summary: Display name for audit/inbox operations when available.
+  example: []
+  syntax:
+    content: public string? DisplayName { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property DisplayName As String
+  overload: MegaForm.Sdk.MegaFormScope.DisplayName*
+- uid: MegaForm.Sdk.MegaFormScope.UserEmail
+  commentId: P:MegaForm.Sdk.MegaFormScope.UserEmail
+  id: UserEmail
+  parent: MegaForm.Sdk.MegaFormScope
+  langs:
+  - csharp
+  - vb
+  name: UserEmail
+  nameWithType: MegaFormScope.UserEmail
+  fullName: MegaForm.Sdk.MegaFormScope.UserEmail
+  type: Property
+  source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: UserEmail
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 26
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  summary: Acting user's email address when available.
+  example: []
+  syntax:
+    content: public string? UserEmail { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property UserEmail As String
+  overload: MegaForm.Sdk.MegaFormScope.UserEmail*
+- uid: MegaForm.Sdk.MegaFormScope.IsAuthenticated
+  commentId: P:MegaForm.Sdk.MegaFormScope.IsAuthenticated
+  id: IsAuthenticated
+  parent: MegaForm.Sdk.MegaFormScope
+  langs:
+  - csharp
+  - vb
+  name: IsAuthenticated
+  nameWithType: MegaFormScope.IsAuthenticated
+  fullName: MegaForm.Sdk.MegaFormScope.IsAuthenticated
+  type: Property
+  source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: IsAuthenticated
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 29
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  summary: Whether the actor is authenticated. Defaults from <xref href="MegaForm.Sdk.MegaFormScope.UserId" data-throw-if-not-resolved="false"></xref> when unset.
+  example: []
+  syntax:
+    content: public bool? IsAuthenticated { get; set; }
+    parameters: []
+    return:
+      type: System.Nullable{System.Boolean}
+    content.vb: Public Property IsAuthenticated As Boolean?
+  overload: MegaForm.Sdk.MegaFormScope.IsAuthenticated*
+- uid: MegaForm.Sdk.MegaFormScope.IsAdmin
+  commentId: P:MegaForm.Sdk.MegaFormScope.IsAdmin
+  id: IsAdmin
+  parent: MegaForm.Sdk.MegaFormScope
+  langs:
+  - csharp
+  - vb
+  name: IsAdmin
+  nameWithType: MegaFormScope.IsAdmin
+  fullName: MegaForm.Sdk.MegaFormScope.IsAdmin
+  type: Property
+  source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: IsAdmin
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 32
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  summary: Whether the actor should be treated as a site administrator.
+  example: []
+  syntax:
+    content: public bool? IsAdmin { get; set; }
+    parameters: []
+    return:
+      type: System.Nullable{System.Boolean}
+    content.vb: Public Property IsAdmin As Boolean?
+  overload: MegaForm.Sdk.MegaFormScope.IsAdmin*
+- uid: MegaForm.Sdk.MegaFormScope.IsSuperUser
+  commentId: P:MegaForm.Sdk.MegaFormScope.IsSuperUser
+  id: IsSuperUser
+  parent: MegaForm.Sdk.MegaFormScope
+  langs:
+  - csharp
+  - vb
+  name: IsSuperUser
+  nameWithType: MegaFormScope.IsSuperUser
+  fullName: MegaForm.Sdk.MegaFormScope.IsSuperUser
+  type: Property
+  source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: IsSuperUser
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 35
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  summary: Whether the actor should be treated as a host/super user.
+  example: []
+  syntax:
+    content: public bool? IsSuperUser { get; set; }
+    parameters: []
+    return:
+      type: System.Nullable{System.Boolean}
+    content.vb: Public Property IsSuperUser As Boolean?
+  overload: MegaForm.Sdk.MegaFormScope.IsSuperUser*
+- uid: MegaForm.Sdk.MegaFormScope.Roles
+  commentId: P:MegaForm.Sdk.MegaFormScope.Roles
+  id: Roles
+  parent: MegaForm.Sdk.MegaFormScope
+  langs:
+  - csharp
+  - vb
+  name: Roles
+  nameWithType: MegaFormScope.Roles
+  fullName: MegaForm.Sdk.MegaFormScope.Roles
+  type: Property
+  source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: Roles
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 38
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  summary: Role names used by workflow role-queue matching.
+  example: []
+  syntax:
+    content: public List<string> Roles { get; set; }
+    parameters: []
+    return:
+      type: System.Collections.Generic.List{System.String}
+    content.vb: Public Property Roles As List(Of String)
+  overload: MegaForm.Sdk.MegaFormScope.Roles*
+- uid: MegaForm.Sdk.MegaFormScope.IpAddress
+  commentId: P:MegaForm.Sdk.MegaFormScope.IpAddress
+  id: IpAddress
+  parent: MegaForm.Sdk.MegaFormScope
+  langs:
+  - csharp
+  - vb
+  name: IpAddress
+  nameWithType: MegaFormScope.IpAddress
+  fullName: MegaForm.Sdk.MegaFormScope.IpAddress
+  type: Property
+  source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: IpAddress
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 41
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  summary: Optional client IP for audit-oriented operations.
+  example: []
+  syntax:
+    content: public string? IpAddress { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property IpAddress As String
+  overload: MegaForm.Sdk.MegaFormScope.IpAddress*
 references:
 - uid: MegaForm.Sdk
   commentId: N:MegaForm.Sdk
@@ -355,3 +623,219 @@ references:
   name: UserId
   nameWithType: MegaFormScope.UserId
   fullName: MegaForm.Sdk.MegaFormScope.UserId
+- uid: MegaForm.Sdk.MegaFormScope.UserName*
+  commentId: Overload:MegaForm.Sdk.MegaFormScope.UserName
+  href: MegaForm.Sdk.MegaFormScope.html#MegaForm_Sdk_MegaFormScope_UserName
+  name: UserName
+  nameWithType: MegaFormScope.UserName
+  fullName: MegaForm.Sdk.MegaFormScope.UserName
+- uid: System.String
+  commentId: T:System.String
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.string
+  name: string
+  nameWithType: string
+  fullName: string
+  nameWithType.vb: String
+  fullName.vb: String
+  name.vb: String
+- uid: MegaForm.Sdk.MegaFormScope.DisplayName*
+  commentId: Overload:MegaForm.Sdk.MegaFormScope.DisplayName
+  href: MegaForm.Sdk.MegaFormScope.html#MegaForm_Sdk_MegaFormScope_DisplayName
+  name: DisplayName
+  nameWithType: MegaFormScope.DisplayName
+  fullName: MegaForm.Sdk.MegaFormScope.DisplayName
+- uid: MegaForm.Sdk.MegaFormScope.UserEmail*
+  commentId: Overload:MegaForm.Sdk.MegaFormScope.UserEmail
+  href: MegaForm.Sdk.MegaFormScope.html#MegaForm_Sdk_MegaFormScope_UserEmail
+  name: UserEmail
+  nameWithType: MegaFormScope.UserEmail
+  fullName: MegaForm.Sdk.MegaFormScope.UserEmail
+- uid: MegaForm.Sdk.MegaFormScope.UserId
+  commentId: P:MegaForm.Sdk.MegaFormScope.UserId
+  href: MegaForm.Sdk.MegaFormScope.html#MegaForm_Sdk_MegaFormScope_UserId
+  name: UserId
+  nameWithType: MegaFormScope.UserId
+  fullName: MegaForm.Sdk.MegaFormScope.UserId
+- uid: MegaForm.Sdk.MegaFormScope.IsAuthenticated*
+  commentId: Overload:MegaForm.Sdk.MegaFormScope.IsAuthenticated
+  href: MegaForm.Sdk.MegaFormScope.html#MegaForm_Sdk_MegaFormScope_IsAuthenticated
+  name: IsAuthenticated
+  nameWithType: MegaFormScope.IsAuthenticated
+  fullName: MegaForm.Sdk.MegaFormScope.IsAuthenticated
+- uid: System.Nullable{System.Boolean}
+  commentId: T:System.Nullable{System.Boolean}
+  parent: System
+  definition: System.Nullable`1
+  href: https://learn.microsoft.com/dotnet/api/system.boolean
+  name: bool?
+  nameWithType: bool?
+  fullName: bool?
+  nameWithType.vb: Boolean?
+  fullName.vb: Boolean?
+  name.vb: Boolean?
+  spec.csharp:
+  - uid: System.Boolean
+    name: bool
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.boolean
+  - name: '?'
+  spec.vb:
+  - uid: System.Boolean
+    name: Boolean
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.boolean
+  - name: '?'
+- uid: System.Nullable`1
+  commentId: T:System.Nullable`1
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.nullable-1
+  name: Nullable<T>
+  nameWithType: Nullable<T>
+  fullName: System.Nullable<T>
+  nameWithType.vb: Nullable(Of T)
+  fullName.vb: System.Nullable(Of T)
+  name.vb: Nullable(Of T)
+  spec.csharp:
+  - uid: System.Nullable`1
+    name: Nullable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.nullable-1
+  - name: <
+  - name: T
+  - name: '>'
+  spec.vb:
+  - uid: System.Nullable`1
+    name: Nullable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.nullable-1
+  - name: (
+  - name: Of
+  - name: " "
+  - name: T
+  - name: )
+- uid: MegaForm.Sdk.MegaFormScope.IsAdmin*
+  commentId: Overload:MegaForm.Sdk.MegaFormScope.IsAdmin
+  href: MegaForm.Sdk.MegaFormScope.html#MegaForm_Sdk_MegaFormScope_IsAdmin
+  name: IsAdmin
+  nameWithType: MegaFormScope.IsAdmin
+  fullName: MegaForm.Sdk.MegaFormScope.IsAdmin
+- uid: MegaForm.Sdk.MegaFormScope.IsSuperUser*
+  commentId: Overload:MegaForm.Sdk.MegaFormScope.IsSuperUser
+  href: MegaForm.Sdk.MegaFormScope.html#MegaForm_Sdk_MegaFormScope_IsSuperUser
+  name: IsSuperUser
+  nameWithType: MegaFormScope.IsSuperUser
+  fullName: MegaForm.Sdk.MegaFormScope.IsSuperUser
+- uid: MegaForm.Sdk.MegaFormScope.Roles*
+  commentId: Overload:MegaForm.Sdk.MegaFormScope.Roles
+  href: MegaForm.Sdk.MegaFormScope.html#MegaForm_Sdk_MegaFormScope_Roles
+  name: Roles
+  nameWithType: MegaFormScope.Roles
+  fullName: MegaForm.Sdk.MegaFormScope.Roles
+- uid: System.Collections.Generic.List{System.String}
+  commentId: T:System.Collections.Generic.List{System.String}
+  parent: System.Collections.Generic
+  definition: System.Collections.Generic.List`1
+  href: https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1
+  name: List<string>
+  nameWithType: List<string>
+  fullName: System.Collections.Generic.List<string>
+  nameWithType.vb: List(Of String)
+  fullName.vb: System.Collections.Generic.List(Of String)
+  name.vb: List(Of String)
+  spec.csharp:
+  - uid: System.Collections.Generic.List`1
+    name: List
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1
+  - name: <
+  - uid: System.String
+    name: string
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: '>'
+  spec.vb:
+  - uid: System.Collections.Generic.List`1
+    name: List
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1
+  - name: (
+  - name: Of
+  - name: " "
+  - uid: System.String
+    name: String
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.string
+  - name: )
+- uid: System.Collections.Generic.List`1
+  commentId: T:System.Collections.Generic.List`1
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1
+  name: List<T>
+  nameWithType: List<T>
+  fullName: System.Collections.Generic.List<T>
+  nameWithType.vb: List(Of T)
+  fullName.vb: System.Collections.Generic.List(Of T)
+  name.vb: List(Of T)
+  spec.csharp:
+  - uid: System.Collections.Generic.List`1
+    name: List
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1
+  - name: <
+  - name: T
+  - name: '>'
+  spec.vb:
+  - uid: System.Collections.Generic.List`1
+    name: List
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic.list-1
+  - name: (
+  - name: Of
+  - name: " "
+  - name: T
+  - name: )
+- uid: System.Collections.Generic
+  commentId: N:System.Collections.Generic
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System.Collections.Generic
+  nameWithType: System.Collections.Generic
+  fullName: System.Collections.Generic
+  spec.csharp:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Collections
+    name: Collections
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections
+  - name: .
+  - uid: System.Collections.Generic
+    name: Generic
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic
+  spec.vb:
+  - uid: System
+    name: System
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system
+  - name: .
+  - uid: System.Collections
+    name: Collections
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections
+  - name: .
+  - uid: System.Collections.Generic
+    name: Generic
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.collections.generic
+- uid: MegaForm.Sdk.MegaFormScope.IpAddress*
+  commentId: Overload:MegaForm.Sdk.MegaFormScope.IpAddress
+  href: MegaForm.Sdk.MegaFormScope.html#MegaForm_Sdk_MegaFormScope_IpAddress
+  name: IpAddress
+  nameWithType: MegaFormScope.IpAddress
+  fullName: MegaForm.Sdk.MegaFormScope.IpAddress

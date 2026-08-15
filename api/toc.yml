@@ -7,6 +7,15 @@ items:
   - uid: MegaForm.Sdk.CreateFormRequest
     name: CreateFormRequest
     type: Class
+  - uid: MegaForm.Sdk.DashboardFormSummaryDto
+    name: DashboardFormSummaryDto
+    type: Class
+  - uid: MegaForm.Sdk.DashboardOverviewDto
+    name: DashboardOverviewDto
+    type: Class
+  - uid: MegaForm.Sdk.DashboardQuery
+    name: DashboardQuery
+    type: Class
   - uid: MegaForm.Sdk.FieldOptionInfo
     name: FieldOptionInfo
     type: Class
@@ -28,11 +37,17 @@ items:
   - uid: MegaForm.Sdk.FormSchemaInfo
     name: FormSchemaInfo
     type: Class
+  - uid: MegaForm.Sdk.IDashboardApi
+    name: IDashboardApi
+    type: Interface
   - uid: MegaForm.Sdk.IFileApi
     name: IFileApi
     type: Interface
   - uid: MegaForm.Sdk.IFormApi
     name: IFormApi
+    type: Interface
+  - uid: MegaForm.Sdk.IInboxApi
+    name: IInboxApi
     type: Interface
   - uid: MegaForm.Sdk.IMegaFormClient
     name: IMegaFormClient
@@ -43,6 +58,42 @@ items:
   - uid: MegaForm.Sdk.ISubmissionApi
     name: ISubmissionApi
     type: Interface
+  - uid: MegaForm.Sdk.ISubmissionDashboardApi
+    name: ISubmissionDashboardApi
+    type: Interface
+  - uid: MegaForm.Sdk.InboxBoardDto
+    name: InboxBoardDto
+    type: Class
+  - uid: MegaForm.Sdk.InboxFileAttachmentRequest
+    name: InboxFileAttachmentRequest
+    type: Class
+  - uid: MegaForm.Sdk.InboxFileAttachmentResultDto
+    name: InboxFileAttachmentResultDto
+    type: Class
+  - uid: MegaForm.Sdk.InboxKpiDto
+    name: InboxKpiDto
+    type: Class
+  - uid: MegaForm.Sdk.InboxQuery
+    name: InboxQuery
+    type: Class
+  - uid: MegaForm.Sdk.InboxSendSubmissionResultDto
+    name: InboxSendSubmissionResultDto
+    type: Class
+  - uid: MegaForm.Sdk.InboxTaskActionDto
+    name: InboxTaskActionDto
+    type: Class
+  - uid: MegaForm.Sdk.InboxTaskActionRequest
+    name: InboxTaskActionRequest
+    type: Class
+  - uid: MegaForm.Sdk.InboxTaskDto
+    name: InboxTaskDto
+    type: Class
+  - uid: MegaForm.Sdk.InboxTaskResultDto
+    name: InboxTaskResultDto
+    type: Class
+  - uid: MegaForm.Sdk.InboxUserDto
+    name: InboxUserDto
+    type: Class
   - uid: MegaForm.Sdk.MegaFormClient
     name: MegaFormClient
     type: Class
@@ -61,11 +112,32 @@ items:
   - uid: MegaForm.Sdk.PagedResult`1
     name: PagedResult<T>
     type: Class
+  - uid: MegaForm.Sdk.SendSubmissionToInboxRequest
+    name: SendSubmissionToInboxRequest
+    type: Class
+  - uid: MegaForm.Sdk.SubmissionDetailDto
+    name: SubmissionDetailDto
+    type: Class
   - uid: MegaForm.Sdk.SubmissionDto
     name: SubmissionDto
     type: Class
+  - uid: MegaForm.Sdk.SubmissionFieldSnapshotDto
+    name: SubmissionFieldSnapshotDto
+    type: Class
+  - uid: MegaForm.Sdk.SubmissionListItemDto
+    name: SubmissionListItemDto
+    type: Class
   - uid: MegaForm.Sdk.SubmissionQuery
     name: SubmissionQuery
+    type: Class
+  - uid: MegaForm.Sdk.SubmissionSearchQuery
+    name: SubmissionSearchQuery
+    type: Class
+  - uid: MegaForm.Sdk.SubmissionValueDto
+    name: SubmissionValueDto
+    type: Class
+  - uid: MegaForm.Sdk.SubmissionWorkflowSummaryDto
+    name: SubmissionWorkflowSummaryDto
     type: Class
   - uid: MegaForm.Sdk.SubmitResult
     name: SubmitResult

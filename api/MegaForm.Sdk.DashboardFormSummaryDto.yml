@@ -1,0 +1,564 @@
+### YamlMime:ManagedReference
+items:
+- uid: MegaForm.Sdk.DashboardFormSummaryDto
+  commentId: T:MegaForm.Sdk.DashboardFormSummaryDto
+  id: DashboardFormSummaryDto
+  parent: MegaForm.Sdk
+  children:
+  - MegaForm.Sdk.DashboardFormSummaryDto.CreatedOnUtc
+  - MegaForm.Sdk.DashboardFormSummaryDto.FormId
+  - MegaForm.Sdk.DashboardFormSummaryDto.RecentSubmissionCount
+  - MegaForm.Sdk.DashboardFormSummaryDto.Status
+  - MegaForm.Sdk.DashboardFormSummaryDto.SubmissionCount
+  - MegaForm.Sdk.DashboardFormSummaryDto.Title
+  langs:
+  - csharp
+  - vb
+  name: DashboardFormSummaryDto
+  nameWithType: DashboardFormSummaryDto
+  fullName: MegaForm.Sdk.DashboardFormSummaryDto
+  type: Class
+  source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: DashboardFormSummaryDto
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 286
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  summary: One form row for dashboard overview UIs.
+  example: []
+  syntax:
+    content: public sealed class DashboardFormSummaryDto
+    content.vb: Public NotInheritable Class DashboardFormSummaryDto
+  inheritance:
+  - System.Object
+  inheritedMembers:
+  - System.Object.Equals(System.Object)
+  - System.Object.Equals(System.Object,System.Object)
+  - System.Object.GetHashCode
+  - System.Object.GetType
+  - System.Object.ReferenceEquals(System.Object,System.Object)
+  - System.Object.ToString
+- uid: MegaForm.Sdk.DashboardFormSummaryDto.FormId
+  commentId: P:MegaForm.Sdk.DashboardFormSummaryDto.FormId
+  id: FormId
+  parent: MegaForm.Sdk.DashboardFormSummaryDto
+  langs:
+  - csharp
+  - vb
+  name: FormId
+  nameWithType: DashboardFormSummaryDto.FormId
+  fullName: MegaForm.Sdk.DashboardFormSummaryDto.FormId
+  type: Property
+  source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: FormId
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 288
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public int FormId { get; set; }
+    parameters: []
+    return:
+      type: System.Int32
+    content.vb: Public Property FormId As Integer
+  overload: MegaForm.Sdk.DashboardFormSummaryDto.FormId*
+- uid: MegaForm.Sdk.DashboardFormSummaryDto.Title
+  commentId: P:MegaForm.Sdk.DashboardFormSummaryDto.Title
+  id: Title
+  parent: MegaForm.Sdk.DashboardFormSummaryDto
+  langs:
+  - csharp
+  - vb
+  name: Title
+  nameWithType: DashboardFormSummaryDto.Title
+  fullName: MegaForm.Sdk.DashboardFormSummaryDto.Title
+  type: Property
+  source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: Title
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 289
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public string? Title { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property Title As String
+  overload: MegaForm.Sdk.DashboardFormSummaryDto.Title*
+- uid: MegaForm.Sdk.DashboardFormSummaryDto.Status
+  commentId: P:MegaForm.Sdk.DashboardFormSummaryDto.Status
+  id: Status
+  parent: MegaForm.Sdk.DashboardFormSummaryDto
+  langs:
+  - csharp
+  - vb
+  name: Status
+  nameWithType: DashboardFormSummaryDto.Status
+  fullName: MegaForm.Sdk.DashboardFormSummaryDto.Status
+  type: Property
+  source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: Status
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 290
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public string? Status { get; set; }
+    parameters: []
+    return:
+      type: System.String
+    content.vb: Public Property Status As String
+  overload: MegaForm.Sdk.DashboardFormSummaryDto.Status*
+- uid: MegaForm.Sdk.DashboardFormSummaryDto.CreatedOnUtc
+  commentId: P:MegaForm.Sdk.DashboardFormSummaryDto.CreatedOnUtc
+  id: CreatedOnUtc
+  parent: MegaForm.Sdk.DashboardFormSummaryDto
+  langs:
+  - csharp
+  - vb
+  name: CreatedOnUtc
+  nameWithType: DashboardFormSummaryDto.CreatedOnUtc
+  fullName: MegaForm.Sdk.DashboardFormSummaryDto.CreatedOnUtc
+  type: Property
+  source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: CreatedOnUtc
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 291
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public DateTime? CreatedOnUtc { get; set; }
+    parameters: []
+    return:
+      type: System.Nullable{System.DateTime}
+    content.vb: Public Property CreatedOnUtc As Date?
+  overload: MegaForm.Sdk.DashboardFormSummaryDto.CreatedOnUtc*
+- uid: MegaForm.Sdk.DashboardFormSummaryDto.SubmissionCount
+  commentId: P:MegaForm.Sdk.DashboardFormSummaryDto.SubmissionCount
+  id: SubmissionCount
+  parent: MegaForm.Sdk.DashboardFormSummaryDto
+  langs:
+  - csharp
+  - vb
+  name: SubmissionCount
+  nameWithType: DashboardFormSummaryDto.SubmissionCount
+  fullName: MegaForm.Sdk.DashboardFormSummaryDto.SubmissionCount
+  type: Property
+  source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: SubmissionCount
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 292
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public int SubmissionCount { get; set; }
+    parameters: []
+    return:
+      type: System.Int32
+    content.vb: Public Property SubmissionCount As Integer
+  overload: MegaForm.Sdk.DashboardFormSummaryDto.SubmissionCount*
+- uid: MegaForm.Sdk.DashboardFormSummaryDto.RecentSubmissionCount
+  commentId: P:MegaForm.Sdk.DashboardFormSummaryDto.RecentSubmissionCount
+  id: RecentSubmissionCount
+  parent: MegaForm.Sdk.DashboardFormSummaryDto
+  langs:
+  - csharp
+  - vb
+  name: RecentSubmissionCount
+  nameWithType: DashboardFormSummaryDto.RecentSubmissionCount
+  fullName: MegaForm.Sdk.DashboardFormSummaryDto.RecentSubmissionCount
+  type: Property
+  source:
+    remote:
+      path: MegaForm.Sdk/Dtos.cs
+      branch: feat/theme-designer-picker-wizard-gallery-1.7.45
+      repo: https://github.com/CissSolution/MegaformDocs.git
+    id: RecentSubmissionCount
+    path: ../../MegaForm.Sdk/Dtos.cs
+    startLine: 293
+  assemblies:
+  - MegaForm.Sdk
+  namespace: MegaForm.Sdk
+  syntax:
+    content: public int RecentSubmissionCount { get; set; }
+    parameters: []
+    return:
+      type: System.Int32
+    content.vb: Public Property RecentSubmissionCount As Integer
+  overload: MegaForm.Sdk.DashboardFormSummaryDto.RecentSubmissionCount*
+references:
+- uid: MegaForm.Sdk
+  commentId: N:MegaForm.Sdk
+  href: MegaForm.html
+  name: MegaForm.Sdk
+  nameWithType: MegaForm.Sdk
+  fullName: MegaForm.Sdk
+  spec.csharp:
+  - uid: MegaForm
+    name: MegaForm
+    href: MegaForm.html
+  - name: .
+  - uid: MegaForm.Sdk
+    name: Sdk
+    href: MegaForm.Sdk.html
+  spec.vb:
+  - uid: MegaForm
+    name: MegaForm
+    href: MegaForm.html
+  - name: .
+  - uid: MegaForm.Sdk
+    name: Sdk
+    href: MegaForm.Sdk.html
+- uid: System.Object
+  commentId: T:System.Object
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object
+  name: object
+  nameWithType: object
+  fullName: object
+  nameWithType.vb: Object
+  fullName.vb: Object
+  name.vb: Object
+- uid: System.Object.Equals(System.Object)
+  commentId: M:System.Object.Equals(System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  name: Equals(object)
+  nameWithType: object.Equals(object)
+  fullName: object.Equals(object)
+  nameWithType.vb: Object.Equals(Object)
+  fullName.vb: Object.Equals(Object)
+  name.vb: Equals(Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.Equals(System.Object,System.Object)
+  commentId: M:System.Object.Equals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  name: Equals(object, object)
+  nameWithType: object.Equals(object, object)
+  fullName: object.Equals(object, object)
+  nameWithType.vb: Object.Equals(Object, Object)
+  fullName.vb: Object.Equals(Object, Object)
+  name.vb: Equals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.Equals(System.Object,System.Object)
+    name: Equals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.GetHashCode
+  commentId: M:System.Object.GetHashCode
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  name: GetHashCode()
+  nameWithType: object.GetHashCode()
+  fullName: object.GetHashCode()
+  nameWithType.vb: Object.GetHashCode()
+  fullName.vb: Object.GetHashCode()
+  spec.csharp:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetHashCode
+    name: GetHashCode
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gethashcode
+  - name: (
+  - name: )
+- uid: System.Object.GetType
+  commentId: M:System.Object.GetType
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  name: GetType()
+  nameWithType: object.GetType()
+  fullName: object.GetType()
+  nameWithType.vb: Object.GetType()
+  fullName.vb: Object.GetType()
+  spec.csharp:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.GetType
+    name: GetType
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.gettype
+  - name: (
+  - name: )
+- uid: System.Object.ReferenceEquals(System.Object,System.Object)
+  commentId: M:System.Object.ReferenceEquals(System.Object,System.Object)
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  name: ReferenceEquals(object, object)
+  nameWithType: object.ReferenceEquals(object, object)
+  fullName: object.ReferenceEquals(object, object)
+  nameWithType.vb: Object.ReferenceEquals(Object, Object)
+  fullName.vb: Object.ReferenceEquals(Object, Object)
+  name.vb: ReferenceEquals(Object, Object)
+  spec.csharp:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+  spec.vb:
+  - uid: System.Object.ReferenceEquals(System.Object,System.Object)
+    name: ReferenceEquals
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.referenceequals
+  - name: (
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: ','
+  - name: " "
+  - uid: System.Object
+    name: Object
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object
+  - name: )
+- uid: System.Object.ToString
+  commentId: M:System.Object.ToString
+  parent: System.Object
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  name: ToString()
+  nameWithType: object.ToString()
+  fullName: object.ToString()
+  nameWithType.vb: Object.ToString()
+  fullName.vb: Object.ToString()
+  spec.csharp:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+  spec.vb:
+  - uid: System.Object.ToString
+    name: ToString
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.object.tostring
+  - name: (
+  - name: )
+- uid: System
+  commentId: N:System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system
+  name: System
+  nameWithType: System
+  fullName: System
+- uid: MegaForm.Sdk.DashboardFormSummaryDto.FormId*
+  commentId: Overload:MegaForm.Sdk.DashboardFormSummaryDto.FormId
+  href: MegaForm.Sdk.DashboardFormSummaryDto.html#MegaForm_Sdk_DashboardFormSummaryDto_FormId
+  name: FormId
+  nameWithType: DashboardFormSummaryDto.FormId
+  fullName: MegaForm.Sdk.DashboardFormSummaryDto.FormId
+- uid: System.Int32
+  commentId: T:System.Int32
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.int32
+  name: int
+  nameWithType: int
+  fullName: int
+  nameWithType.vb: Integer
+  fullName.vb: Integer
+  name.vb: Integer
+- uid: MegaForm.Sdk.DashboardFormSummaryDto.Title*
+  commentId: Overload:MegaForm.Sdk.DashboardFormSummaryDto.Title
+  href: MegaForm.Sdk.DashboardFormSummaryDto.html#MegaForm_Sdk_DashboardFormSummaryDto_Title
+  name: Title
+  nameWithType: DashboardFormSummaryDto.Title
+  fullName: MegaForm.Sdk.DashboardFormSummaryDto.Title
+- uid: System.String
+  commentId: T:System.String
+  parent: System
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.string
+  name: string
+  nameWithType: string
+  fullName: string
+  nameWithType.vb: String
+  fullName.vb: String
+  name.vb: String
+- uid: MegaForm.Sdk.DashboardFormSummaryDto.Status*
+  commentId: Overload:MegaForm.Sdk.DashboardFormSummaryDto.Status
+  href: MegaForm.Sdk.DashboardFormSummaryDto.html#MegaForm_Sdk_DashboardFormSummaryDto_Status
+  name: Status
+  nameWithType: DashboardFormSummaryDto.Status
+  fullName: MegaForm.Sdk.DashboardFormSummaryDto.Status
+- uid: MegaForm.Sdk.DashboardFormSummaryDto.CreatedOnUtc*
+  commentId: Overload:MegaForm.Sdk.DashboardFormSummaryDto.CreatedOnUtc
+  href: MegaForm.Sdk.DashboardFormSummaryDto.html#MegaForm_Sdk_DashboardFormSummaryDto_CreatedOnUtc
+  name: CreatedOnUtc
+  nameWithType: DashboardFormSummaryDto.CreatedOnUtc
+  fullName: MegaForm.Sdk.DashboardFormSummaryDto.CreatedOnUtc
+- uid: System.Nullable{System.DateTime}
+  commentId: T:System.Nullable{System.DateTime}
+  parent: System
+  definition: System.Nullable`1
+  href: https://learn.microsoft.com/dotnet/api/system.datetime
+  name: DateTime?
+  nameWithType: DateTime?
+  fullName: System.DateTime?
+  nameWithType.vb: Date?
+  fullName.vb: Date?
+  name.vb: Date?
+  spec.csharp:
+  - uid: System.DateTime
+    name: DateTime
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.datetime
+  - name: '?'
+  spec.vb:
+  - uid: System.DateTime
+    name: Date
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.datetime
+  - name: '?'
+- uid: System.Nullable`1
+  commentId: T:System.Nullable`1
+  isExternal: true
+  href: https://learn.microsoft.com/dotnet/api/system.nullable-1
+  name: Nullable<T>
+  nameWithType: Nullable<T>
+  fullName: System.Nullable<T>
+  nameWithType.vb: Nullable(Of T)
+  fullName.vb: System.Nullable(Of T)
+  name.vb: Nullable(Of T)
+  spec.csharp:
+  - uid: System.Nullable`1
+    name: Nullable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.nullable-1
+  - name: <
+  - name: T
+  - name: '>'
+  spec.vb:
+  - uid: System.Nullable`1
+    name: Nullable
+    isExternal: true
+    href: https://learn.microsoft.com/dotnet/api/system.nullable-1
+  - name: (
+  - name: Of
+  - name: " "
+  - name: T
+  - name: )
+- uid: MegaForm.Sdk.DashboardFormSummaryDto.SubmissionCount*
+  commentId: Overload:MegaForm.Sdk.DashboardFormSummaryDto.SubmissionCount
+  href: MegaForm.Sdk.DashboardFormSummaryDto.html#MegaForm_Sdk_DashboardFormSummaryDto_SubmissionCount
+  name: SubmissionCount
+  nameWithType: DashboardFormSummaryDto.SubmissionCount
+  fullName: MegaForm.Sdk.DashboardFormSummaryDto.SubmissionCount
+- uid: MegaForm.Sdk.DashboardFormSummaryDto.RecentSubmissionCount*
+  commentId: Overload:MegaForm.Sdk.DashboardFormSummaryDto.RecentSubmissionCount
+  href: MegaForm.Sdk.DashboardFormSummaryDto.html#MegaForm_Sdk_DashboardFormSummaryDto_RecentSubmissionCount
+  name: RecentSubmissionCount
+  nameWithType: DashboardFormSummaryDto.RecentSubmissionCount
+  fullName: MegaForm.Sdk.DashboardFormSummaryDto.RecentSubmissionCount

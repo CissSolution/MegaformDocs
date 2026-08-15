@@ -1,18 +1,73 @@
 {
+  "metadata": [
+    {
+      "src": [
+        {
+          "files": [
+            "MegaForm.Sdk/MegaForm.Sdk.csproj"
+          ],
+          "src": "../.."
+        }
+      ],
+      "dest": "api",
+      "outputFormat": "mref",
+      "properties": {
+        "TargetFramework": "net10.0"
+      },
+      "disableGitFeatures": false,
+      "disableDefaultFilter": false,
+      "namespaceLayout": "flattened",
+      "memberLayout": "samePage"
+    }
+  ],
   "build": {
     "content": [
-      { "files": [ "api/**.yml", "api/index.md" ] },
-      { "files": [ "articles/**.md", "articles/**/toc.yml", "toc.yml", "*.md" ] }
+      {
+        "files": [
+          "api/**.yml",
+          "api/index.md"
+        ]
+      },
+      {
+        "files": [
+          "articles/**.md",
+          "articles/**/toc.yml",
+          "toc.yml",
+          "*.md"
+        ],
+        "exclude": [
+          "articles/automation-fraud-check.md",
+          "articles/automation-field-encryption.md",
+          "articles/automation-realtime-pricing.md",
+          "articles/automation-approval-routing.md",
+          "articles/automation-documents.md",
+          "articles/automation-file-routing.md",
+          "articles/automation-queue.md"
+        ]
+      }
     ],
     "resource": [
-      { "files": [ "images/**" ] }
+      {
+        "files": [
+          "images/**"
+        ],
+        "exclude": [
+          "images/oqtane-sdk-download.png",
+          "images/oqtane-sdk-listview.png",
+          "images/31-webhook-crm.gif",
+          "images/33-bpmn-api-task.gif"
+        ]
+      }
     ],
     "output": "_site",
-    "template": [ "default", "modern" ],
+    "template": [
+      "default",
+      "modern"
+    ],
     "globalMetadata": {
       "_appName": "MegaForm",
       "_appTitle": "MegaForm Documentation",
-      "_appFooter": "MegaForm — forms, submissions, workflows & AI. © 2026 MegaForm.",
+      "_appFooter": "MegaForm \u2014 forms, submissions, workflows & AI. \u00a9 2026 MegaForm.",
       "_enableSearch": true,
       "_disableContribution": true,
       "pdf": false
