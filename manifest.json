@@ -1007,6 +1007,16 @@
     },
     {
       "type": "Conceptual",
+      "source_relative_path": "articles/oqtane-create-form.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/oqtane-create-form.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
       "source_relative_path": "articles/overview.md",
       "output": {
         ".html": {
@@ -1704,6 +1714,36 @@
       "output": {
         "resource": {
           "relative_path": "images/oq-as-respondent-email.png_"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/oq-create-01-admin-pane.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/oq-create-01-admin-pane.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/oq-create-02-wizard-setup.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/oq-create-02-wizard-setup.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/oq-create-03-add-to-page.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/oq-create-03-add-to-page.png"
         }
       },
       "version": ""

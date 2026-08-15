@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Create a form on Oqtane | MegaForm Documentation </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Create a form on Oqtane | MegaForm Documentation ">
+      
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/main/articles/oqtane-create-form.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="MegaForm">
+            MegaForm
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="create-a-form-on-oqtane">Create a form on Oqtane</h1>
+
+<p>The shortest path from a fresh Oqtane install to a form your visitors can fill in. Five steps in a
+wizard, then one dialog to choose where the form lives. No page editing, no module settings.</p>
+<h2 id="1-open-megaform-from-the-admin-area">1. Open MegaForm from the Admin area</h2>
+<p>Sign in as a host or admin and open <strong>Admin → MegaForm</strong>. The pane lists your forms and gives you
+the two buttons you need:</p>
+<p><img src="../images/oq-create-01-admin-pane.png" alt="The MegaForm pane in Oqtane's Admin area: Forms / Data / Templates / Settings tabs, with the Create Form and Full Dashboard buttons"></p>
+<p><strong>Create Form</strong> opens the wizard. <strong>Full Dashboard</strong> opens the complete MegaForm workspace (form
+list, submissions, inbox, languages) when you want more than form creation.</p>
+<h2 id="2-set-up--name-and-starting-point">2. Set up — name and starting point</h2>
+<p>The wizard runs in five steps: <strong>Setup → Fields → Workflow → Design → Publish</strong>.</p>
+<p>On Setup you choose what to start from — the full <strong>Template Gallery</strong>, an <strong>Import</strong> of a MegaForm
+export, one of the <strong>Quick start</strong> sets, or a blank form — and give the form its name.</p>
+<p><img src="../images/oq-create-02-wizard-setup.png" alt="Step 1 of the Form Wizard: template entry points, form name, category and quick-start cards, with a live preview on the right"></p>
+<p>Two things worth knowing:</p>
+<ul>
+<li><strong>Picking a template names the form for you.</strong> Choose <em>Contact Form</em> and the name box fills in
+with &quot;Contact Form&quot;. Change it whenever you like — once you type your own name, switching
+templates will not overwrite it.</li>
+<li><strong>A form needs a name before you can continue.</strong> <em>Continue</em> stays disabled until the name box has
+something in it, and tells you so next to the button.</li>
+</ul>
+<p>The panel on the right previews the form as you build it, including the field count and the access
+level you will end up with.</p>
+<h2 id="3-fields-workflow-design-publish">3. Fields, workflow, design, publish</h2>
+<ul>
+<li><strong>Fields</strong> — add fields from the palette, or keep the set the template brought. Turn on multi-step
+here if the form should be split across pages.</li>
+<li><strong>Workflow</strong> — optional approval chain. Skip it for a plain form; add approvers when a submission
+needs a decision before it counts.</li>
+<li><strong>Design</strong> — theme, colours, typography, corner radius.</li>
+<li><strong>Publish</strong> — who may submit (public, signed-in, or specific roles), whether to collect the
+submitter's email, whether to limit one response per person, and an optional closing date.</li>
+</ul>
+<p>Press <strong>Create Form</strong> on the last step. <strong>You land on the live form</strong>, on a page, exactly as a
+visitor will see it — not in the editor. To change something, use <strong>Edit</strong> on the form list, which
+opens the builder; publishing from the builder brings you back to the live form.</p>
+<h2 id="4-put-the-form-on-the-page-you-want">4. Put the form on the page you want</h2>
+<p>A new form is reachable at its own URL straight away. To place it on one of your site's pages, use
+<strong>Add To Page</strong> on the form list:</p>
+<p><img src="../images/oq-create-03-add-to-page.png" alt="The Add To Page dialog: a Page dropdown listing the site's pages, a Pane dropdown, and Cancel / Add to page buttons"></p>
+<ul>
+<li><strong>Page</strong> — every page on the site, plus <em>Create a new page…</em> if you would rather start a fresh one.
+When you open the dialog from a content page, that page is preselected.</li>
+<li><strong>Pane</strong> — where on the page the form goes. The list shows the panes that page actually uses,
+starting with <code>Default</code>.</li>
+</ul>
+<p>Press <strong>Add to page</strong> and the form is placed with the target page's own view permissions, so
+whoever can already see that page can see the form. The dialog then offers a link straight to it.</p>
+<h2 id="5-check-it-as-a-visitor">5. Check it as a visitor</h2>
+<p>Open the page in a private window, or sign out. You should see the form and its submit button. This
+is worth doing once: it is the only check that proves the form is visible to the people you meant,
+rather than only to you.</p>
+<p>Submissions arrive under <strong>Data → Submissions</strong> in the MegaForm pane, or in the Full Dashboard.</p>
+<h2 id="where-to-go-next">Where to go next</h2>
+<ul>
+<li><a href="form-builder.html">Form Builder</a> — the editor behind <strong>Edit</strong>, field by field.</li>
+<li><a href="form-templates.html">Form Templates</a> — what ships in the gallery and how to install more.</li>
+<li><a href="after-submission.html">After Submission</a> — confirmation message, redirect, notifications.</li>
+<li><a href="field-permissions.html">Field Permissions</a> — showing or hiding individual fields by role.</li>
+</ul>
+
+</article>
+
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          MegaForm — forms, submissions, workflows & AI. © 2026 MegaForm.
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
