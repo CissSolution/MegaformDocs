@@ -1,5 +1,7 @@
 - name: Using MegaForm on Oqtane
   items:
+    - name: Create a Form on Oqtane
+      href: oqtane-create-form.md
     - name: From a Blank Page to a Working Form
       href: add-to-page.md
     - name: Creating Forms
@@ -18,6 +20,8 @@
       href: settings-pane.md
     - name: After Submission
       href: after-submission.md
+    - name: Run your own C# after a submission
+      href: oqtane-after-submit-script.md
     - name: Submissions & My Inbox
       href: submissions-inbox.md
     - name: Submissions Grid — Filters at Scale
