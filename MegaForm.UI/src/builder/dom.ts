@@ -866,6 +866,15 @@ import dbStrings from './db-tables-strings.json';
           createTabWorkflow() +
           createTabPrint() +
         '</div>' +
+        // [2026-08-17] Footer, the way an Umbraco sidebar ends: an explicit way out and
+        // the primary action. Save delegates to the topbar's own save button — which this
+        // panel covers while it is open.
+        '<div class="mf-flyout-footer">' +
+          '<button type="button" class="mf-flyout-btn" id="mf-flyout-cancel">' +
+            bt('builder.flyout_close','Close') + '</button>' +
+          '<button type="button" class="mf-flyout-btn primary" id="mf-flyout-save">' +
+            '<i class="fa-regular fa-floppy-disk"></i> ' + bt('builder.save','Save') + '</button>' +
+        '</div>' +
       '</div>'
     );
   }
@@ -2173,6 +2182,20 @@ import dbStrings from './db-tables-strings.json';
     var flyoutClose = document.getElementById('mf-flyout-close');
     if (flyoutClose) {
       flyoutClose.addEventListener('click', function() { toggleFlyout(false); });
+    }
+    var flyoutCancel = document.getElementById('mf-flyout-cancel');
+    if (flyoutCancel) {
+      flyoutCancel.addEventListener('click', function() { toggleFlyout(false); });
+    }
+    var flyoutSave = document.getElementById('mf-flyout-save');
+    if (flyoutSave) {
+      flyoutSave.addEventListener('click', function() {
+        // One save in the builder, wired in toolbar.ts. Clicking it here keeps the panel
+        // honest about what "Save" means: the whole form, not just this panel.
+        var saveBtn = document.getElementById('mf-btn-save-draft') as HTMLButtonElement | null;
+        if (saveBtn) saveBtn.click();
+        toggleFlyout(false);
+      });
     }
     // Legacy right-rail collapse button also closes the flyout
     var rightCollapse = document.getElementById('mf-right-collapse-btn');

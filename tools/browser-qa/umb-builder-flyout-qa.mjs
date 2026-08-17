@@ -209,7 +209,52 @@ for (const tab of dom.primaryTabs) {
   tabResults.push({ tab, ...state });
 }
 
-const report = { url: page.url(), viewport: { W, H }, geom, dom, gear, topbar, toolResults, tabResults,
+// ── The workspace tabs, which now live in Umbraco's own header band ─────────
+// They are appended into umb-section-main-views' shadow root, so a plain querySelector
+// from the page finds nothing — pierce the shadow roots, and prove each one navigates.
+const headerTabs = { found: [], nav: [] };
+const deepClickTab = async (label) =>
+  page.evaluate((want) => {
+    const find = (root) => {
+      for (const el of root.querySelectorAll(".mf-ws-tab")) {
+        if ((el.textContent || "").trim().toLowerCase() === want.toLowerCase()) return el;
+      }
+      for (const el of root.querySelectorAll("*")) {
+        if (el.shadowRoot) { const hit = find(el.shadowRoot); if (hit) return hit; }
+      }
+      return null;
+    };
+    const el = find(document);
+    if (!el) return false;
+    el.click();
+    return true;
+  }, label);
+
+headerTabs.found = await page.evaluate(() => {
+  const out = [];
+  const walk = (root) => {
+    for (const el of root.querySelectorAll(".mf-ws-head")) out.push((el.textContent || "").replace(/\s+/g, " ").trim().slice(0, 80));
+    for (const el of root.querySelectorAll("*")) if (el.shadowRoot) walk(el.shadowRoot);
+  };
+  walk(document);
+  return out;
+});
+for (const label of ["Entries", "Analytics", "Design"]) {
+  const clicked = await deepClickTab(label);
+  await page.waitForTimeout(2500);
+  const src = await page.evaluate(() => {
+    const walk = (root) => {
+      for (const f of root.querySelectorAll("iframe")) return f.getAttribute("src");
+      for (const el of root.querySelectorAll("*")) if (el.shadowRoot) { const hit = walk(el.shadowRoot); if (hit) return hit; }
+      return null;
+    };
+    return walk(document);
+  });
+  headerTabs.nav.push({ label, clicked, src, url: page.url().replace(BASE, "") });
+  await shot(`headertab-${label.toLowerCase()}`);
+}
+
+const report = { url: page.url(), viewport: { W, H }, geom, dom, gear, topbar, headerTabs, toolResults, tabResults,
                  errors: errors.slice(0, 25), failedRequests: [...new Set(failed)].slice(0, 40) };
 fs.writeFileSync(`${OUT}/report.json`, JSON.stringify(report, null, 2));
 console.log(JSON.stringify(report, null, 1));

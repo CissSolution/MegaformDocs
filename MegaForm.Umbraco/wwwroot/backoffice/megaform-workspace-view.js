@@ -1,5 +1,5 @@
 import { UmbLitElement } from '@umbraco-cms/backoffice/lit-element';
-import { css, html, nothing } from '@umbraco-cms/backoffice/external/lit';
+import { css, html } from '@umbraco-cms/backoffice/external/lit';
 import { mfFetchJson, setMegaFormAuthContext } from './contexts/megaform-permissions-context.js';
 import { UMB_AUTH_CONTEXT } from '@umbraco-cms/backoffice/auth';
 
@@ -31,37 +31,26 @@ import { UMB_AUTH_CONTEXT } from '@umbraco-cms/backoffice/auth';
  * The element is not re-created when the route changes within the view, so the frame URL is
  * recomputed on navigation instead of only at construction.
  */
+/**
+ * [HeaderTabs 2026-08-17] The form tabs belong in the band Umbraco already draws.
+ *
+ * The section header band (umb-section-main-views > umb-body-layout, header slot) held a single
+ * tab reading "MegaForm Dashboard" — a tab strip with nothing to switch between — and the form
+ * tabs sat on a second band underneath it. Two header rows above a builder that wants the height,
+ * and neither of them full. Umbraco Forms puts its Design / Analytics / Settings / Entries tabs on
+ * the top band itself, so that is where these go.
+ *
+ * A package cannot reach that band with a stylesheet, but it can reach it with a reference: this
+ * element sits inside umb-section-main-views' shadow root, so climbing the host chain reaches the
+ * umb-body-layout and its "header" slot. The tab bar is appended there, and a <style> in the same
+ * shadow root hides the one-tab strip. Both are removed again when the view is disconnected.
+ */
+const HEAD_STYLE_ID = 'mf-ws-head-style';
+
 export default class MegaFormWorkspaceView extends UmbLitElement {
   static styles = css`
     :host { display: flex; flex-direction: column; width: 100%; height: 100%; min-height: 0; }
     iframe { display: block; width: 100%; flex: 1 1 auto; min-height: 0; border: 0; }
-
-    /* Workspace header: form name + the tabs that act on that form, the shape Umbraco Forms
-       uses (Design / Entries / Analytics / Settings). It only appears once a form is open —
-       the dashboard and the languages screen are not about one form. */
-    .mf-ws-head {
-      display: flex; align-items: center; gap: var(--uui-size-space-4, 12px);
-      padding: 10px 16px 0; background: var(--uui-color-surface, #fff);
-      border-bottom: 1px solid var(--uui-color-border, #e2e8f0);
-    }
-    .mf-ws-name {
-      font-size: 14px; font-weight: 700; color: var(--uui-color-text, #0f172a);
-      padding-bottom: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-      max-width: 320px;
-    }
-    .mf-ws-name em { font-style: normal; font-weight: 400; opacity: .6; margin-left: 6px; }
-    .mf-ws-tabs { display: flex; gap: 2px; }
-    .mf-ws-tab {
-      appearance: none; border: 0; background: none; cursor: pointer; font: inherit;
-      font-size: 13px; font-weight: 600; color: var(--uui-color-text-alt, #64748b);
-      padding: 8px 14px 10px; border-bottom: 3px solid transparent;
-      display: inline-flex; align-items: center; gap: 7px;
-    }
-    .mf-ws-tab:hover { color: var(--uui-color-text, #0f172a); }
-    .mf-ws-tab[aria-current='page'] {
-      color: var(--uui-color-text, #0f172a);
-      border-bottom-color: var(--uui-color-focus, #3544b1);
-    }
   `;
 
   static properties = {
@@ -128,7 +117,113 @@ export default class MegaFormWorkspaceView extends UmbLitElement {
   disconnectedCallback() {
     window.removeEventListener('popstate', this.#onNav);
     window.removeEventListener('umb:route-change', this.#onNav);
+    this.#teardownHeader();
     super.disconnectedCallback();
+  }
+
+  firstUpdated() {
+    this.#mountHeader();
+  }
+
+  updated() {
+    // The bar lives outside this element's shadow root, so Lit will not re-render it.
+    this.#mountHeader();
+    this.#paintHeader();
+  }
+
+  /** umb-section-main-views, found by climbing out of the shadow roots we are nested in. */
+  #sectionViewsHost() {
+    let node = this;
+    for (let hops = 0; hops < 8 && node; hops++) {
+      const root = node.getRootNode();
+      if (!(root instanceof ShadowRoot)) return null;
+      const host = root.host;
+      if (!host) return null;
+      if (host.tagName && host.tagName.toLowerCase() === 'umb-section-main-views') return host;
+      node = host;
+    }
+    return null;
+  }
+
+  #mountHeader() {
+    if (this._headEl && this._headEl.isConnected) return;
+    const host = this.#sectionViewsHost();
+    const layout = host?.shadowRoot?.querySelector('umb-body-layout');
+    if (!layout) return;
+
+    if (!host.shadowRoot.getElementById(HEAD_STYLE_ID)) {
+      const style = document.createElement('style');
+      style.id = HEAD_STYLE_ID;
+      // One section view means one tab, and a tab strip you cannot switch is just a band of
+      // wasted height. Hide it; the tree on the left is the navigation.
+      style.textContent = `
+        uui-tab-group { display: none !important; }
+        .mf-ws-head {
+          display: flex; align-items: center; gap: 12px; width: 100%;
+          min-height: 36px; font-family: var(--uui-font-family, inherit);
+        }
+        .mf-ws-name {
+          font-size: 15px; font-weight: 700; color: var(--uui-color-text, #0f172a);
+          white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 340px;
+        }
+        .mf-ws-name em { font-style: normal; font-weight: 400; opacity: .55; margin-left: 6px; }
+        /* Tabs to the right, the way Umbraco Forms lays its workspace out. */
+        .mf-ws-tabs { display: flex; gap: 2px; margin-left: auto; align-self: stretch; }
+        .mf-ws-tab {
+          appearance: none; border: 0; background: none; cursor: pointer; font: inherit;
+          font-size: 13px; font-weight: 600; color: var(--uui-color-text-alt, #64748b);
+          padding: 0 14px; border-bottom: 3px solid transparent;
+          display: inline-flex; align-items: center; gap: 7px;
+        }
+        .mf-ws-tab:hover { color: var(--uui-color-text, #0f172a); background: var(--uui-color-surface-alt, #f6f7f9); }
+        .mf-ws-tab[aria-current='page'] {
+          color: var(--uui-color-text, #0f172a);
+          border-bottom-color: var(--uui-color-focus, #3544b1);
+        }
+      `;
+      host.shadowRoot.appendChild(style);
+    }
+
+    const bar = document.createElement('div');
+    bar.className = 'mf-ws-head';
+    bar.setAttribute('slot', 'header');
+    bar.addEventListener('click', (e) => {
+      const btn = e.target.closest?.('.mf-ws-tab');
+      if (btn?.dataset.route) this.#go(btn.dataset.route);
+    });
+    layout.appendChild(bar);
+    this._headEl = bar;
+    this.#paintHeader();
+  }
+
+  #paintHeader() {
+    const bar = this._headEl;
+    if (!bar || !bar.isConnected) return;
+    // No form open (dashboard, languages): leave the band to whatever Umbraco puts there.
+    if (!(this._formId > 0)) { bar.innerHTML = ''; return; }
+
+    const tabs = [
+      ['design',    'builder',       'icon-brush',       'Design'],
+      ['entries',   'submissions',   'icon-inbox',       'Entries'],
+      ['analytics', 'analytics',     'icon-chart-curve', 'Analytics'],
+      ['settings',  'form-settings', 'icon-settings',    'Settings'],
+    ];
+    const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    bar.innerHTML =
+      `<span class="mf-ws-name">${esc(this._formName || 'Form')}<em>#${this._formId}</em></span>` +
+      '<div class="mf-ws-tabs">' +
+      tabs.map(([key, route, icon, label]) =>
+        `<button type="button" class="mf-ws-tab" data-route="${route}" ` +
+        `aria-current="${this._tab === key ? 'page' : 'false'}">` +
+        `<uui-icon name="${icon}"></uui-icon>${label}</button>`).join('') +
+      '</div>';
+  }
+
+  #teardownHeader() {
+    try { this._headEl?.remove(); } catch (_e) { /* already gone */ }
+    this._headEl = null;
+    const host = this.#sectionViewsHost();
+    try { host?.shadowRoot?.getElementById(HEAD_STYLE_ID)?.remove(); } catch (_e) { /* already gone */ }
   }
 
   static resolve() {
@@ -141,9 +236,10 @@ export default class MegaFormWorkspaceView extends UmbLitElement {
     switch ((what || '').toLowerCase()) {
       case 'builder': {
         const id = num(arg);
+        const qs = '?host=umbraco-workspace';
         // Leaving the builder for another tab must not leave a stale rail selection behind.
         try { sessionStorage.removeItem('mf-builder-initial-tab'); } catch (_e) {}
-        return { src: id > 0 ? `/umbraco/MegaForm/Builder/${id}` : '/umbraco/MegaForm/Builder',
+        return { src: id > 0 ? `/umbraco/MegaForm/Builder/${id}${qs}` : `/umbraco/MegaForm/Builder${qs}`,
                  title: 'MegaForm Builder', formId: id, tab: 'design' };
       }
       case 'submissions': {
@@ -161,8 +257,9 @@ export default class MegaFormWorkspaceView extends UmbLitElement {
         // The builder holds form settings in its right rail; it activates a rail tab from
         // sessionStorage on first paint, and a same-origin iframe shares that storage with us.
         const id = num(arg) || num(qsId);
+        const qs = '?host=umbraco-workspace';
         try { sessionStorage.setItem('mf-builder-initial-tab', 'settings'); } catch (_e) {}
-        return { src: id > 0 ? `/umbraco/MegaForm/Builder/${id}` : '/umbraco/MegaForm/Builder',
+        return { src: id > 0 ? `/umbraco/MegaForm/Builder/${id}${qs}` : `/umbraco/MegaForm/Builder${qs}`,
                  title: 'MegaForm Form Settings', formId: id, tab: 'settings' };
       }
       case 'languages':
@@ -175,40 +272,9 @@ export default class MegaFormWorkspaceView extends UmbLitElement {
   }
 
   render() {
-    return html`
-      ${this.#renderHead()}
-      <iframe src="${this._src}" title="${this._title}" allow="fullscreen"></iframe>
-    `;
-  }
-
-  #renderHead() {
-    if (!(this._formId > 0)) return nothing;
-
-    const tabs = [
-      ['design',    'builder',       'icon-brush',      'Design'],
-      ['entries',   'submissions',   'icon-inbox',      'Entries'],
-      ['analytics', 'analytics',     'icon-chart-curve','Analytics'],
-      ['settings',  'form-settings', 'icon-settings',   'Settings'],
-    ];
-
-    return html`
-      <div class="mf-ws-head">
-        <span class="mf-ws-name">
-          ${this._formName || 'Form'}<em>#${this._formId}</em>
-        </span>
-        <div class="mf-ws-tabs">
-          ${tabs.map(([key, route, icon, label]) => html`
-            <button
-              type="button"
-              class="mf-ws-tab"
-              aria-current="${this._tab === key ? 'page' : 'false'}"
-              @click="${() => this.#go(route)}">
-              <uui-icon name="${icon}"></uui-icon>${label}
-            </button>
-          `)}
-        </div>
-      </div>
-    `;
+    // The header is not rendered here: it is appended into Umbraco's own header band
+    // (see #mountHeader), so the frame gets the whole of this element's height.
+    return html`<iframe src="${this._src}" title="${this._title}" allow="fullscreen"></iframe>`;
   }
 }
 
