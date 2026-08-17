@@ -186,7 +186,39 @@ prevalue source from its settings, so the catalog has no consumer in the UI. `Fi
 already reads `prevalueSourceId`/`prevalueSourceName` from field props, so the picker is a builder
 change only — no backend work.
 
-## 8. Still open
+## 8. Sixth pass — the picker, and the save that was 500ing all along (`1d5c5876`)
+
+🔴🔴 **No form could be saved on this host.** Every builder Save answered **HTTP 500 with an empty
+body and no toast**, so the screen looked like it had saved and nothing had. It surfaced only
+because the new picker was being proven end to end: the builder held the right props, the schema
+came back from the server unchanged, and `umbraco/Logs` said
+
+```
+SQLite Error 19: 'NOT NULL constraint failed: MF_Forms.WebhookSecret'
+```
+
+EF's `SetValues` copies nulls, and the builder's payload does not carry every column —
+`WebhookSecret` is not in it. `WorkflowJson` had the same bug fixed alone in v20260711; the rule it
+established now applies to every string column: **a null string means "not editing that column"**,
+so the stored value is kept (`PreserveNullStrings` in `EfRepositories.SaveForm`). Measured on form
+201: two saves → two 500s → label unchanged in the database; after the fix → 200, and both the label
+and a newly added property persisted.
+
+**The picker.** "Options source" on a choice field gains a third entry beside Static and SQL. It
+lists the catalog, previews the options through the provider, and stores **only**
+`prevalueSourceId` + `prevalueSourceName` — no connection detail travels in the form schema. Proven
+against the endpoint the renderer itself calls: after saving, `/Field/Options?formId&fieldKey`
+returned the three catalog options.
+
+**Reorder kept its label.** Moving it into the tool row (`f5b9de16`) made it the eleventh identical
+grey icon and the owner reported it missing — the same disappearance as at 1366px when the topbar
+collapsed it to a square. It is a mode, not an inspector icon: bordered, labelled, hairline-separated.
+
+⚠️ QA note: `umb-prevalue-picker-qa.mjs` runs against **real forms**, so it snapshots the field's
+original properties and restores them; an earlier version blanket-reverted to `static` and would
+have quietly broken form 201's SQL-backed Department dropdown.
+
+## 9. Still open
 
 * 🟠 **Workflow is a full-screen takeover.** Opening it from a flyout tool is a jarring exit from the
   builder, and the flyout's close button does not bring you back — only "Return to App Builder" does.
