@@ -104,6 +104,7 @@ export class MegaFormSidebarMenuElement extends UmbLitElement {
       ${this._renderDashboardItem()}
       ${this._renderFormsTree()}
       ${this._renderSubmissionsItem()}
+      ${this._renderPrevalueSourcesItem()}
       ${this._renderLanguagesItem()}
       ${this._renderSettingsItem()}
     `;
@@ -333,6 +334,23 @@ export class MegaFormSidebarMenuElement extends UmbLitElement {
         href="/umbraco/section/megaform/view/open/submissions"
         @click="${this._navigate}">
         <uui-icon slot="icon" name="icon-inbox"></uui-icon>
+      </uui-menu-item>
+    `;
+  }
+
+  /**
+   * [PrevalueSources 2026-08-17] The shared option lists, beside Umbraco Forms' own
+   * "Prevalue Sources" node in shape and in purpose: a catalog many forms point at,
+   * maintained in one place rather than copied into each field.
+   */
+  _renderPrevalueSourcesItem() {
+    if (!this._permsReady || !megaFormPermissions.has('MegaForm.Form.Browse')) return '';
+    return html`
+      <uui-menu-item
+        label="Prevalue Sources"
+        href="/umbraco/section/megaform/view/open/prevalue-sources"
+        @click="${this._navigate}">
+        <uui-icon slot="icon" name="icon-list"></uui-icon>
       </uui-menu-item>
     `;
   }

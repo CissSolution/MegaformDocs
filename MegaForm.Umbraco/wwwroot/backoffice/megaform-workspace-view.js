@@ -2,6 +2,9 @@ import { UmbLitElement } from '@umbraco-cms/backoffice/lit-element';
 import { css, html } from '@umbraco-cms/backoffice/external/lit';
 import { mfFetchJson, setMegaFormAuthContext } from './contexts/megaform-permissions-context.js';
 import { UMB_AUTH_CONTEXT } from '@umbraco-cms/backoffice/auth';
+// Native screens this view can render in place of the frame. Imported for the side effect
+// of defining the custom element; the manifest only knows about this one view.
+import './megaform-prevalue-sources-view.js';
 
 /**
  * [OneSectionView 2026-08-15] The single section view for MegaForm, routing internally.
@@ -68,7 +71,7 @@ export default class MegaFormWorkspaceView extends UmbLitElement {
   `;
 
   static properties = {
-    _src: { state: true }, _title: { state: true },
+    _src: { state: true }, _title: { state: true }, _native: { state: true },
     _formId: { state: true }, _tab: { state: true }, _formName: { state: true },
   };
 
@@ -77,6 +80,7 @@ export default class MegaFormWorkspaceView extends UmbLitElement {
     const r = MegaFormWorkspaceView.resolve();
     this._src = r.src;
     this._title = r.title;
+    this._native = r.native || '';
     this._formId = r.formId || 0;
     this._tab = r.tab || '';
     this._formName = '';
@@ -105,7 +109,9 @@ export default class MegaFormWorkspaceView extends UmbLitElement {
         this._formName = '';
         this.#loadFormName();
       }
-      if (next.src !== this._src) { this._src = next.src; this._title = next.title; }
+      if (next.src !== this._src || (next.native || '') !== this._native) {
+        this._src = next.src; this._title = next.title; this._native = next.native || '';
+      }
     };
   }
 
@@ -290,6 +296,10 @@ export default class MegaFormWorkspaceView extends UmbLitElement {
         return { src: id > 0 ? `/umbraco/MegaForm/Builder/${id}${qs}` : `/umbraco/MegaForm/Builder${qs}`,
                  title: 'MegaForm Form Settings', formId: id, tab: 'settings' };
       }
+      case 'prevalue-sources':
+        // Native element, not a frame: this screen is administration and it authenticates
+        // on the SPA's bearer token instead of the backoffice cookie the frames rely on.
+        return { native: 'megaform-prevalue-sources-view', title: 'MegaForm Prevalue Sources' };
       case 'languages':
         return { src: '/umbraco/MegaForm/Languages', title: 'MegaForm Languages' };
       case 'settings':
@@ -302,6 +312,10 @@ export default class MegaFormWorkspaceView extends UmbLitElement {
   render() {
     // The header is not rendered here: it is appended into Umbraco's own header band
     // (see #mountHeader), so the frame gets the whole of this element's height.
+    // Native screens render in place; the rest keep the MVC frame.
+    if (this._native === 'megaform-prevalue-sources-view') {
+      return html`<megaform-prevalue-sources-view></megaform-prevalue-sources-view>`;
+    }
     return html`<iframe src="${this._src}" title="${this._title}" allow="fullscreen"></iframe>`;
   }
 }
