@@ -81,6 +81,9 @@ namespace MegaForm.Umbraco.Data
         public DbSet<ExternalBindingRow> ExternalBindings { get; set; }
         public DbSet<ExternalRowMapRow> ExternalRowMap { get; set; }
 
+        // [PrevalueSource v20260816] Shared catalog of reusable option sources.
+        public DbSet<PrevalueSourceRow> PrevalueSources { get; set; }
+
         protected override void OnModelCreating(ModelBuilder b)
         {
             b.Entity<FormInfo>(e => {
@@ -614,6 +617,17 @@ namespace MegaForm.Umbraco.Data
                 e.Property(x => x.RowKeyJson).HasMaxLength(900).IsRequired();
                 // The database, not application code, is what guarantees one anchor per customer row.
                 e.HasIndex(x => new { x.FormId, x.RowKeyHash }).IsUnique();
+            });
+
+            // [PrevalueSource v20260816] Shared catalog of reusable option sources.
+            b.Entity<PrevalueSourceRow>(e => {
+                e.ToTable("MF_PrevalueSources"); e.HasKey(x => x.Id);
+                e.Property(x => x.Name).HasMaxLength(200).IsRequired();
+                e.HasIndex(x => x.Name).IsUnique();
+                e.Property(x => x.Type).HasMaxLength(50).IsRequired();
+                e.Property(x => x.SettingsJson).HasColumnType(TextType).HasDefaultValue("{}");
+                e.Property(x => x.CacheMinutes).HasDefaultValue(0);
+                e.Property(x => x.Culture).HasMaxLength(10).HasDefaultValue("");
             });
         }
     }

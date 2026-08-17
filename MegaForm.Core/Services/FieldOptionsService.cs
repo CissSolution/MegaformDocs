@@ -47,6 +47,8 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using MegaForm.Core.Interfaces;
 using MegaForm.Core.Models;
+using MegaForm.Core.Models.Prevalues;
+using MegaForm.Core.Services.Prevalues;
 using MegaForm.Core.Services.TypedSubmission;
 using Newtonsoft.Json.Linq;
 
@@ -82,23 +84,25 @@ namespace MegaForm.Core.Services
         // back to this alias before silently returning [].
         private readonly string _defaultConnectionKey;
         private readonly SubmissionDataResolver _dataResolver;
+        private readonly PrevalueOptionsResolver _prevalueResolver;
 
         public FieldOptionsService(IConnectionRegistry registry, IFormRepository formRepo)
-            : this(registry, formRepo, null, null)
+            : this(registry, formRepo, null, null, null, null)
         {
         }
 
         public FieldOptionsService(IConnectionRegistry registry, IFormRepository formRepo, ISubmissionRepository submissionRepo)
-            : this(registry, formRepo, submissionRepo, null)
+            : this(registry, formRepo, submissionRepo, null, null, null)
         {
         }
 
-        public FieldOptionsService(IConnectionRegistry registry, IFormRepository formRepo, ISubmissionRepository submissionRepo, string defaultConnectionKey, SubmissionDataResolver dataResolver = null)
+        public FieldOptionsService(IConnectionRegistry registry, IFormRepository formRepo, ISubmissionRepository submissionRepo, string defaultConnectionKey, SubmissionDataResolver dataResolver = null, PrevalueOptionsResolver prevalueResolver = null)
         {
             _registry = registry;
             _formRepo = formRepo;
             _submissionRepo = submissionRepo;
             _dataResolver = dataResolver;
+            _prevalueResolver = prevalueResolver;
             // [DefaultConnFallback2 2026-07-14] Oqtane + Web construct this service via the
             // 2-arg overload, so defaultConnectionKey arrived null and EVERY sql-sourced field
             // without an explicit optionsConnectionKey returned [] — a dropdown that renders
@@ -251,6 +255,13 @@ namespace MegaForm.Core.Services
                     return GetFormLookupOptions(fieldProps, parameters);
                 }
 
+                // [PrevalueSource v20260816] Shared catalog source for choice fields.
+                if (string.Equals(source, "prevalue", StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(source, "prevalue-source", StringComparison.OrdinalIgnoreCase))
+                {
+                    return GetPrevalueOptions(fieldProps, parameters);
+                }
+
                 if (!string.Equals(source, "sql", StringComparison.OrdinalIgnoreCase)) return options;
 
                 var optionsType   = (string)fieldProps["optionsType"];
@@ -314,6 +325,49 @@ namespace MegaForm.Core.Services
             catch { /* swallow — return empty list, renderer falls back to static options */ }
 
             return options;
+        }
+
+        // ─── prevalue-source branch ─────────────────────────────────────────
+        // Reads a shared PrevalueSource catalog entry and converts its options
+        // into the FieldOption shape used by the renderer.
+        private List<FieldOption> GetPrevalueOptions(JToken fieldProps, IDictionary<string, object> parameters)
+        {
+            var result = new List<FieldOption>();
+            if (_prevalueResolver == null) return result;
+
+            var sourceIdToken = fieldProps["prevalueSourceId"];
+            var sourceNameToken = fieldProps["prevalueSourceName"];
+
+            int? sourceId = null;
+            try { if (sourceIdToken != null) sourceId = (int?)sourceIdToken; } catch { }
+            var sourceName = (string)sourceNameToken;
+
+            if (!sourceId.HasValue && string.IsNullOrWhiteSpace(sourceName)) return result;
+
+            try
+            {
+                var context = new PrevalueProviderContext
+                {
+                    Parameters = parameters,
+                    MaxRows = MAX_OPTION_ROWS
+                };
+
+                var prevalues = sourceId.HasValue
+                    ? _prevalueResolver.GetOptionsAsync(sourceId.Value, context).GetAwaiter().GetResult()
+                    : _prevalueResolver.GetOptionsAsync(sourceName, context).GetAwaiter().GetResult();
+
+                foreach (var pv in prevalues ?? new List<PrevalueOption>())
+                {
+                    result.Add(new FieldOption
+                    {
+                        Value = pv.Value,
+                        Label = string.IsNullOrWhiteSpace(pv.Label) ? pv.Value : pv.Label
+                    });
+                }
+            }
+            catch { /* fail-soft */ }
+
+            return result;
         }
 
         // ─── form-lookup branch ─────────────────────────────────────────────
