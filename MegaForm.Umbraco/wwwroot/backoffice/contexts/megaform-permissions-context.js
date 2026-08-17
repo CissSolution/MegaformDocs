@@ -55,6 +55,13 @@ export function getUmbracoBearerToken() {
  * every MegaForm screen did before this helper existed.
  * @returns {Promise<string|null>}
  */
+export async function getMegaFormBearerToken() {
+  // [TokenBridge 2026-08-17] The MegaForm screens that run in an iframe cannot reach this
+  // context: they are a separate document, and the token Bellissima holds lives in memory
+  // here. They ask for it by postMessage and the workspace view answers with this.
+  return getCurrentToken();
+}
+
 async function getCurrentToken() {
   // Extension conditions and entity actions can fire before any MegaForm element has mounted
   // and handed the context over. Give that a brief moment rather than sending the first call

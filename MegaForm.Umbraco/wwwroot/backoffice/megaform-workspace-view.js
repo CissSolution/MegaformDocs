@@ -1,6 +1,6 @@
 import { UmbLitElement } from '@umbraco-cms/backoffice/lit-element';
 import { css, html } from '@umbraco-cms/backoffice/external/lit';
-import { mfFetchJson, setMegaFormAuthContext } from './contexts/megaform-permissions-context.js';
+import { mfFetchJson, setMegaFormAuthContext, getMegaFormBearerToken } from './contexts/megaform-permissions-context.js';
 import { UMB_AUTH_CONTEXT } from '@umbraco-cms/backoffice/auth';
 // Native screens this view can render in place of the frame. Imported for the side effect
 // of defining the custom element; the manifest only knows about this one view.
@@ -95,8 +95,30 @@ export default class MegaFormWorkspaceView extends UmbLitElement {
     this.#onMsg = (e) => {
       if (e.origin !== window.location.origin) return;
       const data = e.data;
-      if (!data || data.type !== 'megaform:flyout') return;
-      this.classList.toggle('mf-panel-open', !!data.open);
+      if (!data) return;
+
+      if (data.type === 'megaform:flyout') {
+        this.classList.toggle('mf-panel-open', !!data.open);
+        return;
+      }
+
+      // [TokenBridge 2026-08-17] The screens inside the frame are served anonymously and
+      // authenticated on the backoffice COOKIE, which lapses about half an hour into a
+      // session — after which every API call is answered with the login PAGE and the screen
+      // says «Unexpected token '<'». The bearer token Bellissima keeps is in memory in THIS
+      // document, and the frame is same-origin, so it can ask for it. Origin is checked
+      // above, and the reply is addressed to this origin only.
+      if (data.type === 'megaform:request-token') {
+        getMegaFormBearerToken()
+          .then((token) => {
+            try { e.source?.postMessage({ type: 'megaform:token', token: token || '' }, window.location.origin); }
+            catch (_e) { /* frame went away */ }
+          })
+          .catch(() => {
+            try { e.source?.postMessage({ type: 'megaform:token', token: '' }, window.location.origin); }
+            catch (_e) { /* frame went away */ }
+          });
+      }
     };
 
     this.#onNav = () => {
