@@ -121,7 +121,43 @@ builder bundle.
 Measured at 1366×768: panel 560×768 for all ten tools and for the gear on a control; header band and
 all four tabs unchanged; no new failed request.
 
-## 6. Still open
+## 6. Fourth pass — Reorder in the tool row, arrange-on-drag, columns that accept drops (`f5b9de16`)
+
+Owner: *"reorder button cũng tốn diện tích: bắt chước Umbraco đưa lên bar phía trên, khi kéo 1 control
+bên left pane thì form cần chuyển về chế độ giống như chế độ reorder … và row/column control nếu có
+cũng phải hiện ra và cho phép kéo thả control vào trong row/columns control"*.
+
+**Reorder** now mounts into `.mf-secondary-toolbar` (the tool row in the top bar, where Umbraco Forms
+keeps its own). `installButton()` falls back to the old band above the canvas only if no tool row
+exists. Verified: parents are `mf-secondary-toolbar > w-center > w-topbar`, no `.mf-reorder-bar`, and
+the button still opens the reorder screen (22 rows).
+
+**Arrange mode**: `setPaletteDragging()` toggles `body.mf-arrange-mode`; the CSS collapses every card
+to a 46px row (measured mid-drag), outlines the Row, and turns each column into a dashed "Drop here"
+target that lights up under the pointer. Reverts on drop.
+
+Two real bugs surfaced by doing the drag instead of reading the code:
+
+1. 🔴 **`body[data-mf-mode]` was never set any more.** Removing the Build/Design pill removed the only
+   code that set it — and **88 rules** in `megaform-builder-ts.css` are scoped to
+   `body[data-mf-mode="build"]`, including every canvas drag affordance. Nothing errored; the canvas
+   simply stopped helping during a drag. Restored, plus a switch to `design` while the Theme
+   Designer is open.
+2. 🔴 **A control dropped into a column landed on the form root.** The pointer fallback resolves the
+   drop target **160ms after** the drop (a wait that exists to let SortableJS finish) — by which time
+   arrange mode has ended and every card has grown back, so the same coordinates point at a different
+   element. The target is now captured while the pointer moves and passed into the insert; the main
+   canvas list also hands the drop back when the pointer finished inside a column. Verified against
+   the schema: root count stays 21, the row reads `columns [1, 0]`.
+
+**QA — `tools/browser-qa/umb-builder-arrange-qa.mjs`** drags for real (down / move / up), photographs
+each state and reads the builder's schema after every drop. It must **re-aim mid-drag**: inserting the
+drag placeholder reflows the list and slides the column out from under the pointer — 86px in one run,
+which first read as "columns reject drops" when it was the aim that was stale. `window.__mfDropDebug`
+(written only during palette drags) is the seam it uses to confirm the pointer is over a column
+before releasing.
+
+## 7. Still open
 
 * 🟠 **Workflow is a full-screen takeover.** Opening it from a flyout tool is a jarring exit from the
   builder, and the flyout's close button does not bring you back — only "Return to App Builder" does.
