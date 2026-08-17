@@ -1,6 +1,13 @@
 import { UmbLitElement } from '@umbraco-cms/backoffice/lit-element';
 import { css, html } from '@umbraco-cms/backoffice/external/lit';
-import { mfFetchJson, setMegaFormAuthContext, getMegaFormBearerToken } from './contexts/megaform-permissions-context.js';
+// [StaleModuleCache 2026-08-17] Import ONLY names this module has had for a while. Umbraco
+// serves every extension file with ?umb__rnd=<package version>, so a browser that already has
+// one of them keeps it until that version changes: adding an export to the permissions context
+// and importing it here made the whole view fail to parse —
+//   "does not provide an export named 'getMegaFormBearerToken'"
+// — on every session that had loaded the old file, while the server was serving the new one.
+// The token comes from the auth context this element already consumes; no new export needed.
+import { mfFetchJson, setMegaFormAuthContext } from './contexts/megaform-permissions-context.js';
 import { UMB_AUTH_CONTEXT } from '@umbraco-cms/backoffice/auth';
 // Native screens this view can render in place of the frame. Imported for the side effect
 // of defining the custom element; the manifest only knows about this one view.
@@ -86,6 +93,9 @@ export default class MegaFormWorkspaceView extends UmbLitElement {
     this._formName = '';
 
     this.consumeContext(UMB_AUTH_CONTEXT, (auth) => {
+      // Keep the context itself: the frame asks this element for a bearer token and
+      // getLatestToken() on this object is where the live one comes from.
+      this._auth = auth;
       setMegaFormAuthContext(auth);
       this.#loadFormName();
     });
@@ -109,7 +119,7 @@ export default class MegaFormWorkspaceView extends UmbLitElement {
       // document, and the frame is same-origin, so it can ask for it. Origin is checked
       // above, and the reply is addressed to this origin only.
       if (data.type === 'megaform:request-token') {
-        getMegaFormBearerToken()
+        this.#bearerToken()
           .then((token) => {
             try { e.source?.postMessage({ type: 'megaform:token', token: token || '' }, window.location.origin); }
             catch (_e) { /* frame went away */ }
@@ -135,6 +145,16 @@ export default class MegaFormWorkspaceView extends UmbLitElement {
         this._src = next.src; this._title = next.title; this._native = next.native || '';
       }
     };
+  }
+
+  /** The backoffice's live bearer token, or '' when there is none to lend. */
+  async #bearerToken() {
+    try {
+      const token = await this._auth?.getLatestToken?.();
+      return token || '';
+    } catch (_e) {
+      return '';
+    }
   }
 
   /** Name in the header, the way Umbraco shows the form it is working on. */
