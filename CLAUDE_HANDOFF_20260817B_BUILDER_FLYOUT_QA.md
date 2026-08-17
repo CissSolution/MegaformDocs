@@ -93,7 +93,35 @@ QA extension: the header tabs live in a foreign shadow root, so the script finds
 shadow roots and asserts each one navigates — Entries → `/view/open/submissions/103`,
 Analytics → the same grid with `?view=reports`, Design → back to the builder.
 
-## 5. Still open
+## 5. Third pass — one subject per panel, screen height (commit `ad9917cd`)
+
+Owner, comparing against Umbraco Forms' Edit Group sidebar: *"umbraco hiện 1 pane độc lập và cao hết
+màn hình, megaform pane còn nhiều sub session không liên quan"*.
+
+**One subject.** The panel borrows its body from the Design Studio accordion, which carries Field
+Properties **plus** Form Settings, Steps and Custom HTML — so the gear on "Last name" opened that
+field's settings with three unrelated sections stacked beneath. `openFlyoutTab()` now stamps
+`data-mf-flyout-scope="<tab>"` on the panel and the CSS (`megaform-builder-ts.css`) keeps that one
+section: siblings hidden, accordion heads hidden (the panel title already names the subject), card
+chrome stripped. Tools that are not accordion sections (Theme, DB, Rules, Perms, Workflow, Print)
+clear the attribute and keep their own pane.
+
+**Screen height.** A panel inside an iframe cannot outgrow the iframe, and the frame stops where the
+backoffice content area stops — 638px of a 768px screen. While the panel is open the builder posts
+`{type:'megaform:flyout', open:true}` to the parent (same origin, origin checked on receipt) and the
+workspace view pins the frame to the viewport (`position:fixed; inset:0; z-index:9000`). The panel
+is then screen-height with everything behind it dimmed. The class is removed on close **and** on
+`disconnectedCallback`, so navigating away can never leave the frame pinned over the backoffice.
+
+Trade-off worth knowing: while pinned, the Umbraco top nav and tree are behind the frame rather
+than beside it. That is the cost of the panel living inside an iframe; the alternative is rebuilding
+the whole panel as a real `umb-modal` in the backoffice, which means moving its content out of the
+builder bundle.
+
+Measured at 1366×768: panel 560×768 for all ten tools and for the gear on a control; header band and
+all four tabs unchanged; no new failed request.
+
+## 6. Still open
 
 * 🟠 **Workflow is a full-screen takeover.** Opening it from a flyout tool is a jarring exit from the
   builder, and the flyout's close button does not bring you back — only "Return to App Builder" does.
