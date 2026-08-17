@@ -218,7 +218,35 @@ collapsed it to a square. It is a mode, not an inspector icon: bordered, labelle
 original properties and restores them; an earlier version blanket-reverted to `static` and would
 have quietly broken form 201's SQL-backed Department dropdown.
 
-## 9. Still open
+## 9. Seventh pass — the frame borrows the backoffice's token (`91e736c8`)
+
+The owner photographed **«Unable to load submissions — Unexpected token '<', "<!DOCTYPE"… is not
+valid JSON»** on Entries. That is the 🔴 item from 08-16c arriving in practice: the screens run in
+an iframe served anonymously and authenticated on the backoffice **cookie**, which lapses about half
+an hour in; after that the API answers with the login page.
+
+The frame is same-origin with the backoffice, so it now **asks for the token**:
+`megaform-workspace-view.js` answers `megaform:request-token` with `getMegaFormBearerToken()`
+(origin checked in both directions) and the frame's fetch interceptor sends it.
+
+Two things only the wire showed:
+
+1. ⭐⭐ **The page's own `window.__MF_TOKEN` was a cookie blob.** The host views print it from
+   `ViewBag.MegaFormAccessToken`, which on this build is an ASP.NET **Data Protection** payload
+   starting `CfDJ8` — not a bearer. Captured: the frame sent `Bearer CfDJ8DoQzTXyk…` → **302**, while
+   the same endpoint answered **200** to the backoffice's own token. A stale-looking credential is
+   worse than none: it gets sent and rejected. The bridged token now wins, and a `CfDJ8` value is
+   never used as a bearer.
+2. ⭐ **A redirect the fetch cannot follow arrives as `status 0` / `opaqueredirect`**, not 401 — so
+   the retry never fired and the screen showed the parse error with no second attempt.
+
+QA — `tools/browser-qa/umb-token-bridge-qa.mjs` reproduces the screenshot by deleting **only**
+`UMB_UCONTEXT` after login (clearing every cookie is harsher than production: it also breaks
+Bellissima's own refresh, so the parent has no token to lend and the test proves nothing). Before:
+302s and the parse error. After: every frame call carries the live bearer, `Submissions/List`
+returns, and the grid renders with no error banner.
+
+## 10. Still open
 
 * 🟠 **Workflow is a full-screen takeover.** Opening it from a flyout tool is a jarring exit from the
   builder, and the flyout's close button does not bring you back — only "Return to App Builder" does.
