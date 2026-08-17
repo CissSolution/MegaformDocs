@@ -4199,3 +4199,104 @@ body.mf-builder-dragging #mf-canvas-dropzone .sortable-ghost > * {
     height: 46px !important;
   }
 }
+
+/* ════════════════════════════════════════════════════════════
+   [B92] UMBRACO FORMS-STYLE TABS + FLYOUT OVERRIDES
+   These rules override the older persistent right-rail layout
+   so the new primary tabs and flyout work correctly.
+   ════════════════════════════════════════════════════════════ */
+
+/* Move builder surface down to make room for the 44px primary tab bar */
+.b-outer,
+#mf-builder-app {
+  padding-top: 100px !important; /* 56px topbar + 44px tab bar */
+}
+
+/* Builder layout height must account for both bars */
+body[data-mf-mode="build"] .mf-builder-layout {
+  height: calc(100vh - var(--topbar, 56px) - 44px) !important;
+}
+body[data-mf-mode="build"] .mf-panel-left,
+body[data-mf-mode="build"] .mf-panel-center {
+  height: calc(100vh - var(--topbar, 56px) - 44px) !important;
+}
+
+/* The right panel is now a fixed flyout, not a layout column.
+   Override every older width/position/flex rule that treated it as a rail. */
+.mf-panel-right.mf-flyout {
+  position: fixed !important;
+  top: calc(var(--topbar, 56px) + 44px) !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  left: auto !important;
+  width: 0 !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  transform: none !important;
+  border-left: 1px solid #e4e4e7 !important;
+  box-shadow: -4px 0 24px rgba(0,0,0,0.06) !important;
+  z-index: 998 !important;
+  transition: width 0.25s ease !important;
+  overflow: hidden !important;
+}
+.mf-panel-right.mf-flyout.mf-flyout-open {
+  width: 420px !important;
+  min-width: 420px !important;
+}
+
+/* Older collapsed/expanded rules should not fight the flyout state */
+.mf-panel-right.mf-flyout.mf-collapsed,
+.mf-panel-right.mf-flyout.mf-expanded,
+body[data-mf-mode="build"] .mf-panel-right.mf-flyout,
+body[data-mf-mode="build"] .mf-panel-right.mf-flyout.mf-expanded,
+body[data-mf-mode="build"] .mf-panel-right.mf-flyout.mf-collapsed {
+  width: 0 !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  display: block !important;
+  opacity: 1 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border-left: 1px solid #e4e4e7 !important;
+  overflow: hidden !important;
+}
+.mf-panel-right.mf-flyout.mf-flyout-open,
+body[data-mf-mode="build"] .mf-panel-right.mf-flyout.mf-flyout-open {
+  width: 420px !important;
+  min-width: 420px !important;
+  overflow: hidden !important;
+}
+
+/* Do not hide the flyout on narrow viewports; let it become full-width if needed */
+@media (max-width: 900px) {
+  body[data-mf-mode="build"] .mf-panel-right.mf-flyout,
+  body[data-mf-mode="build"] .mf-panel-right.mf-flyout.mf-expanded {
+    display: block !important;
+  }
+  .mf-panel-right.mf-flyout.mf-flyout-open,
+  body[data-mf-mode="build"] .mf-panel-right.mf-flyout.mf-flyout-open {
+    width: min(420px, 100vw) !important;
+  }
+}
+
+/* Right flyout body scrolling */
+.mf-flyout-body {
+  position: absolute !important;
+  top: 48px !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  overflow-y: auto !important;
+  padding: 0.75rem !important;
+}
+
+/* Legacy right-rail tab strip is hidden inside the flyout */
+.mf-panel-right .mf-right-tabs {
+  display: none !important;
+}
+
+/* Old collapse trigger is replaced by the flyout close button */
+#mf-right-collapse-btn.mf-collapse-btn {
+  display: none !important;
+}
+

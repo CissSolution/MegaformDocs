@@ -561,7 +561,7 @@ function initCopyButtons(): void {
 }
 
 // ── ALL_TABS: BUG #3 — print + workflow included ─────────────
-var ALL_TABS = ['field','widget','settings','html','ai','embed','rules','perms','print','workflow'];
+var ALL_TABS = ['field','widget','settings','html','ai','embed','rules','perms','print','workflow','theme','db'];
 
 function activateRightTab(tabName: string): void {
     ALL_TABS.forEach(function(t) {
@@ -603,6 +603,27 @@ function initWorkflowTab(): void {
     // delegated click listener already set up on #mf-panel-right in initPanelTabs().
     // The MFWorkflowRF.init() call lives exclusively in dom.ts to avoid double-init.
 }
+
+// ── 9.5 Right rail tab switching (consolidated) ───────────────
+// [B92] Legacy vertical tab strip is hidden in the new flyout layout, but every
+// tab still needs its pane shown. Dedicated modules (theme, workflow, print,
+// permissions, rule-builder) focus on content; this wiring guarantees the
+// pane visibility switch for every tab id.
+function initRightTabSwitching(): void {
+    var tabIds = ['field','widget','settings','html','ai','embed','rules','perms','print','workflow','theme','db'];
+    tabIds.forEach(function(id) {
+        var link = document.getElementById('mf-tab-link-' + id);
+        if (!link) return;
+        if ((link as any)._mfTabSwitchWired) return;
+        (link as any)._mfTabSwitchWired = true;
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            activateRightTab(id);
+        });
+    });
+}
+
+try { (window as any).MFActivateRightTab = activateRightTab; } catch (_e) { /* noop */ }
 
 // ── 10. Left panel ───────────────────────────────────────────
 function setupLeftPanel(): void {
@@ -651,52 +672,41 @@ function setupRightPanel(): void {
     var panel = document.getElementById('mf-panel-right');
     if (!panel) return;
 
-    // BUG #2 FIX: always start open
-    panel.classList.remove('mf-collapsed');
+    // [B92] Flyout mode: the panel is hidden by default and opened by the
+    // Settings tab or secondary toolbar. Do NOT remove the collapsed state
+    // and do NOT inject the old persistent-rail position/width rules.
+    panel.classList.add('mf-flyout');
 
     var tabBar = panel.querySelector<HTMLElement>('.mf-right-tabs');
     var btn = document.getElementById('mf-right-collapse-btn') as HTMLAnchorElement | null;
-    if (!btn && tabBar) {
-        btn = document.createElement('a');
-        btn.id = 'mf-right-collapse-btn'; btn.href = '#'; btn.className = 'mf-right-tab'; btn.title = 'Hide panel';
-        btn.style.cssText = 'flex:0 !important;padding:10px 8px !important;color:#94a3b8;';
-        btn.innerHTML = '<i class="fa fa-chevron-right"></i>';
-        tabBar.insertBefore(btn, tabBar.firstChild);
-    }
-    // [B83c-TriggersFlushEdge] Open trigger pre-rendered by dom.ts; style owned
-    // by megaform-builder-shell.css.
+    // Legacy collapse button is replaced by the flyout close button; do not
+    // inject another one into the hidden tab strip.
+    if (btn) btn.style.display = 'none';
+
     var openBtn = document.getElementById('mf-right-open-btn') as HTMLAnchorElement | null;
     addStyle(
-        '.mf-panel-right{position:relative;overflow:visible;transition:width .3s ease,opacity .3s ease,padding .3s ease;border-left:1px solid #e4e4e7;box-shadow:none;}' +
-        // [B83c] Right resizer — thin invisible hit area (was 14px wide gradient bar).
-        // Keeps drag-to-resize functional via the wider hit zone but visible chrome
-        // is just a 1px hairline; hover thickens it slightly for affordance.
-        // [2026-06-10] Wider hit zone (14px) + an always-visible grip handle (a
-        // small rounded pill with 3 dots) centred on the edge so users discover
-        // the inspector is draggable. Turns indigo on hover/drag.
+        // Resizer stays on the left edge of the flyout.
         '.mf-right-resizer{position:absolute;left:-7px;top:0;bottom:0;width:14px;cursor:col-resize;z-index:9;background:transparent;border:none;display:flex;align-items:center;justify-content:center;}' +
         '.mf-right-resizer:before{content:"";position:absolute;left:6px;top:0;bottom:0;width:1px;background:#e4e4e7;transition:width .15s ease,background .15s ease;}' +
         '.mf-right-resizer:after{content:"⋮";position:absolute;left:1px;top:50%;transform:translateY(-50%);width:12px;height:34px;line-height:34px;text-align:center;font-size:14px;color:#94a3b8;background:#fff;border:1px solid #e4e4e7;border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,.08);transition:.15s;}' +
         '.mf-right-resizer:hover:before,.mf-resizing-right-panel .mf-right-resizer:before{width:2px;background:#6366f1;}' +
         '.mf-right-resizer:hover:after,.mf-resizing-right-panel .mf-right-resizer:after{color:#fff;background:#6366f1;border-color:#6366f1;}' +
-        '.mf-panel-right.mf-collapsed{width:0 !important;min-width:0 !important;max-width:0 !important;padding:0 !important;margin:0 !important;opacity:0;overflow:hidden;border-left:none;pointer-events:none;box-shadow:none;}' +
-        '.mf-panel-right.mf-collapsed #mf-right-resizer{display:none !important;}' +
-        '#mf-right-collapse-btn:hover{color:#6366f1 !important;background:#f1f5f9;}'
+        '#mf-right-collapse-btn{display:none !important;}'
     );
     if (btn && !(btn as any).dataset?.mfCollapseWired) {
         (btn as any).dataset.mfCollapseWired = '1';
         btn.addEventListener('click', function(e: Event) {
-            e.preventDefault(); panel.classList.remove('mf-expanded'); panel.classList.add('mf-collapsed');
+            e.preventDefault(); panel.classList.remove('mf-flyout-open');
             if (openBtn) openBtn.style.display = 'flex';
         });
     }
     if (openBtn && !(openBtn as any).dataset?.mfCollapseWired) {
         (openBtn as any).dataset.mfCollapseWired = '1';
         openBtn.addEventListener('click', function(e: Event) {
-            e.preventDefault(); panel.classList.remove('mf-collapsed'); openBtn!.style.display = 'none';
+            e.preventDefault(); panel.classList.add('mf-flyout-open'); openBtn!.style.display = 'none';
         });
     }
-    // [B83c] Initial state — open trigger hidden until panel is collapsed
+    // [B83c] Initial state — open trigger hidden until panel is opened
     if (openBtn) openBtn.style.display = 'none';
 }
 
@@ -743,6 +753,7 @@ function bootPanels(): void {
     // Two Sortable on #mf-canvas-fields with different group names breaks palette drag.
     initPrintTab();
     initWorkflowTab();
+    initRightTabSwitching();
 }
 
 function bootApp(): void {

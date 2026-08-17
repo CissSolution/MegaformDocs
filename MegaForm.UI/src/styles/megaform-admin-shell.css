@@ -99,6 +99,58 @@ svg{display:inline-block;vertical-align:middle;flex-shrink:0}
 .mf-bc .mf-bc-list{list-style:none;margin:0;padding:0;display:flex;align-items:center;gap:.375rem}
 .mf-bc-page{font-size:.875rem;font-weight:500}
 .mf-hd-ac{display:flex;align-items:center;justify-content:flex-end;gap:.5rem;min-width:0}
+
+/* [HeaderCollapse 2026-08-15] The action buttons used to print on top of each other whenever the
+   header was narrow — reported as "các nút bị ép chặt khi ở chế độ windowed", reproduced on a
+   1327px viewport where the header itself measured only 800px because the module sits in Oqtane's
+   content column rather than the window.
+
+   Two causes, both fixed here:
+
+   1. .mf-btn sets white-space:nowrap but never flex-shrink, so it defaulted to 1: the box was
+      allowed to compress below its own text, and the text then ran over its neighbour. Buttons
+      must keep their width and let the ROW decide what to do about it.
+   2. The icon-only collapse that exists for this exact situation lived in @media(max-width:768px)
+      — a VIEWPORT query. The header's width comes from the pane, not the window, so a wide window
+      with a narrow pane never triggered it. A container query asks the right question.
+
+   The viewport rule further down is left alone: it still applies on genuinely small screens, and
+   the two agree rather than fight. */
+.mf-hd{container-type:inline-size;container-name:mfhd}
+.mf-hd-ac .mf-btn{flex-shrink:0}
+/* Drop the button LABELS first — that alone buys about 200px, and measured on a 800px header the
+   icons need 186px while the breadcrumb needs 108, so the title has no reason to go yet. Hiding it
+   here as the viewport rule does was over-eager: it cost the user their place on the screen to
+   solve a problem the icons had already solved. */
+@container mfhd (max-width:860px){
+  .mf-hd-ac{margin-left:auto}
+  /* font-size is the only lever that hides these labels: they are bare text nodes beside the SVG,
+     so there is no element to target. It carries !important because the existing collapse at
+     @media(max-width:1600px) declares the same thing and loses anyway — measured on the live page,
+     .mf-hd-new resolved to 0px while .mf-hd-starters, named in the very same selector list,
+     resolved to 14px and printed 127px of text across its 32px box. Rather than keep guessing
+     which sheet wins that race, take the label out of the race.
+     overflow:hidden is the belt to that braces: whatever font-size ends up applying, a button can
+     no longer paint outside its own box and onto its neighbour. */
+  .mf-hd-ac .mf-btn{width:2.25rem;min-width:2.25rem;padding:0;justify-content:center;gap:0;
+                    font-size:0!important;overflow:hidden}
+  .mf-hd-ac .mf-btn>svg,.mf-hd-ac .mf-btn>i{flex-shrink:0}
+  /* Keep the one button a first-time user is looking for readable. Every button already carries a
+     tooltip (initNiceTooltips moves title → data-mf-tip), but a newcomer does not hover a row of
+     unexplained glyphs to find out which one creates a form — so the primary action keeps its
+     words and the secondary ones, recognisable icons with tooltips, give up theirs. */
+  .mf-hd-ac .mf-btn.mf-hd-new{width:auto;min-width:0;padding:.375rem .625rem;gap:.375rem;
+                              font-size:.8125rem!important;overflow:visible}
+}
+/* Only when even that will not fit does the breadcrumb go. */
+@container mfhd (max-width:520px){
+  .mf-hd-sep,.mf-bc,.mf-hd>.mf-flex1{display:none}
+}
+/* Browsers without container queries still get the important half: buttons that never overlap.
+   They wrap onto a second row instead, which is ugly but readable — the failure mode to prefer. */
+@supports not (container-type: inline-size){
+  .mf-hd{flex-wrap:wrap;height:auto;min-height:var(--hd)}
+}
 .mf-hd{backdrop-filter:saturate(180%) blur(10px);background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(248,250,252,.94));box-shadow:0 8px 24px rgba(15,23,42,.04)}
 .mf-hd-badges{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
 .mf-hd-badge{display:inline-flex;align-items:center;gap:.375rem;padding:.34rem .72rem;border-radius:9999px;border:1px solid #dbe1ea;background:linear-gradient(180deg,#ffffff,#f8fafc);color:#334155;font-size:.72rem;font-weight:700;letter-spacing:.01em;box-shadow:0 2px 8px rgba(15,23,42,.04)}
@@ -372,9 +424,18 @@ select.mf-input{cursor:pointer;appearance:none;background-image:url("data:image/
 @keyframes mf-spin-kf{from{transform:rotate(0)}to{transform:rotate(360deg)}}
 
 /* ── Responsive ─────────────────────────── */
+/* [HeaderCollapse 2026-08-15] This block used to collapse the five header buttons at
+   @media(max-width:1600px) — which is to say, on almost every screen. It is the bug behind
+   "các nút bị ép chặt": it set the button box to 2.25rem but its font-size:0 lost the cascade
+   for some of the same buttons it named, so the box shrank to 32px while the label kept
+   rendering at 14px and painted 127px of text across its neighbours. Measured on the live
+   dashboard: .mf-hd-new resolved to 0px and .mf-hd-starters to 14px, from one selector list.
+
+   The collapse now lives in the @container rule near .mf-hd-ac, which fires on the header's own
+   width instead of the window's — the header is 1000px inside a 1327px window here, and at
+   1000px the labels fit comfortably, so they should not have been collapsing at all. */
 @media(max-width:1600px){
-  .mf-hd-close,.mf-hd-refresh,.mf-hd-starters,.mf-btn-ai-create,.mf-hd-new{width:2.25rem;min-width:2.25rem;padding:0;justify-content:center;gap:0;font-size:0}
-  .mf-btn-ai-create>span{gap:0!important;font-size:0}
+  .mf-btn-ai-create>span{gap:0}
 }
 @media(max-width:1200px){.mf-stats{grid-template-columns:repeat(2,1fr)}.mf-g21{grid-template-columns:1fr}.mf-hd-close{display:none}}
 @media(max-width:900px){.mf-upload-grid{grid-template-columns:1fr}.mf-upload-hero-meta{flex-direction:column}}
@@ -610,5 +671,12 @@ select.mf-input{cursor:pointer;appearance:none;background-image:url("data:image/
 .mf-sb-lk.is-demo-disabled .mf-sb-lk-lbl{text-decoration:line-through}
 
 @media(max-width:760px){.mf-demo-lock-fixed-badge{font-size:.72rem;bottom:12px;padding:.5rem .75rem;max-width:calc(100vw - 20px)}}
+
+/* [UmbracoHostNoSidebar 2026-08-15] Inside the Umbraco Bellissima backoffice the MegaForm
+   surface is rendered inside an iframe that already has the Umbraco section sidebar. Hide
+   MegaForm's own sidebar so the page uses Umbraco navigation and avoids a duplicated rail. */
+.mf-umbraco-host .mf-sidebar{display:none}
+.mf-umbraco-host .mf-inset{width:100%;max-width:100%}
+.mf-umbraco-host .mf-hd .mf-sb-tog{display:none}
 
 .mf-td-name-cell{display:flex;align-items:center;min-width:0}

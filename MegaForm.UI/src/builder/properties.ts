@@ -322,7 +322,7 @@ import { getPlatformHostConfig } from '../shared/platform-host';
         }, true);
     }
     // =========================================================
-    //  FLYOUT EXPAND / COLLAPSE
+    //  FLYOUT EXPAND / COLLAPSE (B92: right rail → flyout)
     // =========================================================
     var panelExpanded = false;
     function bindPanelExpand() {
@@ -342,7 +342,7 @@ import { getPlatformHostConfig } from '../shared/platform-host';
         }
         function togglePanel() {
             panelExpanded = !panelExpanded;
-            panel.classList.toggle('mf-expanded', panelExpanded);
+            panel.classList.toggle('mf-flyout-open', panelExpanded);
             if (backdrop) backdrop.classList.toggle('active', panelExpanded);
             if (icon) {
                 icon.className = panelExpanded ? 'fas fa-compress-arrows-alt' : 'fas fa-expand-arrows-alt';
@@ -356,12 +356,12 @@ import { getPlatformHostConfig } from '../shared/platform-host';
         if (!panel) return;
         if (shouldExpand && !panelExpanded) {
             panelExpanded = true;
-            panel.classList.add('mf-expanded');
+            panel.classList.add('mf-flyout-open');
             if (backdrop) backdrop.classList.add('active');
             if (icon) icon.className = 'fas fa-compress-arrows-alt';
         } else if (!shouldExpand && panelExpanded) {
             panelExpanded = false;
-            panel.classList.remove('mf-expanded');
+            panel.classList.remove('mf-flyout-open');
             if (backdrop) backdrop.classList.remove('active');
             if (icon) icon.className = 'fas fa-expand-arrows-alt';
         }

@@ -140,6 +140,10 @@ import { MegaFormBuilder } from './core';
         // Expose for click-on-canvas → auto-open Field accordion logic if any
         try { (window as any).MFDesignToggle = toggleAccordion; } catch { /* noop */ }
         try { (window as any).MFDesignOpenField = function () { ensureAccordionOpen('field'); }; } catch { /* noop */ }
+        // [B92] The flyout opens a section by name and must never close one by
+        // re-opening it, so it needs the ensure-open form for every section, not
+        // just Field.
+        try { (window as any).MFDesignEnsureOpen = ensureAccordionOpen; } catch { /* noop */ }
         // [B87] Field Properties expanded by default.
         try { ensureAccordionOpen('field'); } catch { /* noop */ }
 

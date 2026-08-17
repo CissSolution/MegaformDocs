@@ -2041,6 +2041,22 @@ body[data-mf-mode="design"] .w-sep-design-only { display: block; }
 .w-actions {
   gap: 0.35rem !important;
 }
+/* [2026-08-17] Action buttons must not be squeezed. The topbar's third grid column is
+   minmax(0, max-content), so on a narrow host (the builder inside the Umbraco workspace
+   iframe measures ~1050px) the flex children shrank instead: the AI Designer button
+   collapsed to a 28px purple stub while its label — which the media queries below
+   deliberately keep visible — carried on painting across the buttons beside it, so the
+   toolbar read as a half-drawn button. Fixed width, and the label goes at narrow widths
+   like every other label; the data-tip still names it. */
+.w-actions > .w-btn,
+.w-actions > .w-more-menu,
+.w-actions > a.w-btn {
+  flex-shrink: 0;
+}
+@media (max-width: 1280px) {
+  .w-actions .w-btn-ai-designer .mf-ai-lbl { display: none; }
+  .w-actions .w-btn-ai-designer { padding: 0 0.5rem; }
+}
 @media (max-width: 1550px) {
   .w-actions .w-btn:not(.primary) .lbl { display: none; }
   .w-actions .w-btn:not(.primary) { padding: 0 0.5rem; }
@@ -3354,3 +3370,368 @@ body[data-mf-mode="design"] .mf-panel-left .mf-tlr-view-toggle button,
 body[data-mf-mode="design"] .mf-panel-left .mf-tlr-view-toggle button.active {
   color: #0a0a0a !important;
 }
+
+/* ════════════════════════════════════════════════════════════
+   [B92] UMBRACO FORMS-STYLE PRIMARY TABS + SETTINGS FLYOUT
+   ════════════════════════════════════════════════════════════ */
+
+/* Primary tab bar */
+.mf-primary-bar {
+  position: fixed;
+  top: var(--topbar);
+  left: 0;
+  right: 0;
+  height: 44px;
+  background: #ffffff;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0.75rem;
+  gap: 0.5rem;
+  z-index: 999;
+}
+.mf-primary-bar.mf-hidden { display: none !important; }
+
+.mf-primary-tabs {
+  display: flex;
+  align-items: center;
+  gap: 0.125rem;
+  height: 100%;
+}
+.mf-primary-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  height: 100%;
+  padding: 0 0.75rem;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--mf-muted, #71717a);
+  font: 500 13px/1 var(--font);
+  cursor: pointer;
+  transition: color 0.12s, border-color 0.12s, background 0.12s;
+  border-radius: 0;
+}
+.mf-primary-tab:hover {
+  color: var(--mf-text, #09090b);
+  background: rgba(0,0,0,0.02);
+}
+.mf-primary-tab.active,
+.mf-primary-tab[aria-selected="true"] {
+  color: #09090b;
+  border-bottom-color: #18181b;
+  font-weight: 600;
+}
+
+/* Secondary toolbar (icon row) */
+.mf-secondary-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.125rem;
+  height: 100%;
+  padding-left: 0.5rem;
+  border-left: 1px solid var(--border);
+}
+.mf-secondary-tool {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  height: 28px;
+  padding: 0 0.5rem;
+  border: none;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--mf-muted, #71717a);
+  font: 500 12px/1 var(--font);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+.mf-secondary-tool:hover {
+  background: var(--muted, #f4f4f5);
+  color: var(--mf-text, #09090b);
+}
+.mf-secondary-tool i {
+  font-size: 13px;
+}
+.mf-secondary-tool-label {
+  display: none;
+}
+@media (min-width: 1280px) {
+  .mf-secondary-tool-label {
+    display: inline;
+  }
+}
+
+/* Push the 3-column builder layout down under the primary bar */
+.b-outer,
+#mf-builder-app {
+  padding-top: 44px !important;
+}
+#mf-builder-root .w-topbar {
+  border-bottom: none;
+}
+
+/* Hide the legacy vertical right-rail tabs in the flyout */
+.mf-panel-right .mf-right-tabs {
+  display: none !important;
+}
+
+/* Flyout panel */
+.mf-panel-right.mf-flyout {
+  position: fixed !important;
+  top: calc(var(--topbar) + 44px) !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 0 !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  border-left: 1px solid var(--border) !important;
+  background: #ffffff !important;
+  box-shadow: -4px 0 24px rgba(0,0,0,0.06) !important;
+  z-index: 998 !important;
+  transition: width 0.25s ease, min-width 0.25s ease !important;
+  overflow: hidden !important;
+}
+.mf-panel-right.mf-flyout.mf-flyout-open {
+  width: 420px !important;
+  min-width: 420px !important;
+}
+
+/* Flyout header */
+.mf-flyout-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 48px;
+  padding: 0 0.75rem;
+  border-bottom: 1px solid var(--border);
+  background: #ffffff;
+  flex-shrink: 0;
+}
+.mf-flyout-title {
+  font: 600 14px/1 var(--font);
+  color: #09090b;
+}
+.mf-flyout-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: var(--radius);
+  background: transparent;
+  color: #71717a;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+.mf-flyout-close:hover {
+  background: #f4f4f5;
+  color: #09090b;
+}
+
+/* Flyout scrollable body */
+.mf-flyout-body {
+  position: absolute;
+  top: 48px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow-y: auto;
+  padding: 0.75rem;
+}
+.mf-flyout-body .mf-right-tab-content {
+  height: auto !important;
+  overflow: visible !important;
+}
+
+/* Backdrop overlay */
+.mf-flyout-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.12);
+  z-index: 997;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+.mf-flyout-backdrop.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Placeholder panes for Entries / Analytics */
+.mf-placeholder-pane {
+  position: fixed;
+  top: calc(var(--topbar) + 44px);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f4f4f5;
+  z-index: 1;
+  padding: 2rem;
+}
+.mf-placeholder-card {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  max-width: 420px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+}
+.mf-placeholder-card h3 {
+  font: 600 18px/1.3 var(--font);
+  color: #09090b;
+  margin: 0 0 0.5rem;
+}
+.mf-placeholder-card p {
+  font: 400 14px/1.5 var(--font);
+  color: #71717a;
+  margin: 0 0 1.25rem;
+}
+
+/* Right resizer stays on the left edge of the flyout */
+.mf-flyout .mf-right-resizer {
+  left: -7px;
+  z-index: 10;
+}
+
+/* Existing right-rail collapse trigger now closes the flyout */
+.mf-flyout .mf-collapse-btn {
+  display: none !important;
+}
+
+/* When the flyout is open, the right edge trigger should be hidden */
+.mf-flyout-open ~ .mf-edge-open-right,
+.mf-flyout-open + .mf-edge-open-right {
+  display: none !important;
+}
+
+/* ════════════════════════════════════════════════════════════
+   [Bxx] UMBRACO WORKSPACE CO-HOST LAYOUT
+   When the builder runs inside the Bellissima workspace iframe, the
+   workspace view already provides the form title and the top-level
+   Design/Entries/Analytics/Settings tabs. Hide the duplicated internal
+   title/tabs, and switch from viewport-fixed positioning (which can clip
+   inside a flex/animated iframe host) to a normal-flow flex column so the
+   builder layout fills the iframe without blank header bands.
+   ════════════════════════════════════════════════════════════ */
+#mf-builder-root[data-mf-host="umbraco-workspace"] {
+  display: flex;
+  flex-direction: column;
+  height: 100% !important;
+  min-height: 0;
+}
+
+#mf-builder-root[data-mf-host="umbraco-workspace"] .w-topbar {
+  position: relative;
+  top: auto;
+  left: auto;
+  right: auto;
+  z-index: auto;
+  flex: 0 0 auto;
+  height: auto;
+  min-height: var(--topbar);
+}
+#mf-builder-root[data-mf-host="umbraco-workspace"] .w-topbar .w-left {
+  display: none !important;
+}
+
+#mf-builder-root[data-mf-host="umbraco-workspace"] .mf-primary-bar {
+  position: relative;
+  top: auto;
+  left: auto;
+  right: auto;
+  z-index: auto;
+  flex: 0 0 auto;
+  height: auto;
+  min-height: 44px;
+}
+#mf-builder-root[data-mf-host="umbraco-workspace"] .mf-primary-tabs {
+  display: none !important;
+}
+
+#mf-builder-root[data-mf-host="umbraco-workspace"] .b-outer,
+#mf-builder-root[data-mf-host="umbraco-workspace"] #mf-builder-app {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: auto;
+  padding-top: 0 !important;
+  position: relative;
+}
+
+#mf-builder-root[data-mf-host="umbraco-workspace"] .mf-builder-layout {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  height: auto !important;
+  display: flex !important;
+  flex-direction: row !important;
+}
+
+#mf-builder-root[data-mf-host="umbraco-workspace"] .mf-panel-left,
+#mf-builder-root[data-mf-host="umbraco-workspace"] .mf-panel-center {
+  height: auto !important;
+  min-height: 0 !important;
+}
+#mf-builder-root[data-mf-host="umbraco-workspace"] .mf-panel-left {
+  flex: 0 0 auto !important;
+  width: 256px !important;
+  min-width: 256px !important;
+  max-width: 256px !important;
+}
+#mf-builder-root[data-mf-host="umbraco-workspace"] .mf-panel-center {
+  flex: 1 1 auto !important;
+}
+
+#mf-builder-root[data-mf-host="umbraco-workspace"] .mf-flyout {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: auto;
+}
+
+/* [B92-fix 2026-08-17] The tool icons move into the topbar row here (dom.ts), which
+   retires the primary bar: the workspace header above the iframe owns the tabs, so
+   that bar was a second near-empty 44px band above a canvas that wants the height.
+   The icons then live in .w-center, which is a centred flex row — give them the
+   spacing of a toolbar and let them shrink before the action buttons do. */
+#mf-builder-root[data-mf-host="umbraco-workspace"] .w-center .mf-secondary-toolbar {
+  border-left: none;
+  padding-left: 0;
+  gap: 0.125rem;
+  min-width: 0;
+  flex: 0 1 auto;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+#mf-builder-root[data-mf-host="umbraco-workspace"] .w-center .mf-secondary-toolbar::-webkit-scrollbar {
+  display: none;
+}
+#mf-builder-root[data-mf-host="umbraco-workspace"] .w-center .mf-secondary-tool {
+  flex: 0 0 auto;
+  width: 30px;
+  padding: 0;
+}
+/* The label only ever shows on wide screens; in the topbar row the icons stand alone
+   so ten tools cannot push the action buttons off the edge. */
+#mf-builder-root[data-mf-host="umbraco-workspace"] .w-center .mf-secondary-tool-label {
+  display: none !important;
+}
+/* Light/dark preview toggle is a Theme-mode control and duplicates what the Theme
+   Designer offers; drop it here so the row keeps its width for the tools. */
+#mf-builder-root[data-mf-host="umbraco-workspace"] .w-center #mf-color-scheme,
+#mf-builder-root[data-mf-host="umbraco-workspace"] .w-center .w-sep-design-only {
+  display: none;
+}
+

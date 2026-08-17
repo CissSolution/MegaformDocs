@@ -323,6 +323,14 @@ var MegaFormBuilder = (function () {
         if (!f.label && f.type !== 'Html' && f.type !== 'Section') f.label = humanizeKey(f.key || f.type);
 
         if (!Array.isArray(f.columns) && Array.isArray(f.Columns)) f.columns = cloneJson(f.Columns);
+        // [DualCaseColumns fix 2026-08-15] Drop the PascalCase twin once we have taken what we need
+        // from it. Leaving it behind is what doubled every Row: FormSchema binds "columns" and
+        // "Columns" to the SAME member and APPENDS the second one, so two columns became four and
+        // the form rendered First/Last/First/Last. Worse, the normalizer below rewrites only
+        // f.columns — so the twins drift apart (a trimmed placeholder is enough) and the renderer's
+        // identical-twin dedup stops collapsing them. gallery.ts already deletes it on its path;
+        // this brings the builder's own save in line, so one Save cleans an infected form.
+        delete f.Columns;
         if (Array.isArray(f.columns)) {
             f.columns = f.columns.map(function (col) {
                 var nextCol = isPlainObject(col) ? cloneJson(col) || {} : {};

@@ -18,6 +18,7 @@ import { compositeCellStyle } from '../renderer/helpers';
 import { previewFlagHtml } from '../renderer/country-picker';
 // Surface the schema-owned page-break structure in the builder canvas.
 import { listSteps } from '@shared/form-steps';
+import { getPublicFormUrl } from '@shared/platform-host';
 // MegaFormBuilder is a global defined by megaform-builder-core.js
 
 (function () {
@@ -213,11 +214,16 @@ import { listSteps } from '@shared/form-steps';
         // [B52] Legacy URL-src approach kept for fallback. Default mount path
         // now uses buildThemePreviewSrcdoc() which inlines the schema so the
         // iframe shows ONLY the form, no DNN/Oqtane page chrome.
+        // [UmbracoPreviewFix 2026-08-15] When no runtime base URL is configured
+        // (Umbraco/standalone hosts), use the canonical public form URL /f/{id}
+        // instead of the legacy /xx?mfFormId=... path that only exists on DNN/Oqtane.
         const platform = (window as any).__MF_PLATFORM__ || {};
         const base: string = String(platform.runtimeBaseUrl || platform.siteRoot || '');
+        if (!base) {
+            return getPublicFormUrl(formId) + '?theme-preview=1&_=' + Date.now();
+        }
         const path = '/xx?mfFormId=' + encodeURIComponent(String(formId))
             + '&theme-preview=1&_=' + Date.now();
-        if (!base) return path;
         return (base.replace(/\/+$/, '')) + path;
     }
 
@@ -227,9 +233,19 @@ import { listSteps } from '@shared/form-steps';
         if (w.__MF_ASSET_BASE__) return String(w.__MF_ASSET_BASE__).replace(/\/+$/, '');
         var pf = (w.__MF_PLATFORM__ || {}) as any;
         if (pf.assetBase) return String(pf.assetBase).replace(/\/+$/, '');
-        var platform = String(pf.platform || '').toLowerCase();
+        // [2026-08-17] Every host page states its own base on the builder root
+        // (Umbraco: /App_Plugins/MegaForm/). Reading it here is what keeps a fourth
+        // platform from silently inheriting DNN's path: on Umbraco the theme/preview
+        // frame asked /DesktopModules/MegaForm/Assets/css/megaform.css and got six
+        // 404s, so the preview rendered unstyled while the builder logged nothing.
+        var rootEl = document.getElementById('mf-builder-root') as HTMLElement | null;
+        var declared = rootEl && rootEl.dataset ? String(rootEl.dataset.assetsBase || '') : '';
+        if (declared) return declared.replace(/\/+$/, '');
+        var platform = String(pf.platform || (rootEl && rootEl.dataset ? rootEl.dataset.platform : '') || '').toLowerCase();
         if (platform === 'oqtane' || w.Oqtane || w.__OQTANE__) return '/Modules/MegaForm';
         if (document.querySelector('[data-mf-platform="oqtane"]')) return '/Modules/MegaForm';
+        if (platform === 'umbraco') return '/App_Plugins/MegaForm';
+        if (platform === 'web' || platform === 'aspcore') return '/megaform';
         return '/DesktopModules/MegaForm/Assets';
     }
 
@@ -1058,6 +1074,9 @@ import { listSteps } from '@shared/form-steps';
         (window as any).__MF_PLUGIN_PRELOAD_BADGE__ = 'PluginPreload v20260525-01';
         const platform = (window as any).__MF_PLATFORM__ || {};
         let assetsBase: string = String(platform.assetsBaseUrl || platform.assetsBase || '');
+        // The host page declares its own base on the builder root; prefer it over
+        // sniffing script tags, and never let a non-DNN host fall through to DNN's path.
+        if (!assetsBase) assetsBase = getPlatformAssetBase();
         if (!assetsBase) {
             // Best-effort fallback: derive from any existing megaform script src.
             const scripts = Array.prototype.slice.call(document.scripts) as HTMLScriptElement[];
@@ -2031,6 +2050,20 @@ import { listSteps } from '@shared/form-steps';
         } catch (_e) { /* defensive */ }
         // No widget designer — make sure the right rail shows this field's settings.
         try { if (B.callModule) B.callModule('properties', 'showProps', [B.state.schema.fields[index]]); } catch (_e) { /* defensive */ }
+        // [B92 2026-08-17] The right rail is a flyout now: it is closed until something
+        // opens it. Populating it and stopping there meant the gear on a control looked
+        // dead — the properties were filled in behind a panel of zero width. This is the
+        // Umbraco Forms gesture: the gear on a control opens that control's settings.
+        try {
+            var open = (window as any).MFOpenFlyout;
+            if (typeof open === 'function') {
+                // Name the control in the flyout header, the way Umbraco Forms names the
+                // field its settings sidebar belongs to.
+                var fld = B.state.schema.fields[index] || {};
+                var who = String(fld.label || fld.key || fld.type || '').trim();
+                open('field', who ? who : undefined);
+            }
+        } catch (_e) { /* defensive */ }
     }
 
     // ── Row container with columns ──

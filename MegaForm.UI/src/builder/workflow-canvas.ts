@@ -3074,8 +3074,9 @@
   function getApiUrl(path: string): string {
     var base = (W._state.apiBase || '').replace(/\/+$/, '');
     var cleanPath = path.charAt(0) === '/' ? path : '/' + path;
-    if (base.toLowerCase().indexOf('/api/megaform') >= 0) return base + cleanPath;
-    if (base.toLowerCase().indexOf('/desktopmodules/') >= 0) return base + cleanPath;
+    // Twin of the same helper in workflow/index.ts — a base that already names the
+    // MegaForm API is the mount point (Umbraco: /umbraco/MegaForm/MegaFormApi/).
+    if (base.toLowerCase().indexOf('megaform') >= 0) return base + cleanPath;
     return base + '/api/MegaForm' + cleanPath;
   }
   function getToken(): string {

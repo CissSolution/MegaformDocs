@@ -106,7 +106,19 @@ import { MegaFormBuilder } from './core';
     return h;
   }
 
-  function url(path: string): string { return apiBase() + path; }
+  // [OqtaneScriptRoute 2026-08-14] Oqtane mounts FormScriptController at
+  // /api/MegaFormPopup/FormScript/* while apiBase() resolves to /api/MegaForm/ — the builder's
+  // config supplies apiBaseUrl, so the '/api/MegaFormPopup/' default further down apiBase() is
+  // never reached on Oqtane. Every call from this panel 404'd, and the panel reports any failed
+  // fetch as "Could not reach the server.", so the screen loaded empty with the switch off even
+  // for a form with a saved, enabled, approved script — and saving from that state would have
+  // replaced the working script with a blank one.
+  // Same shape as db-tables-panel.ts:69, which routes Subform/* the same way for the same reason.
+  function url(path: string): string {
+    var base = apiBase().replace(/\/?$/, '/');
+    if (platformName() === 'oqtane' && /^FormScript\//i.test(path)) return '/api/MegaFormPopup/' + path;
+    return base + path;
+  }
 
   function currentFormId(): number {
     var id = (B.state && (B.state as any).formId) || 0;
@@ -178,6 +190,11 @@ import { MegaFormBuilder } from './core';
     fetch(url('FormScript/Get?formId=' + formId), { headers: headers(), credentials: 'same-origin' })
       .then(function (r) { return r.json().then(function (b) { return { status: r.status, body: b }; }); })
       .then(function (res) {
+        if (res.status === 200 && res.body && res.body.disabled) {
+          setEditorEnabled(false);
+          setStatus(res.body.message || 'Not available.', 'error');
+          return;
+        }
         if (res.status !== 200) {
           // 403 host_only / 403 feature_disabled / 503 compiler_missing — the server's own
           // wording, not a guess made here.

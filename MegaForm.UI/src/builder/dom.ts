@@ -498,21 +498,6 @@ import dbStrings from './db-tables-strings.json';
         '<div class="w-sep"></div>' +
         '<input type="text" class="w-title" id="w-title" placeholder="Untitled Form" value=""/>' +
         '<span class="w-pill draft" id="w-status">' + (isNew ? 'New' : 'Draft') + '</span>' +
-        // [B67] Build/Design segmented pill — primary mode driver, mirrors
-        // the Tailwind/Radix mock at localhost:3000/builder. Clicking Build
-        // activates the existing "Design Studio" tab (mf-tab-link-field) —
-        // labelled "Build" here because it builds the form structure.
-        // Clicking Design activates the existing Theme tab (mf-tab-link-theme).
-        // The center canvas stays put across mode toggles (B50 iframe mount
-        // is disabled — Theme mode now just dresses the canvas down via CSS).
-        '<div class="w-mode-pill" role="tablist" aria-label="Builder mode">' +
-          '<button type="button" class="w-mode-btn is-active" data-mf-mode="build" id="mf-mode-build" role="tab" aria-selected="true">' +
-            '<i class="fa-solid fa-cube"></i><span>' + bt('builder.mode_build','Build') + '</span>' +
-          '</button>' +
-          '<button type="button" class="w-mode-btn" data-mf-mode="design" id="mf-mode-design" role="tab" aria-selected="false">' +
-            '<i class="fa-solid fa-palette"></i><span>' + bt('builder.mode_design','Design') + '</span>' +
-          '</button>' +
-        '</div>' +
       '</div>' +
 
       // CENTER: Undo / Redo / sep / Device switcher
@@ -564,7 +549,11 @@ import dbStrings from './db-tables-strings.json';
             '<button class="w-more-item" id="mf-btn-create-table-more"><i class="fa-solid fa-database"></i> ' + bt('builder.create_db_table','Create DB Table') + '</button>' +
           '</div>' +
         '</div>' +
-        '<button class="w-btn primary" id="mf-btn-publish" data-tip="Publish form and return to dashboard" aria-label="Publish"><i class="fa-solid fa-rocket"></i><span class="lbl"> ' + bt('builder.publish_return','Publish and Return Dashboard') + '</span></button>' +
+        // [PublishToLiveForm 2026-08-15] Label and tooltip follow the behaviour: publishing now
+        // opens the live form (see getPublishReturnUrl in toolbar.ts). All 37 catalogs were
+        // updated with it — a button that still said "Return Dashboard" in 36 languages would be
+        // lying to everyone but an English reader.
+        '<button class="w-btn primary" id="mf-btn-publish" data-tip="Publish the form and open it live" aria-label="Publish"><i class="fa-solid fa-rocket"></i><span class="lbl"> ' + bt('builder.publish_return','Publish and View Form') + '</span></button>' +
       '</div>' +
       // [B73b] Hidden legacy buttons — kept in DOM so toolbar.ts handlers still mount;
       // overflow menu delegates clicks to them. Display:none keeps them invisible.
@@ -609,96 +598,10 @@ import dbStrings from './db-tables-strings.json';
         });
       });
 
-      // [B67] Build/Design segmented pill wiring. Click handlers map to the
-      // existing right-rail tab links so all current activation logic (tab
-      // CSS, theme-tab-adapter, properties-patch) keeps working untouched —
-      // we just swap the primary mode-driver UI from a 10-tab strip to a
-      // 2-mode pill. Body data-mf-mode lets future CSS rule rail visibility
-      // without further code changes.
-      function activateMode(mode: 'build' | 'design'): void {
-        try { document.body.setAttribute('data-mf-mode', mode); } catch (_e) {}
-        var pillBtns = h.querySelectorAll<HTMLButtonElement>('.w-mode-btn');
-        pillBtns.forEach(function(b) {
-          var isMatch = b.getAttribute('data-mf-mode') === mode;
-          b.classList.toggle('is-active', isMatch);
-          b.setAttribute('aria-selected', isMatch ? 'true' : 'false');
-        });
-        // Mirror onto existing tab strip so all today's wiring runs.
-        var targetTabId = mode === 'design' ? 'mf-tab-link-theme' : 'mf-tab-link-field';
-        var targetTab = document.getElementById(targetTabId) as HTMLAnchorElement | null;
-        if (targetTab && !targetTab.classList.contains('active')) {
-          try { targetTab.click(); } catch (_e) {}
-        }
-        // [B91] Remove state preview chips — not part of current mock spec.
-        // Use MutationObserver to catch chips injected after mode switch.
-        if (mode === 'design') {
-          var stateLabels = ['Default','Hover','Focus','Disabled','Error'];
-          function hideStateChips() {
-            var topbar = document.querySelector('.w-topbar');
-            if (!topbar) return;
-            topbar.querySelectorAll('*').forEach(function(el) {
-              var text = (el.textContent || '').trim();
-              if (stateLabels.indexOf(text) >= 0) {
-                var parent = el.parentElement;
-                if (parent && parent !== topbar && parent.children.length <= 5) {
-                  (parent as HTMLElement).style.display = 'none';
-                } else {
-                  (el as HTMLElement).style.display = 'none';
-                }
-              }
-            });
-          }
-          hideStateChips();
-          // Also watch for dynamically injected chips
-          if (!window.__mfStateChipObserver) {
-            try {
-              window.__mfStateChipObserver = new MutationObserver(function(mutations) {
-                hideStateChips();
-              });
-              window.__mfStateChipObserver.observe(document.body, { childList: true, subtree: true });
-            } catch (_e) {}
-          }
-        } else {
-          if (window.__mfStateChipObserver) {
-            try { window.__mfStateChipObserver.disconnect(); } catch (_e) {}
-            window.__mfStateChipObserver = null;
-          }
-        }
-      }
-      var pillBtns = h.querySelectorAll<HTMLButtonElement>('.w-mode-btn');
-      pillBtns.forEach(function(btn) {
-        btn.addEventListener('click', function(ev) {
-          ev.preventDefault();
-          var mode = (btn.getAttribute('data-mf-mode') || 'build') as 'build' | 'design';
-          activateMode(mode);
-        });
-      });
-      // Listen for tab activation triggered elsewhere (e.g. user clicks the
-      // legacy right-rail tab strip) and keep the pill in sync.
-      window.addEventListener('mf:theme-tab-activated', function() {
-        try { document.body.setAttribute('data-mf-mode', 'design'); } catch (_e) {}
-        var pillBtns2 = h.querySelectorAll<HTMLButtonElement>('.w-mode-btn');
-        pillBtns2.forEach(function(b) {
-          var on = b.getAttribute('data-mf-mode') === 'design';
-          b.classList.toggle('is-active', on);
-          b.setAttribute('aria-selected', on ? 'true' : 'false');
-        });
-      });
-      window.addEventListener('mf:theme-tab-deactivated', function() {
-        try { document.body.setAttribute('data-mf-mode', 'build'); } catch (_e) {}
-        var pillBtns2 = h.querySelectorAll<HTMLButtonElement>('.w-mode-btn');
-        pillBtns2.forEach(function(b) {
-          var on = b.getAttribute('data-mf-mode') === 'build';
-          b.classList.toggle('is-active', on);
-          b.setAttribute('aria-selected', on ? 'true' : 'false');
-        });
-      });
-      // Initialize default mode
-      try {
-        if (!document.body.getAttribute('data-mf-mode')) {
-          document.body.setAttribute('data-mf-mode', 'build');
-        }
-      } catch (_e) {}
+      // [B92] Primary tabs (Design/Entries/Analytics/Settings) now replace the
+      // Build/Design segmented pill. The legacy w-mode-pill and its wiring have
+      // been removed; theme activation is driven by the secondary toolbar icon
+      // or the Settings tab, and the default data-mf-mode is set in initBehaviours.
 
       // [B69] Color-scheme toggle (sun/moon). Drives data-mf-color-scheme on
       // form wrapper. Right now the runtime CSS already supports
@@ -728,6 +631,75 @@ import dbStrings from './db-tables-strings.json';
     }, 300);
 
     return h;
+  }
+
+  // ── 2b. PRIMARY TAB BAR (Design / Entries / Analytics / Settings) ─────────
+  // [B92] Umbraco Forms-style top-level navigation + compact secondary
+  // toolbar that replaces the old persistent right-rail tab strip.
+  function createPrimaryBar(): HTMLElement {
+    var bar = document.createElement('div');
+    bar.className = 'mf-primary-bar' + (isNew ? ' mf-hidden' : '');
+    bar.id = 'mf-primary-bar';
+    bar.innerHTML =
+      '<div class="mf-primary-tabs" role="tablist" aria-label="Form sections">' +
+        primaryTab('design', 'fa-pen-ruler', 'Design') +
+        primaryTab('entries', 'fa-inbox', 'Entries') +
+        primaryTab('analytics', 'fa-chart-line', 'Analytics') +
+        primaryTab('settings', 'fa-gear', 'Settings') +
+      '</div>' +
+      '<div class="mf-secondary-toolbar" role="toolbar" aria-label="Design settings tools">' +
+        secondaryTool('field', 'fa-sliders', 'Field Properties') +
+        secondaryTool('settings', 'fa-cog', 'Form Settings') +
+        secondaryTool('steps', 'fa-list-ol', 'Steps') +
+        secondaryTool('html', 'fa-code', 'Custom HTML') +
+        secondaryTool('theme', 'fa-palette', 'Theme Designer') +
+        secondaryTool('db', 'fa-database', 'Database Tables') +
+        secondaryTool('rules', 'fa-code-branch', 'Rule Builder') +
+        secondaryTool('perms', 'fa-user-shield', 'Permissions & Access') +
+        secondaryTool('workflow', 'fa-project-diagram', 'BPMN 2.0 Workflow') +
+        secondaryTool('print', 'fa-print', 'Print Settings') +
+      '</div>';
+    return bar;
+  }
+
+  function primaryTab(id: string, icon: string, label: string): string {
+    var active = id === 'design' ? ' active' : '';
+    var loc = bt('builder.primary_tab_' + id, label);
+    return '<button type="button" class="mf-primary-tab' + active + '" data-mf-primary-tab="' + id + '" role="tab" aria-selected="' + (id === 'design' ? 'true' : 'false') + '">' +
+             '<i class="fas ' + icon + '"></i><span>' + loc + '</span>' +
+           '</button>';
+  }
+
+  function secondaryTool(id: string, icon: string, title: string): string {
+    var tip = bt('builder.tabtitle_' + id, title).replace(/"/g, '&quot;');
+    var label = bt('builder.tab_' + id, title).replace(/"/g, '&quot;');
+    return '<button type="button" class="mf-secondary-tool" data-mf-secondary-tab="' + id + '" data-tip="' + tip + '" aria-label="' + tip + '">' +
+             '<i class="fas ' + icon + '"></i><span class="mf-secondary-tool-label">' + label + '</span>' +
+           '</button>';
+  }
+
+  // ── 2c. ENTRIES / ANALYTICS PLACEHOLDERS ─────────────────────────
+  // [B92] Entries and Analytics are not embedded in the builder yet; open the
+  // corresponding dashboard pages in a new tab for the current form.
+  function createPlaceholderPanes(): string {
+    return (
+      '<div id="mf-entries-pane" class="mf-placeholder-pane" style="display:none">' +
+        '<div class="mf-placeholder-card">' +
+          '<i class="fas fa-inbox fa-3x" style="color:#cbd5e1;margin-bottom:14px"></i>' +
+          '<h3>' + bt('builder.primary_tab_entries','Entries') + '</h3>' +
+          '<p>' + bt('builder.entries_hint','View and manage submissions for this form.') + '</p>' +
+          '<a class="w-btn primary" id="mf-btn-open-entries" href="#" target="_blank">' + bt('builder.entries_open_dashboard','Open Submissions') + '</a>' +
+        '</div>' +
+      '</div>' +
+      '<div id="mf-analytics-pane" class="mf-placeholder-pane" style="display:none">' +
+        '<div class="mf-placeholder-card">' +
+          '<i class="fas fa-chart-line fa-3x" style="color:#cbd5e1;margin-bottom:14px"></i>' +
+          '<h3>' + bt('builder.primary_tab_analytics','Analytics') + '</h3>' +
+          '<p>' + bt('builder.analytics_hint','View reports and submission analytics for this form.') + '</p>' +
+          '<a class="w-btn primary" id="mf-btn-open-analytics" href="#" target="_blank">' + bt('builder.analytics_open_dashboard','Open Analytics') + '</a>' +
+        '</div>' +
+      '</div>'
+    );
   }
 
   // ── 3. TEMPLATE GALLERY ───────────────────────────────────
@@ -856,7 +828,13 @@ import dbStrings from './db-tables-strings.json';
   function createPropertiesPanel(): string {
     return (
       '<div id="mf-flyout-backdrop" class="mf-flyout-backdrop"></div>' +
-      '<div class="mf-panel mf-panel-right" id="mf-panel-right">' +
+      '<div class="mf-panel mf-panel-right mf-flyout" id="mf-panel-right">' +
+        '<div class="mf-flyout-header">' +
+          '<span class="mf-flyout-title">' + bt('builder.flyout_title','Settings') + '</span>' +
+          '<button type="button" class="mf-flyout-close" id="mf-flyout-close" aria-label="' + bt('builder.flyout_close','Close') + '">' +
+            '<i class="fas fa-times"></i>' +
+          '</button>' +
+        '</div>' +
         '<div id="mf-right-resizer" class="mf-right-resizer" title="Drag to resize panel" role="separator" aria-orientation="vertical" aria-valuemin="420" aria-valuemax="1120"></div>' +
         // [B83e-EdgeTriggerSvgTooltip] Right collapse trigger — mock-style 16×64
         // white card with inline Lucide PanelRightClose SVG + custom tooltip on
@@ -869,27 +847,42 @@ import dbStrings from './db-tables-strings.json';
             '<path d="m8 9 3 3-3 3"/>' +
           '</svg>' +
         '</a>' +
-        createRightTabs() +
-        createTabField() +
-        // createTabWidget() — removed in session 219c (merged into Field tab)
-        createTabSettings() +
-        createTabSteps() +
-        createTabHtml() +
-        createTabTheme() +
-        createTabAi() +
-        createTabDb() +
-        createTabEmbed() +
-        createTabRules() +
-        createPermissionsTab() +
-        createTabWorkflow() +
-        createTabPrint() +
+        // [B92] Legacy vertical tab strip is hidden but kept in the DOM so all
+        // existing tab-activation wiring (properties.ts, properties-patch.ts)
+        // keeps working without knowing about the new flyout/secondary toolbar.
+        '<div class="mf-right-tabs" style="display:none">' + createRightTabsInner() + '</div>' +
+        '<div class="mf-flyout-body">' +
+          createTabField() +
+          // createTabWidget() — removed in session 219c (merged into Field tab)
+          createTabSettings() +
+          createTabSteps() +
+          createTabHtml() +
+          createTabTheme() +
+          createTabAi() +
+          createTabDb() +
+          createTabEmbed() +
+          createTabRules() +
+          createPermissionsTab() +
+          createTabWorkflow() +
+          createTabPrint() +
+        '</div>' +
       '</div>'
     );
   }
 
   function createRightTabs(): string {
+    return '<div class="mf-right-tabs">' + createRightTabsInner() + '</div>';
+  }
+
+  // [B92-fix 2026-08-17] The `return` was lost when this was split out of
+  // createRightTabs(), so the function evaluated the string and returned undefined:
+  // the hidden strip rendered the literal text "undefined" and NOT ONE
+  // #mf-tab-link-* anchor existed. Nothing threw — every consumer just found null.
+  // The panes that mount lazily on a click of those anchors (Print, Theme, DB,
+  // Rules, Workflow) therefore opened blank inside the new flyout, and
+  // activateRightTab() could no longer hide the pane it was leaving.
+  function createRightTabsInner(): string {
     return (
-      '<div class="mf-right-tabs">' +
         // collapse btn removed from here — now sits above as direct child of mf-panel-right
         // [B65d] FIELD tab repurposed as "Design" — single entry that opens
         // per-section popup designers for Field props / Form Settings /
@@ -919,8 +912,7 @@ import dbStrings from './db-tables-strings.json';
         rightTab('workflow', 'fa-project-diagram',        'BPMN 2.0 Workflow',  'BPMN') +
         rightTab('print',    'fa-print',                  'Print Settings',   'Print') +
         '<a href="#" id="mf-panel-expand-btn" class="mf-right-tab mf-expand-btn">' +
-          '<i class="fas fa-expand-arrows-alt" id="mf-expand-icon"></i></a>' +
-      '</div>'
+          '<i class="fas fa-expand-arrows-alt" id="mf-expand-icon"></i></a>'
     );
   }
 
@@ -1974,6 +1966,7 @@ import dbStrings from './db-tables-strings.json';
     // direct child of body → insertBefore throws NotFoundError.
     root!.appendChild(createBuilderTopbar());
     root!.appendChild(createGalleryTopbar());
+    root!.appendChild(createPrimaryBar());
 
     // Outer wrapper
     var outer = document.createElement('div');
@@ -2017,6 +2010,7 @@ import dbStrings from './db-tables-strings.json';
 
     app.appendChild(layout);
     outer.appendChild(app);
+    outer.insertAdjacentHTML('beforeend', createPlaceholderPanes());
 
     root!.appendChild(outer);
     root!.appendChild(createHiddenInputs());
@@ -2030,6 +2024,186 @@ import dbStrings from './db-tables-strings.json';
 
   // ── 9. INIT AFTER DOM BUILT ───────────────────────────────
   function initBehaviours(): void {
+    // [B92] Primary tabs + secondary toolbar + flyout wiring
+    function getEffectiveFormId(): number {
+      try {
+        var el = document.getElementById('mf-builder-form-id') as HTMLInputElement | null;
+        return el ? parseInt(el.value || '0') || 0 : 0;
+      } catch (_e) { return 0; }
+    }
+    function getDashboardBase(): string {
+      var cfg = (window as any).__MF_PLATFORM__;
+      var platform = cfg && cfg.platform ? String(cfg.platform).toLowerCase() : '';
+      if (platform === 'umbraco') return '/umbraco/section/megaform/view/open';
+      return '/admin/dashboard';
+    }
+
+    var builderApp = document.getElementById('mf-builder-app');
+    var primaryBar = document.getElementById('mf-primary-bar');
+    var flyout = document.getElementById('mf-panel-right');
+    var backdrop = document.getElementById('mf-flyout-backdrop');
+    var entriesPane = document.getElementById('mf-entries-pane');
+    var analyticsPane = document.getElementById('mf-analytics-pane');
+
+    function setPrimaryTab(tab: string): void {
+      try { root!.setAttribute('data-mf-primary-tab', tab); } catch (_e) {}
+      document.querySelectorAll<HTMLElement>('.mf-primary-tab').forEach(function(b) {
+        var on = b.getAttribute('data-mf-primary-tab') === tab;
+        b.classList.toggle('active', on);
+        b.setAttribute('aria-selected', on ? 'true' : 'false');
+      });
+      // Show/hide builder app vs placeholder panes
+      if (builderApp) {
+        var showBuilder = tab === 'design' || tab === 'settings';
+        builderApp.style.display = showBuilder ? '' : 'none';
+      }
+      if (entriesPane) entriesPane.style.display = tab === 'entries' ? '' : 'none';
+      if (analyticsPane) analyticsPane.style.display = tab === 'analytics' ? '' : 'none';
+      // Secondary toolbar only visible in Design tab
+      document.querySelectorAll<HTMLElement>('.mf-secondary-toolbar').forEach(function(tb) {
+        tb.style.display = tab === 'design' ? '' : 'none';
+      });
+      if (tab === 'settings') {
+        toggleFlyout(true);
+      } else {
+        toggleFlyout(false);
+      }
+    }
+    function toggleFlyout(show: boolean): void {
+      if (!flyout) return;
+      if (show) {
+        flyout.classList.add('mf-flyout-open');
+        if (backdrop) backdrop.classList.add('active');
+      } else {
+        flyout.classList.remove('mf-flyout-open');
+        if (backdrop) backdrop.classList.remove('active');
+      }
+    }
+    // The flyout is one panel that shows one tool at a time, so it says which tool it
+    // is showing. A header that always read "Settings" while the body showed the BPMN
+    // canvas was the panel lying about itself.
+    var FLYOUT_TITLES: { [k: string]: string } = {
+      field: 'Field Properties', settings: 'Form Settings', steps: 'Steps',
+      html: 'Custom HTML', theme: 'Theme Designer', db: 'Database Tables',
+      rules: 'Rule Builder', perms: 'Permissions & Access',
+      workflow: 'BPMN 2.0 Workflow', print: 'Print Settings',
+      ai: 'AI Assistant', embed: 'Embed', widget: 'Widget'
+    };
+    function setFlyoutTitle(tabId: string, override?: string): void {
+      var el = root!.querySelector('.mf-flyout-title') as HTMLElement | null;
+      if (!el) return;
+      el.textContent = override || bt('builder.tabtitle_' + tabId, FLYOUT_TITLES[tabId] || 'Settings');
+    }
+    // Design Studio holds Field properties / Form settings / Steps / Custom HTML as
+    // accordion sections INSIDE the field pane, so the field pane has to be the visible
+    // pane before its accordion moves: toggling first left the previous pane on screen
+    // with the accordion section rendered into a pane nobody was looking at.
+    var ACCORDION_TABS = ['field', 'settings', 'steps', 'html'];
+    function openFlyoutTab(tabId: string, titleOverride?: string): void {
+      toggleFlyout(true);
+      setFlyoutTitle(tabId, titleOverride);
+      var isAccordion = ACCORDION_TABS.indexOf(tabId) >= 0;
+      var paneId = isAccordion ? 'field' : tabId;
+      // Click the (hidden) legacy anchor: several panes only build themselves on that
+      // click — Print, Theme, DB, Rules and Workflow all mount from its listener.
+      var link = document.getElementById('mf-tab-link-' + paneId);
+      if (link) link.click();
+      // Belt and braces: switch pane visibility even if a module skipped its listener.
+      var activate = (window as any).MFActivateRightTab;
+      if (typeof activate === 'function') {
+        try { activate(paneId); } catch (_e) {}
+      }
+      if (isAccordion) {
+        // Ensure-open, not toggle: clicking a toolbar icon twice should re-show that
+        // section, never collapse it into an empty flyout.
+        var ensure = (window as any).MFDesignEnsureOpen;
+        var toggle = (window as any).MFDesignToggle;
+        try {
+          if (typeof ensure === 'function') ensure(tabId);
+          else if (typeof toggle === 'function') toggle(tabId);
+        } catch (_e) {}
+      }
+    }
+    // Canvas field cards open their own settings through this (see openFieldSettings in
+    // canvas.ts) — the gear on a control is the primary way into the flyout.
+    try {
+      (window as any).MFOpenFlyout = openFlyoutTab;
+      (window as any).MFCloseFlyout = function () { toggleFlyout(false); };
+    } catch (_e) {}
+    if (primaryBar) {
+      primaryBar.addEventListener('click', function(e) {
+        var btn = (e.target as HTMLElement).closest<HTMLElement>('.mf-primary-tab');
+        if (!btn) return;
+        var tab = btn.getAttribute('data-mf-primary-tab') || 'design';
+        setPrimaryTab(tab);
+      });
+    }
+    // Delegate the tool icons on the ROOT, not on the primary bar: in the Umbraco
+    // workspace the toolbar is moved out of that bar into the topbar row, and a
+    // listener bound to its old parent would leave every gear silently dead.
+    if (root) {
+      root.addEventListener('click', function(e) {
+        var btn = (e.target as HTMLElement).closest<HTMLElement>('.mf-secondary-tool');
+        if (!btn) return;
+        e.preventDefault();
+        var tabId = btn.getAttribute('data-mf-secondary-tab');
+        if (tabId) openFlyoutTab(tabId);
+      });
+    }
+    // [B92-fix 2026-08-17] Umbraco co-host: the workspace header above the iframe already
+    // carries the form name and the Design/Entries/Analytics/Settings tabs, so the primary
+    // bar inside the builder was left holding nothing but the tool icons — a second 44px
+    // band of near-empty white stacked under a topbar whose middle was already empty, on
+    // a screen where the canvas is what needs the height. Move the tools up into the
+    // topbar's own row and drop the empty band.
+    if (root!.getAttribute('data-mf-host') === 'umbraco-workspace') {
+      var toolbarEl = root!.querySelector('.mf-secondary-toolbar') as HTMLElement | null;
+      var topbarCenter = root!.querySelector('.w-topbar-builder .w-center') as HTMLElement | null;
+      if (toolbarEl && topbarCenter) {
+        var sep = document.createElement('div');
+        sep.className = 'w-sep';
+        topbarCenter.appendChild(sep);
+        topbarCenter.appendChild(toolbarEl);
+        if (primaryBar) primaryBar.classList.add('mf-hidden');
+      }
+    }
+    if (backdrop) {
+      backdrop.addEventListener('click', function() { toggleFlyout(false); });
+    }
+    var flyoutClose = document.getElementById('mf-flyout-close');
+    if (flyoutClose) {
+      flyoutClose.addEventListener('click', function() { toggleFlyout(false); });
+    }
+    // Legacy right-rail collapse button also closes the flyout
+    var rightCollapse = document.getElementById('mf-right-collapse-btn');
+    if (rightCollapse) {
+      rightCollapse.addEventListener('click', function(e) {
+        e.preventDefault();
+        toggleFlyout(false);
+      });
+    }
+    // Entries / Analytics placeholder URLs
+    var entriesBtn = document.getElementById('mf-btn-open-entries') as HTMLAnchorElement | null;
+    var analyticsBtn = document.getElementById('mf-btn-open-analytics') as HTMLAnchorElement | null;
+    function updatePlaceholderUrls(): void {
+      var fid = getEffectiveFormId();
+      var base = getDashboardBase();
+      if (entriesBtn) entriesBtn.href = base + '/submissions?formId=' + fid;
+      if (analyticsBtn) analyticsBtn.href = base + '/dashboard?formId=' + fid;
+    }
+    updatePlaceholderUrls();
+    // Re-evaluate URLs when a form is saved and the formId changes
+    try {
+      var origSync = (window as any).syncSavedFormId;
+      (window as any).syncSavedFormId = function(nextFormId: any) {
+        var res = origSync ? origSync.apply(this, arguments) : nextFormId;
+        updatePlaceholderUrls();
+        return res;
+      };
+    } catch (_e) {}
+    // Default tab: Design
+    setPrimaryTab('design');
+
     // Templates button — show gallery overlay on top of builder
     var galleryBtn = document.getElementById('mf-btn-gallery');
     if (galleryBtn) {
@@ -2306,6 +2480,19 @@ import dbStrings from './db-tables-strings.json';
 
     // Body state class
     document.body.classList.add(isNew ? 'state-gallery' : 'state-builder');
+
+    // [UmbracoWorkspaceHost 2026-08-17] When the builder is loaded inside the Bellissima
+    // workspace iframe, the workspace header already provides the form title + top-level
+    // Design/Entries/Analytics/Settings tabs. Switch the builder to a co-hosting layout
+    // that hides the duplicated internal title/tabs and avoids fixed-position clipping
+    // inside the iframe.
+    var workspaceHost = false;
+    try {
+      workspaceHost = new URLSearchParams(window.location.search).get('host') === 'umbraco-workspace';
+    } catch (_e) { /* older browsers / invalid URL */ }
+    if (workspaceHost && formId > 0 && root) {
+      root.setAttribute('data-mf-host', 'umbraco-workspace');
+    }
 
     build();
     initBehaviours();

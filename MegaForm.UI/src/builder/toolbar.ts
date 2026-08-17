@@ -508,11 +508,59 @@ import { openSaveAsTemplateDialog } from './save-as-template';
         } catch (_e2) {}
     }
 
+    // [PublishToLiveForm 2026-08-15] Publishing lands on the LIVE FORM, not the dashboard.
+    //
+    // Owner: "submit → Done → quay về dashboard là SAI". They are right — you have just finished
+    // building a form and the one thing you want to see is the form. The dashboard is a list of
+    // other work, so publishing ended by throwing away the thing you were looking at. The old
+    // behaviour is [BuilderReturnDashboard v20260412-01].
+    //
+    // The live URL needs no page picker: the builder is a panel ON a page that already hosts this
+    // module, so the same page without ?mfpanel is that module rendering the form for real.
+    //
+    // Two shapes, because the two entry points differ:
+    //   · a content page  → ?formid=N        (the form in the real page chrome — what the owner
+    //                        wants: "form live trên trang". Verified: /?formid=24 on :5188 renders
+    //                        the form and submits to a thank-you.)
+    //   · /admin/megaform → ?embed=1&formId=N (the reserved admin path is PINNED to the dashboard
+    //                        role, so ?formid= there would silently re-render the dashboard — the
+    //                        very bug being fixed. ?embed= is the one param that opts out, and it
+    //                        is exactly what the pane's own Preview button already links to.)
+    function getLiveFormUrl(formId) {
+        try {
+            var id = Number(formId) || 0;
+            if (id <= 0) return '';
+            var u = new URL(window.location.href);
+            // These describe the BUILDER surface; carrying any forward re-opens the builder.
+            ['mfpanel', 'mfconfig', 'edit', 'view', 'vk', 'rightTab', 'returnUrl', 'return', 'formId', 'formid', 'embed']
+                .forEach(function (k) { u.searchParams.delete(k); });
+            if (/\/admin(\/|$)/i.test(u.pathname)) {
+                u.searchParams.set('embed', '1');
+                u.searchParams.set('formId', String(id));
+            } else {
+                u.searchParams.set('formid', String(id));
+            }
+            u.hash = '';
+            return u.pathname + u.search;
+        } catch (_e) { return ''; }
+    }
+
     function getPublishReturnUrl() {
         try {
             var platform = String((getPlatformHostConfig().platform || '')).toLowerCase();
             if (platform === 'dnn') {
+                // DNN's builder lives on a Persona Bar route, not on the form's page — there is no
+                // "same page minus the panel" to return to, so its dashboard route stands.
                 return getPlatformRoute('dashboard');
+            }
+        } catch (_e) {}
+        try {
+            // An explicit ?returnUrl= wins: a caller that asked to be sent somewhere gets sent
+            // there. The live form only replaces the implicit dashboard default.
+            var qpLive = new URLSearchParams(window.location.search || '');
+            if (!qpLive.get('returnUrl') && !qpLive.get('return')) {
+                var live = getLiveFormUrl(resolveEffectiveFormId());
+                if (live) return live;
             }
         } catch (_e) {}
         try {

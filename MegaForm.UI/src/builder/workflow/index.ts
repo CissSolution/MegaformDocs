@@ -134,19 +134,32 @@ import { SAMPLE_PRESETS, buildSamplePreset, getSampleMeta, reconcileWorkflowToSc
 
   var SCHEMA_DRIVEN_NODE_TYPES: AnyObj = {};
 
+  // [2026-08-17] Which hosts mount the workflow endpoints under Form/.
+  // Umbraco declares every one of them that way (MegaFormApiController.Workflow.cs:
+  // Form/Workflow/Get, /SaveDraft, /Apply, /Validate, /TestRun, /NodeSchema,
+  // /Library/*), so treating "not Oqtane" as "no prefix" pointed the whole BPMN
+  // editor at routes that do not exist on this host.
+  function usesFormWorkflowPrefix(): boolean {
+    var p = getPlatform();
+    return p === 'oqtane' || p === 'umbraco';
+  }
+  function wfPath(suffix: string): string {
+    return (usesFormWorkflowPrefix() ? '/Form/Workflow' : '/Workflow') + suffix;
+  }
+
   function workflowNodeSchemaPath(nodeType: string): string {
     var q = '?nodeType=' + encodeURIComponent(String(nodeType || ''));
-    return getPlatform() === 'oqtane' ? '/Form/Workflow/NodeSchema' + q : '/Workflow/NodeSchema' + q;
+    return wfPath('/NodeSchema') + q;
   }
   function workflowDbConnectionsPath(): string {
-    return getPlatform() === 'oqtane' ? '/Form/Workflow/Database/Connections' : '/Workflow/Database/Connections';
+    return wfPath('/Database/Connections');
   }
   function workflowDbConnectionStringSamplePath(databaseType?: string): string {
     var q = '?databaseType=' + encodeURIComponent(String(databaseType || 'Sqlite'));
-    return (getPlatform() === 'oqtane' ? '/Form/Workflow/Database/ConnectionStringSample' : '/Workflow/Database/ConnectionStringSample') + q;
+    return wfPath('/Database/ConnectionStringSample') + q;
   }
   function workflowDbTestConnectionPath(): string {
-    return getPlatform() === 'oqtane' ? '/Form/Workflow/Database/TestConnection' : '/Workflow/Database/TestConnection';
+    return wfPath('/Database/TestConnection');
   }
   function dbMetaQuery(connectionName: string, databaseType?: string, connectionString?: string): string {
     var q = '?connectionName=' + encodeURIComponent(String(connectionName || ''));
@@ -155,16 +168,16 @@ import { SAMPLE_PRESETS, buildSamplePreset, getSampleMeta, reconcileWorkflowToSc
     return q;
   }
   function workflowDbTablesPath(connectionName: string, databaseType?: string, connectionString?: string): string {
-    return (getPlatform() === 'oqtane' ? '/Form/Workflow/Database/Tables' : '/Workflow/Database/Tables') + dbMetaQuery(connectionName, databaseType, connectionString);
+    return wfPath('/Database/Tables') + dbMetaQuery(connectionName, databaseType, connectionString);
   }
   function workflowDbColumnsPath(connectionName: string, tableName: string, databaseType?: string, connectionString?: string): string {
-    return (getPlatform() === 'oqtane' ? '/Form/Workflow/Database/Columns' : '/Workflow/Database/Columns') + dbMetaQuery(connectionName, databaseType, connectionString) + '&tableName=' + encodeURIComponent(String(tableName || ''));
+    return wfPath('/Database/Columns') + dbMetaQuery(connectionName, databaseType, connectionString) + '&tableName=' + encodeURIComponent(String(tableName || ''));
   }
   function workflowDbProceduresPath(connectionName: string, databaseType?: string, connectionString?: string): string {
-    return (getPlatform() === 'oqtane' ? '/Form/Workflow/Database/Procedures' : '/Workflow/Database/Procedures') + dbMetaQuery(connectionName, databaseType, connectionString);
+    return wfPath('/Database/Procedures') + dbMetaQuery(connectionName, databaseType, connectionString);
   }
   function workflowDbProcedureParamsPath(connectionName: string, procedureName: string, databaseType?: string, connectionString?: string): string {
-    return (getPlatform() === 'oqtane' ? '/Form/Workflow/Database/ProcedureParameters' : '/Workflow/Database/ProcedureParameters') + dbMetaQuery(connectionName, databaseType, connectionString) + '&procedureName=' + encodeURIComponent(String(procedureName || ''));
+    return wfPath('/Database/ProcedureParameters') + dbMetaQuery(connectionName, databaseType, connectionString) + '&procedureName=' + encodeURIComponent(String(procedureName || ''));
   }
 
   function getValueByPath(obj: any, path: string): any {
@@ -836,7 +849,7 @@ import { SAMPLE_PRESETS, buildSamplePreset, getSampleMeta, reconcileWorkflowToSc
 
   function fetchWorkflowDef(formId: number): Promise<any> {
     if (!formId) return Promise.resolve(null);
-    var candidates = getPlatform() === 'oqtane'
+    var candidates = usesFormWorkflowPrefix()
       ? ['/Form/Workflow/Get?formId=' + formId, '/Workflow/Get?formId=' + formId]
       : ['/Workflow/Get?formId=' + formId, '/Form/Workflow/Get?formId=' + formId];
     return new Promise(function (resolve) {
@@ -2539,15 +2552,15 @@ import { SAMPLE_PRESETS, buildSamplePreset, getSampleMeta, reconcileWorkflowToSc
           showToastMsg('Load error: ' + e.message, true);
         }
       }
-      function workflowSavePath():     string { return getPlatform() === 'oqtane' ? '/Form/Workflow/SaveDraft'  : '/Workflow/SaveDraft'; }
-      function workflowApplyPath():    string { return getPlatform() === 'oqtane' ? '/Form/Workflow/Apply'       : '/Workflow/Apply'; }
-      function workflowValidatePath(): string { return getPlatform() === 'oqtane' ? '/Form/Workflow/Validate'    : '/Workflow/Validate'; }
-      function workflowTestRunPath():  string { return getPlatform() === 'oqtane' ? '/Form/Workflow/TestRun'     : '/Workflow/TestRun'; }
+      function workflowSavePath():     string { return wfPath('/SaveDraft'); }
+      function workflowApplyPath():    string { return wfPath('/Apply'); }
+      function workflowValidatePath(): string { return wfPath('/Validate'); }
+      function workflowTestRunPath():  string { return wfPath('/TestRun'); }
 
       // Reusable workflow library. Only Oqtane exposes these today; other hosts
       // answer 404, which openLibrary() surfaces as "not available on this host"
       // rather than an unhandled error.
-      function libraryBase(): string { return getPlatform() === 'oqtane' ? '/Form/Workflow/Library' : '/Workflow/Library'; }
+      function libraryBase(): string { return wfPath('/Library'); }
       function libraryListPath(formId: number):   string { return libraryBase() + '/List?formId=' + formId; }
       function libraryGetPath(templateId: number): string { return libraryBase() + '/Get?templateId=' + templateId; }
       function libraryBindingPath(formId: number): string { return libraryBase() + '/FormBinding?formId=' + formId; }
@@ -3351,8 +3364,12 @@ import { SAMPLE_PRESETS, buildSamplePreset, getSampleMeta, reconcileWorkflowToSc
   function getApiUrl(path: string): string {
     var base = (W._state.apiBase || '').replace(/\/+$/, '');
     var cleanPath = path.charAt(0) === '/' ? path : '/' + path;
-    if (base.toLowerCase().indexOf('/api/megaform') >= 0) return base + cleanPath;
-    if (base.toLowerCase().indexOf('/desktopmodules/') >= 0) return base + cleanPath;
+    // [2026-08-17] Any base that already names the MegaForm API IS the mount point.
+    // Testing only for /api/megaform and /desktopmodules/ missed Umbraco's
+    // /umbraco/MegaForm/MegaFormApi/, so every workflow call went out as
+    // .../MegaFormApi/api/MegaForm/Workflow/... and 404'd — the BPMN pane sat on
+    // "Opening executable workflow editor…" for ever with no error on screen.
+    if (base.toLowerCase().indexOf('megaform') >= 0) return base + cleanPath;
     return base + '/api/MegaForm' + cleanPath;
   }
   function getToken(): string {
