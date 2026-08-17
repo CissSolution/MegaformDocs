@@ -420,6 +420,18 @@ export function renderSubmissions(container: HTMLElement, adapter: PlatformAdapt
   _columnsFormKey = '';
   _seededRespForBucket = false;
   _columnDefs = [];
+  // [FreshSchemaOnOpen 2026-08-15] Re-mounting the surface must re-read the forms list too.
+  //
+  // The list response carries each form's schemaJson — that is where the column LABELS come from —
+  // and `ensureFormsLoaded()` latches on this flag for the lifetime of the JS module, which on an
+  // SPA host outlives many mounts. The three resets above already say "this surface is starting
+  // over"; leaving the forms latch set meant it started over with a pre-edit schema.
+  //
+  // This is the sibling of the switchForm fix below, and it is the path that fix cannot reach:
+  // when the host locks a form (config.formId > 0) we go straight to 'list' and only call
+  // ensureFormsLoaded() — switchForm() never runs, so without this a renamed field would still
+  // show its old column header after closing and reopening Submissions.
+  _formsLoaded = false;
   // [B162] Land on the forms-overview unless a specific form is locked in via host config.
   const _initFormId = getSubsState().config?.formId || 0;
   _viewMode = _initFormId > 0 ? 'list' : 'overview';
@@ -429,10 +441,39 @@ export function renderSubmissions(container: HTMLElement, adapter: PlatformAdapt
   Promise.resolve()
     .then(() => ensureFormsLoaded())
     .then(() => { if (_viewMode !== 'overview') return loadSubmissions(); })
+    .then(() => openReportsFromQuery())
     .catch((err) => {
       _loadError = err instanceof Error ? err.message : String(err || 'Unknown error');
       _loading = false; render();
     });
+}
+
+/**
+ * `?view=reports` opens the report dialog once the data is in.
+ *
+ * The host chrome needs a URL for "show me this form's analytics" — the Umbraco workspace has an
+ * Analytics tab beside Design and Entries — and reports were reachable only by clicking the
+ * toolbar button, which a tab cannot do without reaching into another document's DOM.
+ */
+function openReportsFromQuery(): void {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    if ((params.get('view') || '').toLowerCase() !== 'reports') return;
+
+    // getSubsState(), not a module-level `state` — there isn't one, and reading it here threw a
+    // ReferenceError that this very catch swallowed, so the deep link did nothing and said nothing.
+    const st = getSubsState();
+    const formId = (st && st.config && st.config.formId > 0)
+      ? st.config.formId
+      : Number(params.get('formId') || 0) || 0;
+
+    if (formId > 0) void openReportDialog(formId);
+    else void openReportDialog();
+  } catch (err) {
+    // Never break the grid over a deep link — but never swallow the reason either.
+    // eslint-disable-next-line no-console
+    console.error('[MegaForm.Submissions] ?view=reports could not open the report dialog', err);
+  }
 }
 
 // ── Forms-overview landing (B162) ─────────────────────────────
@@ -607,7 +648,15 @@ function buildHeader(sb: HTMLElement): HTMLElement {
   const closeBtn = a('mf-btn mf-btn-ghost mf-btn-sm', closeHref, '') as HTMLAnchorElement;
   bindSkinSafeHashLink(closeBtn, closeHref);
   closeBtn.innerHTML = `${ic('close',14)} <span class="mf-btn-lbl">${T('dash.close','Close')}</span>`;
-  const rbBtn = btn('mf-btn mf-btn-outline mf-btn-sm', `${ic('refresh',14)} <span class="mf-btn-lbl">${T('dash.refresh','Refresh')}</span>`, () => loadSubmissions());
+  // [FreshSchemaOnOpen 2026-08-15] Refresh re-reads the FORM too, not just the rows. This is the
+  // button someone presses when the screen looks out of date, and a renamed field showing its old
+  // column header is exactly that; reloading rows alone left the stale header in place.
+  // switchForm keeps the current filters and page — it only re-reads the form and its rows.
+  const rbBtn = btn('mf-btn mf-btn-outline mf-btn-sm', `${ic('refresh',14)} <span class="mf-btn-lbl">${T('dash.refresh','Refresh')}</span>`, () => {
+    const fid = getSubsState().config.formId || 0;
+    if (fid > 0) { void switchForm(fid).catch(err => handleLoadError(err, 'Failed to refresh form')); }
+    else { void loadSubmissions(); }
+  });
   const gsBtn = btn('mf-btn mf-btn-outline mf-btn-sm', `${ic('googleSheet',14)} <span class="mf-btn-lbl">${T('subs.connect_gsheet', 'Connect Google Sheet')}</span>`, () => openGoogleSheetConnectModal());
   gsBtn.title = 'Auto-create a workflow that pushes new submissions to Google Sheets';
   const reportBtn = btn('mf-btn mf-btn-outline mf-btn-sm', `${ic('barChart',14)} <span class="mf-btn-lbl">${T('subs.reports', 'Reports')}</span>`, () => openReportDialog());
@@ -1269,6 +1318,25 @@ function buildRow(sub: Submission, isAllForms: boolean): HTMLTableRowElement {
   return tr;
 }
 
+// [ApptCell 2026-08-15] "2026-08-21 12:20" out of an Appointment booking value; null when the
+// value is not one, so every other field type falls through untouched. Deliberately free of any
+// new translatable string — the date and time are already locale-neutral as stored, and the
+// duration/timezone remain in the cell's tooltip rather than inventing a unit word to translate.
+function formatAppointmentCell(raw: unknown): string | null {
+  let o: unknown = raw;
+  if (typeof o === 'string') {
+    const s = o.trim();
+    if (s.charAt(0) !== '{' || s.indexOf('"date"') < 0) return null;
+    try { o = JSON.parse(s); } catch { return null; }
+  }
+  if (!o || typeof o !== 'object' || Array.isArray(o)) return null;
+  const rec = o as Record<string, unknown>;
+  const date = String(rec.date ?? '').trim();
+  const time = String(rec.time ?? '').trim();
+  if (!date && !time) return null;
+  return [date, time].filter(Boolean).join(' ');
+}
+
 function renderCell(sub: Submission, data: Record<string, unknown>, key: string, isAllForms: boolean): HTMLElement {
   switch (key) {
     case 'id': {
@@ -1322,7 +1390,12 @@ function renderCell(sub: Submission, data: Record<string, unknown>, key: string,
         }
         const txt = (raw == null || raw === '') ? '—' : String(unwrapValue(raw));
         const el = span('mf-td-muted mf-td-field');
-        el.textContent = txt.length > 80 ? txt.slice(0, 80) + '…' : txt;
+        // [ApptCell 2026-08-15] An Appointment booking is stored as a JSON object
+        // ({date,time,duration,timezone,bookedAt}), so the cell printed
+        // `{"date":"2026-08-21","time":"12:20",…}` — braces and quotes where a booking should
+        // be. Show the booking; the untouched value stays in the tooltip, so nothing is hidden.
+        const appt = formatAppointmentCell(raw);
+        el.textContent = appt !== null ? appt : (txt.length > 80 ? txt.slice(0, 80) + '…' : txt);
         el.title = txt;
         return el;
       }
@@ -1811,12 +1884,20 @@ async function openReportDialog(reportFormId?: number, reportFormName?: string):
   try {
     // gather submissions (per form, or aggregate all forms) + schema for field completion
     const forms = allForms ? (state.forms || []).filter(f => f.formId > 0).slice(0, 50) : [{ formId: fid, title: name } as SubmissionFormOption];
+    // Read through the platform adapter, the same call the grid makes. The hand-rolled URL this
+    // replaces — apiBase + 'Submissions?formId=' — is not a route on Umbraco (the list lives at
+    // Submissions/List), so every report there answered 404 and drew a page of zeros next to a
+    // grid that was showing rows. The adapter is the only thing that knows each platform's path.
     const fetchForm = async (id: number) => {
-      const r = await fetch(apiBase + 'Submissions?formId=' + id + '&pageSize=2000', { credentials: 'same-origin', cache: 'no-store' });
-      if (!r.ok) return [] as any[];
-      const j: any = await r.json();
-      return (j.items || j.Items || []).map((it: any) => {
-        let data: Record<string, any> = {}; const rawd = it.dataJson || it.DataJson; try { data = rawd ? JSON.parse(rawd) : {}; } catch { /* */ }
+      const result: any = await _adapter.api.getSubmissions(id, { pageIndex: 0, pageSize: 2000 });
+      const items = result?.items || result?.Items || result?.data || [];
+      return (items as any[]).map((it: any) => {
+        // Typed storage answers with `data` as an object and leaves dataJson null, so reading only
+        // the JSON string reported every field as never filled in.
+        let data: Record<string, any> = {};
+        const typed = it.data || it.Data;
+        if (typed && typeof typed === 'object') data = typed as Record<string, any>;
+        else { const rawd = it.dataJson || it.DataJson; try { data = rawd ? JSON.parse(rawd) : {}; } catch { /* */ } }
         return { submittedOnUtc: it.submittedOnUtc || it.SubmittedOnUtc, status: it.status || it.Status || '', data };
       });
     };
@@ -1965,10 +2046,38 @@ async function switchForm(formId: number, preferred?: SubmissionFormOption, rere
     await loadSubmissions();
     return;
   }
+  // [FreshSchemaOnOpen 2026-08-15] ALWAYS re-read the form being opened. The cached entry is only
+  // a fallback now.
+  //
+  // The forms list (Form/List, which carries schemaJson) is fetched ONCE per SPA lifetime —
+  // `ensureFormsLoaded` returns early on `_formsLoaded`. This code used to trust that cached
+  // schema whenever it had one, and only called getForm() when schemaJson was MISSING. So renaming
+  // a field label in the builder and coming back to Submissions **without reloading the page** kept
+  // the old column header: the server had the new label, the grid was reading a snapshot taken
+  // before the edit. Owner: "sửa tên trường nhưng submission dashboard vẫn không thay đổi tên theo."
+  //
+  // Reproduced on :5188 form #25: header "NHAN MOI" while GET Form/25 answered "NHAN MOI 2"; a full
+  // page reload fixed it, which is exactly the signature of a per-session cache.
+  //
+  // Re-reading on open also covers the cases an in-app invalidation event never could — the form
+  // edited in another tab, or by another admin. One request per form switch is the right price.
   let form = preferred || (state.forms || []).find(f => f.formId === formId);
-  if (!form || !form.schemaJson) {
+  try {
     const loaded = await _adapter.api.getForm(formId) as any;
-    form = { formId: loaded.formId ?? loaded.FormId ?? formId, title: loaded.title ?? loaded.Title ?? `Form #${formId}`, status: loaded.status ?? loaded.Status ?? '', schemaJson: loaded.schemaJson ?? loaded.SchemaJson ?? '', submissionCount: loaded.submissionCount ?? loaded.SubmissionCount ?? loaded.totalSubmissions ?? loaded.TotalSubmissions ?? 0 };
+    if (loaded) {
+      form = { formId: loaded.formId ?? loaded.FormId ?? formId, title: loaded.title ?? loaded.Title ?? form?.title ?? `Form #${formId}`, status: loaded.status ?? loaded.Status ?? form?.status ?? '', schemaJson: loaded.schemaJson ?? loaded.SchemaJson ?? form?.schemaJson ?? '', submissionCount: loaded.submissionCount ?? loaded.SubmissionCount ?? loaded.totalSubmissions ?? loaded.TotalSubmissions ?? form?.submissionCount ?? 0 };
+      // Keep the cached list in step, so the form picker and the overview table show the same
+      // title/schema as the grid instead of drifting apart.
+      const cached = state.forms || [];
+      const at = cached.findIndex(f => f.formId === formId);
+      if (at >= 0) { const next = cached.slice(); next[at] = form as SubmissionFormOption; setAvailableForms(next); }
+    }
+  } catch {
+    // Offline / 403 / transient — fall through with whatever the list gave us rather than
+    // dropping the user on an empty grid.
+  }
+  if (!form) {
+    form = { formId, title: `Form #${formId}`, status: '', schemaJson: '', submissionCount: 0 };
   }
   let schema: any = undefined;
   if (form?.schemaJson) { try { schema = JSON.parse(form.schemaJson); } catch {} }
