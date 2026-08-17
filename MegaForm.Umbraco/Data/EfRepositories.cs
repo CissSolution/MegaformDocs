@@ -36,6 +36,26 @@ namespace MegaForm.Umbraco.Data
                 : ordered.ToList();
         }
 
+        // Writable string properties of FormInfo, resolved once: the copy below runs on every
+        // form save.
+        private static readonly System.Reflection.PropertyInfo[] FormStringProps =
+            typeof(FormInfo).GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)
+                .Where(p => p.PropertyType == typeof(string) && p.CanRead && p.CanWrite)
+                .ToArray();
+
+        /// <summary>
+        /// Copies stored values onto the incoming form for every string column it left null,
+        /// so an update never writes NULL into a NOT NULL column it was not asked to change.
+        /// </summary>
+        private static void PreserveNullStrings(FormInfo incoming, FormInfo stored)
+        {
+            if (incoming == null || stored == null) return;
+            foreach (var prop in FormStringProps)
+            {
+                if (prop.GetValue(incoming) == null) prop.SetValue(incoming, prop.GetValue(stored));
+            }
+        }
+
         public int SaveForm(FormInfo form)
         {
             if (form.FormId > 0)
@@ -43,13 +63,18 @@ namespace MegaForm.Umbraco.Data
                 var existing = _db.Forms.Find(form.FormId);
                 if (existing != null)
                 {
-                    // [WfApplyClobber v20260711] SetValues copies nulls too — the builder toolbar
-                    // never sends WorkflowJson, and the applied BPMN workflow lives only in this
-                    // column, so a plain builder Save was wiping it. Null = "not editing the
-                    // workflow": keep the stored value.
-                    var storedWorkflowJson = existing.WorkflowJson;
+                    // [NullClobber 2026-08-17] SetValues copies nulls, and every text column on
+                    // MF_Forms is NOT NULL. The builder's save payload does not carry all of them
+                    // — WebhookSecret is not part of it — so a plain Save wrote NULL into a NOT
+                    // NULL column and SQLite refused the whole update: HTTP 500, empty body, no
+                    // toast, and NOT ONE form on this host could be saved. Measured on form 201
+                    // before the fix: two saves, two 500s, label unchanged in the database.
+                    //
+                    // The rule the WorkflowJson case established in v20260711 is the right one for
+                    // all of them: a null string means "this request is not editing that column",
+                    // so keep what is stored.
+                    PreserveNullStrings(form, existing);
                     _db.Entry(existing).CurrentValues.SetValues(form);
-                    if (form.WorkflowJson == null) existing.WorkflowJson = storedWorkflowJson;
                     existing.UpdatedOnUtc = DateTime.UtcNow;
                 }
             }

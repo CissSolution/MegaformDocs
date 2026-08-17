@@ -3465,6 +3465,34 @@ body[data-mf-mode="design"] .mf-panel-left .mf-tlr-view-toggle button.active {
   }
 }
 
+/* [2026-08-17] Reorder is a MODE, not one more inspector icon. In the tool row it kept
+   its label and a border so it reads as its own control — as the eleventh identical grey
+   glyph it was reported missing, which is the same way it disappeared at 1366px when the
+   topbar collapsed it to a bare square. Umbraco Forms labels its Reorder too. */
+.mf-secondary-tool.mf-reorder-tool {
+  width: auto;
+  gap: 0.375rem;
+  padding: 0 0.65rem;
+  margin-left: 0.5rem;
+  border: 1px solid var(--border);
+  background: #ffffff;
+  color: #3f3f46;
+  font-weight: 600;
+}
+.mf-secondary-tool.mf-reorder-tool::before {
+  /* Hairline separating the mode button from the inspector icons. */
+  content: "";
+  position: absolute;
+  left: -0.3rem;
+  top: 15%;
+  bottom: 15%;
+  width: 1px;
+  background: var(--border);
+}
+.mf-secondary-tool.mf-reorder-tool { position: relative; }
+.mf-secondary-tool.mf-reorder-tool .lbl { display: inline; }
+.mf-secondary-tool.mf-reorder-tool:hover { background: var(--muted, #f4f4f5); color: #09090b; }
+
 /* Push the 3-column builder layout down under the primary bar */
 .b-outer,
 #mf-builder-app {
@@ -3794,6 +3822,14 @@ body[data-mf-mode="design"] .mf-panel-left .mf-tlr-view-toggle button.active {
   flex: 0 0 auto;
   width: 30px;
   padding: 0;
+}
+/* …except Reorder, which keeps its label here too. */
+#mf-builder-root[data-mf-host="umbraco-workspace"] .w-center .mf-secondary-tool.mf-reorder-tool {
+  width: auto;
+  padding: 0 0.65rem;
+}
+#mf-builder-root[data-mf-host="umbraco-workspace"] .w-center .mf-reorder-tool .lbl {
+  display: inline !important;
 }
 /* The label only ever shows on wide screens; in the topbar row the icons stand alone
    so ten tools cannot push the action buttons off the edge. */

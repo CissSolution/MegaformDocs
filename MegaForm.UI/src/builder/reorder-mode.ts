@@ -409,8 +409,12 @@ import { MegaFormBuilder } from './core';
       button.className = 'mf-secondary-tool mf-reorder-tool';
       button.setAttribute('data-tip', t('builder.reorder.open', 'Reorder'));
       button.setAttribute('aria-label', t('builder.reorder.open', 'Reorder'));
+      // Keeps its LABEL. Moving it into the tool row turned it into the eleventh grey
+      // icon in a row of ten and the owner reported it as missing — the same way it went
+      // unnoticed at 1366px when the topbar collapsed it to a 28px square. The label class
+      // is deliberately not .mf-secondary-tool-label: that one is hidden below 1280px.
       button.innerHTML = '<i class="fa-solid fa-arrow-down-short-wide"></i>' +
-        '<span class="mf-secondary-tool-label lbl"></span>';
+        '<span class="lbl"></span>';
       setButtonLabel(button, t('builder.reorder.open', 'Reorder'));
       button.addEventListener('click', () => open());
       toolbar.appendChild(button);

@@ -1049,6 +1049,10 @@ import dbStrings from './db-tables-strings.json';
               '<select id="mf-prop-options-source" class="form-control form-control-sm">' +
                 '<option value="static">Static (manual list below)</option>' +
                 '<option value="sql">From SQL query (dynamic)</option>' +
+                // [PrevalueSource 2026-08-17] Points the field at a catalog entry instead of
+                // carrying its own copy of the list — or its own SQL. The server resolves the
+                // entry by id, so nothing about the connection travels in the form schema.
+                '<option value="prevalue">' + bt('builder.options_source_prevalue','From a shared prevalue source') + '</option>' +
               '</select>' +
               '<small class="text-muted d-block mt-1">Available for every <strong>choice field</strong> — Dropdown, MultiSelect, Single Choice, Multiple Choice, Chips, and Choice Cards. Switch to <strong>SQL</strong> to load choices from a database query at render time.</small>' +
             '</div>' +
@@ -1099,6 +1103,24 @@ import dbStrings from './db-tables-strings.json';
                 '<small class="text-muted d-block mt-1">Auto will split long option lists into balanced columns.</small>' +
               '</div>' +
               '<button type="button" id="mf-add-option" class="btn btn-outline-primary btn-sm mt-2"><i class="fas fa-plus"></i> Add Option</button>' +
+            '</div>' +
+            // [PrevalueSource 2026-08-17] Picker over the shared catalog. The field stores
+            // only the id and the name; every option is resolved server-side at render time,
+            // so a list used by ten forms is maintained in one place.
+            '<div id="mf-prop-options-prevalue-wrap" style="display:none">' +
+              '<div class="form-group mt-2">' +
+                '<label for="mf-prop-options-prevalue">' + bt('builder.prevalue_source','Prevalue source') + '</label>' +
+                '<select id="mf-prop-options-prevalue" class="form-control form-control-sm">' +
+                  '<option value="">' + bt('builder.prevalue_choose','— choose a source —') + '</option>' +
+                '</select>' +
+                '<small class="text-muted d-block mt-1" id="mf-prop-options-prevalue-hint">' +
+                  bt('builder.prevalue_hint','Managed under MegaForm → Prevalue Sources. The options load when the form renders.') +
+                '</small>' +
+                '<div class="mt-2"><button type="button" id="mf-prop-options-prevalue-preview" class="btn btn-secondary btn-sm">' +
+                  bt('builder.prevalue_preview','Preview options') + '</button>' +
+                  '<span id="mf-prop-options-prevalue-result" class="ml-2" style="font-size:12px"></span>' +
+                '</div>' +
+              '</div>' +
             '</div>' +
             '<div id="mf-prop-options-sql-wrap" style="display:none" data-mf-fieldopts-badge="FieldOptionsUi v20260521-01 (help-popup)">' +
               '<div class="form-group mt-2"><label for="mf-prop-options-conn">Connection name</label>' +

@@ -12,6 +12,53 @@ import { getPlatformHostConfig } from '../shared/platform-host';
     'use strict';
     var B = MegaFormBuilder;
     var currentField: any = null;  // field đang được chọn
+
+    // ── [PrevalueSource 2026-08-17] Shared option catalog ────────────────────────
+    // The catalog is an Umbraco-only surface today; on a host without it the endpoint
+    // 404s and the picker says so instead of leaving an empty select that looks broken.
+    var _prevalueCache: any[] | null = null;
+    function prevalueApiUrl(path: string): string {
+        var platform = String(getPlatformHostConfig().platform || '').toLowerCase();
+        return platform === 'dnn'
+            ? '/DesktopModules/MegaForm/API/PrevalueSources' + path
+            : '/api/MegaForm/PrevalueSources' + path;
+    }
+    async function fetchPrevalueJson(path: string): Promise<any> {
+        var headers: Record<string, string> = {};
+        var cfg = (window as any).__MF_PLATFORM__ || {};
+        if (cfg.authToken && String(cfg.platform || '').toLowerCase() === 'oqtane') {
+            headers['Authorization'] = 'Bearer ' + cfg.authToken;
+        }
+        var res = await fetch(prevalueApiUrl(path), { credentials: 'same-origin', headers: headers });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        var ct = res.headers.get('content-type') || '';
+        if (ct.toLowerCase().indexOf('json') < 0) throw new Error('not signed in');
+        return res.json();
+    }
+    /** Fills the picker from the catalog and selects the field's current entry. */
+    async function loadPrevalueSources(selectedId: string): Promise<void> {
+        var sel = document.getElementById('mf-prop-options-prevalue') as HTMLSelectElement | null;
+        var hint = document.getElementById('mf-prop-options-prevalue-hint');
+        if (!sel) return;
+        try {
+            if (!_prevalueCache) _prevalueCache = await fetchPrevalueJson('/List') || [];
+        } catch (e: any) {
+            _prevalueCache = null;
+            sel.innerHTML = '<option value="">—</option>';
+            if (hint) hint.textContent = 'The prevalue catalog is not available on this host (' + e.message + ').';
+            return;
+        }
+        var current = String(selectedId || sel.value || '');
+        sel.innerHTML = '<option value="">— choose a source —</option>' +
+            (_prevalueCache || []).map(function (s: any) {
+                return '<option value="' + s.id + '"' + (String(s.id) === current ? ' selected' : '') + '>' +
+                       B.escHtml(s.name) + ' (' + B.escHtml(s.type) + ')</option>';
+            }).join('');
+        if (hint && (_prevalueCache || []).length === 0) {
+            hint.textContent = 'No prevalue sources yet — create one under MegaForm → Prevalue Sources.';
+        }
+    }
+
     function initModule() {
         bindPropertyInputs();
         bindOptionButtons();
@@ -1688,7 +1735,13 @@ import { getPlatformHostConfig } from '../shared/platform-host';
             B.setVal('mf-prop-option-columns', field.optionColumns ? String(field.optionColumns) : '');
             // ── Options source (Static vs SQL) — FieldOptionsUi v20260516-02 (cascading) ──
             var fp = field.properties || (field.properties = {});
-            var src = String(fp.optionsSource || 'static').toLowerCase() === 'sql' ? 'sql' : 'static';
+            // [PrevalueSource 2026-08-17] Three sources now: the manual list, a SQL query on
+            // the field, or an entry in the shared catalog. The server accepts both spellings
+            // ("prevalue" / "prevalue-source"); normalise to the short one here.
+            var rawSrc = String(fp.optionsSource || 'static').toLowerCase();
+            var src = rawSrc === 'sql' ? 'sql'
+                    : (rawSrc === 'prevalue' || rawSrc === 'prevalue-source') ? 'prevalue'
+                    : 'static';
             var optType = String(fp.optionsType || 'sql').toLowerCase();
             if (optType !== 'storedproc' && optType !== 'sproc') optType = 'sql';
             var depRaw = fp.optionsDependsOn;
@@ -1703,6 +1756,8 @@ import { getPlatformHostConfig } from '../shared/platform-host';
             if (sqlLbl) sqlLbl.textContent = optType === 'storedproc' ? 'Stored procedure name' : 'SQL query';
             B.toggle('mf-prop-options-static-wrap', src === 'static');
             B.toggle('mf-prop-options-sql-wrap',    src === 'sql');
+            B.toggle('mf-prop-options-prevalue-wrap', src === 'prevalue');
+            loadPrevalueSources(String(fp.prevalueSourceId || ''));
         } else {
             B.toggle('mf-prop-option-style-wrap', false);
             B.toggle('mf-prop-option-columns-wrap', false);
@@ -2308,9 +2363,11 @@ import { getPlatformHostConfig } from '../shared/platform-host';
                 // Toggle UI visibility ALWAYS (even if no field selected) — this is presentation,
                 // not data state. Prevents the bug where SQL panel never appears because
                 // _selectedFieldProps() returned null.
-                var src = this.value === 'sql' ? 'sql' : 'static';
+                var src = this.value === 'sql' ? 'sql' : (this.value === 'prevalue' ? 'prevalue' : 'static');
                 B.toggle('mf-prop-options-static-wrap', src === 'static');
                 B.toggle('mf-prop-options-sql-wrap',    src === 'sql');
+                B.toggle('mf-prop-options-prevalue-wrap', src === 'prevalue');
+                if (src === 'prevalue') loadPrevalueSources('');
                 var p = _selectedFieldProps(); if (!p) return;
                 p.optionsSource = src;
                 // [SqlConnDefault v20260519-04] When user picks SQL, auto-fill the
@@ -2323,6 +2380,43 @@ import { getPlatformHostConfig } from '../shared/platform-host';
                     if (connInp && !connInp.value.trim()) connInp.value = fallback;
                 }
                 B.state.isDirty = true;
+            });
+        }
+        // [PrevalueSource 2026-08-17] Picking an entry stores its id AND its name: the id is
+        // what the server resolves, the name keeps the schema readable when a form is
+        // exported to a site whose catalog ids differ.
+        var optsPrevalue = document.getElementById('mf-prop-options-prevalue') as HTMLSelectElement | null;
+        if (optsPrevalue) {
+            optsPrevalue.addEventListener('change', function () {
+                var p = _selectedFieldProps(); if (!p) return;
+                var id = parseInt(this.value || '0', 10) || 0;
+                var picked = (_prevalueCache || []).filter(function (s: any) { return s.id === id; })[0];
+                p.optionsSource = 'prevalue';
+                p.prevalueSourceId = id || undefined;
+                p.prevalueSourceName = picked ? picked.name : undefined;
+                B.state.isDirty = true;
+            });
+        }
+        var optsPrevaluePreview = document.getElementById('mf-prop-options-prevalue-preview');
+        if (optsPrevaluePreview) {
+            optsPrevaluePreview.addEventListener('click', async function () {
+                var out = document.getElementById('mf-prop-options-prevalue-result');
+                var sel = document.getElementById('mf-prop-options-prevalue') as HTMLSelectElement | null;
+                if (!out || !sel) return;
+                var id = parseInt(sel.value || '0', 10) || 0;
+                if (!id) { out.style.color = '#fca5a5'; out.textContent = 'Choose a source first.'; return; }
+                out.style.color = '#94a3b8'; out.textContent = 'Fetching…';
+                try {
+                    var opts = await fetchPrevalueJson('/Options/' + id);
+                    var list = Array.isArray(opts) ? opts : [];
+                    out.style.color = list.length ? '#86efac' : '#fcd34d';
+                    out.textContent = list.length
+                        ? '✅ ' + list.length + ' option(s): ' + list.slice(0, 6).map(function (o: any) { return o.label || o.value; }).join(', ')
+                        : '0 options — check the source under MegaForm → Prevalue Sources.';
+                } catch (e: any) {
+                    out.style.color = '#fca5a5';
+                    out.textContent = 'Preview failed: ' + e.message;
+                }
             });
         }
         var optsHelp = document.getElementById('mf-prop-options-help');
