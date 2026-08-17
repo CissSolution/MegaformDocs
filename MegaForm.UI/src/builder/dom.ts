@@ -2087,6 +2087,15 @@ import dbStrings from './db-tables-strings.json';
         flyout.classList.remove('mf-flyout-open');
         if (backdrop) backdrop.classList.remove('active');
       }
+      // [2026-08-17] An Umbraco sidebar is as tall as the SCREEN. This panel can only
+      // be as tall as the frame it lives in, so while it is open the frame takes the
+      // screen: the workspace view listens for this and pins the iframe to the viewport.
+      // Same origin, but postMessage keeps the parent in charge of its own layout.
+      try {
+        if (root!.getAttribute('data-mf-host') === 'umbraco-workspace' && window.parent && window.parent !== window) {
+          window.parent.postMessage({ type: 'megaform:flyout', open: !!show }, window.location.origin);
+        }
+      } catch (_e) { /* cross-origin host: the panel stays frame-height */ }
     }
     // The flyout is one panel that shows one tool at a time, so it says which tool it
     // is showing. A header that always read "Settings" while the body showed the BPMN
@@ -2113,6 +2122,13 @@ import dbStrings from './db-tables-strings.json';
       setFlyoutTitle(tabId, titleOverride);
       var isAccordion = ACCORDION_TABS.indexOf(tabId) >= 0;
       var paneId = isAccordion ? 'field' : tabId;
+      // One panel, one subject: the scope drives the CSS that hides the accordion's
+      // other sections (Form Settings / Steps / Custom HTML were showing under the
+      // properties of the field you had just clicked).
+      if (flyout) {
+        if (isAccordion) flyout.setAttribute('data-mf-flyout-scope', tabId);
+        else flyout.removeAttribute('data-mf-flyout-scope');
+      }
       // Click the (hidden) legacy anchor: several panes only build themselves on that
       // click — Print, Theme, DB, Rules and Workflow all mount from its listener.
       var link = document.getElementById('mf-tab-link-' + paneId);

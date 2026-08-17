@@ -51,6 +51,20 @@ export default class MegaFormWorkspaceView extends UmbLitElement {
   static styles = css`
     :host { display: flex; flex-direction: column; width: 100%; height: 100%; min-height: 0; }
     iframe { display: block; width: 100%; flex: 1 1 auto; min-height: 0; border: 0; }
+
+    /* [PanelFullHeight 2026-08-17] The builder's settings panel is pinned to the frame it
+       lives in, so inside this iframe it could never be taller than the content area —
+       while an Umbraco sidebar is as tall as the screen. When the builder reports that its
+       panel is open (postMessage), the frame takes the viewport for as long as it is open,
+       which makes the panel screen-height and dims everything behind it, the way Umbraco's
+       own modal does. */
+    :host(.mf-panel-open) iframe {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 9000;
+    }
   `;
 
   static properties = {
@@ -71,6 +85,15 @@ export default class MegaFormWorkspaceView extends UmbLitElement {
       setMegaFormAuthContext(auth);
       this.#loadFormName();
     });
+
+    // The builder tells us when its settings panel opens, so the frame can take the
+    // viewport for that time. Same origin, and the origin is checked before acting.
+    this.#onMsg = (e) => {
+      if (e.origin !== window.location.origin) return;
+      const data = e.data;
+      if (!data || data.type !== 'megaform:flyout') return;
+      this.classList.toggle('mf-panel-open', !!data.open);
+    };
 
     this.#onNav = () => {
       const next = MegaFormWorkspaceView.resolve();
@@ -105,6 +128,7 @@ export default class MegaFormWorkspaceView extends UmbLitElement {
   }
 
   #onNav;
+  #onMsg;
 
   connectedCallback() {
     super.connectedCallback();
@@ -112,11 +136,15 @@ export default class MegaFormWorkspaceView extends UmbLitElement {
     // that way, so listen for both.
     window.addEventListener('popstate', this.#onNav);
     window.addEventListener('umb:route-change', this.#onNav);
+    window.addEventListener('message', this.#onMsg);
   }
 
   disconnectedCallback() {
     window.removeEventListener('popstate', this.#onNav);
     window.removeEventListener('umb:route-change', this.#onNav);
+    window.removeEventListener('message', this.#onMsg);
+    // Never leave the frame pinned over the backoffice after navigating away.
+    this.classList.remove('mf-panel-open');
     this.#teardownHeader();
     super.disconnectedCallback();
   }

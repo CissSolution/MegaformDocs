@@ -3588,6 +3588,33 @@ body.state-theme-mode .mf-builder-layout > .mf-panel-center {
 .mf-design-acc-body .mf-settings-scroll { max-height: none !important; overflow: visible !important; }
 .mf-design-acc-body #mf-no-field-selected { padding: 12px 0; }
 
+/* ── [FlyoutScope 2026-08-17] One panel, one subject ─────────────────────────
+   The flyout is opened FOR something — the field whose gear was clicked, or the
+   tool whose icon was clicked. The Design Studio accordion it borrows its body
+   from carries three more sections (Form Settings, Steps, Custom HTML) that have
+   nothing to do with that subject, and they were showing underneath it. An
+   Umbraco sidebar shows the properties of the thing you opened and nothing else.
+   The scope attribute is set by openFlyoutTab(); with it, the sibling sections,
+   the accordion headers and the "Design Studio" caption all go, leaving a plain
+   list of properties under the flyout's own title bar. */
+.mf-panel-right[data-mf-flyout-scope] .mf-design-launcher-hd { display: none !important; }
+.mf-panel-right[data-mf-flyout-scope] .mf-design-launcher { padding: 0 !important; }
+.mf-panel-right[data-mf-flyout-scope="field"]    .mf-design-acc-item:not([data-mf-acc-id="field"]),
+.mf-panel-right[data-mf-flyout-scope="settings"] .mf-design-acc-item:not([data-mf-acc-id="settings"]),
+.mf-panel-right[data-mf-flyout-scope="steps"]    .mf-design-acc-item:not([data-mf-acc-id="steps"]),
+.mf-panel-right[data-mf-flyout-scope="html"]     .mf-design-acc-item:not([data-mf-acc-id="html"]) {
+  display: none !important;
+}
+/* The flyout header already names the subject, so the section header repeats it. */
+.mf-panel-right[data-mf-flyout-scope] .mf-design-acc-head { display: none !important; }
+.mf-panel-right[data-mf-flyout-scope] .mf-design-acc-item {
+  margin: 0 !important; border: 0 !important; border-radius: 0 !important;
+  background: transparent !important; box-shadow: none !important; overflow: visible !important;
+}
+.mf-panel-right[data-mf-flyout-scope] .mf-design-acc-item > .mf-design-acc-body {
+  display: block !important; padding: 0 !important; background: transparent !important;
+}
+
 /* [B65p+B65q] Help tip — moved LEFT of icon so it doesn't cover the input below */
 .mf-help-tip { display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px; margin-left: 6px; border-radius: 50%; background: #e2e8f0; color: #64748b; font-size: 9px; cursor: help; vertical-align: middle; position: relative; }
 .mf-help-tip:hover { background: #6366f1; color: #ffffff; }
