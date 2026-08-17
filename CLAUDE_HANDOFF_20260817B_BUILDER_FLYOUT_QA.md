@@ -246,7 +246,32 @@ Bellissima's own refresh, so the parent has no token to lend and the test proves
 302s and the parse error. After: every frame call carries the live bearer, `Submissions/List`
 returns, and the grid renders with no error banner.
 
-## 10. Still open
+## 10. Eighth pass — the cache boundary that broke every screen (`201dba8a`)
+
+`SyntaxError: The requested module './contexts/megaform-permissions-context.js' does not provide an
+export named 'getMegaFormBearerToken'` — reported by the owner on every screen, because the whole
+workspace view failed to parse.
+
+⭐⭐⭐ **Umbraco serves each backoffice extension file with `?umb__rnd=<version from
+umbraco-package.json>`.** While that version does not move, a browser keeps the copy it already has.
+So a NEW file importing a NEW export met an OLD cached module — while the server was serving the new
+one all along (checked: the export is in the response body). Clean browser: fine. Owner's browser:
+dead.
+
+Fixed at both ends, because either alone leaves the trap:
+* the view no longer imports that export — it already consumes `UMB_AUTH_CONTEXT`, so it keeps the
+  context and calls `getLatestToken()` itself, which works against an arbitrarily old copy;
+* **package version 1.5.0 → 1.5.1**, which moves `?umb__rnd` for every extension file.
+
+⚠️ **Every future edit under `MegaForm.Umbraco/wwwroot/backoffice/` needs that version bump**, or
+users keep the old file and nobody thinks to hard-refresh.
+
+⚠️ QA needs **one persistent browser profile, two passes** — a fresh context can never reproduce a
+cache bug. `tools/browser-qa/umb-builder-203-qa.mjs` does that against the reported URL: both passes
+mount the builder with 4 fields, the header reads "Umbraco SQL Lookup - Event Registration #203 ·
+Design Entries Analytics Settings", zero module errors.
+
+## 11. Still open
 
 * 🟠 **Workflow is a full-screen takeover.** Opening it from a flyout tool is a jarring exit from the
   builder, and the flyout's close button does not bring you back — only "Return to App Builder" does.
