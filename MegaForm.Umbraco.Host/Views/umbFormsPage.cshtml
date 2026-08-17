@@ -1,0 +1,52 @@
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage
+@{
+    Layout = null;
+    var intro = Model.Value<string>("intro");
+
+    // The Umbraco Forms "Form Picker" stores the form's key. Read it as a Guid first and fall
+    // back to parsing the raw string, so the page still renders if a future Forms version
+    // changes what its value converter hands back.
+    var formGuid = Model.Value<Guid?>("umbracoForm") ?? Guid.Empty;
+    if (formGuid == Guid.Empty)
+    {
+        Guid.TryParse(Model.Value<string>("umbracoForm"), out formGuid);
+    }
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@Model.Name</title>
+    <link rel="stylesheet" href="/css/news-demo.css" />
+    <script src="/App_Plugins/UmbracoForms/assets/aspnet-client-validation/dist/aspnet-validation.min.js"></script>
+</head>
+<body class="news-body">
+    <header class="news-top">
+        <div class="news-top-inner">
+            <a class="news-brand" href="/">MegaForm <span>Newsroom</span></a>
+            <span class="news-top-note">Umbraco Forms demo page</span>
+        </div>
+    </header>
+
+    <div class="news-shell news-article">
+        <h1>@Model.Name</h1>
+        @if (!string.IsNullOrWhiteSpace(intro))
+        {
+            <p class="news-lede">@intro</p>
+        }
+
+        <div class="news-form-card">
+            @if (formGuid != Guid.Empty)
+            {
+                <umb-forms-render form-id="@formGuid" />
+            }
+            else
+            {
+                <p>No form picked yet. Open this page in the backoffice, choose one in the
+                    <strong>Umbraco Form</strong> property, and publish.</p>
+            }
+        </div>
+    </div>
+</body>
+</html>

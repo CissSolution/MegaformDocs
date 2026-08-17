@@ -74,6 +74,13 @@ import './print-settings';
 // ── 15. Fields — tab registry (session 210d) ────────────────────
 import './fields';
 
+// ── 15a. Reorder mode — compact ordering surface ────────────────
+//    Adds a "Reorder" button to the builder top bar. Modelled on Umbraco
+//    Forms: the canvas is covered by one short row per field with a handle
+//    and ▲/▼ buttons, so putting fields in order never depends on landing a
+//    long drag across nested canvas drop targets. Side-effect-only import.
+import './reorder-mode';
+
 // ── 15b. Theme Tab Adapter — [ThemeTab v20260602-B48] ──────────
 //    Installs window.MFThemeTabAdapter and registers a 'theme-tab-adapter'
 //    module with B.registerModule. Mounted inline by dom.ts's THEME tab

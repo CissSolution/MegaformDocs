@@ -1,6 +1,8 @@
 import { UmbLitElement } from '@umbraco-cms/backoffice/lit-element';
 import { css, html } from '@umbraco-cms/backoffice/external/lit';
 import { UmbPropertyValueChangeEvent } from '@umbraco-cms/backoffice/property-editor';
+import { mfFetchJson, setMegaFormAuthContext } from '../contexts/megaform-permissions-context.js';
+import { UMB_AUTH_CONTEXT } from '@umbraco-cms/backoffice/auth';
 
 /**
  * Native Bellissima property editor UI for MegaForm.
@@ -24,7 +26,14 @@ export class MegaFormFormPickerElement extends UmbLitElement {
     this._loading = true;
     this._error = '';
     this._search = '';
-    this._loadForms();
+
+    // Load only once the auth context is available, so the very first request already carries
+    // the bearer token. Loading in the constructor left it to the backoffice cookie, which is
+    // what produced "Unable to load forms" on a session whose cookie had timed out.
+    this.consumeContext(UMB_AUTH_CONTEXT, (auth) => {
+      setMegaFormAuthContext(auth);
+      this._loadForms();
+    });
   }
 
   static styles = css`
@@ -134,16 +143,10 @@ export class MegaFormFormPickerElement extends UmbLitElement {
   async _loadForms() {
     try {
       this._loading = true;
-      const response = await fetch('/umbraco/MegaForm/MegaFormApi/Form/List', {
-        credentials: 'include',
-        headers: { Accept: 'application/json' },
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-
-      const forms = await response.json();
+      // Must go through mfFetchJson: a plain cookie-only fetch is redirected to the login
+      // page once the backoffice cookie lapses, and the picker then reports a JSON parse
+      // error on the login HTML instead of "session expired".
+      const forms = await mfFetchJson('/umbraco/MegaForm/MegaFormApi/Form/List');
       this._forms = Array.isArray(forms) ? forms : [];
       this._filteredForms = [...this._forms];
     } catch (error) {

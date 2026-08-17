@@ -11,8 +11,9 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@(formId > 0 ? $"Edit Form {formId}" : "New Form") — MegaForm Builder</title>
-    <link rel="stylesheet" href="/App_Plugins/MegaForm/css/megaform-builder-shell.css" />
-    <link rel="stylesheet" href="/App_Plugins/MegaForm/css/megaform-builder-ts.css" />
+    <link rel="stylesheet" href="/App_Plugins/MegaForm/css/megaform-builder-shell.css?v=@MegaForm.Umbraco.Services.MegaFormAssetVersion.Value" />
+    <link rel="stylesheet" href="/App_Plugins/MegaForm/css/megaform-builder-ts.css?v=@MegaForm.Umbraco.Services.MegaFormAssetVersion.Value" />
+    <link rel="stylesheet" href="/App_Plugins/MegaForm/css/megaform-umbraco-admin.css?v=@MegaForm.Umbraco.Services.MegaFormAssetVersion.Value" />
     <style>
         html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
     </style>
@@ -42,7 +43,10 @@
         </div>
     </div>
 
-    <script src="/App_Plugins/MegaForm/js/megaform-umbraco-host.js"></script>
-    <script src="/App_Plugins/MegaForm/js/megaform-builder-loader.js"></script>
+    <script>
+        window.__MF_TOKEN = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.MegaFormAccessToken as string ?? ""));
+    </script>
+    <script src="/App_Plugins/MegaForm/js/megaform-umbraco-host.js?v=@MegaForm.Umbraco.Services.MegaFormAssetVersion.Value"></script>
+    <script src="/App_Plugins/MegaForm/js/megaform-builder-loader.js?v=@MegaForm.Umbraco.Services.MegaFormAssetVersion.Value"></script>
 </body>
 </html>

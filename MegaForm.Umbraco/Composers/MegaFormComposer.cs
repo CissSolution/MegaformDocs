@@ -12,6 +12,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using MegaForm.Core.Interfaces;
 using MegaForm.Core.Services;
+using MegaForm.Core.Services.MagicStrings;
 using MegaForm.Core.Services.Workflow;
 using MegaForm.Core.Services.AiKnowledge;
 using MegaForm.Core.Services.Starters;
@@ -27,6 +28,7 @@ using MegaForm.Core.Integrations.Storage;
 using MegaForm.Core.Integrations.Storage.Providers;
 using MegaForm.Core.Payments;
 using MegaForm.Core.Payments.Providers;
+using MegaForm.Core.Security;
 using MegaForm.Core.SpamProtection;
 using MegaForm.Core.SpamProtection.Providers;
 using MegaForm.Core.Templates;
@@ -130,6 +132,15 @@ namespace MegaForm.Umbraco.Composers
             // ── Shared UI route rewrite (/api/MegaForm/ → /umbraco/MegaForm/MegaFormApi/)
             builder.Services.AddTransient<IStartupFilter, MegaFormRouteRewriteStartupFilter>();
 
+            // ── Magic Strings parser wiring for static SSR renderer
+            builder.Services.AddTransient<IStartupFilter, MegaFormMagicStringsStartupFilter>();
+
+            // ── Domain-based licensing probe (localhost = production; public domain needs license)
+            builder.Services.AddTransient<IStartupFilter, MegaFormLicenseStartupFilter>();
+
+            // ── Asset cache-bust token, derived from the shipped js/css files
+            builder.Services.AddTransient<IStartupFilter, StartupFilters.MegaFormAssetVersionStartupFilter>();
+
             // ── CORS for public MegaForm embed/script endpoints
             builder.Services.AddTransient<IStartupFilter, MegaFormCorsStartupFilter>();
 
@@ -141,6 +152,22 @@ namespace MegaForm.Umbraco.Composers
             // calling AddAuthorization again would replace that lifetime contract.
             builder.Services.Configure<AuthorizationOptions>(options =>
             {
+                // Umbraco 17 backoffice SPA authenticates with the OpenIddict bearer token
+                // stored in localStorage by Bellissima. The shared Vite/TS admin UI (dashboard,
+                // builder, submissions, languages) runs inside an iframe and injects that token
+                // via the umbraco-host fetch interceptor. We also accept the Umbraco backoffice
+                // cookie so the same endpoints work when the browser forwards the cookie (same
+                // origin / relaxed SameSite) and to keep direct browser links functional.
+                options.AddPolicy("MegaFormApi", policy =>
+                {
+                    policy.AddAuthenticationSchemes(
+                        Constants.Security.BackOfficeAuthenticationType,
+                        "OpenIddict.Validation.AspNetCore");
+                    policy.RequireAuthenticatedUser();
+                });
+
+                // Dual-scheme policy for Umbraco backoffice pages that may be reached
+                // directly by a browser with the Umbraco backoffice cookie (e.g. preview pages).
                 options.AddPolicy("MegaFormBackOffice", policy =>
                 {
                     policy.AddAuthenticationSchemes(
@@ -149,24 +176,12 @@ namespace MegaForm.Umbraco.Composers
                     policy.RequireAuthenticatedUser();
                 });
 
-                // Named policy for controllers that want to require any MegaForm permission
-                // letter via IAuthorizationService / MegaFormAuthorizeAttribute.
-                options.AddPolicy("MegaFormPermission", policy =>
-                {
-                    policy.AddAuthenticationSchemes(
+                options.DefaultPolicy = options.GetPolicy("MegaFormApi")
+                    ?? new AuthorizationPolicyBuilder(
                         Constants.Security.BackOfficeAuthenticationType,
-                        "OpenIddict.Validation.AspNetCore");
-                    policy.RequireAuthenticatedUser();
-                });
-
-                // API-only policy used by MegaFormAuthorizeAttribute. It uses the OpenIddict
-                // bearer scheme so that AJAX calls from the Bellissima SPA receive a 401
-                // challenge instead of a cookie redirect.
-                options.AddPolicy("MegaFormApi", policy =>
-                {
-                    policy.AddAuthenticationSchemes("OpenIddict.Validation.AspNetCore");
-                    policy.RequireAuthenticatedUser();
-                });
+                        "OpenIddict.Validation.AspNetCore")
+                        .RequireAuthenticatedUser()
+                        .Build();
             });
 
             // ── MegaForm granular permission service and authorization handler
@@ -227,6 +242,29 @@ namespace MegaForm.Umbraco.Composers
             builder.Services.AddScoped<AdminRecordShellService>();
             builder.Services.AddScoped<SubmissionProcessor>();
             builder.Services.AddScoped<PrintFormRenderer>();
+
+            // ── Prevalue Sources (shared catalog of reusable option sources)
+            builder.Services.AddScoped<MegaForm.Core.Models.Prevalues.IPrevalueSourceStore, Data.UmbracoPrevalueSourceStore>();
+            builder.Services.AddScoped<MegaForm.Core.Services.Prevalues.IPrevalueProvider>(sp =>
+            {
+                var env = sp.GetRequiredService<IHostEnvironment>();
+                var safeRoot = System.IO.Path.Combine(env.ContentRootPath, "App_Data", "MegaForm", "Prevalues");
+                System.IO.Directory.CreateDirectory(safeRoot);
+                return new MegaForm.Core.Services.Prevalues.TextfilePrevalueProvider(safeRoot);
+            });
+            builder.Services.AddScoped<MegaForm.Core.Services.Prevalues.IPrevalueProvider, MegaForm.Core.Services.Prevalues.SqlDatabasePrevalueProvider>();
+            builder.Services.AddScoped<MegaForm.Core.Services.Prevalues.IPrevalueProvider, Services.Prevalues.UmbracoDocumentsPrevalueProvider>();
+            builder.Services.AddScoped<MegaForm.Core.Services.Prevalues.IPrevalueProvider, Services.Prevalues.UmbracoDataTypePrevalueProvider>();
+            builder.Services.AddScoped<MegaForm.Core.Services.Prevalues.PrevalueProviderRegistry>();
+            builder.Services.AddScoped<MegaForm.Core.Services.Prevalues.PrevalueOptionsResolver>();
+            // [AfterSubmitScript v20260815-01] Umbraco twin of Oqtane/DNN FormScriptController.
+            // The compiler is null when MegaForm.Scripting.dll is not deployed; the service
+            // then reports compiler unavailable instead of crashing.
+            builder.Services.AddSingleton<AfterSubmitScriptService>(sp =>
+            {
+                var log = sp.GetService<ILogService>();
+                return new AfterSubmitScriptService(null, log, null, null);
+            });
             builder.Services.AddScoped<SubmissionIndexerService>(sp =>
             {
                 var db = sp.GetRequiredService<MegaFormDbContext>();
@@ -263,6 +301,11 @@ namespace MegaForm.Umbraco.Composers
             // ── Localization
             builder.Services.AddScoped<ILocalizationProvider, UmbracoLocalizationProvider>();
 
+            // ── Magic Strings placeholder parser (shared Core engine)
+            builder.Services.RegisterMegaFormMagicStrings();
+            builder.Services.AddScoped<IPageFieldResolver, UmbracoPageFieldResolver>();
+            builder.Services.AddScoped<IDictionaryValueResolver, UmbracoDictionaryValueResolver>();
+
             // ── Google Sheets runtime auth
             builder.Services.AddScoped<IGoogleAuthSettings, UmbracoGoogleAuthSettings>();
             builder.Services.AddScoped<GoogleSheetsAuthService>();
@@ -289,6 +332,10 @@ namespace MegaForm.Umbraco.Composers
 
             // ── MegaForm SDK facade (IMegaFormClient)
             builder.Services.AddMegaFormSdk();
+
+            // ── Headless/AJAX Forms Delivery API
+            builder.Services.AddScoped<FormDeliveryService>();
+            builder.Services.AddSingleton(sp => FormsApiSecurityOptions.FromConfiguration(sp.GetRequiredService<IConfiguration>()));
 
             // ── Hosted services
             builder.Services.AddHostedService<MegaFormWarmupHostedService>();

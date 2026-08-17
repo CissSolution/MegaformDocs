@@ -44,7 +44,9 @@
       "elementName": "megaform-sidebar-menu",
       "meta": {
         "label": "MegaForm",
-        "menus": ["MegaForm.Menu"]
+        "menus": [
+          "MegaForm.Menu"
+        ]
       }
     },
     {
@@ -67,68 +69,14 @@
     },
     {
       "type": "sectionView",
-      "alias": "MegaForm.SectionView.Dashboard",
-      "name": "MegaForm Dashboard",
-      "element": "/App_Plugins/MegaForm/backoffice/megaform-dashboard-view.js",
-      "elementName": "megaform-dashboard-view",
+      "alias": "MegaForm.SectionView.Workspace",
+      "name": "MegaForm Workspace",
+      "element": "/App_Plugins/MegaForm/backoffice/megaform-workspace-view.js",
+      "elementName": "megaform-workspace-view",
       "meta": {
-        "label": "Dashboard",
-        "icon": "icon-home",
-        "pathname": "dashboard"
-      },
-      "conditions": [
-        {
-          "alias": "Umb.Condition.SectionAlias",
-          "match": "MegaForm.Section"
-        }
-      ]
-    },
-    {
-      "type": "sectionView",
-      "alias": "MegaForm.SectionView.Builder",
-      "name": "MegaForm Builder",
-      "element": "/App_Plugins/MegaForm/backoffice/megaform-builder-view.js",
-      "elementName": "megaform-builder-view",
-      "meta": {
-        "label": "Builder",
-        "icon": "icon-edit",
-        "pathname": "builder"
-      },
-      "conditions": [
-        {
-          "alias": "Umb.Condition.SectionAlias",
-          "match": "MegaForm.Section"
-        }
-      ]
-    },
-    {
-      "type": "sectionView",
-      "alias": "MegaForm.SectionView.Submissions",
-      "name": "MegaForm Submissions",
-      "element": "/App_Plugins/MegaForm/backoffice/megaform-submissions-view.js",
-      "elementName": "megaform-submissions-view",
-      "meta": {
-        "label": "Submissions",
-        "icon": "icon-inbox",
-        "pathname": "submissions"
-      },
-      "conditions": [
-        {
-          "alias": "Umb.Condition.SectionAlias",
-          "match": "MegaForm.Section"
-        }
-      ]
-    },
-    {
-      "type": "sectionView",
-      "alias": "MegaForm.SectionView.Languages",
-      "name": "MegaForm Languages",
-      "element": "/App_Plugins/MegaForm/backoffice/megaform-languages-view.js",
-      "elementName": "megaform-languages-view",
-      "meta": {
-        "label": "Languages",
-        "icon": "icon-globe",
-        "pathname": "languages"
+        "label": "MegaForm",
+        "icon": "icon-umb-contour",
+        "pathname": "open"
       },
       "conditions": [
         {
@@ -169,6 +117,15 @@
       }
     },
     {
+      "type": "ufmComponent",
+      "alias": "MegaForm.UfmComponent.FormName",
+      "name": "MegaForm Form Name",
+      "api": "/App_Plugins/MegaForm/backoffice/ufm/megaform-form-name.component.js",
+      "meta": {
+        "alias": "megaformFormName"
+      }
+    },
+    {
       "type": "condition",
       "alias": "MegaForm.Condition.Permission",
       "name": "MegaForm Permission Condition",
@@ -187,8 +144,13 @@
       "alias": "MegaForm.EntityAction.Form.Edit",
       "name": "MegaForm Edit Form",
       "api": "/App_Plugins/MegaForm/backoffice/entity-actions/megaform-form-edit-action.js",
-      "forEntityTypes": ["megaForm.entity.form"],
-      "meta": { "icon": "icon-edit", "label": "Edit" }
+      "forEntityTypes": [
+        "megaForm.entity.form"
+      ],
+      "meta": {
+        "icon": "icon-edit",
+        "label": "Edit"
+      }
     },
     {
       "type": "entityAction",
@@ -196,8 +158,13 @@
       "alias": "MegaForm.EntityAction.Form.Submissions",
       "name": "MegaForm Form Submissions",
       "api": "/App_Plugins/MegaForm/backoffice/entity-actions/megaform-form-submissions-action.js",
-      "forEntityTypes": ["megaForm.entity.form"],
-      "meta": { "icon": "icon-inbox", "label": "Submissions" }
+      "forEntityTypes": [
+        "megaForm.entity.form"
+      ],
+      "meta": {
+        "icon": "icon-inbox",
+        "label": "Submissions"
+      }
     },
     {
       "type": "entityAction",
@@ -205,8 +172,13 @@
       "alias": "MegaForm.EntityAction.Form.Workflow",
       "name": "MegaForm Form Workflow",
       "api": "/App_Plugins/MegaForm/backoffice/entity-actions/megaform-form-workflow-action.js",
-      "forEntityTypes": ["megaForm.entity.form"],
-      "meta": { "icon": "icon-wand", "label": "Workflow" }
+      "forEntityTypes": [
+        "megaForm.entity.form"
+      ],
+      "meta": {
+        "icon": "icon-wand",
+        "label": "Workflow"
+      }
     },
     {
       "type": "entityAction",
@@ -214,8 +186,13 @@
       "alias": "MegaForm.EntityAction.Form.Delete",
       "name": "MegaForm Delete Form",
       "api": "/App_Plugins/MegaForm/backoffice/entity-actions/megaform-form-delete-action.js",
-      "forEntityTypes": ["megaForm.entity.form"],
-      "meta": { "icon": "icon-delete", "label": "Delete" }
+      "forEntityTypes": [
+        "megaForm.entity.form"
+      ],
+      "meta": {
+        "icon": "icon-delete",
+        "label": "Delete"
+      }
     }
   ]
 }

@@ -511,6 +511,27 @@ body.state-theme-mode .mf-panel-body { background: #ffffff !important; }
 }
 .mf-dropzone-placeholder i { opacity: 0.4 !important; }
 
+/* [EmptyStatePlaceholder 2026-08-16] Hide the dashed "Click fields on the left to add them"
+   panel as soon as the canvas holds a field.
+   canvas.ts render() already does `emptyState.style.display = 'none'` — but the rule above
+   sets `display: flex !important`, and an inline style loses to !important. So the dashed
+   rectangle stayed on screen behind every populated form: measured on form 202, three fields
+   rendered and #mf-empty-state still computed to display:flex, visible, 412x459. It reads as
+   a stray dashed border around the form and nothing in the JS looks wrong. */
+.mf-form:has(.mf-canvas-item) #mf-empty-state,
+.mf-form:has(.mf-canvas-item) .mf-dropzone-placeholder {
+  display: none !important;
+}
+
+/* [NoCanvasGrips 2026-08-16] The per-field grip is gone: ordering now happens in Reorder mode
+   (the button above the canvas), the way Umbraco Forms does it. Dragging a field by its body
+   still works — SortableJS treats .mf-canvas-field itself as a handle — so palette drops and
+   power-user drags are unaffected; only the permanent grip column disappears, which also
+   removes the gutter it reserved on the left of every field. */
+#mf-canvas-dropzone .mf-drag-handle {
+  display: none !important;
+}
+
 /* Canvas fields */
 .mf-canvas-field {
   /* [P1-6] Consume theme vars (fallback = original colors) so the Build canvas

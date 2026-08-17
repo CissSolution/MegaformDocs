@@ -8,12 +8,39 @@
 const UMB_AUTH_TOKEN_KEY = 'umb:userAuthTokenResponse';
 
 /**
+ * The backoffice auth context, handed over by whichever MegaForm element mounts first.
+ *
+ * Umbraco 17 keeps the OIDC access token in MEMORY — measured: after a successful login both
+ * localStorage and sessionStorage hold no token entry at all (only umb:appLanguage). So the
+ * storage reader below returns null on every modern site, mfFetch silently degrades to a
+ * cookie-only call, and every MegaForm backoffice screen then depends on the UMB_UCONTEXT
+ * cookie. That cookie times out long before the SPA session does, and the API answers a
+ * cookie-less call with a REDIRECT to the login page — which is where
+ * "Unexpected token '<', "<!DOCTYPE"... is not valid JSON" comes from.
+ */
+let _authContext = null;
+let _resolveAuthReady;
+const _authReady = new Promise((resolve) => { _resolveAuthReady = resolve; });
+
+/**
+ * Registers the backoffice auth context so every mfFetch in this bundle can attach a fresh
+ * bearer token. Elements call this from their UMB_AUTH_CONTEXT subscription.
+ * @param {{ getLatestToken?: () => Promise<string|undefined> }} authContext
+ */
+export function setMegaFormAuthContext(authContext) {
+  if (!authContext) return;
+  _authContext = authContext;
+  _resolveAuthReady?.();
+}
+
+/**
  * Reads the Umbraco backoffice bearer token stored by Bellissima.
+ * Kept as a fallback for older backoffice versions that persisted the token.
  * @returns {string|null}
  */
 export function getUmbracoBearerToken() {
   try {
-    const raw = localStorage.getItem(UMB_AUTH_TOKEN_KEY);
+    const raw = localStorage.getItem(UMB_AUTH_TOKEN_KEY) ?? sessionStorage.getItem(UMB_AUTH_TOKEN_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     return parsed?.access_token || null;
@@ -23,14 +50,38 @@ export function getUmbracoBearerToken() {
 }
 
 /**
+ * The token to send, preferring the live auth context over any persisted copy.
+ * Never throws: without a token the request still goes out on the cookie, which is what
+ * every MegaForm screen did before this helper existed.
+ * @returns {Promise<string|null>}
+ */
+async function getCurrentToken() {
+  // Extension conditions and entity actions can fire before any MegaForm element has mounted
+  // and handed the context over. Give that a brief moment rather than sending the first call
+  // — the permission load that decides which menu items exist — without a token; never block
+  // for long, since falling back to the cookie is exactly the old behaviour.
+  if (!_authContext) {
+    await Promise.race([_authReady, new Promise((resolve) => setTimeout(resolve, 750))]);
+  }
+
+  try {
+    const token = await _authContext?.getLatestToken?.();
+    if (token) return token;
+  } catch (e) {
+    // fall through to the storage fallback
+  }
+  return getUmbracoBearerToken();
+}
+
+/**
  * Wrapper around fetch that injects the Umbraco bearer token into MegaForm API calls.
  * Falls back to plain fetch when no token is available.
  * @param {string} url
  * @param {RequestInit} [options]
  * @returns {Promise<Response>}
  */
-export function mfFetch(url, options = {}) {
-  const token = getUmbracoBearerToken();
+export async function mfFetch(url, options = {}) {
+  const token = await getCurrentToken();
   if (token) {
     options.headers = {
       ...options.headers,
@@ -38,6 +89,44 @@ export function mfFetch(url, options = {}) {
     };
   }
   return fetch(url, options);
+}
+
+/**
+ * Calls a MegaForm API endpoint and returns parsed JSON.
+ *
+ * Why this exists: the MegaForm API endpoints are guarded by the "MegaFormApi" policy,
+ * which challenges with a REDIRECT to the backoffice login page rather than a 401.
+ * fetch() follows that redirect by default, so a caller that only sends the backoffice
+ * cookie — which lapses long before the SPA's bearer token does — receives the login
+ * page with status 200 and then dies inside response.json() with
+ * "Unexpected token '<', "<!DOCTYPE"... is not valid JSON". That message names the
+ * symptom and hides the cause, which reads as a broken endpoint.
+ *
+ * Sending the bearer token (which Bellissima keeps fresh) is the fix; detecting the HTML
+ * answer and saying "session expired" is the safety net for when it is missing too.
+ *
+ * @param {string} url
+ * @param {RequestInit} [options]
+ * @returns {Promise<any>}
+ */
+export async function mfFetchJson(url, options = {}) {
+  const response = await mfFetch(url, {
+    credentials: 'include',
+    ...options,
+    headers: { Accept: 'application/json', ...options.headers },
+  });
+
+  const contentType = response.headers.get('content-type') || '';
+
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
+
+  if (!contentType.toLowerCase().includes('json')) {
+    throw new Error('not signed in — reload the backoffice and try again');
+  }
+
+  return response.json();
 }
 
 /**
@@ -82,14 +171,7 @@ export class MegaFormPermissionsContext {
   load() {
     if (this._promise) return this._promise;
 
-    this._promise = mfFetch('/umbraco/MegaForm/MegaFormApi/CurrentPermissions', {
-      credentials: 'include',
-      headers: { Accept: 'application/json' },
-    })
-      .then((r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json();
-      })
+    this._promise = mfFetchJson('/umbraco/MegaForm/MegaFormApi/CurrentPermissions')
       .then((data) => {
         this._set = {
           hasSectionAccess: !!data.hasSectionAccess,
@@ -104,6 +186,12 @@ export class MegaFormPermissionsContext {
       .catch((err) => {
         // eslint-disable-next-line no-console
         console.error('[MegaForm.Permissions] Failed to load permissions', err);
+
+        // Do not keep a failed result. This runs from an extension condition during app boot,
+        // which can be before the auth context exists (or before the user has signed in at
+        // all); caching that one failure would leave every permission false for the rest of
+        // the session, so the MegaForm menu items simply never appear and nothing says why.
+        this._promise = null;
         this._ready = true;
         this._set = {
           hasSectionAccess: false,
