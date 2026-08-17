@@ -157,7 +157,36 @@ which first read as "columns reject drops" when it was the aim that was stale. `
 (written only during palette drags) is the seam it uses to confirm the pointer is over a column
 before releasing.
 
-## 7. Still open
+## 7. Fifth pass — Prevalue Sources gets a screen (`ecd71842`)
+
+The catalog from `59f515e` (store, four providers `sql` / `textfile` / `umbracoDataType` /
+`umbracoDocuments`, resolver, controller, migration, and a `FieldOptionsService` branch that reads
+`prevalueSourceId` / `prevalueSourceName` off a field) **had never been called**. First action was to
+call it — `tools/browser-qa/umb-prevalue-sources-probe.mjs` — and every endpoint answered correctly
+on the first real request: List → Save → Test (3 options) → Options → Get → Delete → List empty.
+The backend was fine; what was missing was any way in.
+
+**The screen** is a native backoffice element (`megaform-prevalue-sources-view.js`) on a
+"Prevalue Sources" node in the MegaForm tree, not another MVC frame — the frames run on the
+backoffice cookie that lapses ~30 minutes in (08-16c), and this is administration, not authoring.
+The workspace view gained a `native` route so it renders the element in place of the iframe.
+
+Per-provider field descriptors live in the element and mirror each provider's `Settings` class;
+they only drive rendering, and every save passes through the provider's own validation, so drift
+surfaces as a validation message rather than as bad data.
+
+Two QA traps worth keeping:
+* `uui-menu-item` carries its caption in a **label attribute** and renders it inside its own shadow
+  root — matching `textContent` finds no tree node at all.
+* `querySelectorAll` **cannot cross a shadow boundary**: `"my-element .editor input"` matches nothing
+  once `.editor` lives in the element's shadow root. Query relative to each root while walking.
+
+Not done yet: the **field-side picker**. A Dropdown/Radio in the builder still cannot choose a
+prevalue source from its settings, so the catalog has no consumer in the UI. `FieldOptionsService`
+already reads `prevalueSourceId`/`prevalueSourceName` from field props, so the picker is a builder
+change only — no backend work.
+
+## 8. Still open
 
 * 🟠 **Workflow is a full-screen takeover.** Opening it from a flyout tool is a jarring exit from the
   builder, and the flyout's close button does not bring you back — only "Return to App Builder" does.
