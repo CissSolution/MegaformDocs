@@ -4327,3 +4327,74 @@ body[data-mf-mode="build"] .mf-panel-right.mf-flyout.mf-flyout-open {
   display: none !important;
 }
 
+
+/* ════════════════════════════════════════════════════════════
+   [ArrangeMode 2026-08-17] Dragging a control out of the palette
+   The canvas takes the shape of the Reorder screen for the length of the drag:
+   one short row per field, so the whole form fits on screen and the gap you are
+   aiming at is an actual gap rather than the seam between two tall cards. Layout
+   rows and their columns come forward at the same time — a column that renders as
+   a hairline is a column nobody can drop into. Pure CSS on a body class set in
+   canvas.ts setPaletteDragging(); nothing here touches the schema.
+   ════════════════════════════════════════════════════════════ */
+body.mf-arrange-mode #mf-canvas-dropzone .mf-canvas-field {
+  padding: 6px 10px !important;
+  min-height: 0 !important;
+  margin-bottom: 6px !important;
+  border: 1px solid #e2e8f0 !important;
+  background: #ffffff !important;
+  box-shadow: none !important;
+}
+/* Keep the name and the type chip; drop the rendered control itself. */
+body.mf-arrange-mode #mf-canvas-dropzone .mf-canvas-field .mf-field-content > *:not(.mf-field-preview-label):not(.mf-section-preview):not(.mf-html-preview):not(.mf-hidden-preview) {
+  display: none !important;
+}
+body.mf-arrange-mode #mf-canvas-dropzone .mf-canvas-field .mf-field-preview-label {
+  margin: 0 !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+}
+body.mf-arrange-mode #mf-canvas-dropzone .mf-canvas-field .mf-inline-label-edit,
+body.mf-arrange-mode #mf-canvas-dropzone .mf-canvas-field .mf-logic-badge {
+  display: none !important;
+}
+body.mf-arrange-mode #mf-canvas-dropzone .mf-field-icon-chip {
+  width: 24px !important; height: 24px !important; font-size: 11px !important;
+}
+
+/* Layout rows: the container and every column read as drop targets. */
+body.mf-arrange-mode #mf-canvas-dropzone .mf-canvas-row {
+  border: 2px dashed #93c5fd !important;
+  background: #f8fbff !important;
+  padding: 8px !important;
+}
+body.mf-arrange-mode #mf-canvas-dropzone .mf-canvas-row > .mf-row-header {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+body.mf-arrange-mode #mf-canvas-dropzone .mf-row-col {
+  min-height: 72px !important;
+  border: 2px dashed #c7d2fe !important;
+  border-radius: 8px !important;
+  background: #ffffff !important;
+  padding: 8px !important;
+  position: relative !important;
+}
+/* The "Drop field" placeholder is display:none during a drag on purpose — SortableJS
+   only treats a column as empty when it has no child box, and that placeholder was a
+   box. A pseudo-element has no such box, so the hint can stay. */
+body.mf-arrange-mode #mf-canvas-dropzone .mf-row-col:has(> .mf-row-col-empty)::after {
+  content: attr(data-mf-drop-hint);
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font: 600 12px/1 var(--font, system-ui);
+  color: #6366f1;
+  pointer-events: none;
+}
+body.mf-arrange-mode #mf-canvas-dropzone .mf-row-col.mf-row-col-dragover {
+  border-color: #6366f1 !important;
+  background: #eef2ff !important;
+}

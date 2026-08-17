@@ -394,21 +394,37 @@ import { MegaFormBuilder } from './core';
   function installButton() {
     if (document.getElementById('mf-reorder-toggle')) return true;
 
-    // Above the canvas, not in the app chrome. The top bar collapses its buttons to bare
-    // icons below ~1400px — measured at 1366px: this button rendered 28px wide with its
-    // label hidden, which is how it went unnoticed. Umbraco Forms puts its own Reorder
-    // control over the design surface for the same reason: it acts on what is below it.
+    const button = document.createElement('button');
+    button.id = 'mf-reorder-toggle';
+    button.type = 'button';
+    button.title = t('builder.reorder.tooltip', 'Put the fields in order without dragging them across the canvas');
+
+    // [2026-08-17] First choice: the tool row in the top bar, which is where Umbraco Forms
+    // keeps Reorder (next to "Add page to start / end of form"). The button used to sit on
+    // a bar of its own above the canvas — a whole band of white for one button, which is
+    // what the owner marked. That bar is only built now if there is no tool row to join,
+    // which is the case on hosts still running the old topbar markup.
+    const toolbar = document.querySelector<HTMLElement>('.mf-secondary-toolbar');
+    if (toolbar) {
+      button.className = 'mf-secondary-tool mf-reorder-tool';
+      button.setAttribute('data-tip', t('builder.reorder.open', 'Reorder'));
+      button.setAttribute('aria-label', t('builder.reorder.open', 'Reorder'));
+      button.innerHTML = '<i class="fa-solid fa-arrow-down-short-wide"></i>' +
+        '<span class="mf-secondary-tool-label lbl"></span>';
+      setButtonLabel(button, t('builder.reorder.open', 'Reorder'));
+      button.addEventListener('click', () => open());
+      toolbar.appendChild(button);
+      ensureStyles();
+      return true;
+    }
+
     const dropzone = document.getElementById('mf-canvas-dropzone');
     if (!dropzone) return false;
 
     const bar = document.createElement('div');
     bar.className = 'mf-reorder-bar';
 
-    const button = document.createElement('button');
-    button.id = 'mf-reorder-toggle';
-    button.type = 'button';
     button.className = 'mf-reorder-btn';
-    button.title = t('builder.reorder.tooltip', 'Put the fields in order without dragging them across the canvas');
     button.innerHTML = '<i class="fa-solid fa-arrow-down-short-wide"></i><span class="lbl"></span>';
     setButtonLabel(button, t('builder.reorder.open', 'Reorder'));
     button.addEventListener('click', () => open());

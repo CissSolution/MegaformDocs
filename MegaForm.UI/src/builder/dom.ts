@@ -2047,6 +2047,22 @@ import dbStrings from './db-tables-strings.json';
       return '/admin/dashboard';
     }
 
+    // [B92-fix 2026-08-17] Restore data-mf-mode. Removing the Build/Design pill also
+    // removed the only code that set this attribute — and 88 rules in
+    // megaform-builder-ts.css are scoped to body[data-mf-mode="build"], including every
+    // drag affordance on the canvas (hide the hover actions mid-drag, keep the grip lit,
+    // light up row columns as drop targets). Nothing errored; the canvas simply stopped
+    // helping during a drag.
+    try {
+      if (!document.body.getAttribute('data-mf-mode')) document.body.setAttribute('data-mf-mode', 'build');
+      window.addEventListener('mf:theme-tab-activated', function () {
+        try { document.body.setAttribute('data-mf-mode', 'design'); } catch (_e) {}
+      });
+      window.addEventListener('mf:theme-tab-deactivated', function () {
+        try { document.body.setAttribute('data-mf-mode', 'build'); } catch (_e) {}
+      });
+    } catch (_e) { /* defensive */ }
+
     var builderApp = document.getElementById('mf-builder-app');
     var primaryBar = document.getElementById('mf-primary-bar');
     var flyout = document.getElementById('mf-panel-right');

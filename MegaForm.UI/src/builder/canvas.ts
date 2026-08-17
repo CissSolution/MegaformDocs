@@ -1485,7 +1485,20 @@ import { getPublicFormUrl } from '@shared/platform-host';
         return total;
     }
 
-    function handlePalettePointerEnd(): void {
+    function handlePalettePointerEnd(ev?: Event): void {
+        // [ColumnDrop 2026-08-17] Resolve WHERE the drop happened here, in the capture phase
+        // of the pointer-up, and keep it. Everything downstream runs later — SortableJS's own
+        // drop handler, and the pointer fallback's 160ms settle — by which time the canvas has
+        // left arrange mode and every card has grown back, so the same coordinates now point
+        // at a different element. That is what sent controls dropped into a layout column to
+        // the form root instead: not a rejected drop, a drop resolved against a stale layout.
+        const point = (ev && (ev as any).clientX != null)
+            ? { x: (ev as any).clientX, y: (ev as any).clientY }
+            : lastPalettePointer;
+        if (point) {
+            lastPalettePointer = point;
+            lastPaletteDropTarget = getPaletteDropTarget(point.x, point.y);
+        }
         if (_paletteDragging) finishPaletteDragging();
     }
 
@@ -1496,16 +1509,27 @@ import { getPublicFormUrl } from '@shared/platform-host';
         }
         _paletteDragging = active;
         document.body.classList.toggle('mf-palette-dragging', active);
+        // [ArrangeMode 2026-08-17] Dragging a control out of the palette puts the canvas
+        // into the same shape the Reorder screen has: every field collapses to one short
+        // row, so the whole form is on screen at once and the gap you are aiming at is a
+        // gap, not a seam between two tall cards. Layout rows and their columns come
+        // forward at the same time — a column you cannot see is a column you cannot drop
+        // into. Reverts on drop; nothing is written to the schema by this class.
+        document.body.classList.toggle('mf-arrange-mode', active);
         document.getElementById('mf-canvas-dropzone')?.classList.toggle('mf-palette-dragging', active);
         setBuilderDragging(active);
         if (active) {
             document.addEventListener('mouseup', handlePalettePointerEnd, true);
             document.addEventListener('touchend', handlePalettePointerEnd, true);
             document.addEventListener('drop', handlePalettePointerEnd, true);
+            document.addEventListener('pointermove', trackPalettePointer, true);
+            document.addEventListener('mousemove', trackPalettePointer, true);
         } else {
             document.removeEventListener('mouseup', handlePalettePointerEnd, true);
             document.removeEventListener('touchend', handlePalettePointerEnd, true);
             document.removeEventListener('drop', handlePalettePointerEnd, true);
+            document.removeEventListener('pointermove', trackPalettePointer, true);
+            document.removeEventListener('mousemove', trackPalettePointer, true);
         }
     }
 
@@ -1559,6 +1583,32 @@ import { getPublicFormUrl } from '@shared/platform-host';
         return (window as any).Sortable || null;
     }
 
+    // Where the pointer was last seen during a palette drag. SortableJS's forced-fallback
+    // path does not hand the real pointer position to onAdd, and the drop target depends
+    // on it (a column and the form root overlap on screen).
+    let lastPalettePointer: { x: number; y: number } | null = null;
+    // The drop target as it was AT pointer-up, before the canvas left arrange mode.
+    let lastPaletteDropTarget: HTMLElement | null = null;
+    function trackPalettePointer(ev: PointerEvent | MouseEvent): void {
+        const x = (ev as any).clientX, y = (ev as any).clientY;
+        if (typeof x !== 'number' || typeof y !== 'number') return;
+        lastPalettePointer = { x, y };
+        // Resolve on every move, not only at pointer-up: SortableJS ends its drag on
+        // 'pointerup', which fires BEFORE the 'mouseup' this module listens on, so a target
+        // resolved at mouseup arrives after onAdd has already placed the field.
+        lastPaletteDropTarget = getPaletteDropTarget(x, y);
+        // Diagnostic seam for tools/browser-qa/umb-builder-arrange-qa.mjs: a drag is only
+        // observable from outside while it is happening, and "the field ended up in the
+        // wrong place" does not say which of the three drop paths placed it.
+        try {
+            (window as any).__mfDropDebug = {
+                x, y,
+                target: lastPaletteDropTarget ? String(lastPaletteDropTarget.className || lastPaletteDropTarget.id) : null,
+                inColumn: !!(lastPaletteDropTarget && lastPaletteDropTarget.closest('.mf-row-col')),
+            };
+        } catch (_e) { /* diagnostics only */ }
+    }
+
     function getPaletteDropTarget(clientX: number, clientY: number): HTMLElement | null {
         const nodes = document.elementsFromPoint(clientX, clientY) as HTMLElement[];
         for (const node of nodes) {
@@ -1570,11 +1620,15 @@ import { getPublicFormUrl } from '@shared/platform-host';
         return null;
     }
 
-    function addPaletteTypeAtDrop(type: string, clientX: number, clientY: number): boolean {
+    function addPaletteTypeAtDrop(type: string, clientX: number, clientY: number, preResolved?: HTMLElement | null): boolean {
         if (!type || !B.fieldTypes[type]) return false;
         if (type === 'Row') return false;
 
-        const target = getPaletteDropTarget(clientX, clientY);
+        // preResolved is the target captured at pointer-up; re-reading the point now would
+        // measure a canvas that has already grown back out of arrange mode.
+        const target = (preResolved && preResolved.isConnected)
+            ? preResolved
+            : getPaletteDropTarget(clientX, clientY);
         if (!target || target.closest('.mf-panel-left')) return false;
 
         const flexGrid = target.closest<HTMLElement>('.mf-flexgrid-canvas');
@@ -1693,11 +1747,15 @@ import { getPublicFormUrl } from '@shared/platform-host';
             const onUp = (upEv: PointerEvent) => {
                 lastX = upEv.clientX;
                 lastY = upEv.clientY;
+                // Resolve the target NOW: the wait below exists to let SortableJS finish, and
+                // by the time it elapses the canvas has left arrange mode and moved under
+                // these coordinates.
+                const dropTarget = getPaletteDropTarget(lastX, lastY);
                 cleanup();
                 if (!moved) return;
                 window.setTimeout(() => {
                     const currentTotal = countSchemaFields(B.state.schema.fields || []);
-                    if (currentTotal === startTotal) addPaletteTypeAtDrop(type, lastX, lastY);
+                    if (currentTotal === startTotal) addPaletteTypeAtDrop(type, lastX, lastY, dropTarget);
                     finishPaletteDragging();
                 }, 160);
             };
@@ -2126,6 +2184,12 @@ import { getPublicFormUrl } from '@shared/platform-host';
             colDiv.className = 'mf-row-col';
             colDiv.setAttribute('data-row-index', String(index));
             colDiv.setAttribute('data-col-index', String(colIdx));
+            // Drop hint for arrange mode, printed by CSS as a pseudo-element: the real
+            // "Drop field" placeholder has to be display:none mid-drag or SortableJS stops
+            // treating the column as empty and refuses the drop.
+            colDiv.setAttribute('data-mf-drop-hint', B.builderT
+                ? B.builderT('builder.arrange.drop_here', 'Drop here')
+                : 'Drop here');
 
             if (!col.fields || col.fields.length === 0) {
                 colDiv.innerHTML = '<div class="mf-row-col-empty"><i class="fas fa-plus"></i><span>Drop field</span></div>';
@@ -2822,6 +2886,20 @@ import { getPublicFormUrl } from '@shared/platform-host';
                     if (el.classList.contains('mf-palette-item')) {
                         finishPaletteDragging();
                         const type = el.getAttribute('data-type');
+                        // [ColumnDrop 2026-08-17] The pointer can finish inside a layout
+                        // column and still be reported here: the guard in this list's put()
+                        // reads evt.target/evt.related, and on the forced-fallback path those
+                        // are not the element under the pointer — so a control dropped into a
+                        // column landed on the form root instead. Measured on form 103 with a
+                        // real drag: columns stayed [0,0] while the root grew by one. Ask the
+                        // pointer where it actually is, and if it is over a column hand the
+                        // drop to the same code the pointer fallback uses.
+                        const p = lastPalettePointer;
+                        const dropped = lastPaletteDropTarget;
+                        if (type && p && dropped && dropped.isConnected && dropped.closest('.mf-row-col')) {
+                            el.parentNode?.removeChild(el);
+                            if (addPaletteTypeAtDrop(type, p.x, p.y, dropped)) return;
+                        }
                         if (type && B.fieldTypes[type]) {
                             const newField = B.createFieldFromTemplate({ type, label: B.fieldTypes[type].label });
                             const newPos = getCanvasNewIndex(evt, container);
