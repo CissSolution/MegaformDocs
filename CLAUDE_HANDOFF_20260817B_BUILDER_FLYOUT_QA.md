@@ -60,7 +60,40 @@ Then restart the host — the asset version is the **DLL timestamp**, so without
 builder URL keeps its old `?v=` and browsers keep serving the old bundle. Verified this session:
 `v=20260817072718` → `v=20260817081947` after the rebuild.
 
-## 4. Still open
+## 4. Second pass — one header band, and a panel shaped like Umbraco's (commit `0e58f57`)
+
+The owner marked up two screenshots: move the form tabs **up into the top band** (Umbraco Forms
+puts Design / Analytics / Settings / Entries there), and make the settings flyout look like the
+**Edit Group sidebar** Umbraco Forms opens — full height, over a backdrop, with a footer.
+
+**Header band.** `umb-section-main-views` renders its section-view tab strip into an
+`umb-body-layout` (slots: `header`, `action-menu`, `navigation`, default, `footer`, `footer-info`,
+`actions`) inside its own shadow root — found with `tools/browser-qa/umb-workspace-header-probe.mjs`,
+which walks every shadow root and prints the path. With one section view that strip is a tab you
+cannot switch, so it is hidden, and the form bar is appended to the layout with `slot="header"`.
+
+A package cannot cross that shadow boundary with a stylesheet, but it can with a **reference**: the
+view sits inside `umb-section-main-views`' shadow root, so climbing `getRootNode().host` reaches it.
+The `<style>` goes into the same shadow root, and both the bar and the style are removed on
+`disconnectedCallback`. `updated()` re-mounts and repaints, because Lit does not manage a node that
+lives outside its own shadow root.
+
+Measured: usable frame height **585px → 638px**.
+
+**Flyout.** Pinned to the whole frame (`position: fixed; top/right/bottom: 0`), 560px wide, above the
+builder topbar (`z-index: 1002`, backdrop `1001`), header + scrollable body + footer with `Close`
+and `Save` (Save clicks the builder's own save button, which the panel covers while open).
+
+⚠️ **Every declaration in that rule needs `!important`.** The base `.mf-panel-right.mf-flyout` rule
+sets `top: calc(var(--topbar) + 44px) !important`; a plain `top: 0` in the more specific
+host-scoped rule loses to it, and the panel opened 100px down the frame and ran off the bottom —
+full height, wrong origin, and only a screenshot showed it.
+
+QA extension: the header tabs live in a foreign shadow root, so the script finds them by piercing
+shadow roots and asserts each one navigates — Entries → `/view/open/submissions/103`,
+Analytics → the same grid with `?view=reports`, Design → back to the builder.
+
+## 5. Still open
 
 * 🟠 **Workflow is a full-screen takeover.** Opening it from a flyout tool is a jarring exit from the
   builder, and the flyout's close button does not bring you back — only "Return to App Builder" does.
@@ -72,3 +105,10 @@ builder URL keeps its old `?v=` and browsers keep serving the old bundle. Verifi
 * 🟠 **Prevalue Sources (`59f515e`) has still never been run.**
 * 🔴 **The four SPA views inside the iframe are still cookie-only** — the ~30 minute expiry from
   08-16c is unchanged.
+* 🟠 **The Submissions screen still stacks three rows of chrome** (`Dashboard / Submissions` +
+  actions, then `All forms / <form>`) under the new header band — the same crowding the builder
+  just lost.
+* ⚠️ **The backoffice extension files carry no `?v=`** (they are listed in `umbraco-package.json`,
+  which is static). A DLL rebuild changes the version on the *builder* assets but not on
+  `megaform-workspace-view.js`, so after changing a backoffice element the browser wants one
+  hard refresh.
