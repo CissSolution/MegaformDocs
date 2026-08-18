@@ -70,11 +70,13 @@ dotnet build MegaForm.Umbraco.Host/MegaForm.Umbraco.Host.csproj -c Release
 | Prevalue Sources: pickers, never typed aliases | `PrevalueMetadataController` + picker-driven editor | ✅ done |
 | Prevalue Sources: dynamic root + "use current page as root" | origins, steps, page context end to end | ✅ done |
 | **Data Sources** node (where submissions are stored / looked up) | missing | 🟠 §4.1 |
+| Form **Settings** as its own screen with a bottom Save bar | native screen on the Settings tab (`megaform-form-settings-view.js`) | ✅ done `6bd9c14c` |
+| **Security** node: package permissions per user group | native screen + `MegaFormSecurityController` | ✅ done `6bd9c14c` |
 | Field settings reachable from the field itself | gear on a control opens the flyout | ✅ done |
 | Pages → Groups → Fields, with "Add page to start/end of form" | Steps (Section page breaks) + Rows/Columns; no group concept | 🟠 §4.4 |
 | A persistent "Save and preview / Save" footer | Save lives in the top bar only | 🟠 §4.5 |
 | Entries screen with one band of chrome | three stacked rows | 🟠 §4.3 |
-| Security node (form permissions) | permissions exist, no tree node | 🟠 §4.6 |
+| Security node (form permissions) | done — see the row above; per-FORM permissions still live in the builder flyout | 🟠 §4.6 (reduced) |
 
 ---
 
@@ -153,10 +155,13 @@ lives in the top bar, which the flyout covers while open (hence the footer Save 
 Add a slim sticky footer to the builder in the workspace host only, wired to the existing
 `#mf-btn-save-draft` and `#mf-btn-preview` — do not introduce a second save path.
 
-### 4.6 Security / permissions node
+### 4.6 Per-form permissions (the Security node itself is done)
 
-`megaform-permissions-context.js` and the permissions matrix already exist; add a tree node that
-opens the matrix as a native element (same pattern as Prevalue Sources) rather than the flyout tab.
+Done in `6bd9c14c`: **Security** node → user groups → "Package Permissions" toggles, saved onto
+Umbraco's own user group (`MegaFormSecurityController`). What remains is the **per-form** matrix
+(`Permissions/Catalog`, `Permissions/Save` — those endpoints are per `formId`), which still lives in
+the builder flyout. Move it to a second panel on the Security screen, selected by form, using the
+same layout.
 
 ### 4.7 Leftovers from the dynamic-root work
 
@@ -167,6 +172,14 @@ opens the matrix as a native element (same pattern as Prevalue Sources) rather t
 * `Workflow/Database/*` routes do not exist on Umbraco, so BPMN database nodes 404 there.
 
 ---
+
+### 4.8 What the Settings screen deliberately does NOT carry
+
+Only settings stored on the form record: name, description, store-records, require login,
+save-and-continue, captcha, captions, after-submit message/redirect, notification addresses.
+Everything schema-shaped — fields, layout, theme, workflow, rules — stays in the builder, because
+those need the canvas beside them to mean anything. If a setting has to move later, the rule is the
+same: it belongs here if you can change it without looking at the form.
 
 ## 5. Traps this session paid for — do not re-learn them
 
@@ -196,7 +209,12 @@ opens the matrix as a native element (same pattern as Prevalue Sources) rather t
     reproduces it (`umb-builder-203-qa.mjs` does it right).
 12. **`body[data-mf-mode]` is load-bearing**: 88 rules in `megaform-builder-ts.css` are scoped to
     `body[data-mf-mode="build"]`. It is set in `dom.ts initBehaviours`; do not remove it again.
-13. **"Loading departments…" in a field preview is NOT a stuck loader** — it is the field's own
+13. **A screen that scrolls inside its own container defeats `fullPage: true`** — the page does not
+    scroll, the div does, so a screenshot shows only the fold. Walk the inner `.scroll` element and
+    save a tile per screenful (`umb-settings-security-qa.mjs`).
+14. **QA that toggles a permission must put it back.** The Security QA turns "Use AI" off for
+    Administrators, asserts through the API that it went, then restores it.
+15. **"Loading departments…" in a field preview is NOT a stuck loader** — it is the field's own
     placeholder text (`renderPlaceholderHint`, `canvas.ts:3331`). Checked; not a bug.
 
 ---
