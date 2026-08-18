@@ -280,11 +280,16 @@ export default class MegaFormWorkspaceView extends UmbLitElement {
     // No form open (dashboard, languages): leave the band to whatever Umbraco puts there.
     if (!(this._formId > 0)) { bar.innerHTML = ''; return; }
 
+    // [ToolbarCleanup 2026-08-18] Workflow is a tab, not a toolbar icon. The BPMN editor
+    // takes over the whole screen when it opens — it was never an inspector pane — so it
+    // belongs beside Design and Entries, which is also where Umbraco Forms puts a
+    // full-screen editor.
     const tabs = [
-      ['design',    'builder',       'icon-brush',       'Design'],
-      ['entries',   'submissions',   'icon-inbox',       'Entries'],
-      ['analytics', 'analytics',     'icon-chart-curve', 'Analytics'],
-      ['settings',  'form-settings', 'icon-settings',    'Settings'],
+      ['design',    'builder',       'icon-brush',        'Design'],
+      ['entries',   'submissions',   'icon-inbox',        'Entries'],
+      ['analytics', 'analytics',     'icon-chart-curve',  'Analytics'],
+      ['workflow',  'workflow',      'icon-diagram',      'Workflow'],
+      ['settings',  'form-settings', 'icon-settings',     'Settings'],
     ];
     const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
     bar.innerHTML =
@@ -307,7 +312,9 @@ export default class MegaFormWorkspaceView extends UmbLitElement {
   static resolve() {
     const m = /\/view\/open\/([^?#]*)/i.exec(window.location.pathname);
     const rest = (m ? m[1] : '').replace(/^\/+|\/+$/g, '');
-    const [what, arg] = rest.split('/');
+    // A third segment names a pane inside the builder — Settings links to the Print and Rules
+    // editors that still live there, and they must not look like leaving Settings.
+    const [what, arg, pane] = rest.split('/');
     const qsId = new URLSearchParams(window.location.search).get('formId') || '';
     const num = (v) => (/^\d+$/.test(v || '') ? Number(v) : 0);
 
@@ -337,8 +344,29 @@ export default class MegaFormWorkspaceView extends UmbLitElement {
         // Submit caption meant loading a canvas, a palette and three toolbars first.
         const id = num(arg) || num(qsId);
         try { sessionStorage.removeItem('mf-builder-initial-tab'); } catch (_e) {}
+        // [ToolbarCleanup 2026-08-18] Print and Rules are sections of Settings, but their
+        // editors are builder panes and stay there. Opening one keeps the Settings tab
+        // current: you have not left Settings, you are in one of its sections.
+        const editors = { print: 'print', rules: 'rules' };
+        const editor = editors[String(pane || '').toLowerCase()];
+        if (editor && id > 0) {
+          return { src: `/umbraco/MegaForm/Builder/${id}?host=umbraco-workspace&pane=${editor}`,
+                   title: `MegaForm ${editor === 'print' ? 'Print Settings' : 'Rules'}`,
+                   formId: id, tab: 'settings' };
+        }
         return { native: 'megaform-form-settings-view', title: 'MegaForm Form Settings',
                  formId: id, tab: 'settings' };
+      }
+      case 'workflow': {
+        // [ToolbarCleanup 2026-08-18] The BPMN editor, opened straight into its own tab. The
+        // builder is what hosts the canvas; ?pane= tells it to open on that pane instead of
+        // the field inspector, and survives the frame reload the workspace does on every tab
+        // change (a sessionStorage handoff did not).
+        const id = num(arg) || num(qsId);
+        try { sessionStorage.removeItem('mf-builder-initial-tab'); } catch (_e) {}
+        return { src: id > 0 ? `/umbraco/MegaForm/Builder/${id}?host=umbraco-workspace&pane=workflow`
+                             : '/umbraco/MegaForm/Builder?host=umbraco-workspace',
+                 title: 'MegaForm Workflow', formId: id, tab: 'workflow' };
       }
       case 'security':
         // Package permissions per Umbraco user group — the shape Umbraco Forms puts under

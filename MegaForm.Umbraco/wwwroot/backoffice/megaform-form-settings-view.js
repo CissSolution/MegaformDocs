@@ -56,6 +56,10 @@ export default class MegaFormFormSettingsView extends UmbLitElement {
     .msg { margin: 0 20px 12px; padding: 10px 12px; border-radius: 4px; font-size: 13px; }
     .msg.err { background: #fef2f2; color: #b91c1c; }
     .msg.ok { background: #f0fdf4; color: #166534; }
+    /* [ToolbarCleanup 2026-08-18] A section whose control is a way in, not a value. */
+    .state { font-size: 13px; color: var(--uui-color-text-alt, #64748b); margin: 0 0 8px; }
+    .state strong { color: var(--uui-color-text, #0f172a); font-weight: 700; }
+    button.link { background: var(--uui-color-surface, #fff); }
   `;
 
   static properties = { _form: { state: true }, _busy: { state: true }, _error: { state: true }, _ok: { state: true } };
@@ -111,6 +115,11 @@ export default class MegaFormFormSettingsView extends UmbLitElement {
       const raw = await this.#call(`${API}/Form/Get?formId=${id}`);
       let settings = {};
       try { settings = JSON.parse(raw.settingsJson || raw.SettingsJson || '{}') || {}; } catch { settings = {}; }
+      // [ToolbarCleanup 2026-08-18] Read-only, and only so the Print and Rules sections can
+      // report what is configured instead of offering an unlabelled button. It is never
+      // written back: Form/Save is called with the settings columns alone.
+      let schema = {};
+      try { schema = JSON.parse(raw.schemaJson || raw.SchemaJson || '{}') || {}; } catch { schema = {}; }
       this._form = {
         formId: id,
         title: raw.title ?? raw.Title ?? '',
@@ -123,6 +132,7 @@ export default class MegaFormFormSettingsView extends UmbLitElement {
         enableCaptcha: !!(raw.enableCaptcha ?? raw.EnableCaptcha),
         enableSaveResume: !!(raw.enableSaveResume ?? raw.EnableSaveResume),
         settings,
+        schema,
       };
     } catch (e) {
       this._error = `Could not load the form: ${e.message}`;
@@ -225,6 +235,23 @@ export default class MegaFormFormSettingsView extends UmbLitElement {
         </div>
 
         <div class="section">
+          <h3>Print</h3>
+          ${this.#row('Printable version',
+            'The layout used when a submission is printed or saved as PDF — page size, header, logo, signature areas, footer.',
+            html`<p class="state">Currently <strong>${this.#printEnabled() ? 'on' : 'off'}</strong>.</p>
+                 <button class="link" @click="${() => this.#openEditor('print')}">Open print settings</button>`)}
+        </div>
+
+        <div class="section">
+          <h3>Rules</h3>
+          ${this.#row('Form rules',
+            'Conditions that show, hide or require fields as the form is filled in. They apply to the whole form, which is why they are configured here and not on a field.',
+            html`<p class="state"><strong>${this.#ruleCount()}</strong>
+                   ${this.#ruleCount() === 1 ? 'rule' : 'rules'} defined.</p>
+                 <button class="link" @click="${() => this.#openEditor('rules')}">Open rule builder</button>`)}
+        </div>
+
+        <div class="section">
           <h3>Notifications</h3>
           ${this.#row('Notify these addresses',
             'Comma-separated. Each submission is emailed to them using the notification template.',
@@ -240,6 +267,42 @@ export default class MegaFormFormSettingsView extends UmbLitElement {
         <button class="primary" @click="${() => this.#save()}" ?disabled="${this._busy}">Save</button>
       </div>
     `;
+  }
+
+  /**
+   * [ToolbarCleanup 2026-08-18] Print and Rules used to be two of the ten glyphs on the
+   * builder's Design toolbar, which is a row for authoring the form — not for configuring it.
+   * Both are form-wide settings, so this screen is where they are listed. Their editors are
+   * builder panes and stay there; opening one keeps the Settings tab current (see the
+   * form-settings route in megaform-workspace-view.js), so this is one door, not two.
+   */
+  #openEditor(pane) {
+    const id = this._form?.formId || this.#formId();
+    if (!id) return;
+    const href = `/umbraco/section/megaform/view/open/form-settings/${id}/${pane}`;
+    window.history.pushState({}, '', href);
+    window.dispatchEvent(new PopStateEvent('popstate'));
+  }
+
+  #printEnabled() {
+    const print = this._form?.settings?.printSettings || this._form?.settings?.PrintSettings;
+    return !!(print && (print.enabled ?? print.Enabled));
+  }
+
+  /** Rules live on the schema, under settings.rules with rulesJson as the older spelling. */
+  #ruleCount() {
+    const schema = this._form?.schema || {};
+    const fromSettings = schema.settings?.rules ?? schema.Settings?.rules;
+    if (Array.isArray(fromSettings)) return fromSettings.length;
+    const raw = schema.rulesJson ?? schema.RulesJson ?? schema.rules ?? schema.Rules;
+    if (Array.isArray(raw)) return raw.length;
+    if (typeof raw === 'string' && raw.trim()) {
+      try {
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed.length : 0;
+      } catch { return 0; }
+    }
+    return 0;
   }
 
   #row(label, description, control) {

@@ -1,5 +1,5 @@
 import { MegaFormBuilder } from './core';
-import { addStep, listSteps, moveStep, removeStep, renameStep } from '@shared/form-steps';
+import { addPageAtEnd, addPageAtStart, addStep, listSteps, moveStep, removeStep, renameStep } from '@shared/form-steps';
 
 (function () {
   'use strict';
@@ -132,6 +132,28 @@ import { addStep, listSteps, moveStep, removeStep, renameStep } from '@shared/fo
     );
   }
 
+  // [PageTools 2026-08-18] The two page buttons on the Design toolbar, the pair Umbraco Forms
+  // keeps there. They go through applyFields() like every other step operation, so the
+  // multiPage flag, the canvas and the Steps panel all follow from one place.
+  function addPageStart(): void {
+    const fields = schemaFields();
+    const first = t('steps.step_default', 'Step {n}', { n: 1 });
+    const second = t('steps.step_default', 'Step {n}', { n: 2 });
+    applyFields(
+      addPageAtStart(fields, { label: first }, { label: second }),
+      t('steps.page_added_start', 'Page added to the start of the form.'),
+    );
+  }
+
+  function addPageEnd(): void {
+    const fields = schemaFields();
+    const ordinal = listSteps(fields).length + 1;
+    applyFields(
+      addPageAtEnd(fields, { label: t('steps.step_default', 'Step {n}', { n: ordinal }) }),
+      t('steps.page_added_end', 'Page added to the end of the form.'),
+    );
+  }
+
   function render(): void {
     const host = document.getElementById('mf-form-steps-panel');
     if (!host) return;
@@ -221,5 +243,5 @@ import { addStep, listSteps, moveStep, removeStep, renameStep } from '@shared/fo
     }
   }
 
-  B.registerModule('steps', { init, render, remove, rename, move, add });
+  B.registerModule('steps', { init, render, remove, rename, move, add, addPageStart, addPageEnd });
 })();

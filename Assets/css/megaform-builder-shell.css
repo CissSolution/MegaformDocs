@@ -2439,6 +2439,13 @@ body[data-mf-mode="design"] .w-sep-design-only { display: block; }
   width: 16px;
   text-align: center;
 }
+/* [ToolbarCleanup 2026-08-18] Separates the form-level actions from the editors that came off
+   the Design toolbar, so the menu reads as two lists rather than one long one. */
+.w-more-sep {
+  height: 1px;
+  margin: 5px 4px;
+  background: #e4e4e7;
+}
 
 /* =====================================================================
    [B76] Left rail Design pane — mock-aligned layout
@@ -3474,7 +3481,11 @@ body[data-mf-mode="design"] .mf-panel-left .mf-tlr-view-toggle button.active {
    its label and a border so it reads as its own control — as the eleventh identical grey
    glyph it was reported missing, which is the same way it disappeared at 1366px when the
    topbar collapsed it to a bare square. Umbraco Forms labels its Reorder too. */
-.mf-secondary-tool.mf-reorder-tool {
+/* [ToolbarCleanup 2026-08-18] The row is three labelled controls now — two page actions and
+   Reorder — so the labelled treatment is a class of its own rather than something Reorder
+   alone carries. */
+.mf-secondary-tool.mf-reorder-tool,
+.mf-secondary-tool.mf-tool-labeled {
   width: auto;
   gap: 0.375rem;
   padding: 0 0.65rem;
@@ -3484,6 +3495,9 @@ body[data-mf-mode="design"] .mf-panel-left .mf-tlr-view-toggle button.active {
   color: #3f3f46;
   font-weight: 600;
 }
+.mf-secondary-tool.mf-tool-labeled { position: relative; white-space: nowrap; }
+.mf-secondary-tool.mf-tool-labeled .lbl { display: inline; white-space: nowrap; }
+.mf-secondary-tool.mf-tool-labeled:hover { background: var(--muted, #f4f4f5); color: #09090b; }
 .mf-secondary-tool.mf-reorder-tool::before {
   /* Hairline separating the mode button from the inspector icons. */
   content: "";
@@ -3828,13 +3842,20 @@ body[data-mf-mode="design"] .mf-panel-left .mf-tlr-view-toggle button.active {
   width: 30px;
   padding: 0;
 }
-/* …except Reorder, which keeps its label here too. */
-#mf-builder-root[data-mf-host="umbraco-workspace"] .w-center .mf-secondary-tool.mf-reorder-tool {
+/* …except the labelled controls, which keep their text here too. Squeezing one of these into
+   a 30px square does not hide the label — it lets it spill out over its neighbour, which is
+   what "page page to to" in the 1366 photograph was. */
+#mf-builder-root[data-mf-host="umbraco-workspace"] .w-center .mf-secondary-tool.mf-reorder-tool,
+#mf-builder-root[data-mf-host="umbraco-workspace"] .w-center .mf-secondary-tool.mf-tool-labeled {
   width: auto;
   padding: 0 0.65rem;
+  white-space: nowrap;
+  overflow: visible;
 }
-#mf-builder-root[data-mf-host="umbraco-workspace"] .w-center .mf-reorder-tool .lbl {
+#mf-builder-root[data-mf-host="umbraco-workspace"] .w-center .mf-reorder-tool .lbl,
+#mf-builder-root[data-mf-host="umbraco-workspace"] .w-center .mf-tool-labeled .lbl {
   display: inline !important;
+  white-space: nowrap;
 }
 /* The label only ever shows on wide screens; in the topbar row the icons stand alone
    so ten tools cannot push the action buttons off the edge. */

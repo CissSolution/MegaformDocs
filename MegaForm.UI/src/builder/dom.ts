@@ -126,6 +126,51 @@ import dbStrings from './db-tables-strings.json';
   try { (window as any).__MF_BUILDER_BOOT_CONTRACT_BADGE__ = builderBootContractBadge; } catch (_e) { }
   try { (window as any).__MF_WORKFLOW_ENTRY_BADGE__ = workflowEntryBadge; } catch (_e) { }
 
+  /** True while the builder runs inside the Bellissima workspace frame (set in init()). */
+  function isUmbracoWorkspace(): boolean {
+    return !!root && root.getAttribute('data-mf-host') === 'umbraco-workspace';
+  }
+
+  /**
+   * [ToolbarCleanup 2026-08-18] The tools that came off the Design toolbar, as overflow-menu
+   * entries. Each one opens the pane it always opened — through MFOpenFlyout, so the hidden
+   * #mf-tab-link-* anchor is still what mounts the pane.
+   *
+   * On the Umbraco workspace the four form-wide ones are left out on purpose: Print and Rules
+   * are sections of the Settings screen, per-form permissions are an area of the Security
+   * screen, and the BPMN editor is a workspace tab. Two doors to one room is what this cleanup
+   * exists to remove. Everywhere else those screens do not exist, so the menu is the door —
+   * dropping the entries there would simply lose the features.
+   *
+   * Database Tables stays on every host, Umbraco included: its destination (the Data Sources
+   * node, §4.1 of the parity handoff) is not built yet, and an icon must not be retired before
+   * the place it is going exists.
+   */
+  function moreMenuTools(): Array<[string, string, string]> {
+    var tools: Array<[string, string, string]> = [
+      ['steps', 'fa-list-ol', bt('builder.tabtitle_steps', 'Steps')],
+      ['html', 'fa-code', bt('builder.tabtitle_html', 'Custom HTML')],
+      ['db', 'fa-database', bt('builder.tabtitle_db', 'Database Tables')],
+    ];
+    if (isUmbracoWorkspace()) return tools;
+    return tools.concat([
+      ['settings', 'fa-cog', bt('builder.tabtitle_settings', 'Form Settings')],
+      ['rules', 'fa-code-branch', bt('builder.tabtitle_rules', 'Rule Builder')],
+      ['perms', 'fa-user-shield', bt('builder.tabtitle_perms', 'Permissions & Access')],
+      ['workflow', 'fa-project-diagram', bt('builder.tabtitle_workflow', 'BPMN 2.0 Workflow')],
+      ['print', 'fa-print', bt('builder.tabtitle_print', 'Print Settings')],
+    ]);
+  }
+
+  function moreMenuToolsHtml(): string {
+    return '<div class="w-more-sep" role="separator"></div>' +
+      moreMenuTools().map(function (tool) {
+        var label = String(tool[2]).replace(/"/g, '&quot;');
+        return '<button type="button" class="w-more-item" data-mf-more-tab="' + tool[0] + '">' +
+                 '<i class="fa-solid ' + tool[1] + '"></i> ' + label + '…</button>';
+      }).join('');
+  }
+
   function sanitizeBuilderSchemaJson(schema: any): string {
     var raw = schema == null ? '{}' : String(schema);
     try {
@@ -552,6 +597,7 @@ import dbStrings from './db-tables-strings.json';
             '<button class="w-more-item" id="mf-btn-gallery-more"><i class="fa-solid fa-table-cells-large"></i> ' + bt('builder.templates','Templates') + '</button>' +
             '<button class="w-more-item" id="mf-btn-save-as-template-more"><i class="fa-solid fa-bookmark"></i> ' + bt('builder.save_as_template','Save as Template') + '</button>' +
             '<button class="w-more-item" id="mf-btn-create-table-more"><i class="fa-solid fa-database"></i> ' + bt('builder.create_db_table','Create DB Table') + '</button>' +
+            moreMenuToolsHtml() +
           '</div>' +
         '</div>' +
         // [PublishToLiveForm 2026-08-15] Label and tooltip follow the behaviour: publishing now
@@ -652,19 +698,24 @@ import dbStrings from './db-tables-strings.json';
         primaryTab('analytics', 'fa-chart-line', 'Analytics') +
         primaryTab('settings', 'fa-gear', 'Settings') +
       '</div>' +
-      '<div class="mf-secondary-toolbar" role="toolbar" aria-label="Design settings tools">' +
-        secondaryTool('field', 'fa-sliders', 'Field Properties') +
-        secondaryTool('settings', 'fa-cog', 'Form Settings') +
-        secondaryTool('steps', 'fa-list-ol', 'Steps') +
-        secondaryTool('html', 'fa-code', 'Custom HTML') +
-        secondaryTool('db', 'fa-database', 'Database Tables') +
-        secondaryTool('rules', 'fa-code-branch', 'Rule Builder') +
-        // [Perms 2026-08-18] Stays until the per-form matrix has its place on the Security
-        // screen. Removing the tool first would have left form permissions unreachable — the
-        // Security node currently carries PACKAGE permissions per user group, not this matrix.
-        secondaryTool('perms', 'fa-user-shield', 'Permissions & Access') +
-        secondaryTool('workflow', 'fa-project-diagram', 'BPMN 2.0 Workflow') +
-        secondaryTool('print', 'fa-print', 'Print Settings') +
+      // [ToolbarCleanup 2026-08-18] Authoring only, the way Umbraco Forms' Design toolbar is
+      // laid out: two page actions and Reorder (which appends itself here, see
+      // reorder-mode.ts). The nine inspector glyphs that used to sit in this row mixed three
+      // different kinds of work — editing the selected field, configuring the whole form, and
+      // opening a separate editor — and read as ten identical grey squares.
+      //
+      // Where each of them went:
+      //   field / settings / steps / html  the gear on a control opens the field flyout;
+      //                                    Steps and Custom HTML are in the overflow menu.
+      //   print / rules / perms / workflow their own Umbraco screens (Settings, Security and
+      //                                    the Workflow tab); the overflow menu keeps a door
+      //                                    open on hosts that have no such screens.
+      //   db                               overflow menu until the Data Sources node lands.
+      // The hidden #mf-tab-link-* anchors are NOT removed with the icons: the Print, Theme,
+      // DB, Rules and Workflow panes only build themselves when one of those is clicked.
+      '<div class="mf-secondary-toolbar" role="toolbar" aria-label="Design tools">' +
+        pageTool('add-page-start', 'fa-square-plus', 'Add page to start') +
+        pageTool('add-page-end', 'fa-square-plus', 'Add page to end') +
       '</div>';
     return bar;
   }
@@ -677,11 +728,15 @@ import dbStrings from './db-tables-strings.json';
            '</button>';
   }
 
-  function secondaryTool(id: string, icon: string, title: string): string {
-    var tip = bt('builder.tabtitle_' + id, title).replace(/"/g, '&quot;');
-    var label = bt('builder.tab_' + id, title).replace(/"/g, '&quot;');
-    return '<button type="button" class="mf-secondary-tool" data-mf-secondary-tab="' + id + '" data-tip="' + tip + '" aria-label="' + tip + '">' +
-             '<i class="fas ' + icon + '"></i><span class="mf-secondary-tool-label">' + label + '</span>' +
+  // [ToolbarCleanup 2026-08-18] A labelled control, not a glyph. Reorder only became findable
+  // again when it kept its text, and these two are the same kind of thing — an action on the
+  // form, not an inspector. Same markup as .mf-reorder-tool so one CSS rule covers the row.
+  function pageTool(action: string, icon: string, title: string): string {
+    var key = 'builder.' + action.replace(/-/g, '_');
+    var label = bt(key, title).replace(/"/g, '&quot;');
+    return '<button type="button" class="mf-secondary-tool mf-tool-labeled" data-mf-page-tool="' + action + '"' +
+             ' data-tip="' + label + '" aria-label="' + label + '">' +
+             '<i class="fas ' + icon + '"></i><span class="lbl">' + label + '</span>' +
            '</button>';
   }
 
@@ -1206,6 +1261,39 @@ import dbStrings from './db-tables-strings.json';
             propCheck('mf-prop-pagebreak', 'Start new page here') +
           '</div>' +
           createUniqueIdGroup() +
+          createFieldSecurityGroup() +
+        '</div>' +
+      '</div>'
+    );
+  }
+
+  /**
+   * [FieldSecurity 2026-08-18] Part of the field pane's own markup, not appended at render time.
+   *
+   * It used to be built by properties.ts and appended to #mf-field-props whenever a field was
+   * selected. That container is MOVED by the Design Studio accordion, so after the theme
+   * designer had been opened once the append landed in a detached tree and the section stopped
+   * existing for every field afterwards — reproduced exactly: the QA run that opens Preview
+   * fails, the run that skips it passes. Built here it travels with the pane wherever the
+   * accordion puts it, and properties.ts only has to fill the two selects.
+   */
+  function createFieldSecurityGroup(): string {
+    return (
+      '<div class="mf-prop-group" id="mf-prop-field-security" style="display:none">' +
+        '<h6><i class="fas fa-user-shield"></i> ' + bt('builder.field_security', 'Security') + '</h6>' +
+        '<div class="form-group mt-1">' +
+          '<label for="mf-prop-field-roles">' + bt('builder.field_visible_roles', 'Visible to roles') + '</label>' +
+          '<select id="mf-prop-field-roles" class="form-control form-control-sm" multiple size="4"></select>' +
+          '<small class="text-muted d-block mt-1">' +
+            bt('builder.field_visible_roles_hint', 'Leave empty for everyone. Otherwise only these roles see the field.') +
+          '</small>' +
+        '</div>' +
+        '<div class="form-group mt-2">' +
+          '<label for="mf-prop-field-readonly-roles">' + bt('builder.field_readonly_roles', 'Read-only for roles') + '</label>' +
+          '<select id="mf-prop-field-readonly-roles" class="form-control form-control-sm" multiple size="4"></select>' +
+          '<small class="text-muted d-block mt-1">' +
+            bt('builder.field_readonly_roles_hint', 'These roles see the field but cannot change it; a write from them is rejected and the stored value kept.') +
+          '</small>' +
         '</div>' +
       '</div>'
     );
@@ -1876,9 +1964,30 @@ import dbStrings from './db-tables-strings.json';
     return value || 'field';
   }
 
+  /**
+   * [PaneDeepLink 2026-08-18] Which pane the builder should open on, from the query string.
+   *
+   * The Umbraco screens that took work off the toolbar need a way back INTO the editor that
+   * still lives in the builder — Settings links to Print and Rules, the Workflow tab to the
+   * BPMN canvas. A query parameter survives the frame reload the workspace does on every tab
+   * change, which sessionStorage handoffs did not.
+   */
+  function readRequestedPaneFromUrl(): string {
+    try {
+      var value = new URLSearchParams(window.location.search).get('pane') || '';
+      return value ? normalizeInitialRightTab(value) : '';
+    } catch (_e) { return ''; }
+  }
+
+  function requestedRightTab(): string {
+    var fromUrl = readRequestedPaneFromUrl();
+    if (fromUrl && fromUrl !== 'field') return fromUrl;
+    return normalizeInitialRightTab((root && root.dataset.initialRightTab) || initialRightTab);
+  }
+
   function activateRequestedRightTab(): void {
     if (!root) return;
-    var requested = normalizeInitialRightTab(root.dataset.initialRightTab || initialRightTab);
+    var requested = requestedRightTab();
     if (!requested || requested === 'field') return;
 
     var tries = 0;
@@ -1890,6 +1999,16 @@ import dbStrings from './db-tables-strings.json';
       var openBtn = document.getElementById('mf-right-open-btn') as HTMLElement | null;
       if (openBtn && (openBtn as any).style && (openBtn as HTMLElement).style.display !== 'none') {
         openBtn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+      }
+
+      // Prefer the flyout opener: clicking the hidden anchor alone mounts the pane but
+      // leaves it inside a panel nobody has opened, which is a deep link that lands on a
+      // blank screen. MFOpenFlyout clicks the same anchor AND opens the panel.
+      var openFlyout = (window as any).MFOpenFlyout;
+      if (typeof openFlyout === 'function') {
+        clearInterval(timer);
+        try { openFlyout(requested); } catch (_eOpen) { /* fall through to the anchor below */ }
+        return;
       }
 
       var link = document.getElementById('mf-tab-link-' + requested) as HTMLElement | null;
@@ -1904,8 +2023,7 @@ import dbStrings from './db-tables-strings.json';
 
   function openRequestedWorkflowEditor(): void {
     if (!root) return;
-    var requested = normalizeInitialRightTab(root.dataset.initialRightTab || initialRightTab);
-    if (requested !== 'workflow') return;
+    if (requestedRightTab() !== 'workflow') return;
 
     var tries = 0;
     var timer = setInterval(function () {
@@ -2131,6 +2249,23 @@ import dbStrings from './db-tables-strings.json';
       } else {
         flyout.classList.remove('mf-flyout-open');
         if (backdrop) backdrop.classList.remove('active');
+        // [ThemeModeExit 2026-08-18] Leaving the panel has to leave THEME MODE with it.
+        //
+        // The adapter was only ever deactivated by clicking a different rail anchor, so
+        // closing the panel any other way — the ×, Close, the backdrop — left
+        // body.state-theme-mode on. That class hides .mf-canvas-action-btn, which is the
+        // gear on every control, so after opening Preview once no field could be opened
+        // again: the click landed on a button with no box. That is what was reported as
+        // "the field's Security section disappears after Preview" — the section was fine;
+        // the way in was invisible. Measured: gear display=none, propsDisplay=none after
+        // the exact Preview → close → click-a-field sequence.
+        try {
+          var TA = (window as any).MFThemeTabAdapter;
+          if (document.body.classList.contains('state-theme-mode')
+              && TA && typeof TA.deactivate === 'function') {
+            TA.deactivate();
+          }
+        } catch (_e) { /* defensive — never block closing the panel */ }
       }
       // [2026-08-17] An Umbraco sidebar is as tall as the SCREEN. This panel can only
       // be as tall as the frame it lives in, so while it is open the frame takes the
@@ -2208,16 +2343,45 @@ import dbStrings from './db-tables-strings.json';
         setPrimaryTab(tab);
       });
     }
-    // Delegate the tool icons on the ROOT, not on the primary bar: in the Umbraco
+    // Delegate the tool controls on the ROOT, not on the primary bar: in the Umbraco
     // workspace the toolbar is moved out of that bar into the topbar row, and a
-    // listener bound to its old parent would leave every gear silently dead.
+    // listener bound to its old parent would leave every control silently dead. The
+    // overflow menu is inside the topbar, which is also under root.
     if (root) {
       root.addEventListener('click', function(e) {
-        var btn = (e.target as HTMLElement).closest<HTMLElement>('.mf-secondary-tool');
+        var target = e.target as HTMLElement;
+
+        // A pane that came off the toolbar, opened from the overflow menu.
+        var moreItem = target.closest<HTMLElement>('[data-mf-more-tab]');
+        if (moreItem) {
+          e.preventDefault();
+          var moreMenuEl = document.getElementById('mf-more-menu');
+          if (moreMenuEl) moreMenuEl.classList.remove('is-open');
+          var moreTab = moreItem.getAttribute('data-mf-more-tab');
+          if (moreTab) openFlyoutTab(moreTab);
+          return;
+        }
+
+        // [ToolbarCleanup 2026-08-18] Add page to start / end of form. The work is done by
+        // the steps module, which owns applyFields() — that is what keeps settings.multiPage,
+        // the canvas and the Steps panel in step with the schema.
+        var pageBtn = target.closest<HTMLElement>('[data-mf-page-tool]');
+        if (pageBtn) {
+          e.preventDefault();
+          var action = pageBtn.getAttribute('data-mf-page-tool') === 'add-page-start'
+            ? 'addPageStart' : 'addPageEnd';
+          var MFB = (window as any).MegaFormBuilder;
+          try {
+            if (MFB && typeof MFB.callModule === 'function') MFB.callModule('steps', action);
+          } catch (_ePage) { /* the toast in applyFields is the user-facing signal */ }
+          return;
+        }
+
+        var btn = target.closest<HTMLElement>('.mf-secondary-tool');
         if (!btn) return;
-        e.preventDefault();
+        // Legacy attribute — kept so a host still serving an older bundle's markup works.
         var tabId = btn.getAttribute('data-mf-secondary-tab');
-        if (tabId) openFlyoutTab(tabId);
+        if (tabId) { e.preventDefault(); openFlyoutTab(tabId); }
       });
     }
     // [B92-fix 2026-08-17] Umbraco co-host: the workspace header above the iframe already
