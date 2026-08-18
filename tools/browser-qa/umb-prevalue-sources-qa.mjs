@@ -88,54 +88,72 @@ report.heading = await deep.text("h2");
 report.emptyState = await deep.text(".empty");
 await shot("01-screen");
 
-// ── Create a SQL source against the demo table the DB screen already lists ──
-report.createClicked = await deep.click("button.primary", "Create");
-await page.waitForTimeout(600);
-await deep.fill(".editor input", "QA departments", 0);
-await deep.fill(".editor input", "DashboardDatabase", 2);   // 0 name, 1 cache, 2 connection
-await deep.fill(".editor textarea",
-  "SELECT Id AS value, Name AS label FROM MF_DemoDepartments", 0);
-await page.waitForTimeout(300);
-await shot("02-editor-filled");
-
-report.testClicked = await deep.click(".editor button", "Test");
-await page.waitForTimeout(2500);
-report.sample = await deep.text(".sample");
-report.msgAfterTest = await deep.text(".msg");
-await shot("03-tested");
-
-report.saveClicked = await deep.click(".editor button.primary", "Save");
-await page.waitForTimeout(2500);
-report.rowsAfterSave = await deep.text("tbody tr");
-await shot("04-saved");
-
-// ── Reopen it: the stored settings must come back into the editor ───────────
-report.editClicked = await deep.click("tbody button", "Edit");
-await page.waitForTimeout(800);
-report.editorValues = await page.evaluate(() => {
+// ── Create through the PICKERS, the way Umbraco Forms' editor works ────────
+const selectByLabel = (labelText, optionMatch) => page.evaluate(([lbl, opt]) => {
   const walk = (root) => {
-    const view = root.querySelector("megaform-prevalue-sources-view");
-    if (view?.shadowRoot) return view.shadowRoot;
+    for (const row of root.querySelectorAll(".frow")) {
+      const label = row.querySelector(".flabel")?.textContent?.trim() || "";
+      if (!label.toLowerCase().startsWith(lbl.toLowerCase())) continue;
+      const sel = row.querySelector("select");
+      if (!sel) return { ok: false, why: "no select in row" };
+      const options = [...sel.options].map((o) => o.textContent.trim());
+      const hit = [...sel.options].find((o) => o.value && new RegExp(opt, "i").test(o.textContent));
+      if (!hit) return { ok: false, why: "no option matching " + opt, options: options.slice(0, 12) };
+      sel.value = hit.value;
+      sel.dispatchEvent(new Event("change", { bubbles: true }));
+      return { ok: true, picked: hit.textContent.trim(), count: sel.options.length };
+    }
     for (const el of root.querySelectorAll("*")) if (el.shadowRoot) { const hit = walk(el.shadowRoot); if (hit) return hit; }
     return null;
   };
-  const sr = walk(document);
-  if (!sr) return null;
-  return {
-    inputs: [...sr.querySelectorAll(".editor input")].map((i) => i.value),
-    textarea: sr.querySelector(".editor textarea")?.value || "",
-    type: sr.querySelector(".editor select")?.value || "",
-  };
-});
-await shot("05-reopened");
+  return walk(document) || { ok: false, why: "row not found: " + lbl };
+}, [labelText, optionMatch]);
 
-// ── Clean up after ourselves ────────────────────────────────────────────────
-page.on("dialog", (d) => d.accept());
-await deep.click("tbody button.danger", "Delete");
-await page.waitForTimeout(2000);
-report.rowsAfterDelete = await deep.text("tbody tr");
-report.emptyAfterDelete = await deep.text(".empty");
-await shot("06-deleted");
+const setType = (label) => page.evaluate((want) => {
+  const walk = (root) => {
+    for (const sel of root.querySelectorAll(".head select")) {
+      const hit = [...sel.options].find((o) => o.textContent.trim() === want);
+      if (hit) { sel.value = hit.value; sel.dispatchEvent(new Event("change", { bubbles: true })); return true; }
+    }
+    for (const el of root.querySelectorAll("*")) if (el.shadowRoot) { if (walk(el.shadowRoot)) return true; }
+    return false;
+  };
+  return walk(document);
+}, label);
+
+// ---- 1. Umbraco data type, the type that answered HTTP 400 before ----------
+report.createClicked = await deep.click("button.primary", "Create");
+await page.waitForTimeout(800);
+await deep.fill(".head input", "QA data type source", 0);
+report.typeSwitched = await setType("Umbraco data type");
+await page.waitForTimeout(2500);
+report.dataTypePick = await selectByLabel("Data type", "Dropdown");
+await page.waitForTimeout(400);
+await shot("02-datatype-picked");
+report.testClicked = await deep.click(".editor button", "Test");
+await page.waitForTimeout(3000);
+report.dataTypeMsg = (await deep.text(".msg")).slice(0, 3);
+report.dataTypeSample = await deep.text(".sample");
+await shot("03-datatype-tested");
+
+// ---- 2. Umbraco documents: root node + document type + value/label fields --
+report.typeSwitched2 = await setType("Umbraco documents");
+await page.waitForTimeout(2500);
+report.rootPick = await selectByLabel("Root node", ".");   // first real node
+await page.waitForTimeout(600);
+report.docTypePick = await selectByLabel("Document type", ".");
+await page.waitForTimeout(1200);
+report.valueFieldOptions = await selectByLabel("Value field", "Name|Id");
+await page.waitForTimeout(400);
+await shot("04-documents-configured");
+report.testClicked2 = await deep.click(".editor button", "Test");
+await page.waitForTimeout(3000);
+report.documentsMsg = (await deep.text(".msg")).slice(0, 3);
+report.documentsSample = await deep.text(".sample");
+await shot("05-documents-tested");
+
+await deep.click(".editor button", "Cancel");
+await page.waitForTimeout(600);
 
 fs.writeFileSync(`${OUT}/report.json`, JSON.stringify(report, null, 2));
 console.log(JSON.stringify(report, null, 1));
