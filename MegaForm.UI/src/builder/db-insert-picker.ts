@@ -48,7 +48,9 @@ function aiBase(): string {
   const p = plat();
   const explicit = String(p.aiBase || '');
   if (explicit) return explicit.charAt(explicit.length - 1) === '/' ? explicit : explicit + '/';
-  return isOqtane() ? '/api/' : '/DesktopModules/MegaForm/API/';
+  if (isOqtane()) return '/api/';
+  if (String(p.platform || '').toLowerCase() === 'umbraco') return '/umbraco/MegaForm/MegaFormApi/';
+  return '/DesktopModules/MegaForm/API/';
 }
 
 function headers(): Record<string, string> {

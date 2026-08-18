@@ -2,8 +2,9 @@
  * MegaForm Builder — Database Tables Tab
  *
  * Mounts INSIDE the Builder right-panel "DB" tab (#mf-tab-db / #mf-db-tables-body).
- * Lists all base tables on the DashboardDatabase via /Subform/Tables; expanding
- * a table fetches columns via /Subform/Columns and renders column chips.
+ * Lists tables from a shared DataSource catalog on Umbraco, or from an admin
+ * allow-listed connection on DNN/Oqtane. Expanding a table fetches columns and
+ * renders column chips.
  *
  * UX:
  *   - Click "+ DataGrid" on a table row → inserts a Subform widget (DataGrid)
@@ -18,14 +19,14 @@
  * Tables list is exposed on window.__MF_DB_TABLES__ so the AI Form Assistant
  * system prompt can list available tables.
  *
- * Badge: BuilderDbTablesTab v20260528-16
+ * Badge: BuilderDbTablesTab v20260813-01
  */
 
 import S from './db-tables-strings.json';
 import { loadAllowedConnections } from './db-insert-picker';
 import { classifyTable, GROUP_ORDER, TableGroupKey } from './db-table-groups';
 
-const BADGE = 'BuilderDbTablesTab v20260813-01';
+const BADGE = 'BuilderDbTablesTab v20260818-01';
 
 /** How many rows a group renders before it asks to be paged. 74 tables in one run was the
  *  complaint; a group never dumps more than this without the user asking for it. */
@@ -33,6 +34,7 @@ const PAGE_SIZE = 25;
 
 interface DbTable { name: string; schema?: string; rowCount?: number; }
 interface DbColumn { name: string; dataType: string; nullable: boolean; isPrimary?: boolean; isIdentity?: boolean; maxLength: number; uiType: string; }
+interface DataSource { id: number; name: string; connectionKey: string; databaseType?: string; tableName?: string; query?: string; description?: string; }
 
 (function init() {
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
@@ -51,10 +53,14 @@ interface DbColumn { name: string; dataType: string; nullable: boolean; isPrimar
     if (_platform === 'oqtane' || w.Oqtane || w.__OQTANE__ || document.querySelector('[data-mf-platform="oqtane"]')) {
       return '/api/MegaForm/';
     }
+    if (_platform === 'umbraco' || document.querySelector('[data-mf-platform="umbraco"]')) {
+      return '/umbraco/MegaForm/MegaFormApi/';
+    }
     return '/DesktopModules/MegaForm/API/';
   }
   function platform(): any { return (window as any).__MF_PLATFORM__ || {}; }
   function isOqtane(): boolean { return String(platform().platform || '').toLowerCase() === 'oqtane'; }
+  function isUmbraco(): boolean { return String(platform().platform || '').toLowerCase() === 'umbraco'; }
   function buildUrl(path: string, qs: Record<string, string> = {}): string {
     const pf = platform();
     // Oqtane uses Site context (no portalId param); DNN/Web need explicit portalId
@@ -209,11 +215,15 @@ interface DbColumn { name: string; dataType: string; nullable: boolean; isPrimar
   let mounted = false;
   let showSystem = false;
   let selectedTables: string[] = [];
-  // [DbTabConnPicker v20260722-01] Which named connection the DB tab reads tables from.
-  // Default = site DB. Server GATES every read against the admin allow-list, so this is a
-  // convenience selector, not a trust boundary. Threaded into Subform/Tables + Subform/Columns
-  // + the Capability probe; changing it MUST invalidate both caches (they are conn-agnostic).
+
+  // [DbTabDataSourcePicker v20260818-01] On Umbraco the picker is a shared DataSource
+  // catalog entry. On DNN/Oqtane (no catalog yet) it degrades to the legacy connection
+  // allow-list. The connection string itself never reaches the browser.
+  let catalogAvailable: boolean | null = null;
+  let dataSources: DataSource[] = [];
+  let selectedDataSourceId = 0;
   let selectedConnKey = 'DashboardDatabase';
+
   // [DbPaneGrouping v20260813] Only the customer's own tables are open on arrival; the plumbing
   // groups stay shut until asked for. Each group renders PAGE_SIZE rows at a time.
   const groupOpen: Record<TableGroupKey, boolean> = { mine: true, megaform: false, platform: false };
@@ -326,14 +336,30 @@ interface DbColumn { name: string; dataType: string; nullable: boolean; isPrimar
     savePersistedSelected();
   }
 
+  function currentConnectionKey(): string {
+    if (catalogAvailable && selectedDataSourceId) {
+      const ds = dataSources.find(d => d.id === selectedDataSourceId);
+      if (ds) return ds.connectionKey;
+    }
+    return selectedConnKey;
+  }
+
+  function currentDataSourceName(): string {
+    if (catalogAvailable && selectedDataSourceId) {
+      const ds = dataSources.find(d => d.id === selectedDataSourceId);
+      if (ds) return ds.name;
+    }
+    return selectedConnKey;
+  }
+
   function mountTabContent(host: HTMLElement) {
     if (mounted) return;
     mounted = true;
     injectStyles();
     host.innerHTML =
       '<div class="mf-bdb-search">' +
-        '<select class="mf-bdb-conn" data-conn aria-label="' + escapeAttr(S.connectionPrefix.replace(/[:：]\s*$/, '')) + '" title="' + escapeAttr(S.connectionPrefix.replace(/[:：]\s*$/, '')) + '">' +
-          '<option value="DashboardDatabase">DashboardDatabase</option>' +
+        '<select class="mf-bdb-conn" data-conn aria-label="' + escapeAttr(S.dataSourcePrefix.replace(/[:：]\s*$/, '')) + '" title="' + escapeAttr(S.dataSourcePrefix.replace(/[:：]\s*$/, '')) + '">' +
+          '<option value="">' + escapeHtml(S.dataSourcePlaceholder) + '</option>' +
         '</select>' +
         '<input type="search" placeholder="' + S.filterPlaceholder + '" data-search />' +
         '<label class="mf-bdb-toggle"><input type="checkbox" data-show-system /> ' + S.showSystemLabel + '</label>' +
@@ -349,38 +375,98 @@ interface DbColumn { name: string; dataType: string; nullable: boolean; isPrimar
       tablesCache = null; // force refetch
       loadAndRender(host, search.value.trim().toLowerCase());
     });
-    // [DbTabConnPicker v20260722-01] Populate the connection list (admin allow-list) and,
-    // on change, reset BOTH caches — they are keyed by table name only, so a same-named
-    // table on another connection would otherwise render the previous connection's schema.
+
+    // [DbTabDataSourcePicker v20260818-01] Try the Umbraco catalog first; if it
+    // is absent (404) or this is DNN/Oqtane, fall back to the raw connection
+    // allow-list. The connection string never reaches the browser either way.
     if (connSel) {
       void (async () => {
-        try {
-          const conns = await loadAllowedConnections(selectedConnKey);
+        let mode: 'catalog' | 'fallback' = 'fallback';
+        if (isUmbraco()) {
+          try {
+            const list = await fetchJson(buildUrl('DataSources/List'));
+            dataSources = Array.isArray(list) ? list.map((x: any) => ({
+              id: Number(x.id || 0),
+              name: String(x.name || ''),
+              connectionKey: String(x.connectionKey || ''),
+              databaseType: x.databaseType,
+              tableName: x.tableName,
+              query: x.query,
+              description: x.description,
+            } as DataSource)).filter((x: DataSource) => x.id > 0 && x.name) : [];
+            if (dataSources.length) {
+              catalogAvailable = true;
+              mode = 'catalog';
+            } else {
+              catalogAvailable = false;
+            }
+          } catch {
+            catalogAvailable = false;
+          }
+        }
+        if (mode === 'catalog') {
           connSel.innerHTML = '';
-          conns.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; connSel.appendChild(o); });
-          connSel.value = selectedConnKey;
-        } catch { /* keep the single default option */ }
+          const ph = document.createElement('option');
+          ph.value = ''; ph.textContent = S.dataSourcePlaceholder;
+          connSel.appendChild(ph);
+          dataSources.forEach(d => {
+            const o = document.createElement('option');
+            o.value = String(d.id);
+            o.textContent = d.name + (d.description ? ' — ' + d.description : '');
+            o.title = d.connectionKey + (d.databaseType ? ' (' + d.databaseType + ')' : '');
+            connSel.appendChild(o);
+          });
+          // Default to the first data source so the pane is useful on arrival.
+          selectedDataSourceId = dataSources[0].id;
+          connSel.value = String(selectedDataSourceId);
+        } else {
+          catalogAvailable = false;
+          try {
+            const conns = await loadAllowedConnections(selectedConnKey);
+            connSel.innerHTML = '';
+            const ph = document.createElement('option');
+            ph.value = ''; ph.textContent = S.connectionFallbackPlaceholder;
+            connSel.appendChild(ph);
+            conns.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; connSel.appendChild(o); });
+            connSel.value = selectedConnKey;
+          } catch {
+            // Keep the single placeholder option; the panel will show a load error.
+          }
+        }
+        tablesCache = null;
+        columnsCache = {};
+        loadAndRender(host, search.value.trim().toLowerCase());
       })();
       connSel.addEventListener('change', () => {
-        selectedConnKey = connSel.value || 'DashboardDatabase';
+        if (catalogAvailable) {
+          selectedDataSourceId = Number(connSel.value) || 0;
+        } else {
+          selectedConnKey = connSel.value || 'DashboardDatabase';
+        }
         tablesCache = null;
         columnsCache = {};
         loadAndRender(host, search.value.trim().toLowerCase());
       });
     }
+
     // [NoWorkingSetStrip v20260714] The "In use by this form" strip (+ its "Build fields with AI"
     // and "Clear" buttons) is gone: it was a SECOND, unvalidated AI path sitting next to the one in
     // the Capability card, and nothing explained which was which. Tables inserted with "+ DataGrid"
     // are still tracked here (invisibly) because the AI chat uses the list as context.
     selectedTables = loadPersistedSelected();
     (window as any).__MF_SELECTED_DB_TABLES__ = selectedTables.slice();
-    loadAndRender(host, '');
+    // Tables load is triggered by the picker init above.
   }
 
   async function loadAndRender(host: HTMLElement, filter: string) {
     try {
       if (!tablesCache) {
-        const j = await fetchJson(buildUrl('Subform/Tables', { ...(showSystem ? { showAll: '1' } : {}), connectionKey: selectedConnKey }));
+        let j: any;
+        if (catalogAvailable && selectedDataSourceId) {
+          j = await fetchJson(buildUrl('DataSources/Tables', { dataSourceId: String(selectedDataSourceId), ...(showSystem ? { showAll: '1' } : {}) }));
+        } else {
+          j = await fetchJson(buildUrl('Subform/Tables', { ...(showSystem ? { showAll: '1' } : {}), connectionKey: currentConnectionKey() }));
+        }
         tablesCache = (j.tables || []) as DbTable[];
         (window as any).__MF_DB_TABLES__ = tablesCache;
       }
@@ -486,7 +572,7 @@ interface DbColumn { name: string; dataType: string; nullable: boolean; isPrimar
       const open = (window as any).__MF_OPEN_CAPABILITY_CARD__;
       if (typeof open !== 'function') return;
       const t = (tablesCache || []).find(x => x.name === tableName);
-      open(selectedConnKey, (t && t.schema) || 'dbo', tableName);
+      open(currentConnectionKey(), (t && t.schema) || 'dbo', tableName);
     });
 
     head.addEventListener('click', async (e) => {
@@ -540,7 +626,12 @@ interface DbColumn { name: string; dataType: string; nullable: boolean; isPrimar
 
   async function loadColumns(tableName: string): Promise<DbColumn[]> {
     if (columnsCache[tableName]) return columnsCache[tableName];
-    const j = await fetchJson(buildUrl('Subform/Columns', { tableName, connectionKey: selectedConnKey }));
+    let j: any;
+    if (catalogAvailable && selectedDataSourceId) {
+      j = await fetchJson(buildUrl('DataSources/Columns', { dataSourceId: String(selectedDataSourceId), table: tableName }));
+    } else {
+      j = await fetchJson(buildUrl('Subform/Columns', { tableName, connectionKey: currentConnectionKey() }));
+    }
     columnsCache[tableName] = (j.columns || []) as DbColumn[];
     return columnsCache[tableName];
   }
@@ -615,7 +706,31 @@ interface DbColumn { name: string; dataType: string; nullable: boolean; isPrimar
   (async () => {
     try {
       if (!tablesCache) {
-        const j = await fetchJson(buildUrl('Subform/Tables', { connectionKey: selectedConnKey }));
+        let j: any;
+        if (isUmbraco()) {
+          // [DbTabDataSourcePicker v20260818-01] On Umbraco we still need the
+          // catalog entry id to read tables, so we cannot prefetch without it.
+          // Instead, prefetch the catalog list itself.
+          try {
+            const list = await fetchJson(buildUrl('DataSources/List'));
+            dataSources = Array.isArray(list) ? list.map((x: any) => ({
+              id: Number(x.id || 0),
+              name: String(x.name || ''),
+              connectionKey: String(x.connectionKey || ''),
+            } as DataSource)).filter((x: DataSource) => x.id > 0 && x.name) : [];
+            catalogAvailable = dataSources.length > 0;
+            if (catalogAvailable && !selectedDataSourceId) {
+              selectedDataSourceId = dataSources[0].id;
+            }
+          } catch {
+            catalogAvailable = false;
+          }
+        }
+        if (catalogAvailable && selectedDataSourceId) {
+          j = await fetchJson(buildUrl('DataSources/Tables', { dataSourceId: String(selectedDataSourceId) }));
+        } else {
+          j = await fetchJson(buildUrl('Subform/Tables', { connectionKey: currentConnectionKey() }));
+        }
         tablesCache = (j.tables || []) as DbTable[];
         (window as any).__MF_DB_TABLES__ = tablesCache;
       }
