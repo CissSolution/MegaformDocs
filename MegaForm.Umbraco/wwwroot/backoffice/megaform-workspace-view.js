@@ -12,6 +12,8 @@ import { UMB_AUTH_CONTEXT } from '@umbraco-cms/backoffice/auth';
 // Native screens this view can render in place of the frame. Imported for the side effect
 // of defining the custom element; the manifest only knows about this one view.
 import './megaform-prevalue-sources-view.js';
+import './megaform-form-settings-view.js';
+import './megaform-security-view.js';
 
 /**
  * [OneSectionView 2026-08-15] The single section view for MegaForm, routing internally.
@@ -330,14 +332,18 @@ export default class MegaFormWorkspaceView extends UmbLitElement {
                  title: 'MegaForm Analytics', formId: id, tab: 'analytics' };
       }
       case 'form-settings': {
-        // The builder holds form settings in its right rail; it activates a rail tab from
-        // sessionStorage on first paint, and a same-origin iframe shares that storage with us.
+        // [FormSettings 2026-08-18] Its own screen, the way Umbraco Forms does it. It used to
+        // open the whole builder and poke a rail tab through sessionStorage, so changing the
+        // Submit caption meant loading a canvas, a palette and three toolbars first.
         const id = num(arg) || num(qsId);
-        const qs = '?host=umbraco-workspace';
-        try { sessionStorage.setItem('mf-builder-initial-tab', 'settings'); } catch (_e) {}
-        return { src: id > 0 ? `/umbraco/MegaForm/Builder/${id}${qs}` : `/umbraco/MegaForm/Builder${qs}`,
-                 title: 'MegaForm Form Settings', formId: id, tab: 'settings' };
+        try { sessionStorage.removeItem('mf-builder-initial-tab'); } catch (_e) {}
+        return { native: 'megaform-form-settings-view', title: 'MegaForm Form Settings',
+                 formId: id, tab: 'settings' };
       }
+      case 'security':
+        // Package permissions per Umbraco user group — the shape Umbraco Forms puts under
+        // Security. Native, because it edits Umbraco's own user groups.
+        return { native: 'megaform-security-view', title: 'MegaForm Security' };
       case 'prevalue-sources':
         // Native element, not a frame: this screen is administration and it authenticates
         // on the SPA's bearer token instead of the backoffice cookie the frames rely on.
@@ -357,6 +363,12 @@ export default class MegaFormWorkspaceView extends UmbLitElement {
     // Native screens render in place; the rest keep the MVC frame.
     if (this._native === 'megaform-prevalue-sources-view') {
       return html`<megaform-prevalue-sources-view></megaform-prevalue-sources-view>`;
+    }
+    if (this._native === 'megaform-form-settings-view') {
+      return html`<megaform-form-settings-view></megaform-form-settings-view>`;
+    }
+    if (this._native === 'megaform-security-view') {
+      return html`<megaform-security-view></megaform-security-view>`;
     }
     return html`<iframe src="${this._src}" title="${this._title}" allow="fullscreen"></iframe>`;
   }

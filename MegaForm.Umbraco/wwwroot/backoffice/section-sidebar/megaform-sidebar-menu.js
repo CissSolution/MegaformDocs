@@ -105,6 +105,7 @@ export class MegaFormSidebarMenuElement extends UmbLitElement {
       ${this._renderFormsTree()}
       ${this._renderSubmissionsItem()}
       ${this._renderPrevalueSourcesItem()}
+      ${this._renderSecurityItem()}
       ${this._renderLanguagesItem()}
       ${this._renderSettingsItem()}
     `;
@@ -351,6 +352,22 @@ export class MegaFormSidebarMenuElement extends UmbLitElement {
         href="/umbraco/section/megaform/view/open/prevalue-sources"
         @click="${this._navigate}">
         <uui-icon slot="icon" name="icon-list"></uui-icon>
+      </uui-menu-item>
+    `;
+  }
+
+  /**
+   * [Security 2026-08-18] Package permissions per user group — where Umbraco Forms keeps its
+   * own Security node. Only shown to someone who could act on it.
+   */
+  _renderSecurityItem() {
+    if (!this._permsReady || !megaFormPermissions.has('MegaForm.Form.Browse')) return '';
+    return html`
+      <uui-menu-item
+        label="Security"
+        href="/umbraco/section/megaform/view/open/security"
+        @click="${this._navigate}">
+        <uui-icon slot="icon" name="icon-lock"></uui-icon>
       </uui-menu-item>
     `;
   }
