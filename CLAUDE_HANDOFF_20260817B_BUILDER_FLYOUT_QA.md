@@ -271,7 +271,43 @@ cache bug. `tools/browser-qa/umb-builder-203-qa.mjs` does that against the repor
 mount the builder with 4 fields, the header reads "Umbraco SQL Lookup - Event Registration #203 ·
 Design Entries Analytics Settings", zero module errors.
 
-## 11. Still open
+## 11. Ninth pass — prevalue sources learn from Umbraco Forms (`c3bd00c7`)
+
+Owner: *"prevalue source của Umbraco form làm rất tốt, bạn cần phải Visual QA và học hỏi áp dụng cho
+đúng cho megaform"* — with a screenshot of this screen answering **«Test failed (HTTP 400)»** to
+`Umbraco.DropDown.Flexible`.
+
+**The lesson from their editor: nothing is typed by hand.** Root node is a picker, Document type is
+a list, and the Value field lists the standard fields (Id / Key / Name) then that document type's own
+properties. This screen asked for an "Editor alias" and a numeric id, then blamed the provider.
+
+Three defects behind that 400:
+1. **Wrong keys** — the Documents descriptor sent `startNodeId` / `valueProperty` / `labelProperty`
+   while the provider reads `rootNodeId` / `valuePropertyAlias` / `labelPropertyAlias`. It could
+   never have worked from this screen.
+2. ⭐⭐ **An empty box travelled.** `{"dataTypeId":""}` cannot deserialize into an int → the WHOLE
+   settings object came back empty → validation said the field was missing, from a form where it was
+   filled in. Empty values omitted, numbers typed, toggles boolean.
+3. ⭐ **The message was discarded.** "HTTP 400" hid "Data type id, key, or alias is required."
+
+`PrevalueMetadataController` (new, read-only, same admin policy) lists data types, document types,
+document-type fields and content roots **in the shape the providers consume** — alias and integer id,
+not the GUIDs the management API speaks in.
+
+QA — `umb-prevalue-sources-qa.mjs` now drives the pickers:
+* Umbraco data type → "Chu de lien he (Dropdown) (Umbraco.DropDown.Flexible)" out of 42 →
+  **4 options**: Tư vấn sản phẩm · Hỗ trợ kỹ thuật · Khiếu nại / Bảo hành · Hợp tác kinh doanh.
+* Umbraco documents → Root "Contact Us", type "MegaForm Page" → **1 option**: Contact Us.
+
+Two QA rules: never "pick" an option whose value is empty (that is the prompt), and the metadata
+cache key must be spelled identically by loader and renderer (`fields` vs `fields:`) or a dependent
+picker renders empty after a successful fetch.
+
+Not copied from Umbraco Forms yet: **Dynamic Root** (origin picker + query steps: Nearest Ancestor Or
+Self, …) and **"Use current page as root"**. Both need a notion of "the page this form is rendered
+on", which the MegaForm provider does not have — a real feature, not a styling gap.
+
+## 12. Still open
 
 * 🟠 **Workflow is a full-screen takeover.** Opening it from a flyout tool is a jarring exit from the
   builder, and the flyout's close button does not bring you back — only "Return to App Builder" does.
