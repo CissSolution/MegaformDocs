@@ -307,7 +307,45 @@ Not copied from Umbraco Forms yet: **Dynamic Root** (origin picker + query steps
 Self, …) and **"Use current page as root"**. Both need a notion of "the page this form is rendered
 on", which the MegaForm provider does not have — a real feature, not a styling gap.
 
-## 12. Still open
+## 12. Tenth pass — dynamic roots (`30e9d876`)
+
+The two things Umbraco Forms had that MegaForm could not express, because MegaForm had no notion of
+**the page a form is rendered on**. It has one now.
+
+* `PrevalueProviderContext.CurrentPageId` — zero means "no page", and a relative root then resolves
+  to **nothing**. Falling back to another branch would list the wrong content while looking fine.
+* The documents provider resolves its root three ways, in order: **use the current page as root** →
+  **dynamic root** (ORIGIN relative to the page, then STEPS) → the fixed node.
+  Origins: `ContentRoot` / `Root` / `Site` / `Parent` / `Current` / `SpecificNode`.
+  Steps: `Nearest|Furthest` `Ancestor|Descendant` `OrSelf`, each filtered by document types.
+* The page id travels like any other option parameter: the rendered page publishes
+  `window.__MF_PAGE_ID__`, the renderer sends `__p__pageId`, `FieldOptionsService` reads it into the
+  context, and the editor's **Test** takes `?pageId=` so a relative root can be previewed against a
+  page (Umbraco Forms carries the same caveat on its own toggle).
+* The renderer now also hydrates fields whose `optionsSource` is **prevalue** — it only knew `sql`
+  and `form-lookup`, so catalog-backed options never loaded on a public form at all.
+
+**Measured** — the claim is not "returns options" but "returns THIS page's branch":
+
+| source | page: Contact Us | page: Home |
+|---|---|---|
+| use current page as root | `[Contact Us]` | `[Home]` |
+| dynamic root: Current + NearestAncestorOrSelf | `[Contact Us]` | `[Home]` |
+| dynamic root: ContentRoot | `[Contact Us]` | `[Contact Us]` |
+
+With no page context: **0 options**, not a guess. Pages publish their own id: `/contact-us/` → 1058,
+`/home/` → 1060. Editor rows for Umbraco documents now read: Use current page as root · Root node ·
+Dynamic root · Document type · Value field · Label field · Include descendants · Sort by, and
+choosing an origin reveals the step list with **Add query step**.
+
+⚠️ **A host view overrides the RCL view of the same name.** Patching
+`MegaForm.Umbraco/Views/MegaFormView.cshtml` changed nothing on the site until the copy in
+`MegaForm.Umbraco.Host/Views/` was patched too — the page kept rendering without the new line and
+the build was green throughout. Both carry it now.
+
+QA: `tools/browser-qa/umb-dynamic-root-qa.mjs`.
+
+## 13. Still open
 
 * 🟠 **Workflow is a full-screen takeover.** Opening it from a flyout tool is a jarring exit from the
   builder, and the flyout's close button does not bring you back — only "Return to App Builder" does.
