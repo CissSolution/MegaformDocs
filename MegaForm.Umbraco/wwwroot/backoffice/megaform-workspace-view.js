@@ -12,6 +12,7 @@ import { UMB_AUTH_CONTEXT } from '@umbraco-cms/backoffice/auth';
 // Native screens this view can render in place of the frame. Imported for the side effect
 // of defining the custom element; the manifest only knows about this one view.
 import './megaform-prevalue-sources-view.js';
+import './megaform-data-sources-view.js';
 import './megaform-form-settings-view.js';
 import './megaform-security-view.js';
 
@@ -376,6 +377,9 @@ export default class MegaFormWorkspaceView extends UmbLitElement {
         // Native element, not a frame: this screen is administration and it authenticates
         // on the SPA's bearer token instead of the backoffice cookie the frames rely on.
         return { native: 'megaform-prevalue-sources-view', title: 'MegaForm Prevalue Sources' };
+      case 'data-sources':
+        // Native element, not a frame: admin-managed catalog of named database sources.
+        return { native: 'megaform-data-sources-view', title: 'MegaForm Data Sources' };
       case 'languages':
         return { src: '/umbraco/MegaForm/Languages', title: 'MegaForm Languages' };
       case 'settings':
@@ -391,6 +395,9 @@ export default class MegaFormWorkspaceView extends UmbLitElement {
     // Native screens render in place; the rest keep the MVC frame.
     if (this._native === 'megaform-prevalue-sources-view') {
       return html`<megaform-prevalue-sources-view></megaform-prevalue-sources-view>`;
+    }
+    if (this._native === 'megaform-data-sources-view') {
+      return html`<megaform-data-sources-view></megaform-data-sources-view>`;
     }
     if (this._native === 'megaform-form-settings-view') {
       return html`<megaform-form-settings-view></megaform-form-settings-view>`;

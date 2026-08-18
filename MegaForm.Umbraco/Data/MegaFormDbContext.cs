@@ -84,6 +84,9 @@ namespace MegaForm.Umbraco.Data
         // [PrevalueSource v20260816] Shared catalog of reusable option sources.
         public DbSet<PrevalueSourceRow> PrevalueSources { get; set; }
 
+        // [DataSources v20260818] Shared catalog of named database sources.
+        public DbSet<DataSourceRow> DataSources { get; set; }
+
         protected override void OnModelCreating(ModelBuilder b)
         {
             b.Entity<FormInfo>(e => {
@@ -628,6 +631,18 @@ namespace MegaForm.Umbraco.Data
                 e.Property(x => x.SettingsJson).HasColumnType(TextType).HasDefaultValue("{}");
                 e.Property(x => x.CacheMinutes).HasDefaultValue(0);
                 e.Property(x => x.Culture).HasMaxLength(10).HasDefaultValue("");
+            });
+
+            // [DataSources v20260818] Shared catalog of named database sources.
+            b.Entity<DataSourceRow>(e => {
+                e.ToTable("MF_DataSources"); e.HasKey(x => x.Id);
+                e.Property(x => x.Name).HasMaxLength(200).IsRequired();
+                e.HasIndex(x => x.Name).IsUnique();
+                e.Property(x => x.ConnectionKey).HasMaxLength(100).IsRequired();
+                e.Property(x => x.DatabaseType).HasMaxLength(50).HasDefaultValue("");
+                e.Property(x => x.TableName).HasMaxLength(256).HasDefaultValue("");
+                e.Property(x => x.Query).HasColumnType(TextType).HasDefaultValue("");
+                e.Property(x => x.Description).HasColumnType(TextType).HasDefaultValue("");
             });
         }
     }

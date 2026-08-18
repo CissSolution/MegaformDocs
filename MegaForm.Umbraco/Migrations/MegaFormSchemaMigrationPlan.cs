@@ -30,7 +30,11 @@ namespace MegaForm.Umbraco.Migrations
                 .To<AddWorkflowTimerColumnsMigration>("megaform-schema-workflow-timer")
                 // [ATBE P1] External-table binding tables (MF_ExternalBinding +
                 // MF_ExternalRowMap) for existing sites.
-                .To<AddExternalTableTablesMigration>("megaform-schema-external-tables");
+                .To<AddExternalTableTablesMigration>("megaform-schema-external-tables")
+                // [PrevalueSource v20260816] Shared catalog of reusable option sources.
+                .To<AddPrevalueSourceTableMigration>("megaform-schema-prevalue-sources")
+                // [DataSources v20260818] Shared catalog of named database sources.
+                .To<AddDataSourceTableMigration>("megaform-schema-data-sources");
         }
     }
 }

@@ -105,6 +105,7 @@ export class MegaFormSidebarMenuElement extends UmbLitElement {
       ${this._renderFormsTree()}
       ${this._renderSubmissionsItem()}
       ${this._renderPrevalueSourcesItem()}
+      ${this._renderDataSourcesItem()}
       ${this._renderSecurityItem()}
       ${this._renderLanguagesItem()}
       ${this._renderSettingsItem()}
@@ -352,6 +353,22 @@ export class MegaFormSidebarMenuElement extends UmbLitElement {
         href="/umbraco/section/megaform/view/open/prevalue-sources"
         @click="${this._navigate}">
         <uui-icon slot="icon" name="icon-list"></uui-icon>
+      </uui-menu-item>
+    `;
+  }
+
+  /**
+   * [DataSources 2026-08-18] Shared catalog of named database sources — where Umbraco Forms
+   * keeps its Data Sources node. Shown to form browsers; actual edits are gated by the API.
+   */
+  _renderDataSourcesItem() {
+    if (!this._permsReady || !megaFormPermissions.has('MegaForm.Form.Browse')) return '';
+    return html`
+      <uui-menu-item
+        label="Data Sources"
+        href="/umbraco/section/megaform/view/open/data-sources"
+        @click="${this._navigate}">
+        <uui-icon slot="icon" name="icon-server-alt"></uui-icon>
       </uui-menu-item>
     `;
   }

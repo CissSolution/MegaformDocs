@@ -245,6 +245,10 @@ namespace MegaForm.Umbraco.Composers
 
             // ── Prevalue Sources (shared catalog of reusable option sources)
             builder.Services.AddScoped<MegaForm.Core.Models.Prevalues.IPrevalueSourceStore, Data.UmbracoPrevalueSourceStore>();
+
+            // ── Data Sources (shared catalog of named database connections)
+            builder.Services.AddScoped<MegaForm.Core.Models.DataSources.IDataSourceStore, Data.UmbracoDataSourceStore>();
+
             builder.Services.AddScoped<MegaForm.Core.Services.Prevalues.IPrevalueProvider>(sp =>
             {
                 var env = sp.GetRequiredService<IHostEnvironment>();
