@@ -2057,6 +2057,11 @@ body[data-mf-mode="design"] .w-sep-design-only { display: block; }
   .w-actions .w-btn-ai-designer .mf-ai-lbl { display: none; }
   .w-actions .w-btn-ai-designer { padding: 0 0.5rem; }
 }
+/* [ThemePreview 2026-08-18] Preview keeps its word. It replaced the palette icon in the tool
+   row precisely because an unlabelled glyph is invisible in a row of ten — collapsing it back
+   to an icon at 1280px would undo the move. */
+.w-actions .w-btn-preview-theme .lbl { display: inline !important; }
+.w-actions .w-btn-preview-theme { font-weight: 600; }
 @media (max-width: 1550px) {
   .w-actions .w-btn:not(.primary) .lbl { display: none; }
   .w-actions .w-btn:not(.primary) { padding: 0 0.5rem; }

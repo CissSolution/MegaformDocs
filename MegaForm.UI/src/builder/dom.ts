@@ -537,7 +537,12 @@ import dbStrings from './db-tables-strings.json';
         // the AI Designer button stays labelled + prominent at every width.
         '<button class="w-btn w-btn-ai-designer" id="mf-btn-ai-designer" data-tip="Design this form with AI" aria-label="AI Designer" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:0;font-weight:600;white-space:nowrap;">' +
           '<i class="fa-solid fa-wand-magic-sparkles"></i><span class="mf-ai-lbl" style="margin-left:6px;"> ' + bt('builder.ai_designer','AI Designer') + '</span></button>' +
-        '<button class="w-btn" id="mf-btn-preview" data-tip="Preview form" aria-label="Preview form"><i class="fa-regular fa-eye"></i><span class="lbl"> ' + bt('builder.preview','Preview') + '</span></button>' +
+        // [ThemePreview 2026-08-18] The palette icon in the tool row was the least legible
+        // control on the screen, and what it opens is a LIVE PREVIEW of the form with the
+        // styling controls beside it. So it comes up here, labelled for what it does.
+        '<button class="w-btn w-btn-preview-theme" id="mf-btn-theme-preview" data-tip="Preview the form and style it" aria-label="Preview">' +
+          '<i class="fa-solid fa-palette"></i><span class="lbl"> ' + bt('builder.preview','Preview') + '</span></button>' +
+        '<button class="w-btn w-btn-icon" id="mf-btn-preview" data-tip="Quick preview in a dialog" aria-label="Quick preview"><i class="fa-regular fa-eye"></i></button>' +
         '<a class="w-btn" id="mf-btn-view-live" href="#" target="_blank" data-tip="Open live form in new tab" aria-label="View Live Form" style="display:none">' +
           '<i class="fa-solid fa-arrow-up-right-from-square"></i><span class="lbl"> ' + bt('builder.view_live','View Live') + '</span></a>' +
         '<button class="w-btn" id="mf-btn-save-draft" data-tip="Save changes (draft)" aria-label="Save draft"><i class="fa-regular fa-floppy-disk"></i><span class="lbl"> ' + bt('builder.save','Save') + '</span></button>' +
@@ -652,9 +657,11 @@ import dbStrings from './db-tables-strings.json';
         secondaryTool('settings', 'fa-cog', 'Form Settings') +
         secondaryTool('steps', 'fa-list-ol', 'Steps') +
         secondaryTool('html', 'fa-code', 'Custom HTML') +
-        secondaryTool('theme', 'fa-palette', 'Theme Designer') +
         secondaryTool('db', 'fa-database', 'Database Tables') +
         secondaryTool('rules', 'fa-code-branch', 'Rule Builder') +
+        // [Perms 2026-08-18] Stays until the per-form matrix has its place on the Security
+        // screen. Removing the tool first would have left form permissions unreachable — the
+        // Security node currently carries PACKAGE permissions per user group, not this matrix.
         secondaryTool('perms', 'fa-user-shield', 'Permissions & Access') +
         secondaryTool('workflow', 'fa-project-diagram', 'BPMN 2.0 Workflow') +
         secondaryTool('print', 'fa-print', 'Print Settings') +
@@ -2232,6 +2239,13 @@ import dbStrings from './db-tables-strings.json';
     }
     if (backdrop) {
       backdrop.addEventListener('click', function() { toggleFlyout(false); });
+    }
+    var themePreviewBtn = document.getElementById('mf-btn-theme-preview');
+    if (themePreviewBtn) {
+      themePreviewBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        openFlyoutTab('theme');
+      });
     }
     var flyoutClose = document.getElementById('mf-flyout-close');
     if (flyoutClose) {

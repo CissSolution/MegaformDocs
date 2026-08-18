@@ -8,10 +8,138 @@ import { ensureFieldSettingsBadge, getActiveField, hasActiveFieldSelection } fro
 import { openIconPalette, ensureIconPaletteStyles } from './icon-palette';
 import { wireDbInsertPicker } from './db-insert-picker';
 import { getPlatformHostConfig } from '../shared/platform-host';
+import { readFieldRoles, readFieldReadOnlyRoles, writeFieldRoles, writeFieldReadOnlyRoles }
+  from './permissions/field-visibility';
 (function () {
     'use strict';
     var B = MegaFormBuilder;
     var currentField: any = null;  // field đang được chọn
+
+    // ── [FieldSecurity 2026-08-18] Per-field access, inside the field's settings ──
+    // The role catalog comes from the same endpoint the old Access tab used; on a host that
+    // does not answer it the selects say so instead of rendering empty and looking broken.
+    // Same translation helper the rest of the builder uses.
+    function bt(key: string, fallback: string): string {
+        return B.builderT ? B.builderT(key, fallback) : fallback;
+    }
+    var _roleCatalog: string[] | null = null;
+
+    async function loadRoleCatalog(): Promise<string[]> {
+        if (_roleCatalog) return _roleCatalog;
+        try {
+            var formId = _resolveFormId();
+            var platform = String(getPlatformHostConfig().platform || '').toLowerCase();
+            var url = platform === 'dnn'
+                ? '/DesktopModules/MegaForm/API/Permissions/Catalog?formId=' + formId
+                : '/api/MegaForm/Permissions/Catalog?formId=' + formId;
+            var res = await fetch(url, { credentials: 'same-origin' });
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            var body = await res.json();
+            var principals = (body && body.catalog && (body.catalog.principals || body.catalog.Principals)) || [];
+            // PermissionPrincipalInfo: principalType is "special" | "user" | "role", and a role
+            // carries roleName. Reading a "kind" property here returned nothing at all and the
+            // selects rendered empty — measured on form 101, which has two roles.
+            _roleCatalog = principals
+                .filter(function (pr: any) {
+                    return String(pr.principalType || pr.PrincipalType || '').toLowerCase() === 'role';
+                })
+                .map(function (pr: any) {
+                    return String(pr.roleName || pr.RoleName || pr.principalId || pr.PrincipalId || '');
+                })
+                .filter(Boolean);
+        } catch (_e) {
+            _roleCatalog = [];
+        }
+        return _roleCatalog || [];
+    }
+
+    function fillRoleSelect(el: HTMLSelectElement | null, roles: string[], selected: string[]): void {
+        if (!el) return;
+        if (!roles.length) {
+            el.innerHTML = '<option value="" disabled>No roles available on this host</option>';
+            return;
+        }
+        var chosen: Record<string, boolean> = {};
+        (selected || []).forEach(function (r) { chosen[String(r)] = true; });
+        el.innerHTML = roles.map(function (r) {
+            return '<option value="' + B.escHtml(r) + '"' + (chosen[r] ? ' selected' : '') + '>' + B.escHtml(r) + '</option>';
+        }).join('');
+    }
+
+    /** Builds the Security group inside the field's own property list, once. */
+    function ensureFieldSecuritySection(): HTMLElement | null {
+        var existing = document.getElementById('mf-prop-field-security');
+        if (existing && existing.isConnected) return existing;
+        var host = document.getElementById('mf-field-props');
+        // The Design Studio accordion MOVES panes around, so this container can be detached
+        // when the call lands — appending to it then puts the section in an orphan tree and
+        // getElementById never finds it again. Measured: after opening the theme designer once,
+        // the section stopped existing for every field afterwards.
+        if (!host || !host.isConnected) return null;
+        var group = document.createElement('div');
+        group.className = 'mf-prop-group';
+        group.id = 'mf-prop-field-security';
+        group.innerHTML =
+            '<h6><i class="fas fa-user-shield"></i> ' + bt('builder.field_security', 'Security') + '</h6>' +
+            '<div class="form-group mt-1">' +
+              '<label for="mf-prop-field-roles">' + bt('builder.field_visible_roles', 'Visible to roles') + '</label>' +
+              '<select id="mf-prop-field-roles" class="form-control form-control-sm" multiple size="4"></select>' +
+              '<small class="text-muted d-block mt-1">' +
+                bt('builder.field_visible_roles_hint', 'Leave empty for everyone. Otherwise only these roles see the field.') +
+              '</small>' +
+            '</div>' +
+            '<div class="form-group mt-2">' +
+              '<label for="mf-prop-field-readonly-roles">' + bt('builder.field_readonly_roles', 'Read-only for roles') + '</label>' +
+              '<select id="mf-prop-field-readonly-roles" class="form-control form-control-sm" multiple size="4"></select>' +
+              '<small class="text-muted d-block mt-1">' +
+                bt('builder.field_readonly_roles_hint', 'These roles see the field but cannot change it; a write from them is rejected and the stored value kept.') +
+              '</small>' +
+            '</div>';
+        host.appendChild(group);
+        return group;
+    }
+
+    async function renderFieldSecurity(field: any): Promise<void> {
+        var wrap = ensureFieldSecuritySection();
+        if (!wrap) return;
+        // Layout containers carry no access rules of their own.
+        var applies = !!field && field.type !== 'Row' && field.type !== 'FlexGrid';
+        wrap.style.display = applies ? '' : 'none';
+        if (!applies) return;
+        var roles = await loadRoleCatalog();
+        fillRoleSelect(document.getElementById('mf-prop-field-roles') as HTMLSelectElement | null,
+                       roles, readFieldRoles(field));
+        fillRoleSelect(document.getElementById('mf-prop-field-readonly-roles') as HTMLSelectElement | null,
+                       roles, readFieldReadOnlyRoles(field));
+    }
+
+    function bindFieldSecurity(): void {
+        var pick = function (el: HTMLSelectElement) {
+            return Array.prototype.slice.call(el.selectedOptions)
+                .map(function (o: any) { return String(o.value); })
+                .filter(Boolean);
+        };
+        var vis = document.getElementById('mf-prop-field-roles') as HTMLSelectElement | null;
+        if (vis && !(vis as any)._mfBound) {
+            (vis as any)._mfBound = true;
+            vis.addEventListener('change', function () {
+                var f = getActiveField(currentField);
+                if (!f || !f.key) return;
+                writeFieldRoles(f.key, pick(vis as HTMLSelectElement));
+                B.state.isDirty = true;
+            });
+        }
+        var ro = document.getElementById('mf-prop-field-readonly-roles') as HTMLSelectElement | null;
+        if (ro && !(ro as any)._mfBound) {
+            (ro as any)._mfBound = true;
+            ro.addEventListener('change', function () {
+                var f = getActiveField(currentField);
+                if (!f || !f.key) return;
+                writeFieldReadOnlyRoles(f.key, pick(ro as HTMLSelectElement));
+                B.state.isDirty = true;
+            });
+        }
+    }
 
     // ── [PrevalueSource 2026-08-17] Shared option catalog ────────────────────────
     // The catalog is an Umbraco-only surface today; on a host without it the endpoint
@@ -1763,6 +1891,19 @@ import { getPlatformHostConfig } from '../shared/platform-host';
             B.toggle('mf-prop-option-columns-wrap', false);
             B.setVal('mf-prop-option-columns', '');
         }
+        // [FieldSecurity 2026-08-18] Painted for every field — but a frame LATER: the plugin
+        // dispatch below and the widget renderer both rewrite #mf-field-props, so a section
+        // appended here is wiped before anyone sees it. Measured: the element was never in the
+        // document by the time the panel settled.
+        try {
+            // Two passes: one for the common case, one after any pane shuffling settles.
+            [0, 160].forEach(function (delay) {
+                window.setTimeout(function () {
+                    try { renderFieldSecurity(field); bindFieldSecurity(); } catch (_e2) { /* defensive */ }
+                }, delay);
+            });
+        } catch (_e) { /* defensive */ }
+
         // ── Delegate onSelect sang plugin ───────────────────
         // Vd: UniqueId, Html, Section, Captcha...
         var container = document.getElementById('mf-field-props');
