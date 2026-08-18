@@ -71,7 +71,14 @@ const PROVIDERS = [
     label: 'Umbraco documents',
     hint: 'Content nodes under a root, as value/label pairs.',
     fields: [
-      { key: 'rootNodeId', label: 'Root node', kind: 'select', source: 'contentRoots', number: true, required: true },
+      { key: 'useCurrentPageAsRoot', label: 'Use current page as root', kind: 'bool',
+        note: 'The page the form is rendered on becomes the root. Nothing to configure below.' },
+      { key: 'rootNodeId', label: 'Root node', kind: 'select', source: 'contentRoots', number: true,
+        hideWhen: (st) => st.useCurrentPageAsRoot || st.dynamicRoot?.originAlias,
+        note: 'A fixed node. Leave it and use a dynamic root when the answer depends on the page.' },
+      { key: 'dynamicRoot', label: 'Dynamic root', kind: 'dynamicRoot',
+        hideWhen: (st) => st.useCurrentPageAsRoot,
+        note: 'An origin relative to the current page, then steps that walk to the real root.' },
       { key: 'documentTypeAlias', label: 'Document type', kind: 'select', source: 'documentTypes',
         empty: 'Any document type' },
       { key: 'valuePropertyAlias', label: 'Value field', kind: 'select', source: 'fields',
@@ -86,6 +93,23 @@ const PROVIDERS = [
       ] },
     ],
   },
+];
+
+const ORIGINS = [
+  { value: '', label: 'No dynamic root' },
+  { value: 'ContentRoot', label: 'Content Root — top of the content tree' },
+  { value: 'Root', label: 'Root — root of the current page tree' },
+  { value: 'Site', label: 'Site — nearest site root above the current page' },
+  { value: 'Parent', label: 'Parent — the current page parent' },
+  { value: 'Current', label: 'Current — the page the form is on' },
+  { value: 'SpecificNode', label: 'Specific Node — a node picked here' },
+];
+
+const STEPS = [
+  { value: 'NearestAncestorOrSelf', label: 'Nearest Ancestor Or Self' },
+  { value: 'FurthestAncestorOrSelf', label: 'Furthest Ancestor Or Self' },
+  { value: 'NearestDescendantOrSelf', label: 'Nearest Descendant Or Self' },
+  { value: 'FurthestDescendantOrSelf', label: 'Furthest Descendant Or Self' },
 ];
 
 export default class MegaFormPrevalueSourcesView extends UmbLitElement {
@@ -246,6 +270,17 @@ export default class MegaFormPrevalueSourcesView extends UmbLitElement {
     for (const f of this.#descriptor(e.type).fields) {
       const raw = e.settings[f.key];
       if (f.kind === 'bool') { if (raw) out[f.key] = true; continue; }
+      if (f.kind === 'dynamicRoot') {
+        // Only travels when an origin was chosen; an empty object would read as "configured".
+        if (raw && raw.originAlias) {
+          out[f.key] = {
+            originAlias: raw.originAlias,
+            originKey: raw.originKey || undefined,
+            steps: (raw.steps || []).filter((st) => st.alias),
+          };
+        }
+        continue;
+      }
       if (raw === undefined || raw === null || String(raw).trim() === '') continue;
       out[f.key] = f.number ? Number(raw) : raw;
     }
@@ -285,12 +320,17 @@ export default class MegaFormPrevalueSourcesView extends UmbLitElement {
   async #test() {
     this._error = ''; this._ok = ''; this._sample = null; this._busy = true;
     try {
-      const res = await this.#call(`${API}/Test`, {
+      const page = Number(this._editing.previewPageId) || 0;
+      const res = await this.#call(`${API}/Test${page ? `?pageId=${page}` : ''}`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(this.#payload()),
       });
       this._sample = res;
-      this._ok = `${res.total} option${res.total === 1 ? '' : 's'} returned.`;
+      const needsPage = this._editing.settings.useCurrentPageAsRoot
+        || this._editing.settings.dynamicRoot?.originAlias;
+      this._ok = res.total === 0 && needsPage && !page
+        ? '0 options — this source resolves against a page. Pick one under "Preview from page" to test it.'
+        : `${res.total} option${res.total === 1 ? '' : 's'} returned.`;
     } catch (e) {
       this._error = `Test failed: ${e.message}`;
     } finally {
@@ -408,12 +448,30 @@ export default class MegaFormPrevalueSourcesView extends UmbLitElement {
         </div>
 
         <div style="margin-top:12px">
-          ${d.fields.map((f) => html`
+          ${d.fields.filter((f) => !(f.hideWhen && f.hideWhen(e.settings))).map((f) => html`
             <div class="frow">
               <div class="flabel">${f.label}${f.required ? ' *' : ''}</div>
-              <div>${this.#renderField(f, e, setSetting)}</div>
+              <div>
+                ${this.#renderField(f, e, setSetting)}
+                ${f.note ? html`<div class="hint" style="margin-top:6px">${f.note}</div>` : nothing}
+              </div>
             </div>
           `)}
+          ${this.#needsPageContext(e) ? html`
+            <div class="frow">
+              <div class="flabel">Preview from page<small>Test only</small></div>
+              <div>
+                <select @change="${(ev) => { this._editing = { ...e, previewPageId: ev.target.value }; }}">
+                  <option value="">— none —</option>
+                  ${(this._meta[this.#cacheKey('contentRoots')] || []).map((o) => html`
+                    <option value="${o.value}" ?selected="${String(o.value) === String(e.previewPageId || '')}">${o.label}</option>`)}
+                </select>
+                <div class="hint" style="margin-top:6px">
+                  A relative root has no answer without a page. This is the page Test pretends the
+                  form is on; the live form sends its own.
+                </div>
+              </div>
+            </div>` : nothing}
         </div>
         <div class="hint">${d.hint}</div>
 
@@ -450,6 +508,7 @@ export default class MegaFormPrevalueSourcesView extends UmbLitElement {
       return html`<input type="number" placeholder="${f.placeholder || ''}" .value="${String(value)}"
                     @input="${(ev) => setSetting(f, ev.target.value)}" />`;
     }
+    if (f.kind === 'dynamicRoot') return this.#renderDynamicRoot(f, e, setSetting);
     if (f.kind === 'select') {
       const cacheKey = this.#cacheKey(f.source, f.dependsOn ? e.settings[f.dependsOn] : undefined);
       const options = (f.options || this._meta[cacheKey] || []);
@@ -464,6 +523,65 @@ export default class MegaFormPrevalueSourcesView extends UmbLitElement {
     }
     return html`<input placeholder="${f.placeholder || ''}" .value="${value}"
                   @input="${(ev) => setSetting(f, ev.target.value)}" />`;
+  }
+  /** True when the configured root only means something relative to a page. */
+  #needsPageContext(e) {
+    const st = e.settings || {};
+    return !!(st.useCurrentPageAsRoot || (st.dynamicRoot && st.dynamicRoot.originAlias));
+  }
+
+  /**
+   * Origin, then steps — the Umbraco Forms shape. The origin says where to start relative to the
+   * page being rendered; each step walks up or down to the nearest or furthest node of the
+   * document types picked for it.
+   */
+  #renderDynamicRoot(f, e, setSetting) {
+    const dr = e.settings[f.key] || { originAlias: '', originKey: '', steps: [] };
+    const write = (next) => setSetting(f, next);
+    const docTypes = this._meta[this.#cacheKey('documentTypes')] || [];
+    const nodes = this._meta[this.#cacheKey('contentRoots')] || [];
+
+    return html`
+      <select @change="${(ev) => write({ ...dr, originAlias: ev.target.value })}">
+        ${ORIGINS.map((o) => html`
+          <option value="${o.value}" ?selected="${o.value === (dr.originAlias || '')}">${o.label}</option>`)}
+      </select>
+
+      ${dr.originAlias === 'SpecificNode' ? html`
+        <select style="margin-top:8px" @change="${(ev) => write({ ...dr, originKey: ev.target.value })}">
+          <option value="">— pick a node —</option>
+          ${nodes.map((o) => html`
+            <option value="${o.key || o.value}" ?selected="${String(o.key || o.value) === String(dr.originKey || '')}">${o.label}</option>`)}
+        </select>` : nothing}
+
+      ${dr.originAlias ? html`
+        <div style="margin-top:10px">
+          ${(dr.steps || []).map((step, i) => html`
+            <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
+              <select style="flex:1" @change="${(ev) => {
+                const steps = [...(dr.steps || [])];
+                steps[i] = { ...steps[i], alias: ev.target.value };
+                write({ ...dr, steps });
+              }}">
+                ${STEPS.map((o) => html`
+                  <option value="${o.value}" ?selected="${o.value === step.alias}">${o.label}</option>`)}
+              </select>
+              <select style="flex:1" @change="${(ev) => {
+                const steps = [...(dr.steps || [])];
+                steps[i] = { ...steps[i], documentTypeAliases: ev.target.value ? [ev.target.value] : [] };
+                write({ ...dr, steps });
+              }}">
+                <option value="">Any document type</option>
+                ${docTypes.map((o) => html`
+                  <option value="${o.value}" ?selected="${(step.documentTypeAliases || [])[0] === o.value}">${o.label}</option>`)}
+              </select>
+              <button @click="${() => write({ ...dr, steps: (dr.steps || []).filter((_, k) => k !== i) })}">Remove</button>
+            </div>`)}
+          <button @click="${() => write({ ...dr, steps: [...(dr.steps || []), { alias: 'NearestAncestorOrSelf', documentTypeAliases: [] }] })}">
+            Add query step
+          </button>
+        </div>` : nothing}
+    `;
   }
 }
 

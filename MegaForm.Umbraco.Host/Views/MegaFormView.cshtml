@@ -1,4 +1,5 @@
 @using MegaForm.Umbraco.Services
+@using Newtonsoft.Json
 @model MegaForm.Umbraco.ViewModels.MegaFormViewModel
 @inject IUmbracoModuleConfigService ModuleConfigService
 
@@ -9,6 +10,7 @@
     var effectiveViewType = hasExplicitView ? Model.ViewType : (moduleConfig?.ViewType ?? "submit");
     var hasExplicitConfig = !string.IsNullOrWhiteSpace(Model.ConfigJson) && Model.ConfigJson != "{}";
     var effectiveConfigJson = hasExplicitConfig ? Model.ConfigJson : (moduleConfig?.ViewConfigJson ?? "{}");
+    var configAttr = JsonConvert.SerializeObject(effectiveConfigJson).Replace("&", "&amp;").Replace("\"", "&quot;").Replace("<", "&lt;").Replace(">", "&gt;");
 }
 
 @* 
@@ -30,10 +32,15 @@
      data-api-base="/umbraco/MegaForm/MegaFormApi/"
      data-is-admin="@Model.IsAdmin.ToString().ToLower()"
      data-view-type="@effectiveViewType"
-     data-config='@effectiveConfigJson'>
+     data-config="@Html.Raw(configAttr)">
 </div>
 
 <link rel="stylesheet" href="/App_Plugins/MegaForm/css/megaform.css" />
+<link rel="stylesheet" href="/App_Plugins/MegaForm/css/megaform-themes.css" />
+@* [DynamicRoot 2026-08-18] Kept in step with the package copy in MegaForm.Umbraco/Views:
+   a host view of the same name OVERRIDES the RCL one, so an edit to the package alone never
+   reaches the page — measured here when the page kept rendering without this line. *@
+<script>window.__MF_PAGE_ID__ = @Model.ContentId;</script>
 <script src="/App_Plugins/MegaForm/js/megaform-config.js"></script>
 @if (effectiveViewType == "submit" || string.IsNullOrEmpty(effectiveViewType))
 {

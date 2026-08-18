@@ -327,6 +327,18 @@ namespace MegaForm.Core.Services
             return options;
         }
 
+        /// <summary>Reads the current page id out of the request parameters (pageId / __pageId).</summary>
+        private static int ReadPageParameter(IDictionary<string, object> parameters)
+        {
+            if (parameters == null) return 0;
+            foreach (var key in new[] { "pageId", "__pageId", "currentPageId" })
+            {
+                if (!parameters.TryGetValue(key, out var raw) || raw == null) continue;
+                if (int.TryParse(Convert.ToString(raw), out var id) && id > 0) return id;
+            }
+            return 0;
+        }
+
         // ─── prevalue-source branch ─────────────────────────────────────────
         // Reads a shared PrevalueSource catalog entry and converts its options
         // into the FieldOption shape used by the renderer.
@@ -349,7 +361,12 @@ namespace MegaForm.Core.Services
                 var context = new PrevalueProviderContext
                 {
                     Parameters = parameters,
-                    MaxRows = MAX_OPTION_ROWS
+                    MaxRows = MAX_OPTION_ROWS,
+                    // [DynamicRoot 2026-08-18] A dynamic-root source resolves against the page the
+                    // form is on, so the caller passes it like any other parameter: the public form
+                    // sends pageId with the options request, the builder's preview sends the page
+                    // being previewed. Absent, it stays 0 and only fixed-root sources still work.
+                    CurrentPageId = ReadPageParameter(parameters)
                 };
 
                 var prevalues = sourceId.HasValue

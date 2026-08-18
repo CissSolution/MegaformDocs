@@ -3453,8 +3453,18 @@ function fieldOptionsBaseUrl(): (fieldKey: string, params?: Record<string, strin
   const platform = String(((window as any).__MF_PLATFORM__ || {}).platform || '').toLowerCase();
   // DNN routes: /api/MegaForm/Submit/FieldOptions ; Oqtane/Web: /api/MegaForm/Field/Options
   const route = platform === 'dnn' ? 'Submit/FieldOptions' : 'Field/Options';
+  // [DynamicRoot 2026-08-18] The page this form is rendered on. A prevalue source with a
+  // dynamic root resolves against it — "the section this page belongs to" is a different
+  // answer on every page — and every other source ignores it.
+  const pageId = (() => {
+    const w = window as any;
+    const direct = w.__MF_PAGE_ID__ || (w.__MF_PLATFORM__ || {}).pageId;
+    const n = parseInt(String(direct || '0'), 10);
+    return n > 0 ? String(n) : '';
+  })();
   return (fieldKey: string, params?: Record<string, string>) => {
     let qs = `formId=${config.formId}&fieldKey=${encodeURIComponent(fieldKey)}`;
+    if (pageId) qs += `&__p__pageId=${pageId}`;
     if (params) {
       Object.keys(params).forEach(k => {
         const v = params[k];
@@ -3512,7 +3522,11 @@ async function hydrateSqlOptions(): Promise<void> {
     // 'form-lookup' (options from another form's submissions). Both go
     // through the same /Submit/FieldOptions endpoint server-side.
     const src = String((p && p.optionsSource) || '').toLowerCase();
-    return src === 'sql' || src === 'form-lookup' || src === 'formlookup' || src === 'form_lookup';
+    // [PrevalueSource 2026-08-18] A field can also point at the shared catalog. Those options
+    // are resolved server-side through the same endpoint, and a dynamic-root source needs the
+    // page id that goes with the request — see fieldOptionsBaseUrl().
+    return src === 'sql' || src === 'prevalue' || src === 'prevalue-source'
+        || src === 'form-lookup' || src === 'formlookup' || src === 'form_lookup';
   });
 
   for (const f of flat) {

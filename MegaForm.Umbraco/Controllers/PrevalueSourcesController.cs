@@ -87,7 +87,7 @@ namespace MegaForm.Umbraco.Controllers
         }
 
         [HttpPost("Test")]
-        public async Task<IActionResult> Test([FromBody] PrevalueSource source)
+        public async Task<IActionResult> Test([FromBody] PrevalueSource source, int pageId = 0)
         {
             if (source == null) return BadRequest("Source is required.");
             var provider = _registry.Get(source.Type);
@@ -97,14 +97,24 @@ namespace MegaForm.Umbraco.Controllers
             if (!string.IsNullOrWhiteSpace(validation))
                 return BadRequest(validation);
 
-            var options = await provider.GetOptionsAsync(source, PrevalueProviderContext.Empty);
-            return Ok(new { options = options.Take(50).ToList(), total = options.Count });
+            // [DynamicRoot 2026-08-18] A relative root only has an answer for a given page, so the
+            // editor previews against one — the same way Umbraco Forms warns that its own
+            // "use current page" toggle does not work in preview mode. Without a page the source
+            // returns nothing, and the editor says so rather than pretending it is broken.
+            var context = pageId > 0
+                ? new PrevalueProviderContext { CurrentPageId = pageId }
+                : PrevalueProviderContext.Empty;
+            var options = await provider.GetOptionsAsync(source, context);
+            return Ok(new { options = options.Take(50).ToList(), total = options.Count, pageId });
         }
 
         [HttpGet("Options/{id}")]
-        public async Task<IActionResult> Options(int id)
+        public async Task<IActionResult> Options(int id, int pageId = 0)
         {
-            var options = await _resolver.GetOptionsAsync(id, PrevalueProviderContext.Empty);
+            var context = pageId > 0
+                ? new PrevalueProviderContext { CurrentPageId = pageId }
+                : PrevalueProviderContext.Empty;
+            var options = await _resolver.GetOptionsAsync(id, context);
             return Ok(options.Take(500).ToList());
         }
 

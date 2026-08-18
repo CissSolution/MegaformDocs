@@ -46,6 +46,10 @@
 </div>
 
 <link rel="stylesheet" href="/App_Plugins/MegaForm/css/megaform.css" />
+@* [DynamicRoot 2026-08-18] The page this form is rendered on. A prevalue source with a dynamic
+   root resolves against it — "the section this page belongs to" answers differently on every
+   page — and the renderer sends it with the field-options request. Every other source ignores it. *@
+<script>window.__MF_PAGE_ID__ = @Model.ContentId;</script>
 <script src="/App_Plugins/MegaForm/js/megaform-config.js"></script>
 @if (effectiveViewType == "submit" || string.IsNullOrEmpty(effectiveViewType))
 {
