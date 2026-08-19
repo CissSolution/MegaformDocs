@@ -508,7 +508,7 @@
   "builder.templates": "Šablony",
   "builder.save_as_template": "Uložit jako šablonu",
   "builder.create_db_table": "Vytvořit DB tabulku",
-  "builder.publish_return": "Publikovat a zpět na Dashboard",
+  "builder.publish_return": "Publikovat a zobrazit formulář",
   "builder.mode_build": "Sestavit",
   "builder.mode_design": "Design",
   "builder.tab_field": "Design",

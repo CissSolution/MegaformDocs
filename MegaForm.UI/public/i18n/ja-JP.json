@@ -508,7 +508,7 @@
   "builder.templates": "テンプレート",
   "builder.save_as_template": "テンプレートとして保存",
   "builder.create_db_table": "DBテーブルを作成",
-  "builder.publish_return": "公開してダッシュボードに戻る",
+  "builder.publish_return": "公開してフォームを表示",
   "builder.mode_build": "作成",
   "builder.mode_design": "デザイン",
   "builder.tab_field": "デザイン",

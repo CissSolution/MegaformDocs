@@ -508,7 +508,7 @@
   "builder.templates": "Veidnes",
   "builder.save_as_template": "Saglabāt kā veidni",
   "builder.create_db_table": "Izveidot DB tabulu",
-  "builder.publish_return": "Publicēt un atgriezties vadības panelī",
+  "builder.publish_return": "Publicēt un skatīt veidlapu",
   "builder.mode_build": "Veidot",
   "builder.mode_design": "Dizains",
   "builder.tab_field": "Dizains",

@@ -508,7 +508,7 @@
   "builder.templates": "Skabeloner",
   "builder.save_as_template": "Gem som skabelon",
   "builder.create_db_table": "Opret DB-tabel",
-  "builder.publish_return": "Udgiv og vend tilbage til dashboard",
+  "builder.publish_return": "Udgiv og vis formularen",
   "builder.mode_build": "Byg",
   "builder.mode_design": "Design",
   "builder.tab_field": "Design",

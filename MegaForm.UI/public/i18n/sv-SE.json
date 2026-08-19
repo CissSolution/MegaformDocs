@@ -508,7 +508,7 @@
   "builder.templates": "Mallar",
   "builder.save_as_template": "Spara som mall",
   "builder.create_db_table": "Skapa DB-tabell",
-  "builder.publish_return": "Publicera och återgå till instrumentpanelen",
+  "builder.publish_return": "Publicera och visa formuläret",
   "builder.mode_build": "Bygg",
   "builder.mode_design": "Design",
   "builder.tab_field": "Design",

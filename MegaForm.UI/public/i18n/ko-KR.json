@@ -508,7 +508,7 @@
   "builder.templates": "템플릿",
   "builder.save_as_template": "템플릿으로 저장",
   "builder.create_db_table": "DB 테이블 만들기",
-  "builder.publish_return": "게시 후 대시보드로 돌아가기",
+  "builder.publish_return": "게시 후 양식 보기",
   "builder.mode_build": "제작",
   "builder.mode_design": "디자인",
   "builder.tab_field": "디자인",

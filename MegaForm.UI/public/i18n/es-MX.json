@@ -508,7 +508,7 @@
   "builder.templates": "Plantillas",
   "builder.save_as_template": "Guardar como plantilla",
   "builder.create_db_table": "Crear tabla en BD",
-  "builder.publish_return": "Publicar y volver al panel",
+  "builder.publish_return": "Publicar y ver el formulario",
   "builder.mode_build": "Construir",
   "builder.mode_design": "Diseñar",
   "builder.tab_field": "Diseño",

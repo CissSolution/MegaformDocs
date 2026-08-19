@@ -508,7 +508,7 @@
   "builder.templates": "Mallipohjat",
   "builder.save_as_template": "Tallenna mallipohjana",
   "builder.create_db_table": "Luo tietokantataulu",
-  "builder.publish_return": "Julkaise ja palaa hallintapaneeliin",
+  "builder.publish_return": "Julkaise ja näytä lomake",
   "builder.mode_build": "Rakenna",
   "builder.mode_design": "Suunnittele",
   "builder.tab_field": "Suunnittelu",

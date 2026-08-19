@@ -508,7 +508,7 @@
   "builder.templates": "Sablonok",
   "builder.save_as_template": "Mentés sablonként",
   "builder.create_db_table": "Adatbázistábla létrehozása",
-  "builder.publish_return": "Közzététel és vissza az irányítópultra",
+  "builder.publish_return": "Közzététel és az űrlap megtekintése",
   "builder.mode_build": "Építés",
   "builder.mode_design": "Tervezés",
   "builder.tab_field": "Tervezés",

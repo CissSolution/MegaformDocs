@@ -508,7 +508,7 @@
   "builder.templates": "Πρότυπα",
   "builder.save_as_template": "Αποθήκευση ως πρότυπο",
   "builder.create_db_table": "Δημιουργία πίνακα ΒΔ",
-  "builder.publish_return": "Δημοσίευση και επιστροφή στον πίνακα ελέγχου",
+  "builder.publish_return": "Δημοσίευση και προβολή φόρμας",
   "builder.mode_build": "Δόμηση",
   "builder.mode_design": "Σχεδίαση",
   "builder.tab_field": "Σχεδίαση",

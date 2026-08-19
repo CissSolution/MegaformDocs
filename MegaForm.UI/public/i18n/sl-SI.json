@@ -508,7 +508,7 @@
   "builder.templates": "Predloge",
   "builder.save_as_template": "Shrani kot predlogo",
   "builder.create_db_table": "Ustvari tabelo v bazi",
-  "builder.publish_return": "Objavi in se vrni na nadzorno ploščo",
+  "builder.publish_return": "Objavi in poglej obrazec",
   "builder.mode_build": "Gradnja",
   "builder.mode_design": "Oblikovanje",
   "builder.tab_field": "Oblikovanje",

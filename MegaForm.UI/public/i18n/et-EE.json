@@ -508,7 +508,7 @@
   "builder.templates": "Mallid",
   "builder.save_as_template": "Salvesta mallina",
   "builder.create_db_table": "Loo andmebaasitabel",
-  "builder.publish_return": "Avalda ja naase töölauale",
+  "builder.publish_return": "Avalda ja vaata vormi",
   "builder.mode_build": "Ehita",
   "builder.mode_design": "Kujunda",
   "builder.tab_field": "Kujundus",

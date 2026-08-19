@@ -508,7 +508,7 @@
   "builder.templates": "Šablonai",
   "builder.save_as_template": "Įrašyti kaip šabloną",
   "builder.create_db_table": "Sukurti DB lentelę",
-  "builder.publish_return": "Publikuoti ir grįžti į skydelį",
+  "builder.publish_return": "Publikuoti ir peržiūrėti formą",
   "builder.mode_build": "Kurti",
   "builder.mode_design": "Dizainas",
   "builder.tab_field": "Dizainas",

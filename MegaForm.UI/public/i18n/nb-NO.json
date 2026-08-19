@@ -508,7 +508,7 @@
   "builder.templates": "Maler",
   "builder.save_as_template": "Lagre som mal",
   "builder.create_db_table": "Opprett DB-tabell",
-  "builder.publish_return": "Publiser og gå tilbake til dashbord",
+  "builder.publish_return": "Publiser og vis skjemaet",
   "builder.mode_build": "Bygg",
   "builder.mode_design": "Design",
   "builder.tab_field": "Design",

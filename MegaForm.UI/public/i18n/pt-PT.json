@@ -508,7 +508,7 @@
   "builder.templates": "Modelos",
   "builder.save_as_template": "Guardar como modelo",
   "builder.create_db_table": "Criar tabela de BD",
-  "builder.publish_return": "Publicar e voltar ao painel",
+  "builder.publish_return": "Publicar e ver o formulário",
   "builder.mode_build": "Construir",
   "builder.mode_design": "Design",
   "builder.tab_field": "Design",

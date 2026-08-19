@@ -142,9 +142,10 @@ import dbStrings from './db-tables-strings.json';
    * exists to remove. Everywhere else those screens do not exist, so the menu is the door —
    * dropping the entries there would simply lose the features.
    *
-   * Database Tables stays on every host, Umbraco included: its destination (the Data Sources
-   * node, §4.1 of the parity handoff) is not built yet, and an icon must not be retired before
-   * the place it is going exists.
+   * Database Tables stays on every host, Umbraco included, but as an overflow entry rather
+   * than a toolbar glyph. The Data Sources node now owns the catalog (§4.1) and this panel is
+   * a picker over it (§4.2) — what is left in the builder is authoring, dragging a column onto
+   * the canvas, and the builder is the only place that can be done from.
    */
   function moreMenuTools(): Array<[string, string, string]> {
     var tools: Array<[string, string, string]> = [
@@ -714,8 +715,8 @@ import dbStrings from './db-tables-strings.json';
       // The hidden #mf-tab-link-* anchors are NOT removed with the icons: the Print, Theme,
       // DB, Rules and Workflow panes only build themselves when one of those is clicked.
       '<div class="mf-secondary-toolbar" role="toolbar" aria-label="Design tools">' +
-        pageTool('add-page-start', 'fa-square-plus', 'Add page to start') +
-        pageTool('add-page-end', 'fa-square-plus', 'Add page to end') +
+        pageTool('add-page-start', 'fa-square-plus', bt('builder.add_page_start', 'Add page to start')) +
+        pageTool('add-page-end', 'fa-square-plus', bt('builder.add_page_end', 'Add page to end')) +
       '</div>';
     return bar;
   }
@@ -731,9 +732,12 @@ import dbStrings from './db-tables-strings.json';
   // [ToolbarCleanup 2026-08-18] A labelled control, not a glyph. Reorder only became findable
   // again when it kept its text, and these two are the same kind of thing — an action on the
   // form, not an inspector. Same markup as .mf-reorder-tool so one CSS rule covers the row.
-  function pageTool(action: string, icon: string, title: string): string {
-    var key = 'builder.' + action.replace(/-/g, '_');
-    var label = bt(key, title).replace(/"/g, '&quot;');
+  // The already-translated label is passed in, so the bt() call sits at the call site with a
+  // literal key. The i18n checker reads those statically: a key assembled inside this function
+  // — from a parameter, or by concatenation — is invisible to it, and the label would never be
+  // reported as untranslated in any language.
+  function pageTool(action: string, icon: string, text: string): string {
+    var label = String(text).replace(/"/g, '&quot;');
     return '<button type="button" class="mf-secondary-tool mf-tool-labeled" data-mf-page-tool="' + action + '"' +
              ' data-tip="' + label + '" aria-label="' + label + '">' +
              '<i class="fas ' + icon + '"></i><span class="lbl">' + label + '</span>' +

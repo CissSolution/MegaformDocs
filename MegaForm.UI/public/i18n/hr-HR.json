@@ -508,7 +508,7 @@
   "builder.templates": "Predlošci",
   "builder.save_as_template": "Spremi kao predložak",
   "builder.create_db_table": "Stvori DB tablicu",
-  "builder.publish_return": "Objavi i vrati se na nadzornu ploču",
+  "builder.publish_return": "Objavi i pogledaj obrazac",
   "builder.mode_build": "Izrada",
   "builder.mode_design": "Dizajn",
   "builder.tab_field": "Dizajn",

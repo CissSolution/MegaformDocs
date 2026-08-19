@@ -508,7 +508,7 @@
   "builder.templates": "Šabloni",
   "builder.save_as_template": "Sačuvaj kao šablon",
   "builder.create_db_table": "Kreiraj tabelu baze",
-  "builder.publish_return": "Objavi i vrati se na kontrolnu tablu",
+  "builder.publish_return": "Objavi i pogledaj formular",
   "builder.mode_build": "Izgradnja",
   "builder.mode_design": "Dizajn",
   "builder.tab_field": "Dizajn",

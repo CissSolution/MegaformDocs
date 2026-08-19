@@ -1,6 +1,6 @@
 import { defineConfig, Plugin } from 'vite';
 import { resolve, join } from 'path';
-import { copyFileSync, mkdirSync, existsSync, statSync } from 'fs';
+import { copyFileSync, mkdirSync, existsSync, statSync, readdirSync } from 'fs';
 
 const entry = process.env.MF_ENTRY || 'config';
 
@@ -9,6 +9,8 @@ const entries: Record<string, string> = {
   'theme-inspector': resolve(__dirname, 'src/theme-designer/inspector.ts'),
   'builder-loader': resolve(__dirname, 'src/loader/index.ts'),
   config:           resolve(__dirname, 'src/config/index.ts'),
+  // [PinPicker 2026-08-15] Add-To-Page dialog, injected on demand by the Oqtane admin pane.
+  'pin-picker':     resolve(__dirname, 'src/pin-picker/index.ts'),
   builder:          resolve(__dirname, 'src/builder/index.ts'),
   // [B172] Restored after the April-21 vite.config revert dropped this entry — the
   // AI assistant bundle (providers + ops + chat) is loaded as megaform-ai-form-assistant.js
@@ -143,6 +145,37 @@ function syncPlatforms(): Plugin {
         }
       } else {
         console.warn(`[sync-platforms] JS not found: ${srcJs}`);
+      }
+
+      // ── 1b. Sync the language catalogs ───────────────────────────────────────
+      // [i18nSync 2026-08-18] These are plain JSON in public/, so Vite copies them into
+      // outDir — but this plugin only ever copied the entry's own JS and CSS, and nothing
+      // carried them any further. Every platform except DNN (which reads Assets/ directly)
+      // was therefore serving whatever catalog was hand-copied last: on Umbraco,
+      // App_Plugins/MegaForm/js/i18n was two days stale, so a key added today rendered as
+      // its English fallback in all 37 languages and nothing said why.
+      //
+      // Only the i18n entry does this — it is the one that owns the catalogs, and doing it
+      // on every entry would copy 37 files a dozen times per full build.
+      if (entry === 'i18n') {
+        const catalogDir = resolve(__dirname, 'public/i18n');
+        if (existsSync(catalogDir)) {
+          const catalogs = readdirSync(catalogDir).filter((f) => f.endsWith('.json'));
+          for (const [name, platformRoot] of Object.entries(PLATFORMS)) {
+            // DNN reads Assets/ directly and Vite has already written there.
+            if (name === 'dnn') continue;
+            const destDir = join(platformRoot, 'js', 'i18n');
+            try {
+              mkdirSync(destDir, { recursive: true });
+              for (const file of catalogs) copyFileSync(join(catalogDir, file), join(destDir, file));
+              console.log(`[sync-platforms] ✓ ${name}: js/i18n (${catalogs.length} catalogs)`);
+            } catch (err) {
+              console.warn(`[sync-platforms] ✗ ${name} i18n: ${(err as Error).message}`);
+            }
+          }
+        } else {
+          console.warn(`[sync-platforms] ⚠ i18n catalogs not found: ${catalogDir}`);
+        }
       }
 
       // ── 2. Sync CSS ───────────────────────────────────────────────────────────

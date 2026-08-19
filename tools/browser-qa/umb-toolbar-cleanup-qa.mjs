@@ -303,6 +303,22 @@ report.checks.settingsScreen = await (async () => {
   }, FORM);
   await page.waitForTimeout(4000);
   await page.screenshot({ path: `${OUT}/09-settings-screen.png`, fullPage: false });
+  // Photograph the two new sections, not just their headings: they sit below the fold and a
+  // heading counted in the DOM is not a section anyone can see.
+  await page.evaluate(() => {
+    const deep = (root, sel) => {
+      const hit = root.querySelector(sel);
+      if (hit) return hit;
+      for (const el of root.querySelectorAll("*")) {
+        if (el.shadowRoot) { const s = deep(el.shadowRoot, sel); if (s) return s; }
+      }
+      return null;
+    };
+    const scroller = deep(document, ".scroll");
+    if (scroller) scroller.scrollTop = scroller.scrollHeight;
+  });
+  await page.waitForTimeout(800);
+  await page.screenshot({ path: `${OUT}/09b-settings-print-rules.png` });
   return page.evaluate(() => {
     const deep = (root, sel, out = []) => {
       out.push(...root.querySelectorAll(sel));

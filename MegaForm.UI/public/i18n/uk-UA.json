@@ -508,7 +508,7 @@
   "builder.templates": "Шаблони",
   "builder.save_as_template": "Зберегти як шаблон",
   "builder.create_db_table": "Створити таблицю БД",
-  "builder.publish_return": "Опублікувати та повернутися на панель",
+  "builder.publish_return": "Опублікувати та переглянути форму",
   "builder.mode_build": "Побудова",
   "builder.mode_design": "Дизайн",
   "builder.tab_field": "Дизайн",

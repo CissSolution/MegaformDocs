@@ -278,3 +278,59 @@ export function annotateStepOrdinals(
     }
   });
 }
+
+/**
+ * [PageTools 2026-08-18] Umbraco Forms' "Add page to end of form".
+ *
+ * A page in MegaForm is a Section carrying properties.pageBreak, so a new last page is one
+ * Section appended at the end — every field that follows it (none, to start with) belongs to it.
+ */
+export function addPageAtEnd(
+  fields: any[] | null | undefined,
+  options: AddStepOptions = {},
+): any[] {
+  const next = Array.isArray(fields) ? fields.slice() : [];
+  return addStep(next, next.length, options);
+}
+
+/**
+ * [PageTools 2026-08-18] Umbraco Forms' "Add page to start of form".
+ *
+ * Not the mirror image of the one above, because listSteps() ignores a page break at index 0:
+ * a page break is what ENDS the page before it, and there is no page before the first field.
+ * So prepending a single break Section would leave the old content sitting on the new page
+ * instead of moving down to page two — the button would look like it worked and change nothing.
+ *
+ * What actually makes a new first page:
+ *   - the new Section goes in at index 0 and anchors page 1 (it needs no break of its own);
+ *   - whatever used to be first has to START a page now. If it is already a Section, its
+ *     pageBreak is turned on and no second Section is created; only a form whose first field
+ *     is not a Section needs one added to carry that break.
+ */
+export function addPageAtStart(
+  fields: any[] | null | undefined,
+  options: AddStepOptions = {},
+  followingPageOptions: AddStepOptions = {},
+): any[] {
+  const source = Array.isArray(fields) ? fields : [];
+  const next = source.slice();
+  // The new page 1: an anchor, never a break — see above.
+  const page = createStepSection(next, 1, options, false);
+
+  if (!next.length) {
+    // Empty form: one Section is the whole of it, and there is no second page to open.
+    return [page];
+  }
+
+  const firstIsSection = isSection(next[0]);
+  if (firstIsSection) {
+    // The old first Section becomes the anchor of page 2 by gaining the break.
+    next[0] = withPageBreak(next[0], true);
+  } else {
+    // Nothing there to carry the break, so page 2 gets an anchor of its own.
+    const ordinal = listSteps(next).length + 1;
+    next.unshift(createStepSection(next, ordinal, followingPageOptions, true));
+  }
+  next.unshift(page);
+  return next;
+}

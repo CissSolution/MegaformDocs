@@ -508,7 +508,7 @@
   "builder.templates": "模板",
   "builder.save_as_template": "另存为模板",
   "builder.create_db_table": "创建数据库表",
-  "builder.publish_return": "发布并返回仪表板",
+  "builder.publish_return": "发布并查看表单",
   "builder.mode_build": "构建",
   "builder.mode_design": "设计",
   "builder.tab_field": "设计",
