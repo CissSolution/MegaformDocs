@@ -321,14 +321,36 @@ async function loadSubmissions(formId: number, source?: string): Promise<{
   subs: Submission[]; sqlCapable: boolean; appliedSource: string; sqlTable: string;
 }> {
   const src = source === 'sql' ? '&source=sql' : '';
-  const r = await fetch(apiBase() + 'Submissions?formId=' + formId + '&pageSize=2000' + src, { credentials: 'same-origin', headers: csrfHeaders(), cache: 'no-store' });
+  // [ReportOnUmbraco 2026-08-20] Hai nền đặt tên khác nhau cho cùng một thứ:
+  // DNN/Oqtane/Web trả lời ở `Submissions?formId=`, Umbraco chỉ có
+  // `Submissions/List?formId=`. Bản cũ gọi đúng một đường, nên trên Umbraco hộp
+  // báo cáo mở ra là "Failed to load: HTTP 404" — trong khi lưới bên cạnh vẫn
+  // đầy dữ liệu, vì lưới gọi đường kia.
+  //
+  // Thử lần lượt thay vì rẽ theo tên nền: tên nền có thể đọc sai hoặc thiếu, còn
+  // 404 thì không mơ hồ. Đường nào trả lời được thì dùng.
+  const query = '?formId=' + formId + '&pageSize=2000' + src;
+  let r: Response | null = null;
+  for (const path of ['Submissions' + query, 'Submissions/List' + query]) {
+    const attempt = await fetch(apiBase() + path, { credentials: 'same-origin', headers: csrfHeaders(), cache: 'no-store' });
+    if (attempt.ok) { r = attempt; break; }
+    if (attempt.status !== 404) { r = attempt; break; }
+  }
+  if (!r) throw new Error('HTTP 404');
   if (!r.ok) throw new Error('HTTP ' + r.status);
   const j: any = await r.json();
   const items = j.items || j.Items || [];
   const subs = items.map((it: any) => {
+    // Kho kiểu-hoá trả `data` là OBJECT sẵn; kho cũ trả `dataJson` là chuỗi.
+    // Chỉ đọc `dataJson` thì mọi biểu đồ ra rỗng trong khi lưới vẫn có dữ liệu.
     let data: Record<string, any> = {};
-    const raw = it.dataJson || it.DataJson;
-    try { data = raw ? JSON.parse(raw) : {}; } catch { data = {}; }
+    const direct = it.data || it.Data;
+    if (direct && typeof direct === 'object') {
+      data = direct as Record<string, any>;
+    } else {
+      const raw = it.dataJson || it.DataJson || (typeof direct === 'string' ? direct : '');
+      try { data = raw ? JSON.parse(raw) : {}; } catch { data = {}; }
+    }
     return { id: it.submissionId || it.SubmissionId, submittedOnUtc: it.submittedOnUtc || it.SubmittedOnUtc, status: it.status || it.Status || '', data };
   });
   return {

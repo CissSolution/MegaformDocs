@@ -16,6 +16,10 @@ export interface PremiumStepDetail { step: number; navLabel: string; navSubtitle
 export interface WizardData {
   // 1 — Setup
   formName: string; formDescription: string; category: string; template: string | null;
+  // [WizardAutoName 2026-08-15] true while formName is the name we filled in from the picked
+  // template, false once the user types their own. Picking another template may overwrite an
+  // auto name; it must never overwrite a name somebody typed.
+  formNameAuto: boolean;
   // Selected REAL template (BuilderTemplates/List record, normalized) + custom-shell flag.
   // null for blank / built-in quick-start. Custom shell → faithful shell-preserving emit (② / ③).
   // [QuickStart 2026-07-24] This tracks the template SHAPE, not its licensing: the free bundled
@@ -41,7 +45,7 @@ export interface WizardData {
 
 export function defaultWizardData(): WizardData {
   return {
-    formName: '', formDescription: '', category: '', template: null,
+    formName: '', formDescription: '', category: '', template: null, formNameAuto: false,
     templateRecord: null, templateIsCustomShell: false, premiumFields: null, premiumStepDetails: [],
     isMultiStep: false, fields: [], formPages: [{ id: 'page-1', title: 'Step 1', fields: [] }], showProgressBar: true,
     approvalEnabled: false, approvalNodes: [], notifySubmitter: true, deadlineDays: '3',

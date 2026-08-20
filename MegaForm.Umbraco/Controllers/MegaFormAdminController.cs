@@ -30,12 +30,27 @@ namespace MegaForm.Umbraco.Controllers
             _formRepo = formRepo ?? throw new ArgumentNullException(nameof(formRepo));
         }
 
+        private void PublishAccessTokenToView()
+        {
+            // Umbraco 17 / Bellissima stores the OpenIddict access token in the
+            // HttpOnly cookie "umbAccessToken". The shared TS admin UI runs inside
+            // an iframe and needs the token to call MegaForm APIs. Because the
+            // cookie is HttpOnly, the client cannot read it directly; the server
+            // can read it from the request and publish it to the page as a JS
+            // global that the existing bundles already consume.
+            const string accessTokenCookie = "umbAccessToken";
+            var token = Request.Cookies[accessTokenCookie];
+            if (!string.IsNullOrEmpty(token))
+            {
+                ViewBag.MegaFormAccessToken = token;
+            }
+        }
+
         [Route("Admin")]
         [AllowAnonymous]
         public IActionResult Index()
         {
-            // The shared dashboard bundle fetches forms and stats client-side via
-            // the bearer token injected by megaform-umbraco-host.js.
+            PublishAccessTokenToView();
             return View("Dashboard");
         }
 
@@ -43,6 +58,7 @@ namespace MegaForm.Umbraco.Controllers
         [AllowAnonymous]
         public IActionResult Builder(int formId = 0)
         {
+            PublishAccessTokenToView();
             var form = formId > 0 ? _formRepo.GetForm(formId) : null;
             ViewBag.FormId = formId;
             ViewBag.SchemaJson = System.Net.WebUtility.HtmlEncode(form?.SchemaJson ?? "{}");
@@ -55,6 +71,7 @@ namespace MegaForm.Umbraco.Controllers
         [AllowAnonymous]
         public IActionResult Submissions(int formId = 0)
         {
+            PublishAccessTokenToView();
             ViewBag.FormId = formId;
             return View();
         }
@@ -63,6 +80,7 @@ namespace MegaForm.Umbraco.Controllers
         [AllowAnonymous]
         public IActionResult Languages()
         {
+            PublishAccessTokenToView();
             return View();
         }
     }

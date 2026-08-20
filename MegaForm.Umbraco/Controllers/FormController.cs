@@ -33,6 +33,7 @@ namespace MegaForm.Umbraco.Controllers
         }
 
         [HttpGet("/megaform/form/{id:int}")]
+        [HttpGet("/f/{id:int}")]
         public async Task<IActionResult> View(int id)
         {
             var form = _formRepo.GetForm(id);
@@ -45,6 +46,7 @@ namespace MegaForm.Umbraco.Controllers
         }
 
         [HttpGet("/megaform/form/{id:int}/embed")]
+        [HttpGet("/f/{id:int}/embed")]
         public async Task<IActionResult> Embed(int id)
         {
             var form = _formRepo.GetForm(id);
@@ -56,6 +58,7 @@ namespace MegaForm.Umbraco.Controllers
         }
 
         [HttpGet("/megaform/form/{id:int}/preview")]
+        [HttpGet("/f/{id:int}/preview")]
         [Authorize(Policy = "MegaFormBackOffice")]
         public async Task<IActionResult> Preview(int id)
         {

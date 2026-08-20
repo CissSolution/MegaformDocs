@@ -12,7 +12,7 @@ import { renderPublish } from './step-publish';
 import { renderPreview } from './preview';
 import { showTrialUpgrade } from '@shared/trial';
 import { wizardToDto } from './transform';
-import { postWizardForm, builderUrlFor, wizardCtx } from './save';
+import { postWizardForm, liveFormUrlFor, wizardCtx } from './save';
 import { loadSiteCatalog, resetSiteCatalog } from './principals';
 import { resetTemplates } from './templates';
 
@@ -77,7 +77,19 @@ export function openFormCreationWizard(): void {
     footer.appendChild(h('button', { class: 'mfw-btn', disabled: step === 0 ? '' : null, onclick: () => { if (step > 0) { step--; renderAll(); } } }, [icon('fa-chevron-left'), document.createTextNode(' ' + wt('wiz.back', 'Back'))]));
     footer.appendChild(h('div', { class: 'dots' }, WIZARD_STEPS.map((_, i) => h('i', { class: i === step ? 'on' : '' }))));
     if (step < 4) {
-      footer.appendChild(h('button', { class: 'mfw-btn primary', disabled: canLeave(step) ? null : '', onclick: () => { if (canLeave(step)) { step++; renderAll(); } } }, [document.createTextNode(wt('wiz.continue', 'Continue') + ' '), icon('fa-chevron-right')]));
+      // [WizardAutoName 2026-08-15] A disabled button that gives no reason is a dead end: the
+      // owner picked a template, pressed Continue, and nothing happened or explained itself.
+      // Templates now fill the name in (step-setup autoNamePatch), so this is the rarer case of
+      // a blank start — say what is missing rather than just greying out.
+      const blocked = !canLeave(step);
+      if (blocked) {
+        footer.appendChild(h('span', { class: 'mfw-blocked-hint' }, wt('wiz.need_name', 'Enter a form name to continue')));
+      }
+      footer.appendChild(h('button', {
+        class: 'mfw-btn primary', disabled: blocked ? '' : null,
+        title: blocked ? wt('wiz.need_name', 'Enter a form name to continue') : null,
+        onclick: () => { if (canLeave(step)) { step++; renderAll(); } },
+      }, [document.createTextNode(wt('wiz.continue', 'Continue') + ' '), icon('fa-chevron-right')]));
     } else {
       footer.appendChild(h('button', { class: 'mfw-btn primary cta', disabled: busy ? '' : null, onclick: doCreate }, [icon(busy ? 'fa-spinner fa-spin' : 'fa-wand-magic-sparkles'), document.createTextNode(' ' + (busy ? wt('wiz.creating', 'Creating…') : wt('wiz.create', 'Create Form')))]));
     }
@@ -93,7 +105,8 @@ export function openFormCreationWizard(): void {
     try {
       const dto = wizardToDto(state, wizardCtx());
       const res = await postWizardForm(dto);
-      if (res.ok && res.formId) { window.location.href = builderUrlFor(res.formId); return; }
+      // [WizardToLiveForm 2026-08-15] Land on the live form, not the builder — see liveFormUrlFor.
+      if (res.ok && res.formId) { window.location.href = liveFormUrlFor(res.formId); return; }
       busy = false; renderFooter();
       // [TrialTighten v20260706] Server returns 402 + "trial_form_limit" when a trial site is at the
       // MaxTrialForms cap — show the Upgrade CTA instead of a raw HTTP error.

@@ -1,0 +1,85 @@
+﻿@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage
+@{
+    Layout = null;
+    var intro = Model.Value<string>("intro");
+    var formId = Model.Value<int?>("megaFormPicker") ?? 0;
+    var articles = Model.Children.ToList();
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@Model.Name</title>
+    @* asp-append-version: ASP.NET Core băm nội dung file và gắn ?v=<hash>.
+       Không có nó, "/css/news-demo.css" là một URL bất biến — sửa xong CSS thì
+       trình duyệt nào đã mở trang một lần vẫn dùng bản cũ, và bản vá trông như
+       chưa từng được áp. Đã xảy ra thật: thẻ bọc quanh form đã gỡ khỏi CSS trên
+       máy chủ mà màn hình vẫn còn nguyên. *@
+    <link rel="stylesheet" href="/css/news-demo.css" asp-append-version="true" />
+</head>
+<body class="news-body">
+    <header class="news-top">
+        <div class="news-top-inner">
+            <a class="news-brand" href="@Model.Url()">MegaForm <span>Newsroom</span></a>
+            <span class="news-top-note">Umbraco demo site · every article carries a live form</span>
+        </div>
+    </header>
+
+    <div class="news-shell">
+        <div class="news-hero">
+            <p class="news-kicker">Newsroom</p>
+            <h1>@Model.Name</h1>
+            @if (!string.IsNullOrWhiteSpace(intro))
+            {
+                <p class="news-lede">@intro</p>
+            }
+        </div>
+
+        @if (articles.Count == 0)
+        {
+            <p class="news-empty">No articles published yet.</p>
+        }
+        else
+        {
+            <ul class="news-grid">
+                @foreach (var article in articles)
+                {
+                    var date = article.Value<DateTime?>("articleDate") ?? article.CreateDate;
+                    var topic = article.Value<string>("topic");
+                    var cardSummary = article.Value<string>("summary");
+                    var articleFormId = article.Value<int?>("megaFormPicker") ?? 0;
+                    <li class="news-card">
+                        @if (!string.IsNullOrWhiteSpace(topic))
+                        {
+                            <span class="news-tag">@topic</span>
+                        }
+                        <h2><a href="@article.Url()">@article.Name</a></h2>
+                        @* A generic call in an implicit expression makes the Razor parser read
+                           <string> as markup, so the value is hoisted into a variable above. *@
+                        <p>@cardSummary</p>
+                        <div class="news-meta">
+                            <span>@date.ToString("d MMMM yyyy")</span>
+                            @if (articleFormId > 0)
+                            {
+                                <span>Form #@articleFormId</span>
+                            }
+                        </div>
+                        <a class="news-card-cta" href="@article.Url()">Read and fill in the form →</a>
+                    </li>
+                }
+            </ul>
+        }
+
+        @if (formId > 0)
+        {
+            <section class="news-form">
+                @* Không tiêu đề, không lời dẫn ở đây: mỗi template MegaForm đã mang
+                   tiêu đề và lời dẫn trong chính bản thiết kế của nó. Thêm một cặp
+                   nữa ở ngoài là hai tiêu đề chồng nhau. *@
+                <megaform form-id="@formId" content-id="@Model.Id" view-type="submit"></megaform>
+            </section>
+        }
+    </div>
+</body>
+</html>

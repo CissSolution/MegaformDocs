@@ -42,9 +42,11 @@ namespace MegaForm.Umbraco.Controllers
         private readonly IUmbracoModuleConfigService _moduleConfigService;
         private readonly ILogger<MegaFormApiController> _logger;
         private readonly IWebHostEnvironment _env;
+        private readonly Microsoft.Extensions.Configuration.IConfiguration _configuration;
         private readonly Services.UmbracoBuilderTemplateCatalogService _templateCatalog;
         private readonly PermissionCatalogService _permissionCatalog;
         private readonly IWorkflowLibraryRepository _workflowLibrary;
+        private readonly MegaForm.Core.Services.AiKnowledge.IAiKnowledgeService _knowledge;
         private readonly IWorkflowNodeUiSchemaProvider _nodeSchemaProvider;
         private readonly WorkflowTaskService _workflowTasks;
         private readonly IMegaFormPermissionService _nativePermissions;
@@ -62,6 +64,7 @@ namespace MegaForm.Umbraco.Controllers
             IUmbracoModuleConfigService moduleConfigService,
             ILogger<MegaFormApiController> logger,
             IWebHostEnvironment env,
+            Microsoft.Extensions.Configuration.IConfiguration configuration,
             Services.UmbracoBuilderTemplateCatalogService templateCatalog,
             PermissionCatalogService permissionCatalog,
             IWorkflowLibraryRepository workflowLibrary,
@@ -70,7 +73,8 @@ namespace MegaForm.Umbraco.Controllers
             WorkflowTaskService workflowTasks,
             IMegaFormPermissionService nativePermissions,
             SubmissionQueryService submissionQueries,
-            SubmissionDataResolver submissionDataResolver)
+            SubmissionDataResolver submissionDataResolver,
+            MegaForm.Core.Services.AiKnowledge.IAiKnowledgeService knowledge = null)
         {
             _formRepo = formRepo;
             _subRepo = subRepo;
@@ -80,6 +84,7 @@ namespace MegaForm.Umbraco.Controllers
             _moduleConfigService = moduleConfigService;
             _logger = logger;
             _env = env;
+            _configuration = configuration;
             _templateCatalog = templateCatalog;
             _permissionCatalog = permissionCatalog;
             _workflowLibrary = workflowLibrary;
@@ -89,6 +94,7 @@ namespace MegaForm.Umbraco.Controllers
             _nativePermissions = nativePermissions;
             _submissionQueries = submissionQueries;
             _submissionDataResolver = submissionDataResolver;
+            _knowledge = knowledge;
         }
 
         // ── Form CRUD ──
@@ -174,6 +180,21 @@ namespace MegaForm.Umbraco.Controllers
             return Ok(form);
         }
 
+        /// <summary>
+        /// Lightweight form lookup used by the backoffice UFM Block List label component.
+        /// Resolves a form id to its display title and status so block labels can show
+        /// a human-readable form name instead of a raw id.
+        /// </summary>
+        [HttpGet]
+        [Authorize("MegaFormApi")]
+        [Route("/umbraco/MegaForm/MegaFormApi/Form/Lookup")]
+        public IActionResult FormLookup(int formId)
+        {
+            var form = _formRepo.GetForm(formId);
+            if (form == null) return NotFound();
+            return Ok(new { form.FormId, form.Title, form.Status });
+        }
+
         [HttpPost]
         [MegaFormAuthorize(MegaFormPermissionConstants.EditLetter)]
         [Route("/umbraco/MegaForm/MegaFormApi/Form/Save")]
@@ -185,7 +206,34 @@ namespace MegaForm.Umbraco.Controllers
         public IActionResult ListBuilderTemplates()
         {
             var templates = _templateCatalog?.List() ?? new System.Collections.Generic.List<Services.UmbracoBuilderTemplateCatalogService.BuilderTemplateRecord>();
-            return Ok(templates);
+            // NewtonsoftJson, không phải Ok(): record mang JArray/JObject của Newtonsoft.
+            return NewtonsoftJson(templates);
+        }
+
+        /// <summary>
+        /// Serialize bằng Newtonsoft rồi trả thẳng, thay cho <c>Ok(value)</c>.
+        /// </summary>
+        /// <remarks>
+        /// BẮT BUỘC dùng cho mọi payload còn mang kiểu <c>JObject</c>/<c>JArray</c>/<c>JToken</c>
+        /// của Newtonsoft. ASP.NET Core serialize bằng System.Text.Json, và STJ không hiểu những
+        /// kiểu ấy: nó chỉ thấy chúng cài đặt <c>IEnumerable&lt;JToken&gt;</c> nên xuất ra MẢNG.
+        /// Một field của template đi qua đường đó biến thành
+        /// <c>[[[]],[[]],[[]],[[]],[[]]]</c> — đúng số phần tử, không còn một thuộc tính nào.
+        ///
+        /// Hỏng theo kiểu im lặng nhất có thể: HTTP 200, mảng đúng 19 phần tử, không lỗi ở đâu
+        /// cả. Trình duyệt đọc <c>field.type</c> ra <c>undefined</c>, wizard lọc bỏ mọi field
+        /// không có type, và người dùng nhận một form trắng trơn từ một template có 19 field —
+        /// còn theme thì vẫn đúng, vì theme do wizard tự dựng chứ không đi qua đây.
+        /// </remarks>
+        private ContentResult NewtonsoftJson(object value)
+        {
+            var json = JsonConvert.SerializeObject(value, new JsonSerializerSettings
+            {
+                // camelCase để giữ nguyên hợp đồng mà STJ đang trả ra (slug, title, fields…).
+                // Chỉ áp cho thuộc tính POCO; nội dung JObject/JArray giữ nguyên tên khoá.
+                ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(),
+            });
+            return Content(json, "application/json; charset=utf-8");
         }
 
         [HttpGet]
@@ -443,7 +491,7 @@ namespace MegaForm.Umbraco.Controllers
         // ── Submissions ──
 
         [HttpGet]
-        [AllowAnonymous]
+        [Authorize(Policy = "MegaFormApi")]
         public IActionResult GetSubmissions(int formId, string status = null,
             string search = null, DateTime? dateFrom = null, DateTime? dateTo = null,
             int pageIndex = 0, int pageSize = 50, string fieldFilters = null)
@@ -521,7 +569,7 @@ namespace MegaForm.Umbraco.Controllers
         }
 
         [HttpGet]
-        [AllowAnonymous]
+        [Authorize(Policy = "MegaFormApi")]
         [Route("/umbraco/MegaForm/MegaFormApi/Submissions/List")]
         public IActionResult SubmissionsList(int formId = 0, string status = null,
             string search = null, DateTime? dateFrom = null, DateTime? dateTo = null,
@@ -659,7 +707,7 @@ namespace MegaForm.Umbraco.Controllers
         }
 
         [HttpGet]
-        [AllowAnonymous]
+        [Authorize(Policy = "MegaFormApi")]
         public IActionResult GetSubmission(int submissionId)
         {
             var sub = _subRepo.Get(submissionId);
@@ -670,7 +718,7 @@ namespace MegaForm.Umbraco.Controllers
         }
 
         [HttpPost]
-        [Authorize]
+        [Authorize(Policy = "MegaFormApi")]
         public IActionResult UpdateSubmissionStatus(int submissionId, string status)
         {
             var sub = _subRepo.Get(submissionId);
@@ -785,7 +833,7 @@ namespace MegaForm.Umbraco.Controllers
         // ── Permissions ──
 
         [HttpGet("Permissions/Get")]
-        [Authorize]
+        [Authorize(Policy = "MegaFormApi")]
         [Route("/umbraco/MegaForm/MegaFormApi/Permissions/Get")]
         public IActionResult GetPermissions(int formId)
         {
@@ -796,7 +844,7 @@ namespace MegaForm.Umbraco.Controllers
         }
 
         [HttpGet("Permissions/Catalog")]
-        [Authorize]
+        [Authorize(Policy = "MegaFormApi")]
         [Route("/umbraco/MegaForm/MegaFormApi/Permissions/Catalog")]
         public IActionResult GetPermissionsCatalog(int formId)
         {
@@ -819,7 +867,7 @@ namespace MegaForm.Umbraco.Controllers
         }
 
         [HttpPost("Permissions/Save")]
-        [Authorize]
+        [Authorize(Policy = "MegaFormApi")]
         [Route("/umbraco/MegaForm/MegaFormApi/Permissions/Save")]
         public IActionResult SavePermissions([FromBody] JObject body)
         {

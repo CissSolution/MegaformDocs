@@ -24,7 +24,7 @@ namespace MegaForm.Umbraco.Controllers
     {
         [HttpPost]
         [Route("/umbraco/MegaForm/MegaFormApi/Submissions/BulkDelete")]
-        [Authorize]
+        [Authorize(Policy = "MegaFormApi")]
         public IActionResult BulkDeleteSubmissions([FromBody] JObject body)
         {
             int formId = body?.Value<int>("formId") ?? 0;
@@ -44,7 +44,7 @@ namespace MegaForm.Umbraco.Controllers
         }
 
         [HttpDelete]
-        [Authorize]
+        [Authorize(Policy = "MegaFormApi")]
         [Route("/umbraco/MegaForm/MegaFormApi/Submissions/{submissionId:int}")]
         public IActionResult DeleteSubmission(int submissionId)
         {
@@ -59,7 +59,7 @@ namespace MegaForm.Umbraco.Controllers
 
         [HttpPost]
         [Route("/umbraco/MegaForm/MegaFormApi/Submissions/UpdateData")]
-        [Authorize]
+        [Authorize(Policy = "MegaFormApi")]
         public IActionResult UpdateSubmissionData(int submissionId, [FromBody] JObject body)
         {
             if (submissionId <= 0) return BadRequest(new { error = "submissionId required" });
@@ -80,7 +80,7 @@ namespace MegaForm.Umbraco.Controllers
         // CanViewSubmissionRow — a submitter must be able to follow their own ticket even on
         // forms with no permission rules.
         [HttpGet]
-        [Authorize]
+        [Authorize(Policy = "MegaFormApi")]
         [Route("/umbraco/MegaForm/MegaFormApi/Submissions/Mine")]
         public async Task<IActionResult> ListMySubmissions(
             [FromServices] SubmissionQueryService submissionQueries,

@@ -1,0 +1,64 @@
+﻿@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage
+@{
+    Layout = null;
+    var date = Model.Value<DateTime?>("articleDate") ?? Model.CreateDate;
+    var topic = Model.Value<string>("topic");
+    var summary = Model.Value<string>("summary");
+    var body = Model.Value<string>("body");
+    var formId = Model.Value<int?>("megaFormPicker") ?? 0;
+    var parent = Model.Parent;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@Model.Name</title>
+    @* asp-append-version: ASP.NET Core băm nội dung file và gắn ?v=<hash>.
+       Không có nó, "/css/news-demo.css" là một URL bất biến — sửa xong CSS thì
+       trình duyệt nào đã mở trang một lần vẫn dùng bản cũ, và bản vá trông như
+       chưa từng được áp. Đã xảy ra thật: thẻ bọc quanh form đã gỡ khỏi CSS trên
+       máy chủ mà màn hình vẫn còn nguyên. *@
+    <link rel="stylesheet" href="/css/news-demo.css" asp-append-version="true" />
+</head>
+<body class="news-body">
+    <header class="news-top">
+        <div class="news-top-inner">
+            <a class="news-brand" href="@(parent != null ? parent.Url() : "/")">MegaForm <span>Newsroom</span></a>
+            <span class="news-top-note">Umbraco demo site · every article carries a live form</span>
+        </div>
+    </header>
+
+    <div class="news-shell news-article">
+        @if (parent != null)
+        {
+            <a class="news-back" href="@parent.Url()">← All stories</a>
+        }
+
+        <p class="news-kicker">@(string.IsNullOrWhiteSpace(topic) ? "News" : topic) · @date.ToString("d MMMM yyyy")</p>
+        <h1>@Model.Name</h1>
+        @if (!string.IsNullOrWhiteSpace(summary))
+        {
+            <p class="news-lede">@summary</p>
+        }
+
+        <article class="news-copy">
+            @Html.Raw(body)
+        </article>
+
+        @if (formId > 0)
+        {
+            <section class="news-form">
+                @* Không tiêu đề, không lời dẫn ở đây: mỗi template MegaForm đã mang
+                   tiêu đề và lời dẫn trong chính bản thiết kế của nó. Thêm một cặp
+                   nữa ở ngoài là hai tiêu đề chồng nhau. *@
+                <megaform form-id="@formId" content-id="@Model.Id" view-type="submit"></megaform>
+            </section>
+        }
+        else
+        {
+            <p class="news-empty">This article has no MegaForm selected. Pick one in the Form tab of the content node.</p>
+        }
+    </div>
+</body>
+</html>

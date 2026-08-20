@@ -31,6 +31,34 @@ export default class MegaFormFormSettingsView extends UmbLitElement {
     .scroll { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 20px 20px 28px; }
     .section { background: var(--uui-color-surface, #fff); border: 1px solid var(--uui-color-border, #e2e8f0);
                border-radius: 6px; margin-bottom: 16px; }
+    /* [AfterSubmitFlow 2026-08-20] Chuỗi bước theo lối Umbraco Forms: mỗi việc
+       chạy sau khi gửi là một BƯỚC trong một dòng chảy, không phải một ô nhập
+       nằm rời trong màn cài đặt. Trước đây "After submission" và "Notifications"
+       là hai mục cách nhau nửa màn hình, nên không đọc ra được rằng cả hai đều
+       xảy ra sau cùng một cú bấm Gửi. */
+    .flow { padding: 6px 16px 14px; }
+    .flow-head { display: flex; align-items: center; gap: 10px; padding: 10px 0 2px; }
+    .flow-head .bullet { width: 26px; height: 26px; border-radius: 50%; flex: 0 0 26px;
+            display: flex; align-items: center; justify-content: center; font-size: 13px;
+            background: var(--uui-color-surface-alt, #f1f5f9); color: var(--uui-color-text, #0f172a); }
+    .flow-head b { font-size: 14px; }
+    .flow-head small { display: block; color: var(--uui-color-text-alt, #64748b); font-size: 12px; }
+    /* Đường nối dọc: thứ khiến các bước đọc ra như một dòng chảy chứ không phải
+       một danh sách rời. */
+    .flow-steps { margin: 6px 0 0 12px; padding: 0 0 0 20px; border-left: 2px solid var(--uui-color-border, #e2e8f0); }
+    .step { position: relative; margin: 8px 0; }
+    .step > .head { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
+            background: var(--uui-color-surface, #fff); border: 1px solid var(--uui-color-border, #e2e8f0);
+            border-radius: 6px; padding: 10px 12px; cursor: pointer; font: inherit; color: inherit; }
+    .step > .head:hover { border-color: var(--uui-color-border-emphasis, #cbd5e1); }
+    .step > .head .ic { width: 24px; height: 24px; flex: 0 0 24px; display: flex; align-items: center;
+            justify-content: center; color: var(--uui-color-text-alt, #64748b); }
+    .step > .head .txt b { display: block; font-size: 13px; }
+    .step > .head .txt small { color: var(--uui-color-text-alt, #64748b); font-size: 12px; }
+    .step .body { padding: 10px 12px 4px 46px; }
+    .step .body label { display: block; font-size: 12px; font-weight: 600; margin: 8px 0 4px; }
+    .step.add > .head { border-style: dashed; color: var(--uui-color-text-alt, #64748b); }
+    .flow .empty { color: var(--uui-color-text-alt, #64748b); font-size: 12px; padding: 8px 0 2px 32px; }
     .section > h3 { margin: 0; padding: 12px 16px; font-size: 14px; border-bottom: 1px solid var(--uui-color-border, #e2e8f0);
                     background: var(--uui-color-surface-alt, #f6f7f9); border-radius: 6px 6px 0 0; }
     /* Umbraco Forms' proportions: the explanation is part of the label, not a tooltip. */
@@ -62,7 +90,8 @@ export default class MegaFormFormSettingsView extends UmbLitElement {
     button.link { background: var(--uui-color-surface, #fff); }
   `;
 
-  static properties = { _form: { state: true }, _busy: { state: true }, _error: { state: true }, _ok: { state: true } };
+  static properties = { _form: { state: true }, _busy: { state: true }, _error: { state: true }, _ok: { state: true },
+                        _openStep: { state: true }, _adding: { state: true } };
 
   constructor() {
     super();
@@ -128,6 +157,9 @@ export default class MegaFormFormSettingsView extends UmbLitElement {
         successMessage: raw.successMessage ?? raw.SuccessMessage ?? '',
         redirectUrl: raw.redirectUrl ?? raw.RedirectUrl ?? '',
         notifyEmails: raw.notifyEmails ?? raw.NotifyEmails ?? '',
+        // Cột riêng trên MF_Forms — lưu nhầm vào settingsJson thì bước webhook
+        // hiện đủ trên màn hình mà lúc gửi form chẳng gọi đi đâu cả.
+        webhookUrl: raw.webhookUrl ?? raw.WebhookUrl ?? '',
         requireAuth: !!(raw.requireAuth ?? raw.RequireAuth),
         enableCaptcha: !!(raw.enableCaptcha ?? raw.EnableCaptcha),
         enableSaveResume: !!(raw.enableSaveResume ?? raw.EnableSaveResume),
@@ -158,6 +190,7 @@ export default class MegaFormFormSettingsView extends UmbLitElement {
           successMessage: f.successMessage,
           redirectUrl: f.redirectUrl,
           notifyEmails: f.notifyEmails,
+          webhookUrl: f.webhookUrl,
           requireAuth: f.requireAuth,
           enableCaptcha: f.enableCaptcha,
           enableSaveResume: f.enableSaveResume,
@@ -171,6 +204,135 @@ export default class MegaFormFormSettingsView extends UmbLitElement {
     } finally {
       this._busy = false;
     }
+  }
+
+  /**
+   * [AfterSubmitFlow 2026-08-20] Những gì xảy ra SAU khi gửi, đọc như một dòng chảy.
+   *
+   * Umbraco Forms trình bày phần này thành các BƯỚC dưới hai sự kiện — "On Submit"
+   * và "On Approve" — nên nhìn một cái là biết cú bấm Gửi kéo theo những việc gì,
+   * theo thứ tự nào. MegaForm trước đây có đúng những việc ấy nhưng nằm rải: lời
+   * cảm ơn ở mục "After submission", địa chỉ nhận thư ở mục "Notifications" cách
+   * đó nửa màn hình, và không chỗ nào nói rằng cả hai cùng chạy sau một cú bấm.
+   *
+   * Đây KHÔNG phải tính năng mới: mỗi bước đọc và ghi đúng những trường vốn có
+   * (successMessage, redirectUrl, notifyEmails, webhookUrl). Chỉ cách bày là mới.
+   */
+  #afterSubmitFlow(f) {
+    const st = f.settings || {};
+    const hasEmail = !!String(f.notifyEmails || '').trim();
+    const hasHook = !!String(f.webhookUrl || '').trim();
+    // Bước "hiện lời cảm ơn / chuyển trang" luôn có mặt: mọi form đều làm một
+    // trong hai việc đó, kể cả khi biên tập viên chưa gõ gì.
+    const steps = [
+      {
+        key: 'message',
+        icon: 'icon-message',
+        title: f.redirectUrl ? 'Go to page' : 'Submit message',
+        desc: f.redirectUrl
+          ? `Chuyển tới ${f.redirectUrl}`
+          : 'Hiện một lời nhắn thay cho form sau khi gửi',
+        body: () => html`
+          <label>Lời nhắn</label>
+          <textarea @input="${(e) => this.#set('successMessage', e.target.value)}">${f.successMessage}</textarea>
+          <label>Hoặc chuyển tới trang</label>
+          <input type="text" .value="${f.redirectUrl}" placeholder="/thank-you/"
+                 @input="${(e) => this.#set('redirectUrl', e.target.value)}" />
+          <p class="hint">Để trống ô này thì lời nhắn ở trên được hiện; điền vào thì trình duyệt đi tới trang đó.</p>`,
+      },
+    ];
+
+    if (hasEmail) {
+      steps.push({
+        key: 'email',
+        icon: 'icon-message',
+        title: `Send email to ${f.notifyEmails}`,
+        desc: 'Gửi nội dung bài vừa nhận tới các địa chỉ này',
+        body: () => html`
+          <label>Địa chỉ nhận</label>
+          <input type="text" .value="${f.notifyEmails}" placeholder="team@example.com, ops@example.com"
+                 @input="${(e) => this.#set('notifyEmails', e.target.value)}" />
+          <p class="hint">Cách nhau bằng dấu phẩy. Bỏ trống là gỡ bước này khỏi dòng chảy.</p>`,
+      });
+    }
+
+    if (hasHook) {
+      steps.push({
+        key: 'webhook',
+        icon: 'icon-brackets',
+        title: 'Send to webhook',
+        desc: String(f.webhookUrl),
+        body: () => html`
+          <label>Địa chỉ webhook</label>
+          <input type="text" .value="${f.webhookUrl}" placeholder="https://…"
+                 @input="${(e) => this.#set('webhookUrl', e.target.value)}" />`,
+      });
+    }
+
+    const addable = [
+      !hasEmail ? { key: 'email', label: 'Send email', run: () => this.#set('notifyEmails', 'team@example.com') } : null,
+      !hasHook ? { key: 'webhook', label: 'Send to webhook', run: () => this.#set('webhookUrl', 'https://') } : null,
+    ].filter(Boolean);
+
+    return html`
+      <div class="flow">
+        <div class="flow-head">
+          <span class="bullet">✓</span>
+          <span><b>On Submit</b><small>Những bước này chạy ngay khi form được gửi đi</small></span>
+        </div>
+        <div class="flow-steps">
+          ${steps.map((step) => this.#flowStep(step))}
+          ${addable.length
+            ? html`
+              <div class="step add">
+                <button class="head" @click="${() => { this._adding = !this._adding; }}">
+                  <span class="ic">+</span>
+                  <span class="txt"><b>Add workflow</b><small>Thêm một việc chạy sau khi gửi</small></span>
+                </button>
+                ${this._adding
+                  ? html`<div class="body">
+                      ${addable.map((a) => html`
+                        <button class="link" @click="${() => { a.run(); this._adding = false; this._openStep = a.key; }}">
+                          ${a.label}
+                        </button><br />`)}
+                    </div>`
+                  : nothing}
+              </div>`
+            : nothing}
+        </div>
+
+        <div class="flow-head" style="margin-top:14px">
+          <span class="bullet">👍</span>
+          <span><b>On Approve</b><small>Chạy khi một bài gửi được duyệt</small></span>
+        </div>
+        <div class="flow-steps">
+          <p class="empty">
+            ${this.#hasWorkflow()
+              ? 'Các bước duyệt được dựng ở màn Workflow của form này.'
+              : 'Form này chưa có bước duyệt nào. Bật duyệt ở màn Workflow thì các bước sẽ hiện ở đây.'}
+          </p>
+        </div>
+      </div>`;
+  }
+
+  #flowStep(step) {
+    const open = this._openStep === step.key;
+    return html`
+      <div class="step">
+        <button class="head" @click="${() => { this._openStep = open ? '' : step.key; }}">
+          <span class="ic"><uui-icon name="${step.icon}"></uui-icon></span>
+          <span class="txt"><b>${step.title}</b><small>${step.desc}</small></span>
+        </button>
+        ${open ? html`<div class="body">${step.body()}</div>` : nothing}
+      </div>`;
+  }
+
+  /** Form có bước duyệt hay không — đọc từ schema, không gọi thêm mạng. */
+  #hasWorkflow() {
+    const wf = (this._form && this._form.schema && (this._form.schema.workflow || this._form.schema.Workflow)) || null;
+    if (!wf) return false;
+    const nodes = wf.nodes || wf.Nodes || [];
+    return Array.isArray(nodes) && nodes.length > 0;
   }
 
   #set(key, value) { this._form = { ...this._form, [key]: value }; }
@@ -226,12 +388,8 @@ export default class MegaFormFormSettingsView extends UmbLitElement {
         </div>
 
         <div class="section">
-          <h3>After submission</h3>
-          ${this.#row('Message', 'Shown in place of the form once it has been sent.',
-            html`<textarea @input="${(e) => this.#set('successMessage', e.target.value)}">${f.successMessage}</textarea>`)}
-          ${this.#row('Redirect URL', 'Leave empty to show the message instead of navigating away.',
-            html`<input type="text" .value="${f.redirectUrl}" placeholder="/thank-you/"
-                    @input="${(e) => this.#set('redirectUrl', e.target.value)}" />`)}
+          <h3>After submit</h3>
+          ${this.#afterSubmitFlow(f)}
         </div>
 
         <div class="section">
@@ -251,13 +409,7 @@ export default class MegaFormFormSettingsView extends UmbLitElement {
                  <button class="link" @click="${() => this.#openEditor('rules')}">Open rule builder</button>`)}
         </div>
 
-        <div class="section">
-          <h3>Notifications</h3>
-          ${this.#row('Notify these addresses',
-            'Comma-separated. Each submission is emailed to them using the notification template.',
-            html`<input type="text" .value="${f.notifyEmails}" placeholder="team@example.com, ops@example.com"
-                    @input="${(e) => this.#set('notifyEmails', e.target.value)}" />`)}
-        </div>
+
       </div>
 
       <div class="footer">

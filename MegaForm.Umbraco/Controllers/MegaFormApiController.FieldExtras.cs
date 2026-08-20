@@ -23,7 +23,8 @@ namespace MegaForm.Umbraco.Controllers
             int formId,
             string fieldKey,
             [FromServices] IConnectionRegistry connectionRegistry,
-            [FromServices] MegaForm.Core.Services.TypedSubmission.SubmissionDataResolver dataResolver = null)
+            [FromServices] MegaForm.Core.Services.TypedSubmission.SubmissionDataResolver dataResolver = null,
+            [FromServices] MegaForm.Core.Services.Prevalues.PrevalueOptionsResolver prevalueResolver = null)
         {
             if (formId <= 0 || string.IsNullOrWhiteSpace(fieldKey))
                 return BadRequest(new { error = "formId and fieldKey required" });
@@ -38,7 +39,7 @@ namespace MegaForm.Umbraco.Controllers
                 parameters[name] = kv.Value.ToString();
             }
 
-            var svc = new FieldOptionsService(connectionRegistry, _formRepo, _subRepo, "DashboardDatabase", dataResolver);
+            var svc = new FieldOptionsService(connectionRegistry, _formRepo, _subRepo, "DashboardDatabase", dataResolver, prevalueResolver);
             var options = svc.GetOptions(formId, fieldKey, parameters);
             return Ok(options);
         }

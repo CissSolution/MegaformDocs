@@ -114,6 +114,60 @@ function syncPlatformTrialFlags(): void {
   else delete platform.trialFooterText;
 }
 
+// [AssetUrlRewrite v20260819-01] Templates (especially premium gallery seeds)
+// hard-code asset paths against the DNN mount (/DesktopModules/MegaForm/Assets/...).
+// At runtime on Umbraco/Oqtane/Web those images must be served from the host's
+// asset root. This helper rewrites the legacy prefix to the detected platform base.
+const DNN_ASSET_PREFIX = '/DesktopModules/MegaForm/Assets';
+function getRendererAssetBase(): string {
+  const w = window as any;
+  const pf = w.__MF_PLATFORM__ || {};
+  if (pf.assetBase) return String(pf.assetBase).replace(/\/+$/, '');
+  const platform = String(pf.platform || '').toLowerCase();
+  if (platform === 'oqtane') return '/Modules/MegaForm';
+  if (platform === 'umbraco') return '/App_Plugins/MegaForm';
+  if (platform === 'web' || platform === 'aspcore') {
+    // Standalone AspNetCore.Component host serves static assets under /megaform by default.
+    return '/megaform';
+  }
+  // Derive from apiBaseUrl when __MF_PLATFORM__ is not injected (public pages / previews).
+  const apiBase = String(config?.apiBaseUrl || '').toLowerCase();
+  if (apiBase.indexOf('/umbraco/megaform/megaformapi') >= 0) return '/App_Plugins/MegaForm';
+  if (apiBase.indexOf('/modules/megaform') >= 0) return '/Modules/MegaForm';
+  if (apiBase.indexOf('/megaform') >= 0) return '/megaform';
+  // DNN default fallback (already matches the original hard-coded prefix).
+  return DNN_ASSET_PREFIX;
+}
+function resolveAssetUrls(text: string): string {
+  const base = getRendererAssetBase();
+  if (base === DNN_ASSET_PREFIX) return text;
+  return String(text || '').split(DNN_ASSET_PREFIX).join(base);
+}
+
+// [TemplateAssetEditor v2026-08-20] Resolve {{mf:asset:<bindingKey>}} to markup.
+function resolveAssetToken(bindingKey: string, settings: any): string {
+  const assets = settings?.themeAssets || (settings as any)?.ThemeAssets || {};
+  const bindings = settings?.assetBindings || (settings as any)?.AssetBindings || {};
+  const assetKey = bindings[bindingKey] || bindingKey;
+  const asset = assets[assetKey];
+  if (!asset) return `<!-- mf-asset missing: ${esc(bindingKey)} -->`;
+  const type = String(asset.type || '').toLowerCase();
+  if (type === 'image') {
+    const url = esc(String(asset.value || ''));
+    const alt = esc(String(asset.alt || asset.name || bindingKey));
+    return url ? `<img src="${url}" alt="${alt}" class="mf-asset-image mf-asset-${esc(bindingKey)}" />` : `<!-- mf-asset image empty: ${esc(bindingKey)} -->`;
+  }
+  if (type === 'svg' || type === 'shape') {
+    let svg = String(asset.value || '');
+    if (!svg) return `<!-- mf-asset svg empty: ${esc(bindingKey)} -->`;
+    // Apply optional fill override
+    const fill = String(asset.fill || '').trim();
+    if (fill) svg = svg.replace(/fill=["'][^"']*["']/gi, `fill="${esc(fill)}"`);
+    return svg;
+  }
+  return `<!-- mf-asset unsupported type: ${esc(type)} -->`;
+}
+
 function getTrialSubmitNoteText(): string {
   const settings = (config?.schema?.settings || {}) as any;
   const rawText = String(settings.trialFooterText || settings.TrialFooterText || '').trim();
@@ -389,8 +443,8 @@ function applyFormPresentationSettings(settings: any): void {
   }
 
   const cssOverrides = collectThemeCssOverrides(settings, themePatch);
-  const customCss = String(settings?.customCss || settings?.CustomCss || themePatch.customCss || '');
-  const customHtml = String(settings?.customHtml || settings?.CustomHtml || '');
+  const customCss = resolveAssetUrls(String(settings?.customCss || settings?.CustomCss || themePatch.customCss || ''));
+  const customHtml = resolveAssetUrls(String(settings?.customHtml || settings?.CustomHtml || ''));
   const effectiveCssOverrides = Object.assign(
     {},
     buildPremiumThemeAliasVars(cssOverrides, customCss + '\n' + customHtml),
@@ -438,7 +492,42 @@ function collectThemeCssOverrides(settings: any, themePatch?: any): Record<strin
   };
   merge(themePatch?.cssOverrides || themePatch?.CssOverrides || themePatch?.themeCssOverrides || themePatch?.ThemeCssOverrides);
   merge(settings?.cssOverrides || settings?.CssOverrides || settings?.themeCssOverrides || settings?.ThemeCssOverrides);
+  // [TemplateAssetEditor v2026-08-20] Expose theme assets as CSS variables so premium
+  // templates can bind them via var(--mf-asset-<key>) in customCss.
+  const assets = settings?.themeAssets || (settings as any)?.ThemeAssets || {};
+  Object.keys(assets).forEach(key => {
+    const asset = assets[key];
+    if (!asset || typeof asset !== 'object') return;
+    const type = String(asset.type || '').toLowerCase();
+    const value = String(asset.value || '');
+    if (!value) return;
+    const varName = '--mf-asset-' + key.replace(/[^a-zA-Z0-9_-]/g, '-');
+    if (type === 'image') {
+      out[varName] = 'url(' + cssEscapeValue(value) + ')';
+    } else if (type === 'svg' || type === 'shape') {
+      const dataUrl = svgToDataUrl(value);
+      if (dataUrl) out[varName] = 'url(' + dataUrl + ')';
+    }
+  });
   return out;
+}
+
+function svgToDataUrl(svg: string): string {
+  if (!svg) return '';
+  let markup = svg.trim();
+  if (!/^<svg/i.test(markup)) {
+    markup = '<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">' + markup + '</svg>';
+  } else if (!/xmlns=/i.test(markup)) {
+    markup = markup.replace(/^<svg/i, '<svg xmlns="http://www.w3.org/2000/svg"');
+  }
+  try {
+    const base64 = typeof window !== 'undefined' && typeof window.btoa === 'function'
+      ? window.btoa(markup)
+      : '';
+    return base64 ? 'data:image/svg+xml;base64,' + base64 : '';
+  } catch (_e) {
+    return '';
+  }
 }
 
 function applyThemeVarsToElement(el: HTMLElement, vars: Record<string, string>): void {
@@ -872,18 +961,38 @@ function buildCustomShellCompatibilityCss(formId: number, settings: any, customC
     `  color: var(--mf-btn-color, var(--mf-color-text-inverse, #ffffff)) !important;`,
     `  font-family: var(--mf-font-family, 'Outfit', system-ui, sans-serif) !important;`,
     `}`,
-    `${W} .mfp[class*="mfp-"] button[type="submit"],`,
-    `${W} .mfp[class*="mfp-"] .mf-btn-submit,`,
-    `${W} .mfp[class*="mfp-"] .mfp-submit,`,
-    `${W} .mfp[class*="mfp-"] .mf-submit,`,
-    `${W} .mfp[class*="mfp-"] .mf-btn-primary {`,
-    `  background: var(--mf-btn-bg, var(--mf-primary, var(--primary, #3b82f6))) !important;`,
-    `  border-color: var(--mf-btn-bg, var(--mf-primary, var(--primary, #3b82f6))) !important;`,
-    `  border-radius: var(--mf-btn-radius, var(--mf-input-radius, 8px)) !important;`,
-    `  box-shadow: var(--mf-btn-shadow, none) !important;`,
-    `  color: var(--mf-btn-color, var(--mf-btn-text, var(--primary-foreground, #ffffff))) !important;`,
-    `  font-family: var(--mf-font-family, inherit) !important;`,
-    `}`,
+    // [SubmitButtonKeepsTemplateSkin 2026-08-20] Luật ép nút CHỈ chạy khi người
+    // dùng thật sự đổi màu trong Theme Designer.
+    //
+    // Bản cũ phát luật này cho MỌI form, kèm `!important`, và nó nhắm thẳng vào
+    // `.mfp-submit` / `.mf-btn-submit` — đúng những tên class mà các template
+    // dùng cho nút của riêng chúng. Kết quả: nút do người thiết kế vẽ bị xoá và
+    // thay bằng màu chung. Đo trên ba form: Coachella `.mfp-submit` tô
+    // `linear-gradient(...)` ra xanh #4a90d9; Christmas `.xms-submit` cũng vậy.
+    //
+    // Botanical thoát được chỉ vì template của nó tình cờ đặt biến
+    // `--mf-btn-bg: #8b6e3a`, nên luật ép đọc biến ấy rồi trả lại đúng màu nâu.
+    // Tức là luật cũ biến "template phải đặt biến màu" thành điều kiện bắt buộc
+    // để giữ diện mạo — mà một GRADIENT thì không có cách nào nhét vào một biến
+    // màu đơn. Template càng được vẽ kỹ càng dễ mất.
+    //
+    // Bỏ luật đi KHÔNG làm nút mất màu: `megaform.css` vẫn có luật nền cho
+    // `button[type="submit"]` (không `!important`), nên template nào không tự tô
+    // vẫn nhận màu mặc định. Chỉ khác ở chỗ template giờ THẮNG được nó.
+    ...(enableTemplateVarBridge ? [
+      `${W} .mfp[class*="mfp-"] button[type="submit"],`,
+      `${W} .mfp[class*="mfp-"] .mf-btn-submit,`,
+      `${W} .mfp[class*="mfp-"] .mfp-submit,`,
+      `${W} .mfp[class*="mfp-"] .mf-submit,`,
+      `${W} .mfp[class*="mfp-"] .mf-btn-primary {`,
+      `  background: var(--mf-btn-bg, var(--mf-primary, var(--primary, #3b82f6))) !important;`,
+      `  border-color: var(--mf-btn-bg, var(--mf-primary, var(--primary, #3b82f6))) !important;`,
+      `  border-radius: var(--mf-btn-radius, var(--mf-input-radius, 8px)) !important;`,
+      `  box-shadow: var(--mf-btn-shadow, none) !important;`,
+      `  color: var(--mf-btn-color, var(--mf-btn-text, var(--primary-foreground, #ffffff))) !important;`,
+      `  font-family: var(--mf-font-family, inherit) !important;`,
+      `}`,
+    ] : []),
     // Invoice application templates already draw their own centered .io-card.
     // Keep .io-page as a transparent layout wrapper so it cannot become a
     // second full-width card around the authored invoice.
@@ -927,6 +1036,12 @@ function installDisplayStyleSheet(): void {
   // Plus, I include the > .mf-form-inner > .mf-form descendant chain
   // explicitly so the chained-children-of-wrapper rule loses on equality.
   var W = '.mf-form-wrapper[class*="mf-form-wrapper"]';
+  // [SubmitButtonKeepsTemplateSkin 2026-08-20] Nút NẰM TRONG custom shell thì để
+  // template lo. Hạ độ ưu tiên bằng `:where()` vẫn chưa đủ — đo trên Chrome, luật
+  // mặc định vẫn thắng `.mfp-coachella .mfp-submit`, nên nút gradient ra xanh trơn.
+  // Cách chắc chắn là ĐỪNG KHỚP nữa: `:not(:where(.mfp *))` cộng 0 điểm ưu tiên và
+  // loại đúng những nút nằm trong một shell do người thiết kế dựng.
+  var NOT_IN_SHELL = ':not(:where(.mfp *))';
   // [B82-D] Wstd = standard (non-customHtml) wrapper. Rules targeting
   // .mf-form ONLY apply when the wrapper does NOT have customHtml mode —
   // otherwise the outer .mf-form should stay transparent (killer rule wins)
@@ -988,12 +1103,17 @@ function installDisplayStyleSheet(): void {
     border('prominent','2px solid #cbd5e1'),
     // Submit / primary buttons consume --mf-btn-radius so right-rail
     // Button-Shape slider paints on runtime.
-    W + ' button[type="submit"],' +
-      W + ' .mf-submit,' +
-      W + ' .mfp-submit,' +
-      W + ' .mf-btn-primary,' +
-      W + ' .mf-form-actions button' +
-      '{border-radius:var(--mf-btn-radius,6px) !important}',
+    // [SubmitButtonKeepsTemplateSkin 2026-08-20] Cùng lý do như luật màu nền ngay
+    // dưới: đây là GIÁ TRỊ MẶC ĐỊNH, nên bỏ `!important` và bọc `:where()`.
+    // Với `!important` + (0,3,1), nút bo tròn 999px của template bị bẻ về 6px.
+    // Thanh trượt Button-Shape ở rail phải vẫn chạy: nó đặt `--mf-btn-radius`,
+    // và các luật `.mf-style-radius-*` bên dưới (do người dùng CHỌN) vẫn giữ
+    // `!important` — lựa chọn chủ động thì phải thắng, mặc định thì không.
+    ':where(' + W + ') button[type="submit"]' + NOT_IN_SHELL + ',' +
+      ':where(' + W + ') .mf-submit' + NOT_IN_SHELL + ',' +
+      ':where(' + W + ') .mf-btn-primary' + NOT_IN_SHELL + ',' +
+      ':where(' + W + ') .mf-form-actions button' + NOT_IN_SHELL +
+      '{border-radius:var(--mf-btn-radius,6px)}',
     W + '.mf-style-radius-square button[type="submit"],' +
       W + '.mf-style-radius-square .mf-submit,' +
       W + '.mf-style-radius-square .mfp-submit,' +
@@ -1044,14 +1164,19 @@ function installDisplayStyleSheet(): void {
     // iframe via B71 element-overrides). Targets BOTH .mf-submit /
     // .mfp-submit AND .fr-btn-submit (form-receiver custom HTML class)
     // because customHtml templates commonly hardcode this class.
-    W + ' button[type="submit"],' +
-      W + ' .mf-submit,' +
-      W + ' .mfp-submit,' +
-      W + ' .mf-btn-primary,' +
-      W + ' .mf-form-actions button,' +
-      W + ' .fr-btn-submit,' +
-      W + ' .mfp button.fr-btn-submit,' +
-      W + ' .mfp-card button[type="submit"]' +
+    // [SubmitButtonKeepsTemplateSkin 2026-08-20] `:where(...)` — luật MẶC ĐỊNH thì
+    // phải nhường được cho template.
+    //
+    // Selector cũ `.mf-form-wrapper[class*="mf-form-wrapper"] .mfp-submit` có độ
+    // ưu tiên (0,3,1), cao hơn `.mfp-coachella .mfp-submit` (0,2,0) của template —
+    // nên một luật mang danh "mặc định" lại đè lên thứ người thiết kế cố ý vẽ.
+    // `:where()` đưa phần wrapper về 0 điểm: form nào không có template vẫn nhận
+    // đúng màu này (chẳng ai tranh), còn template thì thắng.
+    ':where(' + W + ') button[type="submit"]' + NOT_IN_SHELL + ',' +
+      ':where(' + W + ') .mf-submit' + NOT_IN_SHELL + ',' +
+      ':where(' + W + ') .mf-btn-primary' + NOT_IN_SHELL + ',' +
+      ':where(' + W + ') .mf-form-actions button' + NOT_IN_SHELL + ',' +
+      ':where(' + W + ') .fr-btn-submit' + NOT_IN_SHELL +
       '{background:var(--mf-btn-bg,var(--mf-primary,inherit));color:var(--mf-btn-color,var(--mf-btn-text,var(--mf-color-text-inverse,#ffffff)))}',
   ].join('\n');
   var tag = document.createElement('style');
@@ -2150,7 +2275,7 @@ function renderCustomHtml(container: HTMLElement, settings: any): void {
   applyFormPresentationSettings(settings);
 
   const customContent = ((settings.customContent || (settings as any).CustomContent || {}) as Record<string, unknown>);
-  let html = settings.customHtml as string;
+  let html = resolveAssetUrls(settings.customHtml as string);
   html = html.replace(/<form[^>]*>/gi, '<div class="mfp-form-inner">');
   html = html.replace(/<\/form>/gi, '</div>');
   html = html
@@ -2158,12 +2283,21 @@ function renderCustomHtml(container: HTMLElement, settings: any): void {
     .replace(/\{\{form:description\}\}/gi, esc(String(config.description || '').trim()))
     .replace(/\{\{form:submit\}\}/gi, esc(String(config.submitButtonText || 'Submit').trim()))
     .replace(/\{\{content:([a-zA-Z0-9_-]+)\}\}/g, (_match, key) => esc(String(customContent[key] ?? '')))
+    // [TemplateAssetEditor v2026-08-20] Resolve image/svg/shape asset tokens.
+    .replace(/\{\{mf:asset:([a-zA-Z0-9_\-]+)\}\}/g, (_match, bindingKey) => resolveAssetToken(bindingKey, settings))
     // [ScriptAnchor v20260501-05] Replace {{script:KEY}} with hidden anchor.
     // injectManagedCustomScripts() walks each anchor and executes the matching
     // settings.customScripts[KEY] body with __mfCurrentScriptRoot resolved to
     // the closest [data-mf-script-root="KEY"] (or any [data-mf-script-root]).
     .replace(/\{\{script:([a-zA-Z0-9_-]+)\}\}/g, (_m, key) =>
       `<span class="mf-script-anchor" data-mf-script-key="${esc(String(key))}" data-mf-script-badge="${CUSTOM_SCRIPT_RENDERER_BADGE}" style="display:none !important;"></span>`);
+
+  // Strip builder-only metadata attributes from public output, but keep them in
+  // the builder preview so the asset pick mode can detect editable regions.
+  if (!config.isPreview) {
+    html = html.replace(/\sdata-mf-asset=["'][^"']*["']/gi, '');
+    html = html.replace(/\sdata-mf-asset-target=["'][^"']*["']/gi, '');
+  }
 
   // Build field map
   const fieldMap: Record<string, FormField> = {};

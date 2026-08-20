@@ -35,21 +35,26 @@
      data-config="@Html.Raw(configAttr)">
 </div>
 
-<link rel="stylesheet" href="/App_Plugins/MegaForm/css/megaform.css" />
-<link rel="stylesheet" href="/App_Plugins/MegaForm/css/megaform-themes.css" />
+    @* asp-append-version: ASP.NET Core băm nội dung file và gắn ?v=<hash>.
+       Không có nó, "/css/news-demo.css" là một URL bất biến — sửa xong CSS thì
+       trình duyệt nào đã mở trang một lần vẫn dùng bản cũ, và bản vá trông như
+       chưa từng được áp. Đã xảy ra thật: thẻ bọc quanh form đã gỡ khỏi CSS trên
+       máy chủ mà màn hình vẫn còn nguyên. *@
+<link rel="stylesheet" href="/App_Plugins/MegaForm/css/megaform.css" asp-append-version="true" />
+<link rel="stylesheet" href="/App_Plugins/MegaForm/css/megaform-themes.css" asp-append-version="true" />
 @* [DynamicRoot 2026-08-18] Kept in step with the package copy in MegaForm.Umbraco/Views:
    a host view of the same name OVERRIDES the RCL one, so an edit to the package alone never
    reaches the page — measured here when the page kept rendering without this line. *@
 <script>window.__MF_PAGE_ID__ = @Model.ContentId;</script>
-<script src="/App_Plugins/MegaForm/js/megaform-config.js"></script>
+<script src="/App_Plugins/MegaForm/js/megaform-config.js" asp-append-version="true"></script>
 @if (effectiveViewType == "submit" || string.IsNullOrEmpty(effectiveViewType))
 {
-    <script src="/App_Plugins/MegaForm/js/megaform-renderer.js"></script>
-    <script src="/App_Plugins/MegaForm/js/megaform-widgets.js"></script>
+    <script src="/App_Plugins/MegaForm/js/megaform-renderer.js" asp-append-version="true"></script>
+    <script src="/App_Plugins/MegaForm/js/megaform-widgets.js" asp-append-version="true"></script>
 }
 else
 {
-    <script src="/App_Plugins/MegaForm/js/megaform-views.js"></script>
+    <script src="/App_Plugins/MegaForm/js/megaform-views.js" asp-append-version="true"></script>
 }
 
 <script>

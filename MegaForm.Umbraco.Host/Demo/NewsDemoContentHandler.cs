@@ -99,6 +99,11 @@ namespace MegaForm.Umbraco.Host.Demo
                 return;
             }
 
+            // Chạy TRƯỚC cổng once-only, cùng lý do như phần template ở trên: những
+            // site đã gieo xong sẽ không bao giờ đi qua đoạn dưới nữa, nên một thứ
+            // cần dọn mà đặt sau cổng thì với chúng là dọn vĩnh viễn không tới.
+            TryRemoveLegacyFormCopyProperties();
+
             if (!string.IsNullOrEmpty(_keyValueService.GetValue(SeedKey)))
                 return;
 
@@ -170,8 +175,6 @@ namespace MegaForm.Umbraco.Host.Demo
 
             var formTab = NewTab(contentType, "form", "Form", 20);
             formTab.PropertyTypes.Add(NewProperty("MegaForm.FormPicker", "megaFormPicker", "MegaForm", "The form rendered at the end of the article.", 10));
-            formTab.PropertyTypes.Add(NewProperty("Umbraco.TextBox", "formHeading", "Form heading", "Heading above the form.", 20));
-            formTab.PropertyTypes.Add(NewProperty("Umbraco.TextArea", "formIntro", "Form intro", "One line under the form heading.", 30));
             contentType.PropertyGroups.Add(formTab);
 
             contentType.AllowedTemplates = new[] { template };
@@ -203,8 +206,6 @@ namespace MegaForm.Umbraco.Host.Demo
 
             var formTab = NewTab(contentType, "form", "Form", 20);
             formTab.PropertyTypes.Add(NewProperty("MegaForm.FormPicker", "megaFormPicker", "MegaForm", "Form rendered at the foot of the listing.", 10));
-            formTab.PropertyTypes.Add(NewProperty("Umbraco.TextBox", "formHeading", "Form heading", "Heading above the form.", 20));
-            formTab.PropertyTypes.Add(NewProperty("Umbraco.TextArea", "formIntro", "Form intro", "One line under the form heading.", 30));
             contentType.PropertyGroups.Add(formTab);
 
             contentType.AllowedTemplates = new[] { template };
@@ -228,6 +229,58 @@ namespace MegaForm.Umbraco.Host.Demo
                 Type = PropertyGroupType.Tab,
                 SortOrder = sortOrder
             };
+        }
+
+        /// <summary>
+        /// Gỡ "Form heading" / "Form intro" khỏi hai document type demo.
+        /// </summary>
+        /// <remarks>
+        /// Hai ô này dựng thêm một tiêu đề và một lời dẫn ở NGOÀI form, trong khi mọi
+        /// template MegaForm đều đã có tiêu đề và lời dẫn của riêng nó ngay trong thiết kế.
+        /// Kết quả trên màn hình là hai tiêu đề chồng nhau và một lớp chữ không thuộc về
+        /// bản thiết kế nào cả. Umbraco Forms không có cặp ô này, và đó là lý do trang
+        /// demo của nó gọn hơn.
+        ///
+        /// Gỡ property sẽ XOÁ giá trị đã nhập ở mọi node — đó là chủ ý, owner đã chốt:
+        /// "bỏ đi để form hiển thị đúng theo thiết kế".
+        ///
+        /// Không có bước này thì sửa mã là vô ích với site đang chạy: document type nằm
+        /// trong cơ sở dữ liệu, và cổng once-only đã đóng từ lần gieo đầu tiên.
+        /// </remarks>
+        private void TryRemoveLegacyFormCopyProperties()
+        {
+            foreach (var alias in new[] { ArticleTypeAlias, ListTypeAlias })
+            {
+                try
+                {
+                    var contentType = _contentTypeService.Get(alias);
+                    if (contentType == null) continue;
+
+                    var removed = 0;
+                    foreach (var property in new[] { "formHeading", "formIntro" })
+                    {
+                        if (contentType.PropertyTypeExists(property))
+                        {
+                            contentType.RemovePropertyType(property);
+                            removed++;
+                        }
+                    }
+
+                    if (removed > 0)
+                    {
+                        _contentTypeService.Save(contentType);
+                        _logger.LogInformation(
+                            "[MegaForm.Umbraco.Host] Removed {Count} legacy form-copy properties from '{Alias}'.",
+                            removed, alias);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Dọn dẹp hỏng thì thôi, không được làm site không lên được.
+                    _logger.LogWarning(ex,
+                        "[MegaForm.Umbraco.Host] Could not remove legacy form-copy properties from '{Alias}'.", alias);
+                }
+            }
         }
 
         private PropertyType NewProperty(string editorAlias, string alias, string name, string description, int sortOrder)
@@ -275,8 +328,6 @@ namespace MegaForm.Umbraco.Host.Demo
             content.SetValue("intro",
                 "Product news, release notes and field notes from the MegaForm team. " +
                 "Every story ends with a real form you can fill in — the same forms a customer would meet.");
-            content.SetValue("formHeading", "Get the release notes by email");
-            content.SetValue("formIntro", "One field. We send a short note whenever a build ships.");
             content.SetValue("megaFormPicker", "2");
             content.TemplateId = template.Id;
 
@@ -303,8 +354,6 @@ namespace MegaForm.Umbraco.Host.Demo
                 content.SetValue("summary", article.Summary);
                 content.SetValue("body", article.Body);
                 content.SetValue("megaFormPicker", article.FormId.ToString());
-                content.SetValue("formHeading", article.FormHeading);
-                content.SetValue("formIntro", article.FormIntro);
                 content.TemplateId = template.Id;
 
                 _contentService.SaveAndPublish(content, Array.Empty<string>(), -1);
@@ -321,8 +370,6 @@ namespace MegaForm.Umbraco.Host.Demo
             public string Summary { get; set; }
             public string Body { get; set; }
             public int FormId { get; set; }
-            public string FormHeading { get; set; }
-            public string FormIntro { get; set; }
         }
 
         /// <summary>
@@ -347,9 +394,7 @@ namespace MegaForm.Umbraco.Host.Demo
                     "<li>Open any page with a form on it and submit once — a boot failure shows up there first.</li>" +
                     "<li>Existing forms, submissions and workflows are untouched by the upgrade.</li></ul>" +
                     "<p>Release notes go out by email on the day a build ships.</p>",
-                FormId = 2,
-                FormHeading = "Get the release notes by email",
-                FormIntro = "A single-field form — the smallest thing that still has to validate, submit and store."
+                FormId = 2
             },
             new ArticleSeed
             {
@@ -364,9 +409,7 @@ namespace MegaForm.Umbraco.Host.Demo
                     "<ul><li><strong>Day one</strong> — form design, conditional logic, multi-step layouts.</li>" +
                     "<li><strong>Day two</strong> — approval workflows, integrations, dashboards.</li></ul>" +
                     "<p>Registration below. Pick a track when you sign up; you can change it later from the confirmation email.</p>",
-                FormId = 4,
-                FormHeading = "Reserve a seat",
-                FormIntro = "A dropdown plus free text — the shape most event forms end up with."
+                FormId = 4
             },
             new ArticleSeed
             {
@@ -381,9 +424,7 @@ namespace MegaForm.Umbraco.Host.Demo
                     "<p>The query is resolved on the server from the form's own schema — the browser never sends SQL. " +
                     "Results are capped server-side, so a lookup against a large table cannot pull the whole table into memory.</p>" +
                     "<p>The request form below reads both of its dropdowns from tables in this demo site.</p>",
-                FormId = 201,
-                FormHeading = "Try a SQL-backed request form",
-                FormIntro = "Both dropdowns are populated by a query when the page loads."
+                FormId = 201
             },
             new ArticleSeed
             {
@@ -399,9 +440,7 @@ namespace MegaForm.Umbraco.Host.Demo
                     "<ul><li>Allowed extensions are part of the field settings, not a global switch.</li>" +
                     "<li>Rejected files fail on the server too, not only in the browser.</li></ul>" +
                     "<p>Send a sample file through the form below to see the round trip.</p>",
-                FormId = 6,
-                FormHeading = "Send us a sample file",
-                FormIntro = "Text, email and a file field — the upload path end to end."
+                FormId = 6
             },
             new ArticleSeed
             {
@@ -417,9 +456,7 @@ namespace MegaForm.Umbraco.Host.Demo
                     "<li>Ask for contact details first — a partial submission is still worth something.</li>" +
                     "<li>Never validate a step the person has not reached yet.</li></ul>" +
                     "<p>The form below is two steps; use the buttons to move between them.</p>",
-                FormId = 5,
-                FormHeading = "Walk through a two-step form",
-                FormIntro = "Sections become steps; each one validates before the next opens."
+                FormId = 5
             },
             new ArticleSeed
             {
@@ -436,9 +473,7 @@ namespace MegaForm.Umbraco.Host.Demo
                     "<li>Reporting comes from the submissions table rather than a spreadsheet.</li></ul>" +
                     "<p>The real application form is below — it is the largest form on this site, and the one worth " +
                     "watching on a phone.</p>",
-                FormId = 102,
-                FormHeading = "Open the application form",
-                FormIntro = "Twelve fields across three sections, with conditional rules."
+                FormId = 102
             }
         };
 
@@ -449,8 +484,6 @@ namespace MegaForm.Umbraco.Host.Demo
     Layout = null;
     var intro = Model.Value<string>(""intro"");
     var formId = Model.Value<int?>(""megaFormPicker"") ?? 0;
-    var formHeading = Model.Value<string>(""formHeading"");
-    var formIntro = Model.Value<string>(""formIntro"");
     var articles = Model.Children.ToList();
 }
 <!DOCTYPE html>
@@ -459,7 +492,7 @@ namespace MegaForm.Umbraco.Host.Demo
     <meta charset=""utf-8"" />
     <meta name=""viewport"" content=""width=device-width, initial-scale=1"" />
     <title>@Model.Name</title>
-    <link rel=""stylesheet"" href=""/css/news-demo.css"" />
+    <link rel=""stylesheet"" href=""/css/news-demo.css"" asp-append-version=""true"" />
 </head>
 <body class=""news-body"">
     <header class=""news-top"">
@@ -517,13 +550,9 @@ namespace MegaForm.Umbraco.Host.Demo
         @if (formId > 0)
         {
             <section class=""news-form"">
-                <h2>@(string.IsNullOrWhiteSpace(formHeading) ? ""Sign up"" : formHeading)</h2>
-                @if (!string.IsNullOrWhiteSpace(formIntro))
-                {
-                    <p class=""news-form-intro"">@formIntro</p>
-                }
+                @* Không tiêu đề, không lời dẫn ở đây: mỗi template MegaForm đã mang
+                   tiêu đề và lời dẫn trong chính bản thiết kế của nó. *@
                 <megaform form-id=""@formId"" content-id=""@Model.Id"" view-type=""submit""></megaform>
-                <span class=""news-form-id"">MegaForm #@formId · rendered by the &lt;megaform&gt; tag helper</span>
             </section>
         }
     </div>
@@ -538,8 +567,6 @@ namespace MegaForm.Umbraco.Host.Demo
     var summary = Model.Value<string>(""summary"");
     var body = Model.Value<string>(""body"");
     var formId = Model.Value<int?>(""megaFormPicker"") ?? 0;
-    var formHeading = Model.Value<string>(""formHeading"");
-    var formIntro = Model.Value<string>(""formIntro"");
     var parent = Model.Parent;
 }
 <!DOCTYPE html>
@@ -548,7 +575,7 @@ namespace MegaForm.Umbraco.Host.Demo
     <meta charset=""utf-8"" />
     <meta name=""viewport"" content=""width=device-width, initial-scale=1"" />
     <title>@Model.Name</title>
-    <link rel=""stylesheet"" href=""/css/news-demo.css"" />
+    <link rel=""stylesheet"" href=""/css/news-demo.css"" asp-append-version=""true"" />
 </head>
 <body class=""news-body"">
     <header class=""news-top"">
@@ -578,13 +605,9 @@ namespace MegaForm.Umbraco.Host.Demo
         @if (formId > 0)
         {
             <section class=""news-form"">
-                <h2>@(string.IsNullOrWhiteSpace(formHeading) ? ""Send us a message"" : formHeading)</h2>
-                @if (!string.IsNullOrWhiteSpace(formIntro))
-                {
-                    <p class=""news-form-intro"">@formIntro</p>
-                }
+                @* Không tiêu đề, không lời dẫn ở đây: mỗi template MegaForm đã mang
+                   tiêu đề và lời dẫn trong chính bản thiết kế của nó. *@
                 <megaform form-id=""@formId"" content-id=""@Model.Id"" view-type=""submit""></megaform>
-                <span class=""news-form-id"">MegaForm #@formId · rendered by the &lt;megaform&gt; tag helper</span>
             </section>
         }
         else

@@ -716,7 +716,14 @@ if (Test-Path $quickSrc) {
     throw "Samples\FormTemplates\QuickStart is missing. Run: node tools/gallery/build-quickstart.mjs"
 }
 
-$tplSrc = Join-Path $SOLUTION_DIR 'Samples\FormTemplates\Premium\DONEE'
+# [PremiumTemplatePath 2026-08-20] Thu muc premium ten la GALLERY-PUBLISHED, khong phai DONEE.
+# DONEE la ten cu, da doi tu lau. Vi ca khoi nam trong `if (Test-Path $tplSrc)`, duong dan sai chi
+# lam khoi bi bo qua IM LANG: goi build xong, khong mot canh bao nao, va thieu 4 template premium.
+# Guard duoi day bien no thanh loi that thay vi im lang.
+$tplSrc = Join-Path $SOLUTION_DIR 'Samples\FormTemplates\Premium\GALLERY-PUBLISHED'
+if (-not (Test-Path $tplSrc)) {
+    throw "Khong tim thay thu muc template premium: $tplSrc"
+}
 if (Test-Path $tplSrc) {
     if ($SLIM_GALLERY) {
         # Gallery-hosted templates are downloaded on demand (Template Gallery -> Browse

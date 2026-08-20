@@ -32,7 +32,7 @@ namespace MegaForm.Umbraco.Controllers
     public partial class MegaFormApiController
     {
         [HttpGet]
-        [Authorize]
+        [Authorize(Policy = "MegaFormApi")]
         [Route("/umbraco/api/megaform/files/download")]
         [Route("/umbraco/MegaForm/MegaFormApi/Files/Download")]
         [Route("/api/MegaForm/Files/Download")]

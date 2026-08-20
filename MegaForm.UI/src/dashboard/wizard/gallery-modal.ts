@@ -264,6 +264,12 @@ export function openWizardGallery(onPick: (t: WizardTemplate) => void, onImport:
         const art = res.assetsInstalled ? ' (' + res.assetsInstalled + ' ' + wt('wiz.remote.images', 'images') + ')' : '';
         wizardToast(wt('wiz.remote.done', 'Template installed') + ': ' + (t.title || t.slug) + art);
         if (res.assetsError) wizardToast(wt('wiz.remote.art_failed', 'Template installed, but its images could not be downloaded.'), 'error');
+        // [WizardGalleryPick 2026-08-20] Installing from the online gallery must also APPLY the
+        // template to the wizard; otherwise the user ends up on step 2 with an empty form.
+        loadRemoteTemplateDoc(t.slug).then((tpl) => {
+          if (tpl) { close(); onPick(tpl); }
+          else { wizardToast(wt('wiz.remote.pick_failed', 'Installed, but could not load the template for editing.'), 'error'); }
+        });
         // Refresh the local catalog so the new template shows under "Installed".
         resetTemplates();
         loadTemplates(() => { renderSources(); renderGrid(); });

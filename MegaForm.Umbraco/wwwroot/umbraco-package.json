@@ -2,7 +2,7 @@
   "$schema": "../../umbraco-package-schema.json",
   "id": "MegaForm.Umbraco",
   "name": "MegaForm",
-  "version": "1.5.8",
+  "version": "1.7.0",
   "allowTelemetry": true,
   "allowPublicAccess": true,
   "extensions": [

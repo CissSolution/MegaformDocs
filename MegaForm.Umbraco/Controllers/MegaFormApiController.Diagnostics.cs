@@ -21,7 +21,7 @@ namespace MegaForm.Umbraco.Controllers
     {
         //   GET /umbraco/MegaForm/MegaFormApi/Diagnostics/TypedStorage[?smoke=true]
         [HttpGet]
-        [Authorize]
+        [Authorize(Policy = "MegaFormApi")]
         [Route("/umbraco/MegaForm/MegaFormApi/Diagnostics/TypedStorage")]
         public IActionResult DiagnosticsTypedStorage(bool smoke = false)
         {

@@ -10,9 +10,14 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Umbraco.Cms.Web.Common.Authorization;
 using MegaForm.Umbraco.Permissions;
+using MegaForm.Core.Models;
+using MegaForm.Core.Services;
+using MegaForm.Core.Services.GalleryRepo;
 
 namespace MegaForm.Umbraco.Controllers
 {
@@ -109,7 +114,7 @@ namespace MegaForm.Umbraco.Controllers
                 {
                     var files = Directory.EnumerateFiles(root, "*.*", SearchOption.AllDirectories)
                         .Where(p => _imageUploadExtensions.Contains(Path.GetExtension(p) ?? string.Empty))
-                        .Select(p => new FileInfo(p))
+                        .Select(p => new System.IO.FileInfo(p))
                         .OrderByDescending(fi => fi.LastWriteTimeUtc)
                         .Take(200)
                         .Select(fi =>
@@ -190,7 +195,7 @@ namespace MegaForm.Umbraco.Controllers
         // ═══════════════════════════════════════════════════════════════════
 
         [HttpGet]
-        [Authorize]
+        [Authorize(Policy = "MegaFormApi")]
         [Route("SdkDemo/Download")]
         [Route("/umbraco/MegaForm/MegaFormApi/SdkDemo/Download")]
         [Route("/api/MegaForm/SdkDemo/Download")]
@@ -249,6 +254,229 @@ namespace MegaForm.Umbraco.Controllers
         private bool IsSubmissionAdmin(Core.Services.UserContext actor)
         {
             return actor != null && (actor.IsAdmin || actor.IsSuperUser);
+        }
+
+        // ══════════════════════════════════════════════════════
+        //  REMOTE GALLERY (static HTTPS repo — GitHub Pages)
+        //  Ported from MegaForm.Oqtane.Server for Umbraco parity.
+        // ══════════════════════════════════════════════════════
+
+        private GalleryInstallService BuildGalleryService()
+        {
+            var url = _configuration?["MegaForm:GalleryRepoUrl"];
+            var token = _configuration?["MegaForm:GalleryRepoToken"];
+            return new GalleryInstallService(new GalleryRepositoryService(url, token));
+        }
+
+        private string ResolveGalleryImageRoot()
+        {
+            try
+            {
+                var web = _env?.WebRootPath;
+                if (string.IsNullOrWhiteSpace(web)) return null;
+                return Path.Combine(web, "Modules", "MegaForm");
+            }
+            catch { return null; }
+        }
+
+        private string ResolveGalleryGuidesRoot()
+        {
+            try
+            {
+                var web = _env?.WebRootPath;
+                if (string.IsNullOrWhiteSpace(web)) return null;
+                return Path.Combine(web, "Modules", "MegaForm", "Resources", "TemplateGuides");
+            }
+            catch { return null; }
+        }
+
+        private int? ResolveGalleryAuditUserId()
+        {
+            var id = _platform?.UserId ?? -1;
+            return id > 0 ? (int?)id : null;
+        }
+
+        private IActionResult GalleryDownloadTrialGate()
+        {
+            if (!LicenseService.IsTrial()) return null;
+            return StatusCode(402, new
+            {
+                error = "trial_remote_gallery",
+                message = "Installing templates from the online gallery is available on a paid license.",
+                upgradeUrl = LicenseService.UpgradeUrl
+            });
+        }
+
+        [HttpGet]
+        [MegaFormAuthorize(MegaFormPermissionConstants.EditLetter)]
+        [Route("BuilderTemplates/RemoteGalleryList")]
+        [Route("/umbraco/MegaForm/MegaFormApi/BuilderTemplates/RemoteGalleryList")]
+        [Route("/api/MegaForm/BuilderTemplates/RemoteGalleryList")]
+        public async Task<IActionResult> RemoteGalleryList(bool refresh = false)
+        {
+            var svc = BuildGalleryService();
+            var res = await svc.GetManifestAsync(refresh);
+            if (!res.Success || res.Value == null)
+                return StatusCode(503, new { error = "gallery_unavailable", message = res.Message });
+
+            var localTemplates = _templateCatalog.List() ?? new List<UmbracoBuilderTemplateCatalogService.BuilderTemplateRecord>();
+            var installed = new HashSet<string>(
+                localTemplates.Select(t => (t?.Slug ?? string.Empty).Trim()),
+                StringComparer.OrdinalIgnoreCase);
+
+            var items = (res.Value.Templates ?? new List<GalleryRepoTemplateInfo>())
+                .Where(t => t != null && !string.IsNullOrWhiteSpace(t.Slug))
+                .Select(t => new
+                {
+                    slug = t.Slug,
+                    title = t.Title,
+                    description = t.Description,
+                    category = t.Category,
+                    categories = t.Categories,
+                    icon = t.Icon,
+                    version = t.Version,
+                    sizeBytes = t.SizeBytes,
+                    premium = t.Premium,
+                    fieldCount = t.FieldCount,
+                    installed = installed.Contains((t.Slug ?? string.Empty).Trim())
+                })
+                .ToList();
+
+            return Ok(new
+            {
+                repoUrl = svc.RepoBaseUrl,
+                offline = res.Offline,
+                message = res.Message,
+                trial = LicenseService.IsTrial(),
+                templates = items
+            });
+        }
+
+        [HttpGet]
+        [MegaFormAuthorize(MegaFormPermissionConstants.EditLetter)]
+        [Route("BuilderTemplates/RemoteGalleryPreview")]
+        [Route("/umbraco/MegaForm/MegaFormApi/BuilderTemplates/RemoteGalleryPreview")]
+        [Route("/api/MegaForm/BuilderTemplates/RemoteGalleryPreview")]
+        public async Task<IActionResult> RemoteGalleryPreview(string slug)
+        {
+            var svc = BuildGalleryService();
+            var fetch = await svc.FetchTemplateAsync(slug, forceRefresh: false);
+            if (!fetch.Success)
+                return BadRequest(new { error = "preview_failed", message = fetch.Error });
+
+            try { await svc.InstallAssetsAsync(fetch.Info, ResolveGalleryImageRoot()); }
+            catch { /* preview must still work without artwork */ }
+
+            return Content(fetch.Json, "application/json");
+        }
+
+        [HttpPost]
+        [MegaFormAuthorize(MegaFormPermissionConstants.EditLetter)]
+        [Route("BuilderTemplates/RemoteGalleryInstall")]
+        [Route("/umbraco/MegaForm/MegaFormApi/BuilderTemplates/RemoteGalleryInstall")]
+        [Route("/api/MegaForm/BuilderTemplates/RemoteGalleryInstall")]
+        public async Task<IActionResult> RemoteGalleryInstall([FromBody] System.Text.Json.JsonElement body)
+        {
+            var gate = GalleryDownloadTrialGate();
+            if (gate != null) return gate;
+
+            string slug = null;
+            bool createForm = false;
+            if (body.ValueKind == System.Text.Json.JsonValueKind.Object)
+            {
+                System.Text.Json.JsonElement slugEl;
+                if (body.TryGetProperty("slug", out slugEl) || body.TryGetProperty("Slug", out slugEl))
+                    slug = slugEl.ValueKind == System.Text.Json.JsonValueKind.String ? slugEl.GetString() : null;
+
+                System.Text.Json.JsonElement createEl;
+                if (body.TryGetProperty("createForm", out createEl))
+                    createForm = createEl.ValueKind == System.Text.Json.JsonValueKind.True ||
+                                 (createEl.ValueKind == System.Text.Json.JsonValueKind.String &&
+                                  string.Equals(createEl.GetString(), "true", StringComparison.OrdinalIgnoreCase));
+            }
+
+            var svc = BuildGalleryService();
+            var fetch = await svc.FetchTemplateAsync(slug, forceRefresh: false);
+            if (!fetch.Success)
+                return BadRequest(new { error = "install_failed", message = fetch.Error });
+
+            try
+            {
+                var record = _templateCatalog.SaveTemplateJson(fetch.FileName, fetch.Json);
+                var assets = await svc.InstallAssetsAsync(fetch.Info, ResolveGalleryImageRoot());
+
+                var knowledge = new GalleryInstallService.KnowledgeInstallResult
+                {
+                    Installed = false,
+                    NotPublished = true,
+                    Message = "Knowledge service not available."
+                };
+                if (_knowledge != null)
+                {
+                    knowledge = await svc.InstallKnowledgeAsync(
+                        fetch.Info, ResolveGalleryGuidesRoot(), _knowledge, ResolveGalleryAuditUserId());
+                }
+
+                int? formId = null;
+                if (createForm)
+                {
+                    formId = CreateFormFromTemplateRecord(record);
+                }
+
+                // NewtonsoftJson vì `record` mang JArray/JObject — xem ghi chú ở helper.
+                return NewtonsoftJson(new
+                {
+                    success = true,
+                    slug = fetch.Slug,
+                    template = record,
+                    formId = formId,
+                    assetsInstalled = assets.FilesWritten,
+                    assetsError = assets.Success ? null : assets.Error,
+                    knowledgeInstalled = knowledge.Installed,
+                    knowledgeEntries = knowledge.Entries,
+                    knowledgeGuides = knowledge.GuideFiles,
+                    knowledgeError = knowledge.Installed || knowledge.NotPublished ? null : knowledge.Message,
+                    knowledgeMessage = knowledge.Message
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "MegaForm gallery install failed for slug {Slug}", fetch.Slug);
+                return StatusCode(500, new { error = "install_failed", message = "Could not save the downloaded template." });
+            }
+        }
+
+        private int CreateFormFromTemplateRecord(Services.UmbracoBuilderTemplateCatalogService.BuilderTemplateRecord record)
+        {
+            var settings = record.Settings ?? new JObject();
+            settings["customHtml"] = record.CustomHtml ?? settings["customHtml"] ?? string.Empty;
+            settings["customCss"] = record.CustomCss ?? settings["customCss"] ?? string.Empty;
+            settings["rules"] = record.Rules ?? settings["rules"] ?? new JArray();
+            settings["workflowTemplate"] = record.Workflow ?? settings["workflowTemplate"];
+
+            var schemaObj = new JObject
+            {
+                ["version"] = "1.0",
+                ["fields"] = record.Fields ?? new JArray(),
+                ["settings"] = settings
+            };
+
+            var form = new FormInfo
+            {
+                Title = record.Title ?? record.Slug,
+                Description = record.Description,
+                SchemaJson = schemaObj.ToString(Formatting.None),
+                SettingsJson = settings.ToString(Formatting.None),
+                RulesJson = record.Rules?.ToString(Formatting.None),
+                WorkflowJson = record.Workflow?.ToString(Formatting.None),
+                ModuleId = _platform.ModuleId,
+                PortalId = _platform.PortalId,
+                CreatedByUserId = _platform.UserId,
+                CreatedOnUtc = DateTime.UtcNow,
+                Status = "Draft"
+            };
+
+            return _formRepo.SaveForm(form);
         }
 
     }

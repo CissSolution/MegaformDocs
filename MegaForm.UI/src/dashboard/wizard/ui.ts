@@ -5,6 +5,7 @@ import { t as i18nT } from '@i18n';
 // [WizardI18n 2026-07-01] Translate a wiz.* key with an English fallback baked in
 // (never blanks the UI). Mirrors the dashboard's T(). Keys live under `wiz.*` in the
 // locale catalog so the in-product "Translate (AI)" tool can fill them per locale.
+import { svgIcon } from './icons';
 export function wt(key: string, fallback: string, params?: Record<string, string | number>): string {
   let out = fallback;
   try { const o = i18nT(key, params); if (o && o !== key) { return o; } } catch { /* engine */ }
@@ -30,7 +31,9 @@ export function h(tag: string, attrs?: Attrs | null, children?: Array<Node | str
   return el;
 }
 
-export const icon = (name: string, cls?: string): HTMLElement => h('i', { class: 'fas ' + name + (cls ? ' ' + cls : '') });
+// Icon là SVG vẽ trong mã, không phải font — xem `icons.ts`. Chữ ký giữ nguyên
+// nên hàng trăm lời gọi rải khắp các bước không phải sửa dòng nào.
+export const icon = (name: string, cls?: string): HTMLElement => svgIcon(name, cls);
 
 // [ImportFeedback 2026-07-01] Transient toast inside the wizard overlay so actions like
 // "Import JSON" give visible confirmation (was silent → felt like nothing happened).
@@ -78,6 +81,11 @@ const WIZARD_CSS = `
 .mfw-brand{display:flex;align-items:center;gap:10px;font-weight:700}
 .mfw-brand .mfw-logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--mfw-p),var(--mfw-p2));color:#fff;display:flex;align-items:center;justify-content:center}
 .mfw-brand small{display:block;font-weight:500;font-size:11px;color:#94a3b8}
+/* Icon SVG: canh giữa theo dòng chữ đứng cạnh nó, và nhận màu từ chỗ đặt.
+   inline-flex chứ không inline-block — nếu không, khoảng đệm dưới của dòng chữ
+   đẩy hình lệch xuống vài pixel ở mọi chỗ có icon cạnh chữ. */
+.mfw-ico{display:inline-flex;align-items:center;justify-content:center;line-height:0;flex:0 0 auto}
+.mfw-ico svg{display:block}
 .mfw-steps-top{display:flex;align-items:center;gap:6px;margin:0 auto;font-size:13px}
 .mfw-steps-top .s{display:flex;align-items:center;gap:7px;padding:4px 8px;border-radius:8px;color:#94a3b8;font-weight:600;white-space:nowrap}
 .mfw-steps-top .s.active{color:#0f172a}
@@ -92,9 +100,14 @@ const WIZARD_CSS = `
 .mfw-rail .ri{display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:12px;cursor:pointer;color:#64748b}
 .mfw-rail .ri:hover{background:#f8fafc}
 .mfw-rail .ri.active{background:#f1f5f9}
-.mfw-rail .ri .ic{width:34px;height:34px;border-radius:10px;background:#f1f5f9;color:#94a3b8;display:flex;align-items:center;justify-content:center;flex:0 0 34px}
-.mfw-rail .ri.active .ic{background:linear-gradient(135deg,var(--mfw-p),var(--mfw-p2));color:#fff}
-.mfw-rail .ri.done .ic{background:#0f172a;color:#fff}
+/* Ô icon của thanh bước — số đo lấy từ chính bản mock, không ước lượng bằng mắt:
+   rộng 36px, BO TRÒN HẲN (mock dùng bán kính vô cực, không phải góc vuông bo 10px),
+   bước đang làm là nền đen mờ 10% với hình đậm, bước chưa tới là nền trắng viền
+   nhạt với hình xám. Bản cũ tô gradient tím đặc cho bước đang làm, đậm hơn hẳn
+   mọi thứ quanh nó và kéo mắt về một chỗ không cần được nhấn đến thế. */
+.mfw-rail .ri .ic{width:36px;height:36px;border-radius:50%;background:#fff;border:1px solid #e5e7eb;color:#6b7280;display:flex;align-items:center;justify-content:center;flex:0 0 36px;font-size:15px}
+.mfw-rail .ri.active .ic{background:rgba(15,23,42,.1);border-color:transparent;color:#111827}
+.mfw-rail .ri.done .ic{background:#0f172a;border-color:#0f172a;color:#fff}
 .mfw-rail .ri b{font-size:14px;color:#0f172a;display:block}
 .mfw-rail .ri small{font-size:12px}
 .mfw-rail .ri.active b{color:#0f172a}
@@ -126,6 +139,11 @@ const WIZARD_CSS = `
 .mfw-btn.primary:hover{background:#1e293b}
 .mfw-btn.cta{background:linear-gradient(135deg,var(--mfw-p),var(--mfw-p2));border:0}
 .mfw-btn:disabled{opacity:.5;cursor:not-allowed}
+/* [WizardAutoName 2026-08-15] Why Continue is greyed out, next to the button itself — a
+   disabled control that explains nothing reads as a broken button. Muted, not an error:
+   nothing has gone wrong, a required box is simply still empty. Sits inside the 64px bar,
+   so it must not wrap. */
+.mfw-blocked-hint{font-size:12.5px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:46ch}
 .mfw-in{width:100%;height:42px;border:1px solid #e2e8f0;border-radius:11px;padding:0 13px;font-size:14px;font-family:inherit;outline:none}
 .mfw-in:focus{border-color:var(--mfw-p);box-shadow:0 0 0 3px rgba(99,102,241,.12)}
 textarea.mfw-in{height:auto;padding:10px 13px;resize:vertical}

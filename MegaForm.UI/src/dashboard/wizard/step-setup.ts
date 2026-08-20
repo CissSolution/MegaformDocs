@@ -18,25 +18,49 @@ function cleanTemplateName(raw: string): string {
 let counter = 1000;
 const fid = () => 'wf-' + (++counter);
 
+// [WizardAutoName 2026-08-15] Picking a template names the form after it.
+//
+// Form Name is required and Continue is DISABLED until it is filled — so someone who picked
+// "Media Inquiry", saw the whole form appear in the live preview, and pressed Continue got a
+// button that did nothing and said nothing (owner: "click next nhưng không chạy tiếp được vì
+// chưa có tên form"). The template already carries the obvious name; not using it made the user
+// retype what they had just chosen.
+//
+// Never clobbers a typed name: it fills only when the box is empty or still holds a name WE put
+// there (formNameAuto), so trying several templates keeps following along, and the moment the
+// user types, the name is theirs. Returns a patch so the name rides in the SAME set() call as
+// the template — two set() calls would render the step twice and fight over the input.
+function autoNamePatch(data: WizardData, title: string): Partial<WizardData> {
+  const typed = String(data.formName || '').trim();
+  if (typed && !data.formNameAuto) return {};
+  const name = cleanTemplateName(title);
+  if (!name || name === 'Template') return {};
+  return { formName: name, formNameAuto: true };
+}
+
 // Apply a built-in quick-start template's field set (flat single-page).
-function applyTemplate(tplId: string, set: SetFn): void {
+function applyTemplate(tplId: string, data: WizardData, set: SetFn): void {
   const tpl = TEMPLATES.find(t => t.id === tplId);
   const fields: WizardField[] = (tpl?.fieldTypes || []).map(ft => {
     const meta = FIELD_TYPES.find(f => f.type === ft);
     return { id: fid(), type: ft, label: meta ? meta.label : 'Field', required: ft === 'email' };
   });
-  set({ template: tplId, templateRecord: null, templateIsCustomShell: false, premiumFields: null, premiumStepDetails: [], isMultiStep: false, fields, formPages: [{ id: 'page-1', title: 'Step 1', fields: [] }] });
+  // 'blank' is deliberately excluded: "Blank Form" is not a form name, it is the absence of a
+  // choice, and pre-filling it would push a meaningless title into the site's form list.
+  const named = tplId === 'blank' ? {} : autoNamePatch(data, tpl?.label || '');
+  set({ template: tplId, templateRecord: null, templateIsCustomShell: false, premiumFields: null, premiumStepDetails: [], isMultiStep: false, fields, formPages: [{ id: 'page-1', title: 'Step 1', fields: [] }], ...named });
 }
 
 // Apply a REAL library template. Custom-shell → editable working copy of its fields
 // (③ — add/remove in the wizard) and the shell survives Create. Standard → hydrate the
 // editable wizard fields. Routing is on SHAPE (isCustomShell), never on licensing:
 // the free quick-start starters carry a layout wrapper and would lose it otherwise.
-function applyRealTemplate(t: WizardTemplate, set: SetFn): void {
+function applyRealTemplate(t: WizardTemplate, data: WizardData, set: SetFn): void {
+  const named = autoNamePatch(data, t.title);
   if (t.isCustomShell) {
-    set({ template: t.id, templateRecord: t, templateIsCustomShell: true, premiumFields: premiumNativeFieldsFor(t), premiumStepDetails: premiumStepDetailsFor(t), isMultiStep: false, fields: [], formPages: [{ id: 'page-1', title: 'Step 1', fields: [] }] });
+    set({ template: t.id, templateRecord: t, templateIsCustomShell: true, premiumFields: premiumNativeFieldsFor(t), premiumStepDetails: premiumStepDetailsFor(t), isMultiStep: false, fields: [], formPages: [{ id: 'page-1', title: 'Step 1', fields: [] }], ...named });
   } else {
-    set({ template: t.id, templateRecord: t, templateIsCustomShell: false, premiumFields: null, premiumStepDetails: [], isMultiStep: false, fields: hydrateStandardFields(t), formPages: [{ id: 'page-1', title: 'Step 1', fields: [] }] });
+    set({ template: t.id, templateRecord: t, templateIsCustomShell: false, premiumFields: null, premiumStepDetails: [], isMultiStep: false, fields: hydrateStandardFields(t), formPages: [{ id: 'page-1', title: 'Step 1', fields: [] }], ...named });
   }
 }
 
@@ -112,13 +136,15 @@ export function renderSetup(data: WizardData, set: SetFn): HTMLElement {
   // with the template loaded, ready to edit. Starting from scratch = ignore these + fill
   // the name / pick a Quick start below.
   const applyPicked = (t: WizardTemplate): void => {
-    applyRealTemplate(t, set);
+    applyRealTemplate(t, data, set);
   };
   // Import path also shows a toast — imports were silent before, so a valid file that
   // only changed the (off-screen) name field felt like "nothing happened".
   const importPicked = (t: WizardTemplate): void => {
+    // applyRealTemplate now carries the name across (autoNamePatch), so the separate
+    // formName set() that used to live here is gone — it fired a second render for the
+    // same pick, and it wrote the raw title with the ".json" the upload left on it.
     applyPicked(t);
-    if (!String(data.formName || '').trim() && t.title) set({ formName: t.title });
     const n = t.fieldCount || (t.fields && t.fields.length) || 0;
     wizardToast(wt('wiz.import_ok', 'Imported "{title}" — {n} fields loaded', { title: t.title || 'form', n }));
   };
@@ -182,7 +208,7 @@ export function renderSetup(data: WizardData, set: SetFn): HTMLElement {
         data.template === t.id,
         locked
           ? () => showTrialUpgrade({ title: wt('trial.premium_title', 'Premium template'), message: wt('trial.premium_msg', 'Premium templates need a paid license. Upgrade to use this template.') })
-          : () => applyRealTemplate(t, set),
+          : () => applyRealTemplate(t, data, set),
         locked,
       ));
     });
@@ -229,7 +255,9 @@ export function renderSetup(data: WizardData, set: SetFn): HTMLElement {
 
     h('div', { style: 'margin-bottom:18px' }, [
       h('label', { class: 'mfw-flbl' }, [document.createTextNode(wt('wiz.setup.form_name', 'Form Name') + ' '), h('span', { class: 'mfw-req' }, '*')]),
-      h('input', { class: 'mfw-in', placeholder: wt('wiz.setup.form_name_ph', 'e.g. Employee Leave Request'), value: data.formName, oninput: (e: any) => set({ formName: e.target.value }, { rerender: false }) }),
+      // formNameAuto:false — once it is typed, the name belongs to the user and no template
+      // pick may overwrite it.
+      h('input', { class: 'mfw-in', placeholder: wt('wiz.setup.form_name_ph', 'e.g. Employee Leave Request'), value: data.formName, oninput: (e: any) => set({ formName: e.target.value, formNameAuto: false }, { rerender: false }) }),
     ]),
     h('div', { style: 'margin-bottom:22px' }, [
       h('label', { class: 'mfw-flbl' }, wt('wiz.setup.description', 'Description (optional)')),
@@ -247,8 +275,8 @@ export function renderSetup(data: WizardData, set: SetFn): HTMLElement {
     // Quick start (built-in field sets) + explicit Blank.
     h('label', { class: 'mfw-flbl', style: 'margin-bottom:10px' }, wt('wiz.setup.quick_start', 'Quick start')),
     h('div', { class: 'mfw-grid mfw-quick-grid', style: 'grid-template-columns:repeat(2,1fr);margin-bottom:22px' }, [
-      templateCard(wt('wiz.setup.blank', 'Blank Form'), wt('wiz.setup.blank_sub', 'Start from scratch'), 'fa-file', data.template === 'blank', () => applyTemplate('blank', set)),
-      ...quickStarts.map(t => templateCard(t.label, t.desc + (t.fieldTypes.length ? ' · ' + t.fieldTypes.length + ' fields' : ''), t.icon, data.template === t.id, () => applyTemplate(t.id, set), t.badge)),
+      templateCard(wt('wiz.setup.blank', 'Blank Form'), wt('wiz.setup.blank_sub', 'Start from scratch'), 'fa-file', data.template === 'blank', () => applyTemplate('blank', data, set)),
+      ...quickStarts.map(t => templateCard(t.label, t.desc + (t.fieldTypes.length ? ' · ' + t.fieldTypes.length + ' fields' : ''), t.icon, data.template === t.id, () => applyTemplate(t.id, data, set), t.badge)),
     ]),
 
     // Real saved template library: compact, searchable, and paged.

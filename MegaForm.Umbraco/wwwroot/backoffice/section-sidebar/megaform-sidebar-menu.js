@@ -163,7 +163,13 @@ export class MegaFormSidebarMenuElement extends UmbLitElement {
                   class="mf-action"
                   @click="${() => {
                     closeRoot();
-                    window.history.pushState({}, '', '/umbraco/section/megaform/view/open/builder/new');
+                    // Nonce nằm TRONG url: bấm "Create form" lần thứ hai khi đang
+                    // đứng sẵn ở màn đó vẫn phải mở lại trình hướng dẫn. Không có
+                    // nó, địa chỉ không đổi ⇒ khung không tải lại ⇒ nút bấm như
+                    // chết. Nonce đọc từ url nên ổn định qua mọi lần vẽ lại, chỉ
+                    // đổi đúng lúc người dùng bấm.
+                    const url = '/umbraco/section/megaform/view/open/builder/new?n=' + Date.now();
+                    window.history.pushState({}, '', url);
                     window.dispatchEvent(new PopStateEvent('popstate'));
                   }}">
                   <uui-icon name="icon-add"></uui-icon><span>Create form…</span>
@@ -414,10 +420,14 @@ export class MegaFormSidebarMenuElement extends UmbLitElement {
   }
 
   _navigate(event) {
-    const href = event.currentTarget.getAttribute('href');
+    let href = event.currentTarget.getAttribute('href');
     if (!href) return;
     event.preventDefault();
     event.stopPropagation();
+    // "Create form" phải mở lại trình hướng dẫn kể cả khi đang đứng sẵn ở đó —
+    // cùng lý do như nonce trong menu hành động: địa chỉ không đổi thì khung
+    // không tải lại, và nút bấm trông như chết.
+    if (/\/builder\/new$/.test(href)) href += '?n=' + Date.now();
     // Navigate within the Umbraco backoffice SPA
     window.history.pushState({}, '', href);
     window.dispatchEvent(new PopStateEvent('popstate'));

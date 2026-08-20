@@ -289,18 +289,31 @@ namespace MegaForm.Core.Services
                .Append("font-family:var(--mf-font-family,'Outfit',system-ui,sans-serif)!important;")
                .Append("}\n");
 
-            css.Append(scoped).Append(" .mfp[class*=\"mfp-\"] button[type=\"submit\"],")
-               .Append(scoped).Append(" .mfp[class*=\"mfp-\"] .mf-btn-submit,")
-               .Append(scoped).Append(" .mfp[class*=\"mfp-\"] .mfp-submit,")
-               .Append(scoped).Append(" .mfp[class*=\"mfp-\"] .mf-submit,")
-               .Append(scoped).Append(" .mfp[class*=\"mfp-\"] .mf-btn-primary{")
-               .Append("background:var(--mf-btn-bg,var(--mf-primary,var(--primary,#3b82f6)))!important;")
-               .Append("border-color:var(--mf-btn-bg,var(--mf-primary,var(--primary,#3b82f6)))!important;")
-               .Append("border-radius:var(--mf-btn-radius,var(--mf-input-radius,8px))!important;")
-               .Append("box-shadow:var(--mf-btn-shadow,none)!important;")
-               .Append("color:var(--mf-btn-color,var(--mf-btn-text,var(--primary-foreground,#ffffff)))!important;")
-               .Append("font-family:var(--mf-font-family,inherit)!important;")
-               .Append("}\n");
+            // [SubmitButtonKeepsTemplateSkin 2026-08-20] Song sinh SSR của luật trong
+            // renderer/index.ts — phải đổi cùng nhau, nếu không trang dựng ở máy chủ
+            // và trang dựng ở trình duyệt vẽ ra hai cái nút khác nhau.
+            //
+            // Luật ép nút CHỈ chạy khi người dùng thật sự đổi màu trong Theme Designer.
+            // Bản cũ phát cho MỌI form kèm !important, và nhắm thẳng `.mfp-submit` /
+            // `.mf-btn-submit` — đúng tên class các template dùng cho nút riêng của
+            // chúng. Coachella tô nút bằng linear-gradient, không đặt --mf-btn-bg, nên
+            // bị thay bằng màu chung #4a90d9. Một gradient không có cách nào nhét vào
+            // một biến màu đơn, nên template càng vẽ kỹ càng dễ mất.
+            if (enableTemplateVarBridge)
+            {
+                css.Append(scoped).Append(" .mfp[class*=\"mfp-\"] button[type=\"submit\"],")
+                   .Append(scoped).Append(" .mfp[class*=\"mfp-\"] .mf-btn-submit,")
+                   .Append(scoped).Append(" .mfp[class*=\"mfp-\"] .mfp-submit,")
+                   .Append(scoped).Append(" .mfp[class*=\"mfp-\"] .mf-submit,")
+                   .Append(scoped).Append(" .mfp[class*=\"mfp-\"] .mf-btn-primary{")
+                   .Append("background:var(--mf-btn-bg,var(--mf-primary,var(--primary,#3b82f6)))!important;")
+                   .Append("border-color:var(--mf-btn-bg,var(--mf-primary,var(--primary,#3b82f6)))!important;")
+                   .Append("border-radius:var(--mf-btn-radius,var(--mf-input-radius,8px))!important;")
+                   .Append("box-shadow:var(--mf-btn-shadow,none)!important;")
+                   .Append("color:var(--mf-btn-color,var(--mf-btn-text,var(--primary-foreground,#ffffff)))!important;")
+                   .Append("font-family:var(--mf-font-family,inherit)!important;")
+                   .Append("}\n");
+            }
 
             css.Append(scoped).Append(" .mfp.mfp-australia button[type=\"submit\"],")
                .Append(scoped).Append(" .mfp.mfp-australia .mf-btn-submit,")

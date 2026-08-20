@@ -167,7 +167,20 @@ function premiumDto(data: WizardData, ctx: WizardSaveCtx): any {
     SchemaJson: JSON.stringify(schema),
     SettingsJson: JSON.stringify(settings),
     ThemeJson: JSON.stringify({ theme, customCss: settings.customCss || '' }),
-    Status: 'Draft',
+    // 'Published', không phải 'Draft'.
+    //
+    // Bước cuối của trình hướng dẫn tên là **Publish**, ở đó người dùng chọn mức
+    // truy cập, ai được gửi, giới hạn phản hồi — rồi bấm nút **Create Form**. Sau
+    // ngần ấy, thứ họ nhận được là một form KHÔNG XEM ĐƯỢC: `schema?formId=` trả
+    // 404 cho form nháp, nên mở đường dẫn của nó chỉ thấy "Error loading form.
+    // Please try again later." Không có chỗ nào trong trình hướng dẫn nói rằng
+    // còn một bước xuất bản nữa phải làm.
+    //
+    // Mức truy cập KHÔNG bị bỏ qua: `accessLevel` vẫn quyết định `RequireAuth`
+    // ngay bên dưới, nên chọn "Members Only" hay "Restricted" vẫn được tôn trọng.
+    // Xuất bản ở đây chỉ có nghĩa "form đã tồn tại và xem được", không có nghĩa
+    // "ai cũng vào được".
+    Status: 'Published',
     SubmitButtonText: t.submitButtonText || 'Submit',
     SuccessMessage: t.successMessage || 'Thank you! Your submission has been received.',
     RequireAuth: requireAuth,
@@ -222,7 +235,20 @@ export function wizardToDto(data: WizardData, ctx: WizardSaveCtx): any {
     SchemaJson: JSON.stringify(schema),
     SettingsJson: JSON.stringify(settings),
     ThemeJson: JSON.stringify({ theme: finalTheme, customCss: settings.customCss || '', cssOverrides }),
-    Status: 'Draft',
+    // 'Published', không phải 'Draft'.
+    //
+    // Bước cuối của trình hướng dẫn tên là **Publish**, ở đó người dùng chọn mức
+    // truy cập, ai được gửi, giới hạn phản hồi — rồi bấm nút **Create Form**. Sau
+    // ngần ấy, thứ họ nhận được là một form KHÔNG XEM ĐƯỢC: `schema?formId=` trả
+    // 404 cho form nháp, nên mở đường dẫn của nó chỉ thấy "Error loading form.
+    // Please try again later." Không có chỗ nào trong trình hướng dẫn nói rằng
+    // còn một bước xuất bản nữa phải làm.
+    //
+    // Mức truy cập KHÔNG bị bỏ qua: `accessLevel` vẫn quyết định `RequireAuth`
+    // ngay bên dưới, nên chọn "Members Only" hay "Restricted" vẫn được tôn trọng.
+    // Xuất bản ở đây chỉ có nghĩa "form đã tồn tại và xem được", không có nghĩa
+    // "ai cũng vào được".
+    Status: 'Published',
     SubmitButtonText: 'Submit',
     SuccessMessage: 'Thank you! Your submission has been received.',
     RequireAuth: requireAuth,

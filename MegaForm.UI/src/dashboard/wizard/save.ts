@@ -72,3 +72,38 @@ export async function postWizardForm(dto: any): Promise<{ ok: boolean; formId?: 
 export function builderUrlFor(formId: number): string {
   return getPlatformRoute('builder', formId);
 }
+
+// [WizardToLiveForm 2026-08-15] Where the wizard lands after "Create Form": the LIVE FORM.
+//
+// Owner, twice: "sau bước cuối create form phải hiện ra form live trên trang luôn, không hiện ra
+// form trong builder nữa rất khó chịu" — and again after the builder's Publish was changed. You
+// have just described a form in five steps; being dropped into an editor to look for it is the
+// wrong ending. The builder stays one click away.
+//
+// Same two shapes as the builder's own publish redirect (builder/toolbar.ts getLiveFormUrl):
+//   · a content page  → ?formid=N        (the form in the real page chrome)
+//   · /admin/megaform → ?embed=1&formId=N (that path is pinned to the dashboard role, so ?formid=
+//                        there would re-render the dashboard instead of the form)
+// DNN keeps the builder: its wizard runs on a Persona Bar route, which is not the form's page, so
+// there is no "same page minus the panel" to land on.
+export function liveFormUrlFor(formId: number): string {
+  try {
+    const id = Number(formId) || 0;
+    if (id <= 0) return builderUrlFor(formId);
+    const cfg: any = getPlatformHostConfig() || {};
+    if (String(cfg.platform || '').toLowerCase() === 'dnn') return builderUrlFor(formId);
+    const u = new URL(window.location.href);
+    ['mfpanel', 'mfconfig', 'edit', 'view', 'vk', 'rightTab', 'returnUrl', 'return', 'formId', 'formid', 'embed']
+      .forEach((k) => u.searchParams.delete(k));
+    if (/\/admin(\/|$)/i.test(u.pathname)) {
+      u.searchParams.set('embed', '1');
+      u.searchParams.set('formId', String(id));
+    } else {
+      u.searchParams.set('formid', String(id));
+    }
+    u.hash = '';
+    return u.pathname + u.search;
+  } catch {
+    return builderUrlFor(formId);
+  }
+}

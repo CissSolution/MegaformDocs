@@ -65,8 +65,36 @@ export class MegaFormFormPickerElement extends UmbLitElement {
       font-size: 0.875rem;
       color: var(--uui-color-text, #1e293b);
     }
-    .selected span {
+    .selected .title {
       color: var(--uui-color-text-alt, #64748b);
+      flex: 1 1 auto;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    /* Cùng chỗ, cùng thứ tự với picker của Umbraco Forms: các liên kết nằm
+       cuối hàng đã chọn, không phải một hàng nút riêng bên dưới. */
+    .actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex: 0 0 auto;
+    }
+    .actions button {
+      background: none;
+      border: 0;
+      padding: 0;
+      cursor: pointer;
+      font: inherit;
+      color: var(--uui-color-interactive, #1b264f);
+      text-decoration: none;
+    }
+    .actions button:hover {
+      text-decoration: underline;
+    }
+    .actions button.remove {
+      color: var(--uui-color-danger, #dc2626);
     }
   `;
 
@@ -112,7 +140,12 @@ export class MegaFormFormPickerElement extends UmbLitElement {
               <uui-tag color="${(selected.status ?? '').toLowerCase() === 'published' ? 'positive' : 'warning'}">
                 ${selected.status ?? 'draft'}
               </uui-tag>
-              <span>${selected.title} (#${selected.formId})</span>
+              <span class="title">${selected.title} (#${selected.formId})</span>
+              <span class="actions">
+                <button type="button" @click="${() => this._goTo(`builder/${selected.formId}`)}">Edit</button>
+                <button type="button" @click="${() => this._goTo(`submissions?formId=${selected.formId}`)}">Open</button>
+                <button type="button" class="remove" @click="${this._clear}">Remove</button>
+              </span>
             </div>
           `
         : ''}
@@ -156,6 +189,31 @@ export class MegaFormFormPickerElement extends UmbLitElement {
     } finally {
       this._loading = false;
     }
+  }
+
+  /**
+   * Sang một màn MegaForm khác mà KHÔNG tải lại trang.
+   *
+   * `location.href` sẽ nạp lại cả backoffice, và Umbraco 17 giữ token OIDC
+   * trong bộ nhớ — nạp lại là mất token, rồi bị đẩy về màn đăng nhập. Đẩy vào
+   * history rồi bắn popstate là cách chính thanh điều hướng bên trái đang dùng.
+   */
+  _goTo(route) {
+    window.history.pushState({}, '', `/umbraco/section/megaform/view/open/${route}`);
+    window.dispatchEvent(new PopStateEvent('popstate'));
+  }
+
+  /**
+   * Bỏ chọn form. Phải bắn UmbPropertyValueChangeEvent y như khi chọn, nếu
+   * không thì ô hiển thị trống mà giá trị cũ vẫn nằm trong tài liệu và quay lại
+   * ngay lần mở sau — người dùng tưởng đã gỡ, thực ra chưa.
+   */
+  _clear() {
+    if (this.value === '') return;
+    this.value = '';
+    this._search = '';
+    this._filteredForms = [...this._forms];
+    this.dispatchEvent(new UmbPropertyValueChangeEvent());
   }
 
   _onChange(event) {

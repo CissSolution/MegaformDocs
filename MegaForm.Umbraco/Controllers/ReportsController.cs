@@ -67,7 +67,10 @@ namespace MegaForm.Umbraco.Controllers
             });
         }
 
-        [HttpGet("FormsOverview")]
+        // The permission-aware shared API endpoint is implemented by
+        // MegaFormApiController.ReportsFormsOverview. Keep this implementation for
+        // internal compatibility without registering a duplicate ASP.NET route.
+        [NonAction]
         public IActionResult FormsOverview(int days = 30, int siteId = 0)
         {
             if (days < 1) days = 7;

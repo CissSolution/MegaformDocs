@@ -325,6 +325,24 @@ export default class MegaFormWorkspaceView extends UmbLitElement {
         const qs = '?host=umbraco-workspace';
         // Leaving the builder for another tab must not leave a stale rail selection behind.
         try { sessionStorage.removeItem('mf-builder-initial-tab'); } catch (_e) {}
+
+        // [CreateFormGoesStraightToWizard 2026-08-20] "Create form" mở THẲNG trình
+        // hướng dẫn 5 bước, không dừng ở một màn trung gian.
+        //
+        // Trước đây `builder/new` mở canvas rỗng của builder: một thanh tiêu đề
+        // "New Form" trên một vùng trống, và cách duy nhất đi tiếp là bấm Cancel để
+        // quay về Dashboard rồi bấm "New Form" ở đó. Người dùng phải HUỶ thì mới bắt
+        // đầu được — một màn chắn giữa ý định và việc cần làm.
+        //
+        // Dashboard đã có sẵn deep link `#mf-new-form` (dựng cho Persona Bar của DNN),
+        // nên chỗ này chỉ việc đi tới đúng liên kết ấy.
+        if (!id && String(arg || '').toLowerCase() === 'new') {
+          const nonce = new URLSearchParams(window.location.search).get('n') || '';
+          const q = nonce ? `?n=${encodeURIComponent(nonce)}` : '';
+          return { src: `/umbraco/MegaForm/Admin${q}#mf-new-form`,
+                   title: 'MegaForm', formId: 0, tab: '' };
+        }
+
         return { src: id > 0 ? `/umbraco/MegaForm/Builder/${id}${qs}` : `/umbraco/MegaForm/Builder${qs}`,
                  title: 'MegaForm Builder', formId: id, tab: 'design' };
       }

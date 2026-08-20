@@ -622,7 +622,7 @@ async function openGoogleSheetsSettings(targetBody?: HTMLElement): Promise<void>
 
   const jsonTa = el('textarea', 'mf-input') as HTMLTextAreaElement;
   jsonTa.rows = 7; jsonTa.placeholder = '{\n  "type": "service_account",\n  "client_email": "...@...iam.gserviceaccount.com",\n  "private_key": "-----BEGIN PRIVATE KEY-----\\n..."\n}';
-  jsonTa.style.cssText = GS_INPUT_CSS + ';resize:vertical;font-family:ui-monospace,monospace;font-size:12px';
+  jsonTa.style.cssText = GS_INPUT_CSS + ';resize:vertical;font-family:ui-monospace,monospace;font-size:12px;min-height:120px';
   const ssInp = el('input', 'mf-input') as HTMLInputElement; ssInp.type = 'text'; ssInp.placeholder = '1AbCd…spreadsheet id'; ssInp.style.cssText = GS_INPUT_CSS;
   const rangeInp = el('input', 'mf-input') as HTMLInputElement; rangeInp.type = 'text'; rangeInp.value = 'Sheet1!A:Z'; rangeInp.style.cssText = GS_INPUT_CSS;
 
@@ -2423,9 +2423,15 @@ async function openPortalAccess(formId: number, title?: string) {
     status = await parseJsonResponseSafe(r);
     if (!r.ok) throw new Error((status && (status.error || status.message)) || ('HTTP ' + r.status));
   } catch (e: any) {
-    (ov.querySelector('.mf-modal-body') as HTMLElement).innerHTML =
-      '<div class="mf-modal-err">' + ((e && e.message) || 'Failed to load access settings.') +
-      '<br><br><span style="font-size:12px;color:#64748b">Portal mode currently requires the Oqtane platform.</span></div>';
+    // 404 ở đây KHÔNG phải lỗi — đó là "nền này chưa có tính năng cổng thông tin".
+    // In "HTTP 404" lên trước câu giải thích khiến người dùng đi tìm thứ hỏng, mà
+    // chẳng có gì hỏng cả. Chỉ những mã lỗi THẬT mới đáng hiện ra.
+    const notHere = /404/.test(String((e && e.message) || ''));
+    (ov.querySelector('.mf-modal-body') as HTMLElement).innerHTML = notHere
+      ? '<div class="mf-modal-err" style="color:#475569">Cổng thông tin cho người gửi hiện chỉ chạy trên nền Oqtane.' +
+        '<br><br><span style="font-size:12px;color:#64748b">Trên nền này, phần phân quyền xem bài gửi nằm ở màn Security.</span></div>'
+      : '<div class="mf-modal-err">' + ((e && e.message) || 'Failed to load access settings.') +
+        '<br><br><span style="font-size:12px;color:#64748b">Portal mode currently requires the Oqtane platform.</span></div>';
     return;
   }
 
@@ -2521,7 +2527,12 @@ function aiConfigUrl(): string {
     return '/api/AiAssistant/DefaultConfig?entityid=' + encodeURIComponent(String(sid)) + '&entityname=Site&siteId=' + encodeURIComponent(String(sid));
   }
   const isAspCore = platform === 'aspcore' || platform === 'aspnetcore' || platform === 'web';
+  const isUmbraco = platform === 'umbraco' || /\/umbraco\/MegaForm\//i.test(w.location.pathname || '');
   const pid = pf.portalId ?? pf.PortalId ?? 0;
+  if (isUmbraco) {
+    const apiBase = String(cfg.apiBase || '/umbraco/MegaForm/MegaFormApi/').replace(/\/?$/, '/');
+    return apiBase + 'AiAssistant/DefaultConfig?portalId=' + encodeURIComponent(String(pid));
+  }
   if (isAspCore) {
     return '/api/AiAssistant/DefaultConfig?portalId=' + encodeURIComponent(String(pid));
   }
@@ -2702,6 +2713,50 @@ async function openAiSettings(targetBody?: HTMLElement) {
 // ─────────────────────────────────────────────────────────────
 // SIDEBAR
 // ─────────────────────────────────────────────────────────────
+/**
+ * [SidebarAutoCollapse 2026-08-15] Start the sidebar in icon mode when the shell is narrow.
+ *
+ * The dashboard is not always the whole window. Inside Oqtane it renders in the page's content
+ * column, so the shell can be 800px wide while the window is 1327 — and at that width the
+ * expanded sidebar eats the room the form list needs. A viewport media query cannot see this,
+ * which is why the header buttons had the same class of bug.
+ *
+ * Two rules, both deliberate:
+ *  · This sets a DEFAULT, not a lock. The toggle still works in both directions.
+ *  · Once the user has toggled it themselves, we stop touching it — a layout that keeps
+ *    overriding a person's choice on every resize is worse than one that never helps.
+ */
+function autoCollapseSidebar(shell: HTMLElement, sb: HTMLElement): void {
+  // Measured on the reported case: a 1327px window gives a 1056px shell, because Oqtane's page
+  // chrome takes the rest — and at 1056 the expanded 256px rail leaves the form list 800px, which
+  // is where the header ran out of room. 1200 catches that and still leaves a genuinely wide
+  // dashboard expanded.
+  const NARROW = 1200;
+  let userDecided = false;
+
+  const apply = () => {
+    if (userDecided) return;
+    const w = shell.getBoundingClientRect().width || shell.clientWidth;
+    if (!w) return;                        // not laid out yet; a later observation will catch it
+    sb.setAttribute('data-state', w < NARROW ? 'collapsed' : 'expanded');
+  };
+
+  // The toggle lives in the header and flips the same attribute; a click there is the user
+  // speaking, so record it and stand down.
+  shell.addEventListener('click', (e) => {
+    if ((e.target as HTMLElement | null)?.closest('.mf-sb-tog')) userDecided = true;
+  }, true);
+
+  apply();
+  try {
+    const ro = new ResizeObserver(() => apply());
+    ro.observe(shell);
+  } catch {
+    // No ResizeObserver: fall back to the window, which is still better than a fixed default.
+    window.addEventListener('resize', apply);
+  }
+}
+
 function buildSidebar(counts: DashboardData['counts']): HTMLElement {
   const sb = div('mf-sidebar'); sb.setAttribute('data-state','expanded');
 
@@ -4877,6 +4932,12 @@ function render(root: HTMLElement, data: DashboardData) {
   root.innerHTML = '';
   document.body.className = 'mf-body';
   const lay = div('mf-layout');
+  // [UmbracoHostNoSidebar 2026-08-15] When running inside the Umbraco Bellissima
+  // backoffice iframe we already have the Umbraco left sidebar. Hide MegaForm's
+  // own sidebar so the page uses the Umbraco navigation instead and avoids the
+  // duplicated left rail the user reported.
+  const isUmbraco = String(getPlatformHostConfig().platform || '').toLowerCase() === 'umbraco';
+  if (isUmbraco) lay.classList.add('mf-umbraco-host');
   const sb = buildSidebar(data.counts);
   const inset = div('mf-inset');
   const hd = buildHeader(sb, data.counts);
@@ -4888,6 +4949,7 @@ function render(root: HTMLElement, data: DashboardData) {
   // const btm = div('mf-g2'); btm.appendChild(buildQA(data.quickActions||[])); btm.appendChild(buildSystem(data.system||[]));
   // main.appendChild(btm);
   mk(inset, hd, main); mk(lay, sb, inset); root.appendChild(lay);
+  autoCollapseSidebar(lay, sb);
   applyDashboardDemoMode(root);
   // [2026-06-12] Renderer-host info toast removed per user request — not necessary.
   (async () => {

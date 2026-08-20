@@ -28,6 +28,35 @@ Codebase này đã qua nhiều đợt audit và **các lớp lỗ hổng dưới
 - **Đổi API contract phải đồng bộ client JS** (`MegaForm.UI/src`, `wwwroot/js`) — deploy lệch pha = vỡ public form/builder flow.
 - **Sau fix:** build clean mọi target; cập nhật audit doc đánh dấu finding đã đóng; giữ public submit + builder flow.
 
+## 🎨 GIAO DIỆN & ĐÓNG GÓI — BẮT BUỘC (đọc trước khi sửa CSS dùng chung / endpoint Umbraco / đóng gói)
+
+**Canonical rules: [`Docs/RENDER_AND_PACKAGING_RULES.md`](Docs/RENDER_AND_PACKAGING_RULES.md).**
+
+Mọi lỗi trong tài liệu đó đều **build xanh, HTTP 200, không một dòng lỗi** — chỉ lộ ra khi mở màn
+hình lên nhìn hoặc đo bằng số. Tóm tắt để không tái phạm:
+
+1. **CSS "mặc định" phải nhường được cho template** — không `!important`, không nhắm class của
+   template (`.mfp-submit`…). Cần loại ngữ cảnh thì dùng `:not(:where(.mfp *))`. ⭐`:where()` chưa
+   chắc đủ: đo bằng CDP `CSS.getMatchedStylesForNode`, đừng tranh luận bằng bảng specificity.
+   Và đọc `backgroundColor` là chưa đủ — gradient nằm ở `background-image`.
+2. **Luật CSS hậu duệ (`.wrapper h2`) luôn chồm vào nội dung component vẽ ra.** Đã ép mọi tiêu đề
+   của template về cỡ chữ trang tin.
+3. **Asset không `?v=` thì bản vá không tới người dùng.** Dùng `asp-append-version="true"`; gói
+   Umbraco thì bump `version` trong `umbraco-package.json`.
+4. **Umbraco/Oqtane: KHÔNG `Ok()` payload còn mang `JObject`/`JArray`** — STJ xuất ra mảng rác
+   (`[[[]],[[]]…]`), field mất sạch thuộc tính, form ra trắng mà vẫn 200. Serialize bằng Newtonsoft
+   rồi `Content(...)`. **Sửa 1 nền, rà 3 nền còn lại.**
+5. **Umbraco: property là DỮ LIỆU, template mới VẼ.** Thêm property không làm nó hiện ra. File render
+   thật ở `MegaForm.Umbraco.Host/Views/*.cshtml`, không phải chuỗi seed trong handler. Gỡ property
+   phải có bước dọn chạy **trước** cổng once-only. ⚠️alias lệch hoa-thường ⇒ `Value<T>()` trả null im lặng.
+6. **Đóng gói:** guard `throw` phải nằm **NGOÀI** `if (Test-Path)` (đường dẫn sai = bỏ qua im lặng,
+   gói thiếu template mà vẫn xanh); **so timestamp DLL với source** trước khi pack; mở zip kiểm chuỗi
+   của chính bản vá trước khi cài lên site thật. ⚠️DNN install **không ghi đè `bin/*.dll`**.
+7. **Nghiệm thu đi tới tận nơi người dùng nhìn** — không dừng ở "API trả đúng"/"đã tạo xong". Đếm ô
+   nhập trên trang công khai, đếm `svg` thật, deep-query xuyên shadow DOM, dùng `.click()` của
+   Playwright (không phải trong `evaluate`). Trước khi kết luận "màn hình hỏng", kiểm **id đang thử
+   có thật không**.
+
 ## Kiến trúc & deploy
 - Chi tiết deploy gate (Oqtane bump `ModuleInfo.Version`), pack gotchas, các site QA (:5090/:5100/:5111/…) → xem auto-memory `MEMORY.md`.
 - Nguồn canonical CSS = `Assets/css/` (không sửa bản wwwroot đã build). Renderer có 2 nguồn (TS + `FormHtmlRenderer.cs`) — sửa phải giữ parity SSR/client.

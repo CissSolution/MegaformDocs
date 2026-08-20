@@ -11,6 +11,11 @@
     {
         Guid.TryParse(Model.Value<string>("umbracoForm"), out formGuid);
     }
+
+    // Alias ở document type này là "megaformPicker" — chữ f THƯỜNG. Trang tin
+    // (newsArticle) lại đặt là "megaFormPicker" với F hoa. Hai cái tên khác nhau
+    // cho cùng một thứ, và gõ nhầm thì Value<int?>() trả null chứ không báo gì.
+    var megaFormId = Model.Value<int?>("megaformPicker") ?? 0;
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -18,8 +23,13 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>@Model.Name</title>
-    <link rel="stylesheet" href="/css/news-demo.css" />
-    <script src="/App_Plugins/UmbracoForms/assets/aspnet-client-validation/dist/aspnet-validation.min.js"></script>
+    @* asp-append-version: ASP.NET Core băm nội dung file và gắn ?v=<hash>.
+       Không có nó, "/css/news-demo.css" là một URL bất biến — sửa xong CSS thì
+       trình duyệt nào đã mở trang một lần vẫn dùng bản cũ, và bản vá trông như
+       chưa từng được áp. Đã xảy ra thật: thẻ bọc quanh form đã gỡ khỏi CSS trên
+       máy chủ mà màn hình vẫn còn nguyên. *@
+    <link rel="stylesheet" href="/css/news-demo.css" asp-append-version="true" />
+    <script src="/App_Plugins/UmbracoForms/assets/aspnet-client-validation/dist/aspnet-validation.min.js" asp-append-version="true"></script>
 </head>
 <body class="news-body">
     <header class="news-top">
@@ -36,17 +46,34 @@
             <p class="news-lede">@intro</p>
         }
 
+        @*
+            Trang này có HAI ô chọn form, và mỗi ô do một hệ khác nhau vẽ ra.
+            Template phải đọc TỪNG ô và tự xuất HTML cho nó: một property có dữ
+            liệu không tự hiện lên trang. Bản trước chỉ đọc "umbracoForm", nên
+            chọn form MegaForm ở ô dưới xong trang vẫn báo "chưa chọn form nào" —
+            đúng như nó được viết, chỉ là không ai viết phần còn lại.
+        *@
         <div class="news-form-card">
             @if (formGuid != Guid.Empty)
             {
+                <h2 class="news-form-which">Umbraco Forms</h2>
                 <umb-forms-render form-id="@formGuid" />
             }
-            else
+        </div>
+
+        <div class="news-form-card">
+            @if (megaFormId > 0)
             {
-                <p>No form picked yet. Open this page in the backoffice, choose one in the
-                    <strong>Umbraco Form</strong> property, and publish.</p>
+                <h2 class="news-form-which">MegaForm</h2>
+                <megaform form-id="@megaFormId" content-id="@Model.Id" view-type="submit"></megaform>
             }
         </div>
+
+        @if (formGuid == Guid.Empty && megaFormId <= 0)
+        {
+            <p>No form picked yet. Open this page in the backoffice, choose one in the
+                <strong>Umbraco Form</strong> or <strong>MegaformPicker</strong> property, and publish.</p>
+        }
     </div>
 </body>
 </html>
