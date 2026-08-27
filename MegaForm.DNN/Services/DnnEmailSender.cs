@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Mail;
+using System.Text;
 using DotNetNuke.Entities.Controllers;
 using DotNetNuke.Entities.Host;
 using DotNetNuke.Services.Mail;
@@ -102,54 +104,91 @@ namespace MegaForm.DNN.Services
             var host = (options.Host ?? string.Empty).Trim();
             var senderEmail = (options.FromEmail ?? string.Empty).Trim();
             if (string.IsNullOrWhiteSpace(senderEmail)) senderEmail = Host.HostEmail ?? string.Empty;
-            var senderName = (options.FromName ?? string.Empty).Trim();
-            var username = (options.Username ?? string.Empty).Trim();
-            var password = options.Password ?? string.Empty;
             var finalReplyTo = string.IsNullOrWhiteSpace(replyTo) ? options.ReplyTo : replyTo;
+
+            var recipients = (to ?? string.Empty)
+                .Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(x => x.Trim())
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .ToList();
+
+            var mailTo = recipients.FirstOrDefault() ?? string.Empty;
+            var cc = recipients.Count > 1 ? string.Join(",", recipients.Skip(1)) : string.Empty;
+
+            // Use the plain email address as the from address. Some providers reject display
+            // names (especially ones containing '&') during spam filtering, and DNN's own
+            // Host "Test SMTP Settings" button also sends from the bare HostEmail address.
+            var mailFrom = senderEmail;
 
             if (string.IsNullOrWhiteSpace(host))
             {
-                Mail.SendEmail(senderEmail, senderEmail, to.Trim(), subject ?? string.Empty, htmlBody ?? string.Empty);
+                // No custom SMTP host configured: let DNN use its configured mail provider.
+                Mail.SendEmail(mailFrom, finalReplyTo ?? mailFrom, mailTo, subject ?? string.Empty, htmlBody ?? string.Empty);
                 return;
             }
 
-            using (var msg = new MailMessage())
+            // If the MegaForm SMTP settings match the DNN Host SMTP settings and no explicit
+            // password is stored in MegaForm, delegate to DNN so it can use the encrypted
+            // Host SMTP password. Passing an empty password to a custom SMTP server usually
+            // results in "Sending address not accepted due to spam filter" auth failures.
+            var hostSmtpRaw = Host.SMTPServer ?? string.Empty;
+            var hostSmtpParts = hostSmtpRaw.Split(new[] { ':' }, 2);
+            var hostSmtpHost = hostSmtpParts.Length > 0 ? hostSmtpParts[0].Trim() : string.Empty;
+            var hostSmtpPort = hostSmtpParts.Length > 1 ? hostSmtpParts[1].Trim() : "25";
+            if (!int.TryParse(hostSmtpPort, out var hostSmtpPortNum)) hostSmtpPortNum = 25;
+
+            bool hostMatches = string.Equals(host, hostSmtpHost, StringComparison.OrdinalIgnoreCase)
+                && options.Port == hostSmtpPortNum;
+            bool userMatches = string.Equals(options.Username ?? string.Empty, Host.SMTPUsername ?? string.Empty, StringComparison.OrdinalIgnoreCase);
+            bool useHostSmtp = hostMatches && userMatches && string.IsNullOrWhiteSpace(options.Password);
+
+            if (useHostSmtp)
             {
-                msg.From = string.IsNullOrWhiteSpace(senderName)
-                    ? new MailAddress(senderEmail)
-                    : new MailAddress(senderEmail, senderName);
-
-                foreach (var addr in (to ?? string.Empty)
-                    .Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)
-                    .Select(x => x.Trim())
-                    .Where(x => !string.IsNullOrWhiteSpace(x)))
-                {
-                    msg.To.Add(new MailAddress(addr));
-                }
-
-                foreach (var addr in (finalReplyTo ?? string.Empty)
-                    .Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)
-                    .Select(x => x.Trim())
-                    .Where(x => !string.IsNullOrWhiteSpace(x)))
-                {
-                    msg.ReplyToList.Add(new MailAddress(addr));
-                }
-
-                msg.Subject = subject ?? string.Empty;
-                msg.Body = htmlBody ?? string.Empty;
-                msg.IsBodyHtml = true;
-
-                using (var smtp = new SmtpClient(host, options.Port > 0 ? options.Port : 25))
-                {
-                    smtp.EnableSsl = options.EnableSsl;
-                    smtp.DeliveryMethod = SmtpDeliveryMethod.Network;
-                    smtp.Timeout = options.TimeoutMs > 0 ? options.TimeoutMs : 20000;
-                    smtp.UseDefaultCredentials = false;
-                    if (!string.IsNullOrWhiteSpace(username))
-                        smtp.Credentials = new NetworkCredential(username, password);
-                    smtp.Send(msg);
-                }
+                // Let DNN resolve host SMTP settings (including the encrypted password).
+                Mail.SendMail(
+                    mailFrom: mailFrom,
+                    mailTo: mailTo,
+                    cc: cc,
+                    bcc: string.Empty,
+                    replyTo: finalReplyTo ?? string.Empty,
+                    priority: DotNetNuke.Services.Mail.MailPriority.Normal,
+                    subject: subject ?? string.Empty,
+                    bodyFormat: MailFormat.Html,
+                    bodyEncoding: Encoding.UTF8,
+                    body: htmlBody ?? string.Empty,
+                    attachments: new string[0],
+                    smtpServer: string.Empty,
+                    smtpAuthentication: "0",
+                    smtpUsername: string.Empty,
+                    smtpPassword: string.Empty,
+                    smtpEnableSSL: false);
+                return;
             }
+
+            // Use DNN Mail.SendMail so the platform's own SMTP handling (auth, SSL, spam
+            // filter integration) is used instead of our own SmtpClient. This matches the
+            // behaviour of the DNN Host "Test SMTP Settings" button and avoids provider-
+            // specific rejections that only happen when SmtpClient connects directly.
+            var smtpServer = host + ":" + (options.Port > 0 ? options.Port : 25);
+            var smtpAuthentication = !string.IsNullOrWhiteSpace(options.Username) ? "1" : "0";
+
+            Mail.SendMail(
+                mailFrom: mailFrom,
+                mailTo: mailTo,
+                cc: cc,
+                bcc: string.Empty,
+                replyTo: finalReplyTo ?? string.Empty,
+                priority: DotNetNuke.Services.Mail.MailPriority.Normal,
+                subject: subject ?? string.Empty,
+                bodyFormat: MailFormat.Html,
+                bodyEncoding: Encoding.UTF8,
+                body: htmlBody ?? string.Empty,
+                attachments: new string[0],
+                smtpServer: smtpServer,
+                smtpAuthentication: smtpAuthentication,
+                smtpUsername: options.Username ?? string.Empty,
+                smtpPassword: options.Password ?? string.Empty,
+                smtpEnableSSL: options.EnableSsl);
         }
 
         public void Send(string to, string subject, string htmlBody, string from = null, string replyTo = null)

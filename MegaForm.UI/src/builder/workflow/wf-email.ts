@@ -91,6 +91,7 @@ export function renderSendEmailConfig(ctx: any): any {
   function applyEmailSample(kind: string): void {
     if (kind === 'confirmation') {
       patchEmail({
+        to: toVal || '{{field.email}}',
         subject: subjectVal || 'We received your submission',
         body: bodyVal || '<p>Hello <strong>{{field.full_name}}</strong>,</p><p>Thanks for your submission. We will review it and email <strong>{{field.work_email}}</strong> with the next steps.</p>',
         replyTo: replyToVal || ''
@@ -102,6 +103,33 @@ export function renderSendEmailConfig(ctx: any): any {
         to: toVal || 'ops@example.com',
         subject: subjectVal || 'New submission: {{field.full_name}}',
         body: bodyVal || '<p>A new submission is ready for review.</p><ul><li>Name: {{field.full_name}}</li><li>Email: {{field.work_email}}</li><li>Route: {{variable.route}}</li></ul>',
+        cc: ccVal || ''
+      });
+      return;
+    }
+    if (kind === 'rejection') {
+      patchEmail({
+        to: toVal || '{{field.email}}',
+        subject: subjectVal || 'Your submission was not approved',
+        body: bodyVal || '<p>Hi {{field.full_name}},</p><p>Thank you for your submission. Unfortunately we are unable to proceed at this time.</p><p>Reason: {{variable.rejectionReason}}</p>',
+        replyTo: replyToVal || ''
+      });
+      return;
+    }
+    if (kind === 'approval-notice') {
+      patchEmail({
+        to: toVal || '{{field.email}}',
+        subject: subjectVal || 'Your submission was approved',
+        body: bodyVal || '<p>Hi {{field.full_name}},</p><p>Good news — your submission has been approved. Next steps will follow shortly.</p>',
+        replyTo: replyToVal || ''
+      });
+      return;
+    }
+    if (kind === 'summary-table') {
+      patchEmail({
+        to: toVal || 'team@example.com',
+        subject: subjectVal || 'Submission summary',
+        body: bodyVal || '<table border="1" cellpadding="6"><tr><td>Name</td><td>{{field.full_name}}</td></tr><tr><td>Email</td><td>{{field.email}}</td></tr><tr><td>Submission ID</td><td>{{submission.id}}</td></tr></table>',
         cc: ccVal || ''
       });
     }
@@ -153,7 +181,10 @@ export function renderSendEmailConfig(ctx: any): any {
       h('div', null, 'Use form-field tokens and workflow variables in To, Subject, and Body.'),
       h('div', mergeGuardProps({ style: { display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 } }),
         h('button', buttonProps({ className: 'mf-rf-cfg-btn', onClick: function(){ applyEmailSample('confirmation'); } }), 'Sample: Confirmation'),
-        h('button', buttonProps({ className: 'mf-rf-cfg-btn', onClick: function(){ applyEmailSample('internal-alert'); } }), 'Sample: Internal Alert')
+        h('button', buttonProps({ className: 'mf-rf-cfg-btn', onClick: function(){ applyEmailSample('internal-alert'); } }), 'Sample: Internal Alert'),
+        h('button', buttonProps({ className: 'mf-rf-cfg-btn', onClick: function(){ applyEmailSample('approval-notice'); } }), 'Sample: Approved'),
+        h('button', buttonProps({ className: 'mf-rf-cfg-btn', onClick: function(){ applyEmailSample('rejection'); } }), 'Sample: Rejected'),
+        h('button', buttonProps({ className: 'mf-rf-cfg-btn', onClick: function(){ applyEmailSample('summary-table'); } }), 'Sample: Summary table')
       )
     ),
     renderEmailTokenBoard({ h: h, getSchemaSourceTokenOptions: getSchemaSourceTokenOptions }),

@@ -461,6 +461,87 @@ namespace MegaForm.Core.Services
             return Task.CompletedTask;
         }
 
+        // ─── RetryAsync ───────────────────────────────────────────────────────
+
+        public async Task<WorkflowExecutionContext> RetryAsync(string executionId, CancellationToken ct)
+        {
+            if (string.IsNullOrWhiteSpace(executionId))
+                throw new ArgumentException("executionId is required.", nameof(executionId));
+
+            var ctx = _repo.GetExecution(executionId);
+            if (ctx == null)
+                throw new InvalidOperationException("Workflow execution not found.");
+
+            if (ctx.Status != WorkflowExecutionStatus.Failed)
+                throw new InvalidOperationException(
+                    "Workflow execution '" + executionId + "' is not failed (status=" +
+                    ctx.Status.ToString().ToLowerInvariant() + ") — only failed executions can be retried.");
+
+            var runtime = ResolveWorkflowForForm(ctx.FormId);
+            var definition = runtime != null ? runtime.Definition : null;
+            if (definition == null)
+                throw new InvalidOperationException("No applied workflow found for form " + ctx.FormId + ".");
+
+            if (string.IsNullOrWhiteSpace(ctx.CurrentNodeId))
+                throw new InvalidOperationException("Workflow execution has no current node to retry from.");
+
+            var node = FindNode(definition, ctx.CurrentNodeId);
+            if (node == null)
+                throw new InvalidOperationException("Current workflow node '" + ctx.CurrentNodeId + "' was not found in the applied definition.");
+
+            ctx.Status        = WorkflowExecutionStatus.Running;
+            ctx.ErrorMessage  = null;
+            ctx.CompletedAt   = null;
+            _repo.UpdateExecution(ctx);
+
+            _log?.LogInfo("MegaForm.Workflow",
+                "Retrying workflow execution " + ctx.ExecutionId + " from node " + ctx.CurrentNodeId + ".");
+
+            var settings = definition.Settings;
+            int timeoutSec = (settings != null && settings.ExecutionTimeoutSeconds > 0)
+                ? definition.Settings.ExecutionTimeoutSeconds : 300;
+
+            using (var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSec)))
+            using (var linked = CancellationTokenSource.CreateLinkedTokenSource(ct, timeoutCts.Token))
+            {
+                try
+                {
+                    await WalkGraphAsync(definition, ctx, ctx.CurrentNodeId, linked.Token);
+                }
+                catch (OperationCanceledException)
+                {
+                    if (timeoutCts.IsCancellationRequested)
+                    {
+                        ctx.Status       = WorkflowExecutionStatus.Failed;
+                        ctx.ErrorMessage = "Workflow execution timed out after " + timeoutSec + "s.";
+                    }
+                    else
+                    {
+                        ctx.Status       = WorkflowExecutionStatus.Cancelled;
+                        ctx.ErrorMessage = "Execution cancelled.";
+                    }
+                }
+                catch (Exception ex)
+                {
+                    ctx.Status       = WorkflowExecutionStatus.Failed;
+                    ctx.ErrorMessage = "Unhandled error: " + ex.Message;
+                    _log?.LogError("MegaForm.Workflow", "Unhandled workflow retry error for execution " + ctx.ExecutionId + ": " + ex.Message, ex);
+                }
+            }
+
+            if (ctx.Status == WorkflowExecutionStatus.Running)
+                ctx.Status = WorkflowExecutionStatus.Completed;
+            if (ctx.Status != WorkflowExecutionStatus.Waiting)
+                ctx.CompletedAt = DateTime.UtcNow;
+
+            _repo.UpdateExecution(ctx);
+
+            _log?.LogInfo("MegaForm.Workflow",
+                "Workflow retry " + ctx.ExecutionId + " finished with status=" + ctx.Status + ", currentNode=" + (ctx.CurrentNodeId ?? "") + ", error=" + (ctx.ErrorMessage ?? "") + ".");
+
+            return ctx;
+        }
+
         // ─── Helpers ──────────────────────────────────────────────────────────
 
         private WorkflowExecutionContext BuildContext(

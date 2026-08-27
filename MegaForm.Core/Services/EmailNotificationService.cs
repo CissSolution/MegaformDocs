@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using MegaForm.Core.Interfaces;
 using MegaForm.Core.Models;
+using MegaForm.Core.Services.MagicStrings;
 using MegaForm.Core.Services.TypedSubmission;
 using MegaForm.Core.Utilities;
 using MegaForm.Core.Workflow;
@@ -15,12 +16,14 @@ namespace MegaForm.Core.Services
         private readonly IEmailSender _email;
         private readonly ILogService _log;
         private readonly SubmissionDataResolver _dataResolver;
+        private readonly IPlaceholderParsingService _parser;
 
-        public EmailNotificationService(IEmailSender email, ILogService log, SubmissionDataResolver dataResolver = null)
+        public EmailNotificationService(IEmailSender email, ILogService log, SubmissionDataResolver dataResolver = null, IPlaceholderParsingService parser = null)
         {
             _email = email ?? throw new ArgumentNullException(nameof(email));
             _log = log;
             _dataResolver = dataResolver;
+            _parser = parser;
         }
 
         // ── [Recovered June-15 from MegaForm.Core.dll] Default task-email templates ──
@@ -139,6 +142,12 @@ namespace MegaForm.Core.Services
         public string ReplaceTokens(string template, FormInfo form, SubmissionInfo submission, FormSchema schema)
         {
             if (string.IsNullOrEmpty(template)) return template;
+            if (_parser != null)
+            {
+                var context = MagicStrings.PlaceholderContextBuilder.FromSubmission(form, submission, schema);
+                return _parser.Parse(template, context);
+            }
+
             var data = ResolveData(submission);
             template = template.Replace("{{submission_id}}", submission.SubmissionId.ToString());
             template = template.Replace("{{form_title}}", form.Title ?? "");
