@@ -1,0 +1,39 @@
+name: Publish MegaForm.Umbraco to NuGet
+
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    runs-on: windows-latest
+    permissions:
+      contents: read
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup .NET 10
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Setup Node.js 20
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+        cache-dependency-path: MegaForm.UI/package-lock.json
+
+    - name: Install UI dependencies
+      run: cd MegaForm.UI && npm ci
+
+    - name: Build production bundle
+      run: cd MegaForm.UI && npm run build --ignore-scripts
+
+    - name: Build and pack Umbraco package
+      run: dotnet pack MegaForm.Umbraco/MegaForm.Umbraco.csproj -c Release -o ./artifacts
+
+    - name: Publish to NuGet.org
+      run: dotnet nuget push ./artifacts/MegaForm.Umbraco.*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_TOKEN }} --skip-duplicate
