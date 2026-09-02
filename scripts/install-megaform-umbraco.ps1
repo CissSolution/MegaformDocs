@@ -6,6 +6,7 @@ param(
     [string]$ProjectPath,
     [string]$Version = "2.0.37",
     [string]$PackageSource,
+    [string]$PackageCachePath,
     [string]$Configuration = "Release",
     [switch]$Start,
     [int]$Port = 0
@@ -108,7 +109,11 @@ if ($PSCmdlet.ShouldProcess($project, "Add MegaForm.Umbraco $Version")) {
     }
 }
 
-$nugetPackages = Join-Path $siteRoot ".megaform-install-packages"
+$nugetPackages = if ([string]::IsNullOrWhiteSpace($PackageCachePath)) {
+    Join-Path $siteRoot ".megaform-install-packages"
+} else {
+    [System.IO.Path]::GetFullPath($PackageCachePath)
+}
 New-Item -ItemType Directory -Path $nugetPackages -Force | Out-Null
 $installStateDir = Join-Path $siteRoot ".megaform-install"
 New-Item -ItemType Directory -Path $installStateDir -Force | Out-Null
@@ -161,12 +166,19 @@ $resolvedPackage = "MegaForm.Umbraco/$Version"
 if ($assets.libraries.PSObject.Properties.Name -notcontains $resolvedPackage) {
     throw "Restore completed but $resolvedPackage was not resolved as a NuGet package."
 }
+$internalPackages = @($assets.libraries.PSObject.Properties.Name | Where-Object {
+    $_ -match "^MegaForm\.(Core|Sdk|Integrations\.CloudStorage)/"
+})
+if ($internalPackages.Count -gt 0) {
+    throw "The platform package restored internal MegaForm packages separately: $($internalPackages -join ', ')"
+}
 
 $result = [ordered]@{
     Project = $project
     Version = $Version
     PackageSource = $PackageSource
     NuGetConfig = $nugetConfig
+    PackageCache = $nugetPackages
     CentralPackageManagement = $usesCentral
     Backup = $backupDir
     ResolvedPackage = $resolvedPackage

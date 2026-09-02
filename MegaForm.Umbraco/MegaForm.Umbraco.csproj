@@ -25,7 +25,7 @@
     <PackageIcon>icon.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageTags>umbraco;umbraco-marketplace;form-builder;forms;workflow;submissions;bellissima;umbraco17</PackageTags>
-    <PackageReleaseNotes>MegaForm 2.0.37 for Umbraco 17 LTS. Adds backoffice license.lic activation, restores runtime flags and core artwork, moves template-specific artwork to on-demand Gallery archives, removes duplicate catalogs and source maps, and adds clean-site installation QA.</PackageReleaseNotes>
+    <PackageReleaseNotes>MegaForm 2.0.37 for Umbraco 17 LTS. Adds backoffice license.lic activation, bundles MegaForm Core, SDK, and cloud-storage runtime assemblies for one-package installation, restores runtime flags and core artwork, moves template-specific artwork to on-demand Gallery archives, removes duplicate catalogs and source maps, and adds clean-site installation QA.</PackageReleaseNotes>
     <NoWarn>$(NoWarn);NU5104</NoWarn>
   </PropertyGroup>
 
@@ -34,9 +34,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MegaForm.Core\MegaForm.Core.csproj" />
-    <ProjectReference Include="..\MegaForm.Sdk\MegaForm.Sdk.csproj" />
-    <ProjectReference Include="..\MegaForm.Integrations.CloudStorage\MegaForm.Integrations.CloudStorage.csproj" />
+    <!-- Platform packages are the customer-facing installation unit. Keep the project
+         references for development, but do not emit separate MegaForm NuGet dependencies. -->
+    <ProjectReference Include="..\MegaForm.Core\MegaForm.Core.csproj" PrivateAssets="all" />
+    <ProjectReference Include="..\MegaForm.Sdk\MegaForm.Sdk.csproj" PrivateAssets="all" />
+    <ProjectReference Include="..\MegaForm.Integrations.CloudStorage\MegaForm.Integrations.CloudStorage.csproj" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
@@ -50,6 +52,9 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.8" />
     <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" Version="2.1.12" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <!-- Dependencies used by the bundled Core/SDK/CloudStorage assemblies. These are
+         restored automatically when the single MegaForm.Umbraco package is installed. -->
+    <PackageReference Include="AWSSDK.S3" Version="4.0.101.4" />
   </ItemGroup>
 
   <ItemGroup>
@@ -73,6 +78,22 @@
     <Content Remove="wwwroot/js/bundles/i18n/**" />
     <Content Remove="wwwroot/js/builder/i18n/**" />
     <Content Remove="wwwroot/js/plugins/i18n/**" />
+
+    <!-- Core, SDK, and cloud storage are implementation assemblies of the Umbraco
+         product. Ship them beside MegaForm.Umbraco.dll so customers install one
+         MegaForm package and never need unpublished internal packages. -->
+    <None Include="$(OutputPath)MegaForm.Core.dll"
+          Pack="true"
+          PackagePath="lib/$(TargetFramework)/"
+          Visible="false" />
+    <None Include="$(OutputPath)MegaForm.Sdk.dll"
+          Pack="true"
+          PackagePath="lib/$(TargetFramework)/"
+          Visible="false" />
+    <None Include="$(OutputPath)MegaForm.Integrations.CloudStorage.dll"
+          Pack="true"
+          PackagePath="lib/$(TargetFramework)/"
+          Visible="false" />
   </ItemGroup>
 
 </Project>
