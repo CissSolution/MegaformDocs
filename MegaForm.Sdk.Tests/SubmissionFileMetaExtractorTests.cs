@@ -57,6 +57,21 @@ namespace MegaForm.Sdk.Tests
         }
 
         [Fact]
+        public void Handles_multiple_files_with_server_path_alias()
+        {
+            var json = "[{\"fileName\":\"a.pdf\",\"serverPath\":\"dnnfile:101\"}," +
+                       "{\"fileName\":\"b.pdf\",\"serverPath\":\"dnnfile:102\"}]";
+            var fields = new List<FormField> { FileField("attachments") };
+            var data = new Dictionary<string, object> { ["attachments"] = json };
+
+            var rows = SubmissionFileMetaExtractor.Extract(fields, data, 17);
+
+            Assert.Equal(2, rows.Count);
+            Assert.Equal("dnnfile:101", rows[0].StoredPath);
+            Assert.Equal("dnnfile:102", rows[1].StoredPath);
+        }
+
+        [Fact]
         public void Reads_pascalcase_and_already_deserialized_object()
         {
             // Already-deserialized list-of-dict (not a string) with PascalCase keys.

@@ -135,7 +135,9 @@ namespace MegaForm.Umbraco.Composers
             // ── Magic Strings parser wiring for static SSR renderer
             builder.Services.AddTransient<IStartupFilter, MegaFormMagicStringsStartupFilter>();
 
-            // ── Domain-based licensing probe (localhost = production; public domain needs license)
+            // ── Umbraco file licensing (App_Data/MegaForm/license.lic). This channel is
+            // independent from the Oqtane Marketplace bridge.
+            builder.Services.AddSingleton<UmbracoLicenseFileService>();
             builder.Services.AddTransient<IStartupFilter, MegaFormLicenseStartupFilter>();
 
             // ── Asset cache-bust token, derived from the shipped js/css files
@@ -207,7 +209,7 @@ namespace MegaForm.Umbraco.Composers
                 return new UmbracoStorageService(env, string.Empty);
             });
             builder.Services.AddScoped<SmtpEmailSender>();
-            builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
+            builder.Services.AddScoped<MegaForm.Core.Interfaces.IEmailSender, SmtpEmailSender>();
             builder.Services.AddSingleton<ILogService, UmbracoLogService>();
             builder.Services.AddScoped<IConnectionRegistry, UmbracoConnectionRegistry>();
             builder.Services.AddScoped<IDatabaseWorkflowMetadataService, DatabaseWorkflowMetadataService>();

@@ -7,7 +7,7 @@ namespace MegaForm.DNN.Services
 {
     /// <summary>
     /// [CloudStorage v20260723-01] Opens a previously uploaded submission file so the
-    /// cloud storage mirror (SubmissionCloudStorageUploader) can push it to Drive/S3/Azure.
+    /// cloud storage mirror (SubmissionCloudStorageUploader) can push it to Drive/S3.
     /// Same relative → absolute mapping as the DNN upload pipeline and the Files/Download
     /// endpoint: stored paths are relative to ~/App_Data/MegaForm/PrivateUploads (see
     /// MegaFormApiController.UploadFile :3292-3306). Canonical-path containment mirrors
@@ -21,6 +21,9 @@ namespace MegaForm.DNN.Services
             try
             {
                 if (string.IsNullOrWhiteSpace(storedPath)) return null;
+
+                if (DnnPortalFolderStorage.TryGetFileId(storedPath, out _))
+                    return DnnPortalFolderStorage.OpenRead(storedPath);
 
                 var root = Path.GetFullPath(
                     HostingEnvironment.MapPath("~/App_Data/MegaForm/PrivateUploads")

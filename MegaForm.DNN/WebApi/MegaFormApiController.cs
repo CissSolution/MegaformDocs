@@ -124,6 +124,13 @@ namespace MegaForm.WebApi
                 defaults: new { controller = "Payment", action = "PayPalWebhook" },
                 namespaces: new[] { "MegaForm.WebApi" }
             );
+            mapRouteManager.MapHttpRoute(
+                moduleFolderName: "MegaForm",
+                routeName: "MegaFormProductDownload",
+                url: "products/download",
+                defaults: new { controller = "ProductDownload", action = "Download" },
+                namespaces: new[] { "MegaForm.WebApi" }
+            );
             // Specific routes for settings sub-paths (must come before generic route)
             mapRouteManager.MapHttpRoute(
                 moduleFolderName: "MegaForm",
@@ -757,11 +764,19 @@ namespace MegaForm.WebApi
                 catch { existingForms = 0; }
                 if (existingForms >= MegaForm.Core.Services.LicenseService.MaxTrialForms)
                 {
+                    // [TrialMessage 2026-08-15] Twin of the Oqtane wording. Tell the reader what was
+                    // counted, that nothing of theirs is at risk, and the two ways forward — the old
+                    // sentence landed at the end of a five-step wizard and answered none of that.
                     return Request.CreateResponse((HttpStatusCode)402, new
                     {
                         error = "trial_form_limit",
-                        message = "Trial mode is limited to " + MegaForm.Core.Services.LicenseService.MaxTrialForms + " forms. Upgrade to create more.",
+                        message = "You have reached the trial limit of "
+                                  + MegaForm.Core.Services.LicenseService.MaxTrialForms
+                                  + " forms — all " + existingForms + " on this site are yours to keep. "
+                                  + "Nothing has been deleted, and every existing form keeps working. "
+                                  + "Delete a form you no longer need to free a slot, or upgrade for unlimited forms.",
                         limit = MegaForm.Core.Services.LicenseService.MaxTrialForms,
+                        current = existingForms,
                         upgradeUrl = MegaForm.Core.Services.LicenseService.UpgradeUrl
                     });
                 }
@@ -3479,30 +3494,58 @@ VALUES
                         return Request.CreateResponse(HttpStatusCode.BadRequest, new { error = "File content does not match its type. Possible security risk." });
                 }
 
-                var appDataRoot = System.Web.Hosting.HostingEnvironment.MapPath("~/App_Data/MegaForm/PrivateUploads")
-                    ?? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "App_Data", "MegaForm", "PrivateUploads");
                 var safeFieldKey = FileUploadSecurityService.SanitizePathSegment(fileField.Key ?? fieldKey, "file");
-                var folder = Path.Combine(appDataRoot, "form-" + formId, "field-" + safeFieldKey);
-                if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
+                var portalId = PortalSettings != null ? PortalSettings.PortalId : -1;
+                var storageMode = PortalController.GetPortalSetting("MegaForm_Upload_StorageMode", portalId, "private");
+                var relativePath = string.Empty;
+                var serverPath = string.Empty;
+                var fileUrl = string.Empty;
+                var storedIn = "private";
+                var fileId = 0;
 
-                var safeName = Guid.NewGuid().ToString("N").Substring(0, 16) + ext;
-                var filePath = Path.Combine(folder, safeName);
-                using (var source = new FileStream(tempFilePath, FileMode.Open, FileAccess.Read, FileShare.Read))
-                using (var target = new FileStream(filePath, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+                if (string.Equals(storageMode, "dnn-folder", StringComparison.OrdinalIgnoreCase))
                 {
-                    await source.CopyToAsync(target);
+                    var rootFolder = PortalController.GetPortalSetting("MegaForm_Upload_DnnFolder", portalId, "MegaForm/Uploads");
+                    var targetFolder = rootFolder.TrimEnd('/', '\\') + "/form-" + formId + "/field-" + safeFieldKey;
+                    using (var source = new FileStream(tempFilePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+                    {
+                        var stored = MegaForm.DNN.Services.DnnPortalFolderStorage.Save(portalId, targetFolder, originalName, source);
+                        relativePath = stored.StoredPath;
+                        serverPath = stored.RelativePath;
+                        fileUrl = "/DesktopModules/MegaForm/API/Files/Download?path=" + Uri.EscapeDataString(relativePath);
+                        storedIn = "dnn-folder";
+                        fileId = stored.FileId;
+                    }
+                }
+                else
+                {
+                    var appDataRoot = System.Web.Hosting.HostingEnvironment.MapPath("~/App_Data/MegaForm/PrivateUploads")
+                        ?? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "App_Data", "MegaForm", "PrivateUploads");
+                    var folder = Path.Combine(appDataRoot, "form-" + formId, "field-" + safeFieldKey);
+                    if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
+                    var safeName = Guid.NewGuid().ToString("N").Substring(0, 16) + ext;
+                    var filePath = Path.Combine(folder, safeName);
+                    using (var source = new FileStream(tempFilePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+                    using (var target = new FileStream(filePath, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+                    {
+                        await source.CopyToAsync(target);
+                    }
+                    relativePath = "form-" + formId + "/field-" + safeFieldKey + "/" + safeName;
+                    serverPath = relativePath;
+                    fileUrl = "/DesktopModules/MegaForm/API/Files/Download?path=" + Uri.EscapeDataString(relativePath);
                 }
 
-                var relativePath = "form-" + formId + "/field-" + safeFieldKey + "/" + safeName;
                 return Request.CreateResponse(HttpStatusCode.OK, new
                 {
-                    fileId      = 0,
+                    fileId,
                     fileName    = originalName,
                     fileSize,
                     contentType = fileData.Headers.ContentType != null ? fileData.Headers.ContentType.MediaType : "application/octet-stream",
-                    fileUrl     = "/DesktopModules/MegaForm/API/Files/Download?path=" + Uri.EscapeDataString(relativePath),
+                    fileUrl,
                     tempPath    = relativePath,
-                    storedIn    = "private"
+                    storedPath  = relativePath,
+                    serverPath,
+                    storedIn
                 });
             }
             catch (Exception ex)
@@ -3669,6 +3712,19 @@ VALUES
             if (string.IsNullOrWhiteSpace(path))
                 return Request.CreateResponse(HttpStatusCode.NotFound);
 
+            if (MegaForm.DNN.Services.DnnPortalFolderStorage.TryGetFileId(path, out _))
+            {
+                var dnnFile = MegaForm.DNN.Services.DnnPortalFolderStorage.GetFile(path);
+                if (dnnFile == null || (PortalSettings != null && dnnFile.PortalId != PortalSettings.PortalId))
+                    return Request.CreateResponse(HttpStatusCode.NotFound);
+                using (var source = DotNetNuke.Services.FileSystem.FileManager.Instance.GetFileContent(dnnFile))
+                using (var memory = new MemoryStream())
+                {
+                    source.CopyTo(memory);
+                    return BuildDownloadResponse(memory.ToArray(), dnnFile.FileName, dnnFile.ContentType);
+                }
+            }
+
             // [SecFix P1-8] Canonical-path containment (GetFullPath resolves any `..`); the old
             // `path.Replace("..","")` sanitiser is bypassable.
             var appDataRoot = System.Web.Hosting.HostingEnvironment.MapPath("~/App_Data/MegaForm/PrivateUploads")
@@ -3682,13 +3738,22 @@ VALUES
                 return Request.CreateResponse(HttpStatusCode.NotFound);
 
             var bytes = File.ReadAllBytes(fullPath);
+            return BuildDownloadResponse(bytes, Path.GetFileName(fullPath), null);
+        }
+
+        private HttpResponseMessage BuildDownloadResponse(byte[] bytes, string fileName, string contentType)
+        {
             var response = new HttpResponseMessage(HttpStatusCode.OK)
             {
                 Content = new System.Net.Http.ByteArrayContent(bytes)
             };
-            var ext = (Path.GetExtension(fullPath) ?? "").ToLowerInvariant();
+            var ext = (Path.GetExtension(fileName) ?? "").ToLowerInvariant();
             string mime;
-            switch (ext)
+            if (!string.IsNullOrWhiteSpace(contentType))
+            {
+                mime = contentType;
+            }
+            else switch (ext)
             {
                 case ".pdf":  mime = "application/pdf"; break;
                 case ".jpg":
@@ -3705,7 +3770,7 @@ VALUES
             response.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(mime);
             response.Content.Headers.ContentDisposition =
                 new System.Net.Http.Headers.ContentDispositionHeaderValue("attachment")
-                { FileName = Path.GetFileName(fullPath) };
+                { FileName = Path.GetFileName(fileName) };
             // [SecFix P2-4] Prevent MIME-sniffing a private upload into executable content.
             response.Headers.TryAddWithoutValidation("X-Content-Type-Options", "nosniff");
             return response;
@@ -5193,10 +5258,13 @@ VALUES
                 maxSizeMb         = int.TryParse(maxSizeMb, out var sz) ? sz : 10,
                 allowedExtensions = allowedExt,
                 blockedExtensions = blockedExt,
-                storageMode       = "private",
+                storageMode       = GetPortalSetting("Upload_StorageMode", "private"),
+                dnnFolder         = GetPortalSetting("Upload_DnnFolder", "MegaForm/Uploads"),
+                storageModes      = new[] { "private", "dnn-folder" },
                 notes = new[]
                 {
                     "Uploads are stored in App_Data/MegaForm/PrivateUploads, not under public wwwroot.",
+                    "DNN Folder Provider mode uses DNN's configured storage provider, including a default Azure Storage folder mapping.",
                     "Upload requests must target a published form and a real File widget key.",
                     "If the form requires login, uploads require login too."
                 }
@@ -5221,7 +5289,15 @@ VALUES
             SetPortalSetting("Upload_MaxSizeMB",          maxSizeMb.ToString());
             SetPortalSetting("Upload_AllowedExtensions",  allowed ?? "");
             SetPortalSetting("Upload_BlockedExtensions",  blocked ?? "");
-            return Request.CreateResponse(HttpStatusCode.OK, new { success = true, message = "Upload settings saved.", storageMode = "private" });
+            var storageMode = body.Value<string>("storageMode") ?? GetPortalSetting("Upload_StorageMode", "private");
+            storageMode = string.Equals(storageMode, "dnn-folder", StringComparison.OrdinalIgnoreCase) ? "dnn-folder" : "private";
+            var dnnFolder = body.Value<string>("dnnFolder") ?? GetPortalSetting("Upload_DnnFolder", "MegaForm/Uploads");
+            dnnFolder = string.Join("/", (dnnFolder ?? string.Empty).Replace('\\', '/').Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(x => FileUploadSecurityService.SanitizePathSegment(x, "uploads")));
+            if (string.IsNullOrWhiteSpace(dnnFolder)) dnnFolder = "MegaForm/Uploads";
+            SetPortalSetting("Upload_StorageMode", storageMode);
+            SetPortalSetting("Upload_DnnFolder", dnnFolder);
+            return Request.CreateResponse(HttpStatusCode.OK, new { success = true, message = "Upload settings saved.", storageMode, dnnFolder });
         }
     }
 

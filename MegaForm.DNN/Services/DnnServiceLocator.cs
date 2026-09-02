@@ -80,7 +80,7 @@ namespace MegaForm.DNN.Services
         public MegaForm.DNN.Data.DnnSubmissionDataStore TypedStore { get; }
         public SubmissionDataResolver DataResolver { get; }
         public TypedSubmissionResyncService TypedResync { get; }
-        // [CloudStorage 2026-07-23] Cloud storage stack (Google Drive / Amazon S3 / Azure Blob).
+        // [CloudStorage 2026-07-23] Cloud storage stack (Google Drive / Amazon S3).
         // Named connections live in PORTAL settings under CloudStorageConnectionCatalog.SettingKey
         // (written by ModuleConfigController.CloudStorageConnection* endpoints); the uploader mirrors
         // uploaded submission files fail-soft right after insert. StorageIntegration is exposed so
@@ -185,7 +185,7 @@ namespace MegaForm.DNN.Services
                 new FormFieldNodeExecutor(),
                 new ConditionNodeExecutor(WorkflowEvaluator),
                 new WebhookNodeExecutor(WorkflowEvaluator),
-                new EmailNodeExecutor(WorkflowEvaluator, WorkflowEmail),
+                new EmailNodeExecutor(WorkflowEvaluator, WorkflowEmail, new DnnFileRepository(), new DnnDiskStorageService(), FormRepo),
                 new EndNodeExecutor(WorkflowEvaluator),
                 new CalculateNodeExecutor(WorkflowEvaluator),
                 new SetVariableNodeExecutor(WorkflowEvaluator),
@@ -231,7 +231,7 @@ namespace MegaForm.DNN.Services
 
             // [CloudStorage 2026-07-23] One process-wide HttpClient for the Google Drive
             // provider (HttpClient is designed for reuse — a per-call instance would exhaust
-            // sockets). S3/Azure providers are stateless. The connection provider reads the
+            // sockets). S3 providers are stateless. The connection provider reads the
             // same portal-settings blob the ModuleConfig admin endpoints write (full key — it
             // already carries the MegaForm_ prefix, so ReadPortalSetting's prefixing must NOT
             // be applied here).

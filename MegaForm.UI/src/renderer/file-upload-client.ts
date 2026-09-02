@@ -11,6 +11,8 @@ export interface UploadedFileMeta {
   contentType?: string;
   fileUrl?: string;
   tempPath?: string;
+  storedPath?: string;
+  serverPath?: string;
   storedIn?: string;
 }
 

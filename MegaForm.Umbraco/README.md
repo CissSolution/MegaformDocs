@@ -1,6 +1,6 @@
 # MegaForm for Umbraco
 
-MegaForm is a cross-platform, schema-driven form builder. This package adds first-class Umbraco 17 LTS (Bellissima) support with a native backoffice section, property editor, content app, and public render components.
+MegaForm is a schema-driven form and application builder for Umbraco 17 LTS, distributed as a Purchase package. It provides a native backoffice workspace for designing forms, managing submissions, configuring workflows, and publishing forms across Umbraco websites.
 
 ## Features
 
@@ -9,7 +9,7 @@ MegaForm is a cross-platform, schema-driven form builder. This package adds firs
 - Content app showing linked-form summary and recent submissions directly on document workspaces
 - Multi-view rendering: inline, modal, embed, script
 - Submissions, validation, conditional logic, and rules
-- Workflow-ready extensibility points
+- Configurable workflows for processing submissions and integrating external services
 - AI-assisted form building and knowledge-base answers
 - Static web assets served under `/App_Plugins/MegaForm/`
 
@@ -40,60 +40,22 @@ MegaForm is a cross-platform, schema-driven form builder. This package adds firs
    @await Component.InvokeAsync("RenderMegaForm", new { formId = 1234, viewType = "inline" })
    ```
 
-4. Open the **MegaForm** section in the Umbraco backoffice to design forms and view submissions.
+4. Open the **MegaForm** section in the Umbraco backoffice to design forms, configure workflows, and review submissions.
 
-## Local demo
+## Licensing
 
-A ready-to-run demo host is included in `MegaForm.Umbraco.Host`.
+MegaForm for Umbraco is distributed as a Purchase package. Installing the NuGet package does not grant production usage rights. A valid purchased MegaForm license is required for each production deployment.
 
-### Run with the provided script
+To activate an installation, open **MegaForm > Settings > License** in the Umbraco backoffice and upload the purchased `license.lic` file. MegaForm validates the file using its current license mechanism and stores it privately at `App_Data/MegaForm/license.lic`. Umbraco activation does not use the Oqtane Marketplace license flow.
 
-```powershell
-# PowerShell
-cd MegaForm.Umbraco.Host
-.\Run-Demo.ps1
-```
-
-or
-
-```batch
-REM Command Prompt
-cd MegaForm.Umbraco.Host
-Run-Demo.bat
-```
-
-The demo starts at `http://localhost:16474`.
-
-### Default credentials
-
-- **Back-office:** `http://localhost:16474/umbraco`
-- **User:** `admin@local`
-- **Password:** `Admin123456!`
-
-### What to test
-
-| URL | Description |
-|-----|-------------|
-| `/umbraco` | Umbraco back-office |
-| `/umbraco/section/megaform/view/dashboard` | MegaForm dashboard |
-| `/umbraco/section/megaform/view/builder` | MegaForm builder |
-| `/demo` | Corporate demo home page |
-| `/demo/contact` | Contact form render demo (FormId=1) |
-| `/demo/seed` | Re-seed demo forms (development only) |
-
-On first run the host automatically creates three sample forms if `MF_Forms` is empty.
-
-## Package contents
-
-- `MegaForm.Umbraco.dll` — composers, controllers, services, repositories, and Razor views
-- `App_Plugins/MegaForm/` — static CSS/JS bundles and Bellissima backoffice extensions
+Contact the MegaForm team through the project links below for licensing, pricing, evaluation access, and support.
 
 ## Marketplace
 
-This package is tagged for the official Umbraco Marketplace: `umbraco-marketplace`.
+This package is listed on the official Umbraco Marketplace as a `Purchase` package and is tagged `umbraco-marketplace` for compatibility discovery.
 
-## Links
+## Documentation and support
 
-- Source: https://github.com/CissSolution/MegaformDocs
+- Documentation: https://github.com/CissSolution/MegaformDocs
 - Issues: https://github.com/CissSolution/MegaformDocs/issues
 - Discussions: https://github.com/CissSolution/MegaformDocs/discussions

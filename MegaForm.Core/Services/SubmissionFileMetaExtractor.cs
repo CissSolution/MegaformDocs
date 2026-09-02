@@ -32,7 +32,7 @@ namespace MegaForm.Core.Services
         private static readonly string[] NameKeys =
             { "fileName", "FileName", "originalName", "OriginalName", "name", "Name" };
         private static readonly string[] PathKeys =
-            { "tempPath", "filePath", "storedPath", "StoredPath", "TempPath", "FilePath", "path", "Path" };
+            { "tempPath", "filePath", "storedPath", "serverPath", "StoredPath", "ServerPath", "TempPath", "FilePath", "path", "Path" };
         private static readonly string[] ContentTypeKeys =
             { "contentType", "ContentType" };
         private static readonly string[] SizeKeys =

@@ -8,6 +8,7 @@ const DASHBOARD_NEW_ROUTE_BADGE = 'DashboardNewRoute v20260420-01';
 const DASHBOARD_LANG_ROUTE_BADGE = 'DashboardLangRoute v20260407-01';
 const DASHBOARD_DB_SETTINGS_COMPACT_BADGE = 'DashboardDbSettingsCompact v20260409-09';
 const DASHBOARD_HASH_LINK_FIX_BADGE = 'DashboardHashLinkFix v20260426-01';
+const DASHBOARD_HEADER_COMPACT_BADGE = 'DashboardHeaderCompact v20260825-01';
 const DASHBOARD_APP_ACCORDION_BADGE = 'DashboardAppAccordion v20260526-01';
 // [B55 v20260603] Reporting System P1-P3 cache-bust. P1 ships the flat
 // MF_SubmissionValues index + SubmissionIndexerService hook in
@@ -679,7 +680,7 @@ async function openGoogleSheetsSettings(targetBody?: HTMLElement): Promise<void>
   });
 }
 
-// ── Cloud Storage: named connections (Google Drive / Amazon S3 / Azure Blob) ──
+// ── Cloud Storage: named connections (Google Drive / Amazon S3) ──
 // Global server-side catalog (settings key MegaForm_CloudStorageConnections),
 // same 4 ModuleConfig endpoints the builder's per-form "Cloud Storage" section
 // uses. This pane is the GLOBAL management surface (list/add/edit/delete/test);
@@ -733,7 +734,7 @@ async function openCloudStorageSettings(targetBody?: HTMLElement): Promise<void>
   formWrap.appendChild(gsBlock('Access token', accInp));
   formWrap.appendChild(gsBlock('Refresh token', refInp));
   formWrap.appendChild(gsBlock('Client ID', cidInp, 'Amazon S3: access key ID.'));
-  formWrap.appendChild(gsBlock('Client secret', csecInp, 'Amazon S3: secret access key · Azure Blob: connection string.'));
+  formWrap.appendChild(gsBlock('Client secret', csecInp, 'Amazon S3: secret access key.'));
   formWrap.appendChild(gsBlock('Base folder / bucket / container', folderInp));
   formWrap.appendChild(gsBlock('Base URL', urlInp, 'S3-compatible endpoint (leave blank for AWS).'));
   formWrap.appendChild(gsBlock('Extra (JSON or key=value lines)', extraTa, 'e.g. Amazon S3: Region=ap-southeast-1'));
@@ -1200,6 +1201,127 @@ function settingsHost(
   return modal(title, icon, loading, maxW);
 }
 
+async function openUmbracoLicenseSettings(targetBody?: HTMLElement): Promise<void> {
+  const wrap = div('mf-modal-inner');
+  const ov = settingsHost(targetBody, 'MegaForm License', 'shield', wrap, 620);
+  const body = ov.querySelector('.mf-modal-body') as HTMLElement;
+  body.innerHTML = '';
+
+  const statusHost = div('mf-license-status');
+  const fileInput = input('file', 'mf-license-file') as HTMLInputElement;
+  fileInput.accept = '.lic';
+  fileInput.style.cssText = 'max-width:100%;padding:9px 10px;height:auto';
+  const uploadBtn = el('button', 'mf-btn mf-btn-primary mf-btn-sm') as HTMLButtonElement;
+  uploadBtn.type = 'button';
+  uploadBtn.innerHTML = ic('files', 14) + ' Activate license';
+  const removeBtn = el('button', 'mf-btn mf-btn-outline mf-btn-sm') as HTMLButtonElement;
+  removeBtn.type = 'button';
+  removeBtn.textContent = 'Deactivate';
+  removeBtn.style.color = '#b91c1c';
+  const feedback = div('mf-field-hint');
+  feedback.style.cssText = 'min-height:20px;margin-top:8px';
+
+  body.appendChild(sectionHead('shield', 'MegaForm License'));
+  body.appendChild(infoBox('Upload the license.lic file supplied with your purchase. The file is stored privately in App_Data and activates this Umbraco installation without Oqtane Marketplace licensing.'));
+  body.appendChild(statusHost);
+  body.appendChild(divider());
+  body.appendChild(field('License file', fileInput, 'The filename must be license.lic.'));
+  const actions = div('mf-modal-actions');
+  actions.style.cssText = 'display:flex;align-items:center;gap:8px;margin-top:12px';
+  mk(actions, uploadBtn, removeBtn);
+  body.appendChild(actions);
+  body.appendChild(feedback);
+
+  const setFeedback = (message: string, ok?: boolean): void => {
+    feedback.textContent = message || '';
+    feedback.style.color = ok == null ? '#64748b' : (ok ? '#047857' : '#b91c1c');
+  };
+
+  const readError = async (response: Response): Promise<string> => {
+    try {
+      const json = await response.json();
+      return String(json?.error || json?.message || `HTTP ${response.status}`);
+    } catch {
+      return `HTTP ${response.status}`;
+    }
+  };
+
+  const renderStatus = (status: any): void => {
+    const active = !!status?.active;
+    const state = String(status?.state || 'not-installed');
+    statusHost.style.cssText = `margin-top:12px;padding:12px 14px;border:1px solid ${active ? '#86efac' : state === 'invalid' || state === 'error' ? '#fca5a5' : '#cbd5e1'};background:${active ? '#f0fdf4' : state === 'invalid' || state === 'error' ? '#fef2f2' : '#f8fafc'};border-radius:6px`;
+    statusHost.innerHTML = '';
+    const title = div('mf-sect-title');
+    title.style.color = active ? '#166534' : state === 'invalid' || state === 'error' ? '#991b1b' : '#334155';
+    title.textContent = active ? 'Active' : state === 'invalid' ? 'Invalid license' : state === 'error' ? 'License error' : 'Not activated';
+    const message = div('mf-field-hint');
+    message.style.cssText = 'margin-top:4px;color:#475569';
+    message.textContent = String(status?.message || 'License status is unavailable.');
+    mk(statusHost, title, message);
+    uploadBtn.innerHTML = ic('files', 14) + (active ? ' Replace license' : ' Activate license');
+    removeBtn.style.display = status?.installed ? '' : 'none';
+  };
+
+  const refresh = async (): Promise<void> => {
+    statusHost.innerHTML = ic('spin', 16) + ' Loading license status…';
+    const response = await fetch(API + 'ModuleConfig/LicenseStatus', {
+      credentials: 'same-origin',
+      cache: 'no-store',
+      headers: dnnAuthHeaders(),
+    });
+    if (!response.ok) throw new Error(await readError(response));
+    renderStatus(await response.json());
+  };
+
+  uploadBtn.onclick = async () => {
+    const file = fileInput.files?.[0];
+    if (!file) { setFeedback('Choose license.lic first.', false); return; }
+    uploadBtn.disabled = true;
+    setFeedback('Installing license…');
+    try {
+      const form = new FormData();
+      form.append('file', file, file.name);
+      const headers = dnnAuthHeaders();
+      delete headers['Content-Type'];
+      const response = await fetch(API + 'ModuleConfig/LicenseUpload', {
+        method: 'POST', credentials: 'same-origin', headers, body: form,
+      });
+      if (!response.ok) throw new Error(await readError(response));
+      renderStatus(await response.json());
+      fileInput.value = '';
+      setFeedback('MegaForm has been activated.', true);
+    } catch (error) {
+      setFeedback(error instanceof Error ? error.message : 'License activation failed.', false);
+    } finally {
+      uploadBtn.disabled = false;
+    }
+  };
+
+  removeBtn.onclick = async () => {
+    if (!window.confirm('Deactivate MegaForm on this Umbraco installation?')) return;
+    removeBtn.disabled = true;
+    setFeedback('Removing license…');
+    try {
+      const response = await fetch(API + 'ModuleConfig/LicenseRemove', {
+        method: 'POST', credentials: 'same-origin', headers: dnnAuthHeaders(),
+      });
+      if (!response.ok) throw new Error(await readError(response));
+      renderStatus(await response.json());
+      setFeedback('License removed. Public domains will use trial limits.', true);
+    } catch (error) {
+      setFeedback(error instanceof Error ? error.message : 'Could not remove the license.', false);
+    } finally {
+      removeBtn.disabled = false;
+    }
+  };
+
+  try {
+    await refresh();
+  } catch (error) {
+    renderStatus({ state: 'error', message: error instanceof Error ? error.message : 'License status could not be loaded.' });
+  }
+}
+
 type SettingsTabDef = { key: string; labelKey: string; labelFallback: string; icon: string; render: (body: HTMLElement) => void | Promise<void> };
 
 function openSettingsPane(initialTab?: string): void {
@@ -1225,6 +1347,9 @@ function openSettingsPane(initialTab?: string): void {
     { key: 'gsheets',  labelKey: 'dash.nav_gsheets',  labelFallback: 'Google Sheets',     icon: 'googleSheet', render: (b) => openGoogleSheetsSettings(b) },
     { key: 'cloudstorage', labelKey: 'dash.nav_cloudstorage', labelFallback: 'Cloud Storage', icon: 'cloudUp', render: (b) => openCloudStorageSettings(b) },
   ];
+  if (getPlatformHostConfig().platform === 'umbraco') {
+    tabs.push({ key: 'license', labelKey: 'dash.nav_license', labelFallback: 'License', icon: 'shield', render: (b) => openUmbracoLicenseSettings(b) });
+  }
 
   // Left tab rail + right content host (race-safe: a fresh content div per select,
   // so a slow async load that resolves after a tab switch fills a detached node).
@@ -2295,10 +2420,13 @@ async function openUploadSettings(targetBody?: HTMLElement) {
 
       const hero = div('mf-upload-hero');
       const heroBody = div('mf-upload-hero-body');
-      const heroHead = sectionHead('files', 'Private Upload Storage', 'Recommended');
+      const isDnn = getPlatformHostConfig().platform === 'dnn';
+      const heroHead = sectionHead('files', isDnn ? 'Upload Storage' : 'Private Upload Storage', 'Recommended');
       heroHead.classList.add('mf-upload-hero-head');
       const heroMeta = div('mf-upload-hero-meta');
-      heroMeta.appendChild(infoBox('File uploads are stored in a private App_Data folder and downloaded only through the API.'));
+      heroMeta.appendChild(infoBox(isDnn
+        ? 'Use private App_Data storage, or DNN Folder Provider storage. DNN Folder Provider automatically follows the folder mapping configured by DNN, including Azure Storage.'
+        : 'File uploads are stored in a private App_Data folder and downloaded only through the API.'));
       const modePill = span('mf-upload-pill', `${ic('files',12)} ${String(d.storageMode || 'private').toUpperCase()}`);
       heroMeta.appendChild(modePill);
       mk(heroBody, heroHead, heroMeta);
@@ -2306,17 +2434,31 @@ async function openUploadSettings(targetBody?: HTMLElement) {
       c.appendChild(hero);
 
       const maxInput = input('number','up-max','10', String(d.maxSizeMb || 10));
-      const storageInput = input('text','up-storage','private', d.storageMode || 'private');
-      storageInput.readOnly = true;
-      storageInput.disabled = true;
+      const storageInput = isDnn
+        ? select('up-storage', [
+            { v: 'private', l: 'Private App_Data' },
+            { v: 'dnn-folder', l: 'DNN Folder Provider (supports Azure)' },
+          ], d.storageMode || 'private')
+        : input('text','up-storage','private', d.storageMode || 'private');
+      if (!isDnn) {
+        (storageInput as HTMLInputElement).readOnly = true;
+        (storageInput as HTMLInputElement).disabled = true;
+      }
+      const dnnFolderInput = input('text', 'up-dnn-folder', 'MegaForm/Uploads', d.dnnFolder || 'MegaForm/Uploads');
+      const dnnFolderField = field('DNN Folder', dnnFolderInput, 'DNN chooses the actual folder provider. Point this folder at the site Azure mapping in DNN if required.');
+      dnnFolderField.style.display = isDnn && String(d.storageMode || '').toLowerCase() === 'dnn-folder' ? '' : 'none';
+      if (isDnn) storageInput.addEventListener('change', () => {
+        dnnFolderField.style.display = (storageInput as HTMLSelectElement).value === 'dnn-folder' ? '' : 'none';
+      });
 
       const topGrid = div('mf-upload-grid');
       const limitsCard = div('mf-upload-card');
       limitsCard.appendChild(sectionHead('zap', 'Limits & runtime'));
       limitsCard.appendChild(row2(
         field('Max File Size (MB)', maxInput, 'Global ceiling for each uploaded file.'),
-        field('Storage Mode', storageInput, 'Read-only runtime mode.')
+        field('Storage Mode', storageInput, isDnn ? 'DNN Folder Provider can use the site\'s default Azure-backed folder mapping.' : 'Read-only runtime mode.')
       ));
+      if (isDnn) limitsCard.appendChild(dnnFolderField);
 
       const extCard = div('mf-upload-card');
       extCard.appendChild(sectionHead('key', 'Extension policy'));
@@ -2324,7 +2466,7 @@ async function openUploadSettings(targetBody?: HTMLElement) {
       extCard.appendChild(field('Blocked Extensions', textarea('up-block','.exe,.bat,.cmd,.com,.dll,.msi,.ps1,.sh,.php,.phtml,.aspx,.asp,.jsp,.js', d.blockedExtensions || '', 4), 'These are always rejected, even if a field allows them.'));
       const hintRow = div('mf-upload-hints');
       hintRow.appendChild(span('mf-upload-chip', 'Safer public-form defaults'));
-      hintRow.appendChild(span('mf-upload-chip', 'Private storage only'));
+      hintRow.appendChild(span('mf-upload-chip', isDnn ? 'Private or DNN Folder Provider' : 'Private storage only'));
       hintRow.appendChild(span('mf-upload-chip', 'Unique file names'));
       extCard.appendChild(hintRow);
 
@@ -2358,7 +2500,9 @@ async function openUploadSettings(targetBody?: HTMLElement) {
           const body = {
             maxSizeMb: Math.max(1, Number(getVal('up-max') || '10')),
             allowedExtensions: getVal('up-allow'),
-            blockedExtensions: getVal('up-block')
+            blockedExtensions: getVal('up-block'),
+            storageMode: isDnn ? getVal('up-storage') : 'private',
+            dnnFolder: isDnn ? getVal('up-dnn-folder') : ''
           };
           const r = await fetch(API + 'ModuleConfig/UploadSettings', {
             method: 'POST',
@@ -2882,15 +3026,40 @@ function buildHeader(sb: HTMLElement, counts?: DashboardData['counts']): HTMLEle
   const ac = div('mf-hd-ac');
   const hostCfg = getPlatformHostConfig();
   const closeHref = String(hostCfg.returnUrl || '/').trim() || '/';
-  const cb = el('a','mf-btn mf-btn-ghost mf-btn-sm mf-hd-close');
+
+  // [HeaderCompact v20260825] Group secondary actions (Close, Refresh, Business
+  // Starters) into a "More" (⋮) dropdown so the header always fits on one row.
+  // Primary actions (AI Create, New Form) stay directly visible.
+  const moreWrap = div('mf-hd-more-wrap');
+  const moreBtn = el('button','mf-btn mf-btn-ghost mf-btn-sm mf-hd-more-btn'); moreBtn.type='button';
+  moreBtn.title = T('dash.more','More');
+  moreBtn.setAttribute('aria-label', T('dash.more','More'));
+  moreBtn.innerHTML = ic('more',16);
+  const moreMenu = div('mf-hd-more-menu');
+  moreMenu.style.display = 'none';
+
+  const cb = el('a','mf-hd-more-item');
   cb.href = closeHref;
-  cb.title = T('dash.close','Close');
-  cb.setAttribute('aria-label', T('dash.close','Close'));
-  cb.innerHTML = ic('close',14)+' '+T('dash.close','Close');
-  const rb = el('button','mf-btn mf-btn-outline mf-btn-sm mf-hd-refresh'); rb.type='button';
-  rb.title = T('dash.refresh','Refresh');
-  rb.setAttribute('aria-label', T('dash.refresh','Refresh'));
-  rb.innerHTML=ic('refresh',14)+' '+T('dash.refresh','Refresh'); rb.onclick=()=>location.reload();
+  cb.innerHTML = ic('close',14)+' <span>'+T('dash.close','Close')+'</span>';
+
+  const rb = el('button','mf-hd-more-item'); rb.type='button';
+  rb.innerHTML = ic('refresh',14)+' <span>'+T('dash.refresh','Refresh')+'</span>';
+  rb.onclick = () => location.reload();
+
+  const sb2 = el('button','mf-hd-more-item'); sb2.type='button';
+  sb2.innerHTML = ic('zap',14)+' <span>'+T('dash.business_starters','Business Starters')+'</span>';
+  sb2.onclick = () => { closeMoreMenu(); openBusinessStartersModal(); };
+
+  mk(moreMenu, cb, rb, sb2);
+  mk(moreWrap, moreBtn, moreMenu);
+
+  // Toggle the More menu on click; close on outside click
+  moreBtn.onclick = (e: MouseEvent) => { e.stopPropagation(); const open = moreMenu.style.display !== 'none'; moreMenu.style.display = open ? 'none' : 'block'; };
+  function closeMoreMenu() { moreMenu.style.display = 'none'; }
+  document.addEventListener('click', (e: Event) => {
+    if (!moreWrap.contains(e.target as Node)) closeMoreMenu();
+  });
+
   const nb = el('a','mf-btn mf-btn-primary mf-btn-sm mf-hd-new');
   nb.title = T('dash.new_form','New Form');
   nb.setAttribute('aria-label', T('dash.new_form','New Form'));
@@ -2900,17 +3069,9 @@ function buildHeader(sb: HTMLElement, counts?: DashboardData['counts']): HTMLEle
   // wizard instead of jumping to the blank builder.
   nb.setAttribute('data-mf-new-form-wizard', '1'); nb.style.cursor = 'pointer';
   nb.onclick = (e) => { e.preventDefault(); openFormCreationWizard(); };
-  // [DnnBusinessStarters v20260518-01] Open the App Builder modal — same
-  // 3 cards Oqtane Index.razor renders on its "Business Starters" panel.
-  // Calls window.MFStarter.launch (DNN shim emitted by dnn-host/index.ts)
-  // which POSTs Starter/Launch and redirects.
-  const sb2 = el('button','mf-btn mf-btn-outline mf-btn-sm mf-hd-starters'); sb2.type='button';
-  sb2.title = T('dash.business_starters', 'Business Starters');
-  sb2.setAttribute('aria-label', T('dash.business_starters', 'Business Starters'));
-  sb2.innerHTML = ic('zap',14) + ' ' + T('dash.business_starters', 'Business Starters');
-  sb2.onclick = () => openBusinessStartersModal();
+
   const aib1 = makeAiCreateBtn();
-  mk(ac, cb, rb, sb2, aib1, nb);
+  mk(ac, moreWrap, aib1, nb);
   mk(hd, tog, sep, bc, sp, ac);
   return hd;
 }
@@ -4965,6 +5126,7 @@ function render(root: HTMLElement, data: DashboardData) {
       '#captcha-settings': 'captcha',
       '#ai-settings': 'ai',
       '#google-sheets': 'gsheets',
+      '#license-settings': 'license',
     };
     const tab = settingsHash[location.hash];
     if (tab) openSettingsPane(tab);

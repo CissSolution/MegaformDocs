@@ -62,7 +62,9 @@ function hasFileMetadata(source: Record<string, unknown>): boolean {
     'filePath',
     'tempPath',
     'storedPath',
+    'serverPath',
     'StoredPath',
+    'ServerPath',
     'TempPath',
     'path',
     'Path',
@@ -171,7 +173,8 @@ function normalizeFileEntry(raw: unknown): SubmissionFileEntry | null {
   }
 
   const source = raw;
-  const filePath = readString(source, 'filePath', 'tempPath', 'storedPath', 'StoredPath', 'TempPath', 'path', 'Path');
+  const downloadPath = readString(source, 'filePath', 'tempPath', 'storedPath', 'StoredPath', 'TempPath', 'serverPath', 'ServerPath', 'path', 'Path');
+  const filePath = readString(source, 'serverPath', 'ServerPath', 'storedPath', 'StoredPath', 'filePath', 'tempPath', 'TempPath', 'path', 'Path');
   const explicitUrl = readString(source, 'fileUrl', 'FileUrl', 'downloadUrl', 'DownloadUrl', 'url', 'Url');
   const fileName = readString(source, 'fileName', 'FileName', 'originalName', 'OriginalName', 'name', 'Name')
     || guessFileNameFromPath(filePath);
@@ -181,7 +184,7 @@ function normalizeFileEntry(raw: unknown): SubmissionFileEntry | null {
   return {
     fileName: fileName || 'Uploaded file',
     fileSize: readNumber(source, 'fileSize', 'FileSize', 'fileSizeBytes', 'FileSizeBytes'),
-    fileUrl: filePath ? buildDownloadUrl(filePath) : normalizeExplicitUrl(explicitUrl),
+    fileUrl: downloadPath ? buildDownloadUrl(downloadPath) : normalizeExplicitUrl(explicitUrl),
     filePath: normalizeStoredPath(filePath),
   };
 }
@@ -230,8 +233,10 @@ function createSubmissionFileLink(
 ): HTMLElement {
   const label = file.fileName || emptyText;
   const suffix = formatFileSize(file.fileSize);
+  const wrap = h('span', { class: `${itemClass}-wrap` });
+  let primary: HTMLElement;
   if (file.fileUrl) {
-    return h(
+    primary = h(
       'a',
       {
         href: file.fileUrl,
@@ -244,14 +249,21 @@ function createSubmissionFileLink(
       h('i', { class: 'fas fa-paperclip' }),
       ` ${label}${suffix}`,
     );
+  } else {
+    primary = h(
+      'span',
+      { class: itemClass, 'data-submission-file-badge': SUBMISSION_FILE_LINKS_BADGE },
+      h('i', { class: 'fas fa-paperclip' }),
+      ` ${label}${suffix}`,
+    );
   }
-
-  return h(
-    'span',
-    { class: itemClass, 'data-submission-file-badge': SUBMISSION_FILE_LINKS_BADGE },
-    h('i', { class: 'fas fa-paperclip' }),
-    ` ${label}${suffix}`,
-  );
+  wrap.appendChild(primary);
+  if (file.filePath) {
+    const path = h('code', { class: 'mf-submission-file-path', title: 'Stored path' }, file.filePath);
+    path.style.cssText = 'display:block;margin-top:3px;font-size:10px;color:#64748b;overflow-wrap:anywhere;white-space:normal';
+    wrap.appendChild(path);
+  }
+  return wrap;
 }
 
 export function renderSubmissionFileLinks(

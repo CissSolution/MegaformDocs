@@ -3,7 +3,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <RootNamespace>MegaForm.Umbraco</RootNamespace>
     <AssemblyName>MegaForm.Umbraco</AssemblyName>
-    <Version>1.5.0</Version>
+    <Version>2.0.37</Version>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>disable</Nullable>
     <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
@@ -16,16 +16,16 @@
     <Authors>MegaForm Team</Authors>
     <Company>MegaForm</Company>
     <Product>MegaForm for Umbraco</Product>
-    <Description>MegaForm module for Umbraco CMS — form builder, multi-view, submissions, and workflow extensibility.</Description>
+    <Description>Purchase package for building forms and applications in Umbraco 17 LTS with multi-view rendering, submission management, workflows, and AI-assisted design.</Description>
     <Copyright>© 2026 MegaForm. All rights reserved.</Copyright>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
     <PackageProjectUrl>https://github.com/CissSolution/MegaformDocs</PackageProjectUrl>
     <RepositoryUrl>https://github.com/CissSolution/MegaformDocs.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageIcon>icon.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageTags>umbraco;umbraco-marketplace;form-builder;forms;workflow;submissions;bellissima;umbraco17</PackageTags>
-    <PackageReleaseNotes>MegaForm 1.5 for Umbraco 17 LTS (Bellissima). Adds native Bellissima property editor and content-app integration, Marketplace-ready packaging, and backoffice section/tree permissions.</PackageReleaseNotes>
+    <PackageReleaseNotes>MegaForm 2.0.37 for Umbraco 17 LTS. Adds backoffice license.lic activation, restores runtime flags and core artwork, moves template-specific artwork to on-demand Gallery archives, removes duplicate catalogs and source maps, and adds clean-site installation QA.</PackageReleaseNotes>
     <NoWarn>$(NoWarn);NU5104</NoWarn>
   </PropertyGroup>
 
@@ -42,9 +42,10 @@
   <ItemGroup>
     <!-- Umbraco 17 LTS (Bellissima) -->
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.8" />
-    <PackageReference Include="Umbraco.Cms.Web.Common" Version="17.6.1" />
-    <PackageReference Include="Umbraco.Cms.Core" Version="17.6.1" />
-    <PackageReference Include="Umbraco.Cms.Infrastructure" Version="17.6.1" />
+    <!-- Pin the tested Umbraco 17 LTS range. The upper bound excludes Umbraco 18. -->
+    <PackageReference Include="Umbraco.Cms.Web.Common" Version="[17.6.1,18.0.0)" />
+    <PackageReference Include="Umbraco.Cms.Core" Version="[17.6.1,18.0.0)" />
+    <PackageReference Include="Umbraco.Cms.Infrastructure" Version="[17.6.1,18.0.0)" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.8" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.8" />
     <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" Version="2.1.12" />
@@ -56,8 +57,22 @@
     <None Include="icon.png" Pack="true" PackagePath="\" />
     <None Include="README.md" Pack="true" PackagePath="\" />
     <None Include="umbraco-marketplace.json" Pack="true" PackagePath="\" />
+    <None Update="LICENSE.txt" Pack="true" PackagePath="\" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Remove="umbraco-marketplace.json" />
-    <!-- License file copied to build/publish output -->
-    <Content Include="LICENSE.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+
+    <!-- Runtime assets stay in the NuGet package. Template-specific artwork is installed
+         on demand from the signed MegaForm Gallery asset archives. -->
+    <Content Remove="wwwroot/App_Plugins/MegaForm/img/**/*" />
+    <Content Include="wwwroot/App_Plugins/MegaForm/img/flags/**/*"
+             Link="wwwroot/img/flags/%(RecursiveDir)%(Filename)%(Extension)" />
+    <Content Include="wwwroot/App_Plugins/MegaForm/img/megaform-ai-bear.png"
+             Link="wwwroot/img/megaform-ai-bear.png" />
+
+    <!-- Production packages do not need source maps or duplicate locale catalogs. -->
+    <Content Remove="wwwroot/**/*.map" />
+    <Content Remove="wwwroot/js/bundles/i18n/**" />
+    <Content Remove="wwwroot/js/builder/i18n/**" />
+    <Content Remove="wwwroot/js/plugins/i18n/**" />
   </ItemGroup>
+
 </Project>
