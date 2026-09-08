@@ -96,6 +96,8 @@
 <li>Find the failed node and read the recorded error.</li>
 </ol>
 <p>The workflow view can show the active node, successful attempts, failed attempts, retry count, duration, open tasks, and per-step history. A retry action is shown only when the execution is failed and has a retryable current node.</p>
+<p>The screenshot below is from the real Umbraco submission panel. It shows a successful <strong>Form submitted</strong> step, two failed attempts of <strong>QA API failure</strong>, the <strong>Retry 1</strong> badge, the recorded webhook error, and the <strong>Retry failed step</strong> action.</p>
+<p><img src="../images/umbraco/umbraco-workflow-retry-failed-step.png" alt="Failed workflow step and retry action in Umbraco"></p>
 <h2 id="fix-the-cause-first">Fix the cause first</h2>
 <p>Before retrying, correct the condition that caused the failure. Examples include an unavailable endpoint, rejected credentials, invalid email settings, a missing named database connection, or an invalid destination record.</p>
 <p>If the BPMN definition itself is wrong, edit it, validate it, and apply the corrected definition. The failed node ID must still exist in the applied workflow or the retry cannot continue.</p>

@@ -91,7 +91,7 @@
 <h2 id="before-you-begin">Before you begin</h2>
 <p>An administrator must enable and configure an AI provider under <strong>MegaForm → Settings → AI Settings</strong>. AI creation is a licensed feature; a trial banner marked <strong>AI locked</strong> means the assistant cannot create a form until the site is licensed.</p>
 <h2 id="create-the-first-draft">Create the first draft</h2>
-<p>The animation below was recorded in the real Umbraco backoffice. The prompt is in English so the example is consistent and easy to copy, but you can describe the form in <strong>any language supported by the configured AI model</strong>. MegaForm sends the prompt as entered; the generated labels and content normally follow the language requested in the prompt.</p>
+<p>The animation below was recorded in the real Umbraco backoffice. It follows the complete proof path: enter the prompt, inspect the generated live preview, save the form, publish it, and open the final live form. The prompt is in English so the example is consistent and easy to copy, but you can describe the form in <strong>any language supported by the configured AI model</strong>. MegaForm sends the prompt as entered; the generated labels and content normally follow the language requested in the prompt.</p>
 <p><img src="../images/umbraco/umbraco-ai-create-form.gif" alt="Create and save a new form with AI in Umbraco"></p>
 <ol>
 <li>Open <strong>MegaForm → Dashboard</strong>.</li>
@@ -99,11 +99,11 @@
 <li>Describe the form, its audience, and the information to collect.</li>
 <li>Send the prompt and wait for the structured preview.</li>
 <li>Review the proposed fields, pages, rules, and design.</li>
-<li>Save the generated form, then open it in the builder for final changes.</li>
+<li>Save the generated form, open it in the builder, publish it, and verify the live URL.</li>
 </ol>
 <p>For example:</p>
 <blockquote>
-<p>Create a modern Customer Support Request form named AI Documentation Demo. Include full name, work email, phone, issue category, priority, detailed description, preferred contact method, file upload, and consent. Make name, email, category, priority, description, and consent required. Use a clean blue professional design.</p>
+<p>Create a simple customer feedback form named AI Success Demo. Include Full Name, Email Address, Rating, Feedback, and a required Consent checkbox. Make Full Name, Email Address, Feedback, and Consent required. Use the standard MegaForm layout with no custom HTML. Keep all labels and messages in English.</p>
 </blockquote>
 <p>To generate a form in another language, write the prompt in that language or explicitly name the output language. For example, a Vietnamese prompt can request Vietnamese field labels and messages, while an English prompt can request an English form.</p>
 <h2 id="write-a-strong-prompt">Write a strong prompt</h2>
@@ -140,7 +140,7 @@
 </table>
 <p>AI Designer can add, remove, rename, and reconfigure fields after the form exists.</p>
 <h2 id="review-before-publishing">Review before publishing</h2>
-<p>AI output remains a draft. Check field keys, required flags, validation, option values, conditional logic, workflow recipients, and any database binding. Remove unnecessary personal data, preview the form, and complete a real test submission before publication.</p>
+<p>AI output is saved as a draft until you explicitly publish it. Check field keys, required flags, validation, option values, conditional logic, workflow recipients, and any database binding. Remove unnecessary personal data, preview the form, publish it, and complete a real test submission.</p>
 <h2 id="related-guides">Related guides</h2>
 <ul>
 <li><a href="umbraco-ai-designer.html">Design a form with AI</a></li>

@@ -2310,6 +2310,26 @@
     },
     {
       "type": "Resource",
+      "source_relative_path": "images/umbraco/umbraco-workflow-retry-failed-step.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/umbraco/umbraco-workflow-retry-failed-step.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/umbraco/umbraco-workflow-two-step.gif",
+      "output": {
+        "resource": {
+          "relative_path": "images/umbraco/umbraco-workflow-two-step.gif"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
       "source_relative_path": "images/wg-address.png",
       "output": {
         "resource": {
