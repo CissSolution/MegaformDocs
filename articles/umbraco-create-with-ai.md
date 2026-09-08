@@ -8,7 +8,7 @@ An administrator must enable and configure an AI provider under **MegaForm → S
 
 ## Create the first draft
 
-The animation below was recorded in the real Umbraco backoffice. The prompt is in English so the example is consistent and easy to copy, but you can describe the form in **any language supported by the configured AI model**. MegaForm sends the prompt as entered; the generated labels and content normally follow the language requested in the prompt.
+The animation below was recorded in the real Umbraco backoffice. It follows the complete proof path: enter the prompt, inspect the generated live preview, save the form, publish it, and open the final live form. The prompt is in English so the example is consistent and easy to copy, but you can describe the form in **any language supported by the configured AI model**. MegaForm sends the prompt as entered; the generated labels and content normally follow the language requested in the prompt.
 
 ![Create and save a new form with AI in Umbraco](../images/umbraco/umbraco-ai-create-form.gif)
 
@@ -17,11 +17,11 @@ The animation below was recorded in the real Umbraco backoffice. The prompt is i
 3. Describe the form, its audience, and the information to collect.
 4. Send the prompt and wait for the structured preview.
 5. Review the proposed fields, pages, rules, and design.
-6. Save the generated form, then open it in the builder for final changes.
+6. Save the generated form, open it in the builder, publish it, and verify the live URL.
 
 For example:
 
-> Create a modern Customer Support Request form named AI Documentation Demo. Include full name, work email, phone, issue category, priority, detailed description, preferred contact method, file upload, and consent. Make name, email, category, priority, description, and consent required. Use a clean blue professional design.
+> Create a simple customer feedback form named AI Success Demo. Include Full Name, Email Address, Rating, Feedback, and a required Consent checkbox. Make Full Name, Email Address, Feedback, and Consent required. Use the standard MegaForm layout with no custom HTML. Keep all labels and messages in English.
 
 To generate a form in another language, write the prompt in that language or explicitly name the output language. For example, a Vietnamese prompt can request Vietnamese field labels and messages, while an English prompt can request an English form.
 
@@ -52,7 +52,7 @@ AI Designer can add, remove, rename, and reconfigure fields after the form exist
 
 ## Review before publishing
 
-AI output remains a draft. Check field keys, required flags, validation, option values, conditional logic, workflow recipients, and any database binding. Remove unnecessary personal data, preview the form, and complete a real test submission before publication.
+AI output is saved as a draft until you explicitly publish it. Check field keys, required flags, validation, option values, conditional logic, workflow recipients, and any database binding. Remove unnecessary personal data, preview the form, publish it, and complete a real test submission.
 
 ## Related guides
 

@@ -4,7 +4,7 @@ AI Designer turns a plain-language request into live changes on the form current
 
 Use [Create a form with AI](umbraco-create-with-ai.md) when the form does not exist yet. Use AI Designer for the form currently open in the builder.
 
-The animation below was recorded in the real Umbraco builder. It uses an English prompt for consistency, but you can write the request in **any language supported by the configured AI model**. Use the language you want for generated field labels and form text, or name the desired output language explicitly.
+The animation below was recorded in the real Umbraco builder. It starts with the published form, shows AI Designer applying the requested changes on the canvas, and ends on the live form with the new **Company Name** field, new description, and **Send Feedback** button visible. It uses an English prompt for consistency, but you can write the request in **any language supported by the configured AI model**. Use the language you want for generated field labels and form text, or name the desired output language explicitly.
 
 ![Edit an existing form with AI Designer in Umbraco](../images/umbraco/umbraco-ai-edit-form.gif)
 
@@ -26,13 +26,13 @@ Open a form in the builder, select **AI Designer**, and describe:
 
 Example used in the animation:
 
-> Add a required Company Name field below Full Name, add a Preferred Contact Time field, and change the form description to "Tell us how we can help and our team will respond within one business day."
+> Add a required Company Name field directly below Full Name, change the submit button text to "Send Feedback", and change the description to "Your feedback helps us improve every customer experience." Keep the title AI Success Demo and preserve the existing fields.
 
 ## Review and save the result
 
 Check the changed field labels, keys, required flags, option lists, and conditional rules on the live canvas. Remove anything unnecessary and confirm that the form does not request personal or sensitive data without a business need.
 
-Use the normal builder for any precise follow-up changes, then select **Save draft**. AI output is a starting point, not a substitute for validation and visitor testing.
+Use the normal builder for any precise follow-up changes, then select **Save draft** or **Publish and View Form**. The published page at the end of the animation is the final verification that the AI changes were saved and rendered for visitors. AI output is a starting point, not a substitute for validation and visitor testing.
 
 ## Database-assisted design
 

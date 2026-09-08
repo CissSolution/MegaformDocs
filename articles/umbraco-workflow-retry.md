@@ -11,6 +11,10 @@ MegaForm records workflow attempts with their node, status, duration, and error.
 
 The workflow view can show the active node, successful attempts, failed attempts, retry count, duration, open tasks, and per-step history. A retry action is shown only when the execution is failed and has a retryable current node.
 
+The screenshot below is from the real Umbraco submission panel. It shows a successful **Form submitted** step, two failed attempts of **QA API failure**, the **Retry 1** badge, the recorded webhook error, and the **Retry failed step** action.
+
+![Failed workflow step and retry action in Umbraco](../images/umbraco/umbraco-workflow-retry-failed-step.png)
+
 ## Fix the cause first
 
 Before retrying, correct the condition that caused the failure. Examples include an unavailable endpoint, rejected credentials, invalid email settings, a missing named database connection, or an invalid destination record.

@@ -17,6 +17,10 @@ The simple editor groups actions by event. Common events include:
 - **On Submit** for confirmation email, notification, data delivery, or follow-up processing.
 - **On Approve** for actions that run after an approval is accepted.
 
+This real Umbraco recording builds a two-step **On Submit** workflow. Step 1 shows a confirmation message to the visitor. Step 2 emails a receipt to the address collected by the form. The final frame keeps both enabled steps visible together so you can verify the complete sequence before saving.
+
+![Create a two-step workflow in the real Umbraco builder](../images/umbraco/umbraco-workflow-two-step.gif)
+
 Add only the actions needed by the form. Configure email, database, payment, storage, or other site-wide services before selecting workflow actions that depend on them.
 
 The simple editor includes common communication, action, integration, and logic steps:
