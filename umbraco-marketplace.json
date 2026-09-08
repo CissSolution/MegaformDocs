@@ -1,0 +1,56 @@
+{
+  "$schema": "https://marketplace.umbraco.com/umbraco-marketplace-schema.json",
+  "Title": "MegaForm for Umbraco",
+  "Description": "Purchase package for building forms and applications in Umbraco 17 LTS, with multi-step forms, conditional logic, payment widgets, workflows, submission management, and headless-friendly rendering. Sales and support: daoa@dnndefender.com.",
+  "Category": "Editor Tools",
+  "AlternateCategory": "Developer Tools",
+  "PackageType": "Package",
+  "LicenseTypes": [ "Purchase" ],
+  "Tags": [
+    "form builder",
+    "forms",
+    "survey",
+    "workflow",
+    "submissions",
+    "ai",
+    "multi-step",
+    "headless",
+    "bellissima",
+    "umbraco 17",
+    "lts",
+    ".net 10",
+    "megaform",
+    "conditional logic",
+    "payments"
+  ],
+  "AuthorDetails": {
+    "Name": "MegaForm Team",
+    "Url": "https://github.com/CissSolution/MegaformDocs",
+    "SyncContributorsFromRepository": true
+  },
+  "DocumentationUrl": "https://cisssolution.github.io/MegaformDocs/articles/umbraco-overview.html",
+  "IssueTrackerUrl": "https://github.com/CissSolution/MegaformDocs/issues",
+  "DiscussionForumUrl": "https://github.com/CissSolution/MegaformDocs/discussions",
+  "Screenshots": [
+    {
+      "ImageUrl": "https://cisssolution.github.io/MegaformDocs/images/umbraco/01-backoffice-dashboard.png",
+      "Caption": "MegaForm dashboard inside the Umbraco backoffice"
+    },
+    {
+      "ImageUrl": "https://cisssolution.github.io/MegaformDocs/images/umbraco/03-form-builder.png",
+      "Caption": "MegaForm visual form builder inside the Umbraco backoffice"
+    }
+  ],
+  "VersionDependencyMode": "SemVer",
+  "RelatedPackages": [
+    {
+      "PackageId": "MegaForm.Core",
+      "GroupTitle": "MegaForm ecosystem",
+      "Description": "Shared core logic used by all MegaForm platform packages."
+    },
+    {
+      "PackageId": "MegaForm.Sdk",
+      "Description": "HTTP SDK for headless integrations with MegaForm."
+    }
+  ]
+}
