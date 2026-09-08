@@ -54,6 +54,46 @@
   items:
     - name: Managing MegaForm from the Persona Bar
       href: dnn-persona-bar.md
+- name: Using MegaForm on Umbraco
+  items:
+    - name: Overview
+      href: umbraco-overview.md
+    - name: Install and Activate
+      href: umbraco-installation.md
+    - name: Create a Form
+      href: umbraco-create-form.md
+    - name: Create a Form with AI
+      href: umbraco-create-with-ai.md
+    - name: Form Templates
+      href: umbraco-form-templates.md
+    - name: Form Builder
+      href: umbraco-form-builder.md
+    - name: Controls & Widgets
+      href: umbraco-controls-widgets.md
+    - name: Publish and Place a Form
+      href: umbraco-place-form.md
+    - name: After Submission
+      href: umbraco-after-submission.md
+    - name: Submissions
+      href: umbraco-submissions.md
+    - name: Workflows
+      href: umbraco-workflows.md
+    - name: Workflow Library
+      href: umbraco-workflow-library.md
+    - name: Approval Workflows
+      href: umbraco-workflow-approvals.md
+    - name: Workflow History & Retry
+      href: umbraco-workflow-retry.md
+    - name: Run C# After Submission
+      href: umbraco-after-submit-script.md
+    - name: AI Designer
+      href: umbraco-ai-designer.md
+    - name: Prevalues and Data Sources
+      href: umbraco-data-sources.md
+    - name: Security
+      href: umbraco-security.md
+    - name: Languages and Global Settings
+      href: umbraco-languages-settings.md
 - name: Programming
   items:
     - name: Overview
