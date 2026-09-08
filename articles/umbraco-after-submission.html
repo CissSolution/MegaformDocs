@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Configure what happens after submission on Umbraco | MegaForm Documentation </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Configure what happens after submission on Umbraco | MegaForm Documentation ">
+      
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/main/articles/umbraco-after-submission.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="MegaForm">
+            MegaForm
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="configure-what-happens-after-submission-on-umbraco">Configure what happens after submission on Umbraco</h1>
+
+<p>Form Settings controls the immediate visitor experience and lightweight follow-up actions. Workflows handle longer business processes such as approvals, branching, retries, and multi-system automation.</p>
+<h2 id="open-after-submission-settings">Open after-submission settings</h2>
+<ol>
+<li>Open the form in the builder.</li>
+<li>In <strong>Design Studio</strong>, expand <strong>Form Settings</strong>.</li>
+<li>Review the confirmation, notification, integration, and storage groups.</li>
+</ol>
+<h2 id="confirmation-experience">Confirmation experience</h2>
+<p>Choose whether the visitor sees a success message, moves to another page, or sees a message before a timed redirect. Configure a clear title and message, and include a submission reference when visitors may need support later.</p>
+<p>Optional confirmation features include an answer review, submitted-answer summary, a button to submit another response, primary and secondary calls to action, and a downloadable file.</p>
+<h2 id="email-and-notifications">Email and notifications</h2>
+<ul>
+<li>A respondent email confirms receipt at the submitted email address.</li>
+<li>An administrator notification alerts one or more internal recipients.</li>
+<li>Workflow email steps send messages at later stages of the process.</li>
+</ul>
+<p>Configure the mail service under <strong>MegaForm → Settings → Email Settings</strong> before testing. Use test addresses first and check both the recipient mailbox and server logs.</p>
+<h2 id="redirects-and-calls-to-action">Redirects and calls to action</h2>
+<p>Use a redirect for a dedicated thank-you page or tracked conversion path. Use confirmation buttons when visitors may choose between actions, such as returning to the site or downloading a guide.</p>
+<h2 id="send-data-elsewhere">Send data elsewhere</h2>
+<p>Form Settings can enable a webhook or custom URL, Google Analytics, Google Sheets, database insertion, and cloud file storage. Keep secrets in server-side settings and test destination permissions with non-production data.</p>
+<p>For delivery that requires conditions, retries, approvals, or several steps, use <a href="umbraco-workflows.html">Workflows</a> instead of stacking unrelated form settings.</p>
+<h2 id="processing-order-to-remember">Processing order to remember</h2>
+<p>A valid submission is saved first when <strong>Store records</strong> is enabled. MegaForm then performs configured post-submit actions and starts the applied workflow. A server script, when available and enabled, runs in the server-side post-commit stage.</p>
+<div class="NOTE">
+<h5>Note</h5>
+<p>If local record storage is disabled, verify the external destination carefully. The Entries grid cannot recover data that was never stored locally.</p>
+</div>
+<h2 id="test-checklist">Test checklist</h2>
+<ul>
+<li>Confirm the success message or redirect.</li>
+<li>Confirm respondent and internal email.</li>
+<li>Verify downloaded files and links.</li>
+<li>Confirm the entry appears in <strong>Entries</strong> when local storage is enabled.</li>
+<li>Verify webhook, database, sheet, payment, and storage outcomes.</li>
+<li>Check that a failed integration produces visible workflow history.</li>
+</ul>
+
+</article>
+
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          MegaForm — forms, submissions, workflows & AI. © 2026 MegaForm.
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

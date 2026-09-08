@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Languages and global settings on Umbraco | MegaForm Documentation </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Languages and global settings on Umbraco | MegaForm Documentation ">
+      
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/main/articles/umbraco-languages-settings.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="MegaForm">
+            MegaForm
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="languages-and-global-settings-on-umbraco">Languages and global settings on Umbraco</h1>
+
+<p>The MegaForm section includes language management for the administration experience and a global settings workspace for services shared by forms.</p>
+<h2 id="choose-and-maintain-languages">Choose and maintain languages</h2>
+<p>Open <strong>MegaForm → Languages</strong> to select the display language and maintain translated strings.</p>
+<p><img src="../images/umbraco/12-languages.png" alt="MegaForm language management in Umbraco"></p>
+<ul>
+<li><strong>Display language</strong> changes MegaForm administration and form labels for the current browser.</li>
+<li>The language list selects the translation set you want to edit.</li>
+<li>Search finds a string, key, widget, or control.</li>
+<li><strong>Download JSON</strong> and <strong>Upload JSON</strong> support review and transfer of a translation set.</li>
+<li><strong>Translate (AI)</strong> can prepare translations when AI is configured; review them before use.</li>
+</ul>
+<p>English remains the fallback when a translated value is missing. Test validation, confirmation, and workflow messages as well as visible field labels.</p>
+<h2 id="configure-shared-services">Configure shared services</h2>
+<p>Open <strong>MegaForm → Settings</strong> for services used across forms.</p>
+<p><img src="../images/umbraco/13-global-settings.png" alt="MegaForm global settings workspace"></p>
+<table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Configure when you need it</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Database Settings</strong></td>
+<td>Named database access for lookups or workflows</td>
+</tr>
+<tr>
+<td><strong>Payment Settings</strong></td>
+<td>Forms that collect or confirm payments</td>
+</tr>
+<tr>
+<td><strong>Email Settings</strong></td>
+<td>Confirmation, notification, or workflow email</td>
+</tr>
+<tr>
+<td><strong>Upload Settings</strong></td>
+<td>File upload limits and handling</td>
+</tr>
+<tr>
+<td><strong>Captcha Settings</strong></td>
+<td>Automated submission protection</td>
+</tr>
+<tr>
+<td><strong>AI Settings</strong></td>
+<td>AI Designer and assisted translation</td>
+</tr>
+<tr>
+<td><strong>Google Sheets</strong></td>
+<td>Workflows that send rows to a sheet</td>
+</tr>
+<tr>
+<td><strong>Cloud Storage</strong></td>
+<td>External storage for submitted files</td>
+</tr>
+<tr>
+<td><strong>License</strong></td>
+<td>Production package activation</td>
+</tr>
+</tbody>
+</table>
+<h2 id="change-control">Change control</h2>
+<p>Global settings can affect many published forms. Record the previous value, test the new configuration, submit a representative form, and verify the result before considering the change complete. Keep secrets in server-side settings and never place them in form content or screenshots.</p>
+<h2 id="related-guides">Related guides</h2>
+<ul>
+<li><a href="umbraco-ai-designer.html">Design a form with AI</a></li>
+<li><a href="umbraco-data-sources.html">Reuse option lists and data sources</a></li>
+<li><a href="umbraco-security.html">Manage MegaForm security</a></li>
+</ul>
+
+</article>
+
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          MegaForm — forms, submissions, workflows & AI. © 2026 MegaForm.
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

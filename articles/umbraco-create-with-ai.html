@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Create a form with AI on Umbraco | MegaForm Documentation </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Create a form with AI on Umbraco | MegaForm Documentation ">
+      
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/main/articles/umbraco-create-with-ai.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="MegaForm">
+            MegaForm
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="create-a-form-with-ai-on-umbraco">Create a form with AI on Umbraco</h1>
+
+<p><strong>Create with AI</strong> starts a new form from a plain-language description. Use it when you know the business outcome but do not want to select and arrange every field manually.</p>
+<h2 id="before-you-begin">Before you begin</h2>
+<p>An administrator must enable and configure an AI provider under <strong>MegaForm → Settings → AI Settings</strong>. AI creation is a licensed feature; a trial banner marked <strong>AI locked</strong> means the assistant cannot create a form until the site is licensed.</p>
+<h2 id="create-the-first-draft">Create the first draft</h2>
+<p>The animation below was recorded in the real Umbraco backoffice. The prompt is in English so the example is consistent and easy to copy, but you can describe the form in <strong>any language supported by the configured AI model</strong>. MegaForm sends the prompt as entered; the generated labels and content normally follow the language requested in the prompt.</p>
+<p><img src="../images/umbraco/umbraco-ai-create-form.gif" alt="Create and save a new form with AI in Umbraco"></p>
+<ol>
+<li>Open <strong>MegaForm → Dashboard</strong>.</li>
+<li>Select <strong>Create with AI</strong>.</li>
+<li>Describe the form, its audience, and the information to collect.</li>
+<li>Send the prompt and wait for the structured preview.</li>
+<li>Review the proposed fields, pages, rules, and design.</li>
+<li>Save the generated form, then open it in the builder for final changes.</li>
+</ol>
+<p>For example:</p>
+<blockquote>
+<p>Create a modern Customer Support Request form named AI Documentation Demo. Include full name, work email, phone, issue category, priority, detailed description, preferred contact method, file upload, and consent. Make name, email, category, priority, description, and consent required. Use a clean blue professional design.</p>
+</blockquote>
+<p>To generate a form in another language, write the prompt in that language or explicitly name the output language. For example, a Vietnamese prompt can request Vietnamese field labels and messages, while an English prompt can request an English form.</p>
+<h2 id="write-a-strong-prompt">Write a strong prompt</h2>
+<p>Include the details that affect structure:</p>
+<ul>
+<li>the form's purpose and intended visitor;</li>
+<li>required fields and useful optional fields;</li>
+<li>the sections or pages you expect;</li>
+<li>choice lists and default values;</li>
+<li>conditional questions;</li>
+<li>approvals, notifications, or integrations after submission;</li>
+<li>the visual tone, such as corporate, minimal, or friendly.</li>
+</ul>
+<p>The assistant may start from an installed form template when one matches the request. This produces a more complete first draft than adding unrelated fields one at a time.</p>
+<p>The creation surface uses the same conversational AI studio as AI Designer in the form builder. It shows the request, the assistant's summary, and a structured live preview before the form is saved.</p>
+<h2 id="create-with-ai-versus-ai-designer">Create with AI versus AI Designer</h2>
+<table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Use it for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Create with AI</strong></td>
+<td>Creating a new form from the Dashboard</td>
+</tr>
+<tr>
+<td><strong>AI Designer</strong></td>
+<td>Modifying the form currently open in the builder</td>
+</tr>
+</tbody>
+</table>
+<p>AI Designer can add, remove, rename, and reconfigure fields after the form exists.</p>
+<h2 id="review-before-publishing">Review before publishing</h2>
+<p>AI output remains a draft. Check field keys, required flags, validation, option values, conditional logic, workflow recipients, and any database binding. Remove unnecessary personal data, preview the form, and complete a real test submission before publication.</p>
+<h2 id="related-guides">Related guides</h2>
+<ul>
+<li><a href="umbraco-ai-designer.html">Design a form with AI</a></li>
+<li><a href="umbraco-form-templates.html">Use form templates</a></li>
+<li><a href="umbraco-workflows.html">Configure workflows</a></li>
+</ul>
+
+</article>
+
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          MegaForm — forms, submissions, workflows & AI. © 2026 MegaForm.
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

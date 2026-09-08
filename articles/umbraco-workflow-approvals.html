@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Approval workflows on Umbraco | MegaForm Documentation </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Approval workflows on Umbraco | MegaForm Documentation ">
+      
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/main/articles/umbraco-workflow-approvals.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="MegaForm">
+            MegaForm
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="approval-workflows-on-umbraco">Approval workflows on Umbraco</h1>
+
+<p>An approval task pauses a workflow until an authorized user claims, approves, rejects, forwards, or comments on the task. The selected outcome then follows the corresponding BPMN path.</p>
+<h2 id="build-an-approval-path">Build an approval path</h2>
+<ol>
+<li>Open <strong>Workflow</strong> for the form.</li>
+<li>In the simple editor, add <strong>Approval</strong>, or add a <strong>User Task</strong> in Advanced BPMN.</li>
+<li>Configure candidate roles or candidate users.</li>
+<li>Set the due time and the submission status for approved and rejected outcomes.</li>
+<li>Connect both outcomes to the intended next steps.</li>
+<li>Validate, test, and apply the workflow.</li>
+</ol>
+<h2 id="assignment-behavior">Assignment behavior</h2>
+<table>
+<thead>
+<tr>
+<th>Configuration</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>One candidate user</td>
+<td>The task is assigned directly to that user</td>
+</tr>
+<tr>
+<td>Several candidate users</td>
+<td>The task remains available for an eligible user to claim</td>
+</tr>
+<tr>
+<td>Candidate role</td>
+<td>Eligible members share a role queue until one claims it</td>
+</tr>
+</tbody>
+</table>
+<p>Workflow identity uses the authenticated Umbraco identity plus the roles available to MegaForm's workflow directory. Create the required users and role mappings before applying the workflow, then test with a non-administrator account.</p>
+<h2 id="work-with-an-approval">Work with an approval</h2>
+<p>Open the submission from <strong>MegaForm → Submissions</strong>. The detail surface shows responses plus <strong>Details</strong>, <strong>History</strong>, and <strong>Workflow</strong> information when the submission has a workflow task.</p>
+<ul>
+<li><strong>Claim</strong> reserves a shared task for the current user.</li>
+<li><strong>Approve</strong> completes the approved outcome.</li>
+<li><strong>Reject</strong> completes the rejected outcome and may require a comment.</li>
+<li><strong>Forward</strong> assigns the task to another eligible user.</li>
+<li><strong>Comment</strong> records context without completing the task.</li>
+</ul>
+<p>Every action is recorded in history. After an approval, MegaForm resumes at the next BPMN node and may create another approval task.</p>
+<h2 id="email-and-due-dates">Email and due dates</h2>
+<p>Task email requires <strong>MegaForm → Settings → Email Settings</strong>. A missing mail configuration does not prevent the task from existing, but the assignee may not receive a notification.</p>
+<p>Use due times for operational visibility and escalation. Test overdue behavior in a non-production workflow before relying on it for a service-level commitment.</p>
+<h2 id="troubleshooting">Troubleshooting</h2>
+<p>If a user cannot see or claim a task, verify the applied workflow version, candidate role spelling, the user's resolved roles, and that the task has not already been claimed. Administrators can inspect the workflow history from the submission to see its current node and assignee.</p>
+
+</article>
+
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          MegaForm — forms, submissions, workflows & AI. © 2026 MegaForm.
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

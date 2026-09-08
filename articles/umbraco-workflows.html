@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Configure workflows on Umbraco | MegaForm Documentation </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Configure workflows on Umbraco | MegaForm Documentation ">
+      
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/main/articles/umbraco-workflows.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="MegaForm">
+            MegaForm
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="configure-workflows-on-umbraco">Configure workflows on Umbraco</h1>
+
+<p>Workflows decide what MegaForm does after an event such as a new submission. Start with the simple workflow for common actions, then move to Advanced BPMN when the process needs branches, approvals, retries, or several connected steps.</p>
+<p><img src="../images/umbraco/08-workflow-builder.png" alt="Workflow editor for a MegaForm in Umbraco"></p>
+<h2 id="open-the-workflow-editor">Open the workflow editor</h2>
+<ol>
+<li>Open a form in <strong>MegaForm → Forms</strong>.</li>
+<li>Select <strong>Workflow</strong> in the builder toolbar.</li>
+<li>Review the simple workflow or select <strong>Advanced BPMN</strong>.</li>
+</ol>
+<h2 id="simple-workflow">Simple workflow</h2>
+<p>The simple editor groups actions by event. Common events include:</p>
+<ul>
+<li><strong>On Submit</strong> for confirmation email, notification, data delivery, or follow-up processing.</li>
+<li><strong>On Approve</strong> for actions that run after an approval is accepted.</li>
+</ul>
+<p>Add only the actions needed by the form. Configure email, database, payment, storage, or other site-wide services before selecting workflow actions that depend on them.</p>
+<p>The simple editor includes common communication, action, integration, and logic steps:</p>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Typical use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Show message / Redirect</strong></td>
+<td>Control the visitor result after submit</td>
+</tr>
+<tr>
+<td><strong>Send email</strong></td>
+<td>Confirm receipt or notify a team</td>
+</tr>
+<tr>
+<td><strong>Approval</strong></td>
+<td>Pause and wait for a reviewer</td>
+</tr>
+<tr>
+<td><strong>Push to API</strong></td>
+<td>Send data to an HTTP endpoint</td>
+</tr>
+<tr>
+<td><strong>Insert into database</strong></td>
+<td>Write to a named connection or procedure</td>
+</tr>
+<tr>
+<td><strong>Google Sheets</strong></td>
+<td>Append a row to a sheet</td>
+</tr>
+<tr>
+<td><strong>Wait</strong></td>
+<td>Resume after a duration or date</td>
+</tr>
+<tr>
+<td><strong>Set variable / Calculate</strong></td>
+<td>Prepare values for later steps</td>
+</tr>
+</tbody>
+</table>
+<h2 id="advanced-bpmn">Advanced BPMN</h2>
+<p>Use Advanced BPMN for a business process that contains conditions, human decisions, parallel work, delays, or integrations. Give nodes descriptive names so another administrator can understand the process without opening every setting.</p>
+<p><img src="../images/umbraco/16-advanced-bpmn-workflow.png" alt="Advanced BPMN workflow canvas running inside Umbraco"></p>
+<p>The toolbar separates workflow lifecycle states:</p>
+<ul>
+<li><strong>Save Draft</strong> stores the diagram without changing the process currently used by published submissions.</li>
+<li><strong>Validate BPMN</strong> checks the executable graph and reports missing or invalid configuration.</li>
+<li><strong>Test</strong> runs the draft against sample data.</li>
+<li><strong>Apply BPMN</strong> makes the validated workflow the active definition for this form.</li>
+</ul>
+<p>The palette provides gateways, business rules, workflow variables, timers, user tasks, email tasks, API service tasks, database tasks, Google Sheets tasks, identity actions, and end events. A <strong>Script Task</strong> sets a workflow variable; it is not the same as the optional C# after-submission server script.</p>
+<h2 id="reuse-a-workflow">Reuse a workflow</h2>
+<p>Select <strong>Library</strong> in the BPMN toolbar to save a diagram as a reusable workflow or apply a saved workflow to another form. Applied library versions can be pinned so a production form does not change when a newer library version is created.</p>
+<h2 id="test-safely">Test safely</h2>
+<ol>
+<li>Save the workflow and form as a draft.</li>
+<li>Submit test data with a clearly recognizable email address or reference.</li>
+<li>Verify the entry status and every external result.</li>
+<li>Test each conditional branch and both approval outcomes.</li>
+<li>Publish only after all expected actions complete once.</li>
+</ol>
+<div class="TIP">
+<h5>Tip</h5>
+<p>Build the workflow in small stages. A submit event followed by one action is much easier to verify than a complete business process added all at once.</p>
+</div>
+<h2 id="troubleshooting">Troubleshooting</h2>
+<p>If an action does not run, verify that it is connected to the correct event, its required site-wide setting is complete, and the form version containing the workflow is published. Review the entry and available workflow history to identify the failed step before retrying.</p>
+<h2 id="related-guides">Related guides</h2>
+<ul>
+<li><a href="umbraco-workflow-approvals.html">Approval workflows</a></li>
+<li><a href="umbraco-workflow-retry.html">Workflow history and retry</a></li>
+<li><a href="umbraco-workflow-library.html">Workflow library</a></li>
+<li><a href="umbraco-after-submission.html">After-submission settings</a></li>
+</ul>
+
+</article>
+
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          MegaForm — forms, submissions, workflows & AI. © 2026 MegaForm.
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

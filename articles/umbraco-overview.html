@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>MegaForm for Umbraco | MegaForm Documentation </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="MegaForm for Umbraco | MegaForm Documentation ">
+      
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/main/articles/umbraco-overview.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="MegaForm">
+            MegaForm
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="megaform-for-umbraco">MegaForm for Umbraco</h1>
+
+<p>MegaForm adds a visual form workspace to Umbraco 17. Use it to create forms, publish them, review entries, automate follow-up actions, and manage access without leaving the Umbraco backoffice.</p>
+<p><img src="../images/umbraco/01-backoffice-dashboard.png" alt="MegaForm dashboard in the Umbraco backoffice"></p>
+<h2 id="what-you-can-do">What you can do</h2>
+<ul>
+<li>Build single-page or multi-step forms with drag-and-drop fields, layouts, and widgets.</li>
+<li>Configure validation, conditional logic, field security, themes, and form settings.</li>
+<li>Publish a form at its own public URL or select it on an Umbraco content page.</li>
+<li>Search, filter, and review submitted entries.</li>
+<li>Run simple submission actions or advanced BPMN workflows.</li>
+<li>Reuse option lists and named database sources across forms.</li>
+<li>Translate the MegaForm interface and form labels.</li>
+<li>Ask AI Designer to prepare a form plan that you can review before applying.</li>
+<li>Create a complete new form from a plain-language AI prompt.</li>
+<li>Inspect workflow attempts and retry a failed step from the submission history.</li>
+<li>Optionally run reviewed server-side C# after a saved submission when the scripting add-on is installed.</li>
+</ul>
+<h2 id="the-megaform-section">The MegaForm section</h2>
+<p>Sign in to the Umbraco backoffice and select <strong>MegaForm</strong> from the top navigation. The left navigation contains:</p>
+<table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Dashboard</strong></td>
+<td>Form totals, recent forms, quick actions, and package status</td>
+</tr>
+<tr>
+<td><strong>Forms</strong></td>
+<td>Create a form or open an existing form</td>
+</tr>
+<tr>
+<td><strong>Submissions</strong></td>
+<td>Browse entries across forms</td>
+</tr>
+<tr>
+<td><strong>Prevalue Sources</strong></td>
+<td>Maintain option lists shared by multiple fields</td>
+</tr>
+<tr>
+<td><strong>Data Sources</strong></td>
+<td>Register server-side database connections for form data</td>
+</tr>
+<tr>
+<td><strong>Security</strong></td>
+<td>Control what each Umbraco user group may do in MegaForm</td>
+</tr>
+<tr>
+<td><strong>Languages</strong></td>
+<td>Select the display language and manage translations</td>
+</tr>
+<tr>
+<td><strong>Settings</strong></td>
+<td>Database, payment, email, upload, CAPTCHA, AI, storage, and license settings</td>
+</tr>
+</tbody>
+</table>
+<div class="TIP">
+<h5>Tip</h5>
+<p>Start with <a href="umbraco-installation.html">Install and activate MegaForm</a> on a new site. If MegaForm is already installed, go directly to <a href="umbraco-create-form.html">Create a form</a>.</p>
+</div>
+<h2 id="typical-publishing-flow">Typical publishing flow</h2>
+<ol>
+<li>Create a form from a template, imported JSON, quick start, or a blank form.</li>
+<li>Add and configure fields in the visual builder.</li>
+<li>Review form settings and any submission workflow.</li>
+<li>Save a draft, preview it, then publish.</li>
+<li>Open the public form or select it on an Umbraco content page.</li>
+<li>Review new entries in <strong>Entries</strong> or <strong>Submissions</strong>.</li>
+</ol>
+<h2 id="next-steps">Next steps</h2>
+<ul>
+<li><a href="umbraco-installation.html">Install and activate MegaForm</a></li>
+<li><a href="umbraco-create-form.html">Create a form</a></li>
+<li><a href="umbraco-create-with-ai.html">Create a form with AI</a></li>
+<li><a href="umbraco-form-builder.html">Use the form builder</a></li>
+<li><a href="umbraco-place-form.html">Publish and place a form</a></li>
+<li><a href="umbraco-after-submission.html">Configure after-submission behavior</a></li>
+<li><a href="umbraco-workflow-retry.html">Inspect workflow history and retry</a></li>
+</ul>
+
+</article>
+
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          MegaForm — forms, submissions, workflows & AI. © 2026 MegaForm.
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

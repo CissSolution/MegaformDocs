@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Reuse option lists and data sources on Umbraco | MegaForm Documentation </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Reuse option lists and data sources on Umbraco | MegaForm Documentation ">
+      
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/main/articles/umbraco-data-sources.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="MegaForm">
+            MegaForm
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="reuse-option-lists-and-data-sources-on-umbraco">Reuse option lists and data sources on Umbraco</h1>
+
+<p>MegaForm separates reusable choices from database connectivity. <strong>Prevalue Sources</strong> maintain option lists shared by fields, while <strong>Data Sources</strong> register named server-side database sources.</p>
+<h2 id="prevalue-sources">Prevalue Sources</h2>
+<p>Use a prevalue source when several forms should share the same countries, departments, products, content items, or other choices.</p>
+<p><img src="../images/umbraco/10-prevalue-sources.png" alt="Prevalue Sources in the Umbraco MegaForm section"></p>
+<ol>
+<li>Select <strong>MegaForm → Prevalue Sources</strong>.</li>
+<li>Select <strong>Create</strong>.</li>
+<li>Name the source and choose its type.</li>
+<li>Configure and save the source.</li>
+<li>Open a choice field in the builder and select the saved source.</li>
+</ol>
+<p>Updating the source maintains the list in one place instead of copying options into every form. Test existing forms after a change, particularly when an option value is renamed or removed.</p>
+<h2 id="data-sources">Data Sources</h2>
+<p>Data Sources are named database connections that forms and workflows can read from or write to.</p>
+<p><img src="../images/umbraco/09-data-sources.png" alt="Data Sources in the Umbraco MegaForm section"></p>
+<ol>
+<li>Select <strong>MegaForm → Data Sources</strong>.</li>
+<li>Select <strong>Create</strong>.</li>
+<li>Choose a registered server-side connection and provide a clear reusable name.</li>
+<li>Select the allowed table or data target when applicable.</li>
+<li>Save and test the source before using it in a form.</li>
+</ol>
+<p>Connection strings stay on the server; MegaForm stores and displays the registered connection name. Keep credentials out of form definitions, field labels, prompts, and documentation.</p>
+<h2 id="good-practice">Good practice</h2>
+<ul>
+<li>Use least-privilege database accounts.</li>
+<li>Prefer read-only access for lookup lists.</li>
+<li>Give every source an owner and purpose.</li>
+<li>Test with non-production data first.</li>
+<li>Review forms before deleting or renaming a shared source.</li>
+<li>Limit write access to the tables and operations the workflow requires.</li>
+</ul>
+<div class="IMPORTANT">
+<h5>Important</h5>
+<p>A data source can affect multiple forms. Coordinate changes with form owners and verify all dependent forms after editing it.</p>
+</div>
+
+</article>
+
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          MegaForm — forms, submissions, workflows & AI. © 2026 MegaForm.
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

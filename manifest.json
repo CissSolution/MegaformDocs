@@ -706,11 +706,11 @@
       "type": "Toc",
       "source_relative_path": "api/toc.yml",
       "output": {
-        ".json": {
-          "relative_path": "api/toc.json"
-        },
         ".html": {
           "relative_path": "api/toc.html"
+        },
+        ".json": {
+          "relative_path": "api/toc.json"
         }
       },
       "version": ""
@@ -1139,11 +1139,201 @@
       "type": "Toc",
       "source_relative_path": "articles/toc.yml",
       "output": {
-        ".json": {
-          "relative_path": "articles/toc.json"
-        },
         ".html": {
           "relative_path": "articles/toc.html"
+        },
+        ".json": {
+          "relative_path": "articles/toc.json"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/umbraco-after-submission.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/umbraco-after-submission.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/umbraco-after-submit-script.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/umbraco-after-submit-script.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/umbraco-ai-designer.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/umbraco-ai-designer.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/umbraco-controls-widgets.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/umbraco-controls-widgets.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/umbraco-create-form.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/umbraco-create-form.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/umbraco-create-with-ai.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/umbraco-create-with-ai.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/umbraco-data-sources.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/umbraco-data-sources.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/umbraco-form-builder.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/umbraco-form-builder.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/umbraco-form-templates.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/umbraco-form-templates.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/umbraco-installation.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/umbraco-installation.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/umbraco-languages-settings.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/umbraco-languages-settings.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/umbraco-overview.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/umbraco-overview.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/umbraco-place-form.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/umbraco-place-form.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/umbraco-security.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/umbraco-security.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/umbraco-submissions.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/umbraco-submissions.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/umbraco-workflow-approvals.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/umbraco-workflow-approvals.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/umbraco-workflow-library.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/umbraco-workflow-library.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/umbraco-workflow-retry.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/umbraco-workflow-retry.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/umbraco-workflows.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/umbraco-workflows.html"
         }
       },
       "version": ""
@@ -1950,6 +2140,176 @@
     },
     {
       "type": "Resource",
+      "source_relative_path": "images/umbraco/01-backoffice-dashboard.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/umbraco/01-backoffice-dashboard.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/umbraco/02-create-form-wizard.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/umbraco/02-create-form-wizard.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/umbraco/03-form-builder.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/umbraco/03-form-builder.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/umbraco/04-field-settings.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/umbraco/04-field-settings.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/umbraco/05-ai-designer.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/umbraco/05-ai-designer.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/umbraco/06-form-settings.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/umbraco/06-form-settings.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/umbraco/07-entries-grid.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/umbraco/07-entries-grid.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/umbraco/08-workflow-builder.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/umbraco/08-workflow-builder.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/umbraco/09-data-sources.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/umbraco/09-data-sources.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/umbraco/10-prevalue-sources.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/umbraco/10-prevalue-sources.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/umbraco/11-security.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/umbraco/11-security.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/umbraco/12-languages.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/umbraco/12-languages.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/umbraco/13-global-settings.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/umbraco/13-global-settings.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/umbraco/14-public-form.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/umbraco/14-public-form.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/umbraco/16-advanced-bpmn-workflow.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/umbraco/16-advanced-bpmn-workflow.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/umbraco/umbraco-ai-create-form.gif",
+      "output": {
+        "resource": {
+          "relative_path": "images/umbraco/umbraco-ai-create-form.gif"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/umbraco/umbraco-ai-edit-form.gif",
+      "output": {
+        "resource": {
+          "relative_path": "images/umbraco/umbraco-ai-edit-form.gif"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
       "source_relative_path": "images/wg-address.png",
       "output": {
         "resource": {
@@ -2422,11 +2782,11 @@
       "type": "Toc",
       "source_relative_path": "toc.yml",
       "output": {
-        ".json": {
-          "relative_path": "toc.json"
-        },
         ".html": {
           "relative_path": "toc.html"
+        },
+        ".json": {
+          "relative_path": "toc.json"
         }
       },
       "version": ""

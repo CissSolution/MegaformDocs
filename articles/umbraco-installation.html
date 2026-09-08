@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Install and activate MegaForm on Umbraco | MegaForm Documentation </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Install and activate MegaForm on Umbraco | MegaForm Documentation ">
+      
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/main/articles/umbraco-installation.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="MegaForm">
+            MegaForm
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="install-and-activate-megaform-on-umbraco">Install and activate MegaForm on Umbraco</h1>
+
+<p>MegaForm for Umbraco is distributed as a single NuGet package for Umbraco 17 LTS. After installation, it registers its backoffice section, database schema, property editor, and public form renderer automatically.</p>
+<h2 id="requirements">Requirements</h2>
+<ul>
+<li>Umbraco 17.6.1 or later in the Umbraco 17 LTS line</li>
+<li>.NET 10 or later</li>
+<li>An Umbraco administrator account</li>
+<li>A MegaForm license file for production use</li>
+</ul>
+<h2 id="install-the-package">Install the package</h2>
+<p>Run this command from the Umbraco website project:</p>
+<pre><code>dotnet add package MegaForm.Umbraco
+</code></pre>
+<p>Restore and start the site. Sign in to the Umbraco backoffice and confirm that <strong>MegaForm</strong> appears in the top navigation.</p>
+<div class="NOTE">
+<h5>Note</h5>
+<p>The package registers itself automatically. You do not need to add a composer or manually register MegaForm services.</p>
+</div>
+<h2 id="activate-a-production-license">Activate a production license</h2>
+<p>Trial status appears at the top of the MegaForm workspace. <strong>Purchase</strong> opens the configured purchase location; <strong>Activate license</strong> opens the license pane.</p>
+<ol>
+<li>Select <strong>MegaForm → Settings</strong>.</li>
+<li>Select <strong>License</strong> in the settings menu.</li>
+<li>Upload the purchased <code>license.lic</code> file.</li>
+<li>Confirm that the status changes to <strong>Active</strong>.</li>
+</ol>
+<p>The license file is stored privately under <code>App_Data/MegaForm/license.lic</code>. Keep it separate from the NuGet package when moving the site between environments.</p>
+<h2 id="review-site-wide-settings">Review site-wide settings</h2>
+<p>The settings workspace groups configuration for database connections, payment providers, email, uploads, CAPTCHA, AI, Google Sheets, cloud storage, and licensing.</p>
+<p><img src="../images/umbraco/13-global-settings.png" alt="MegaForm global settings in Umbraco"></p>
+<p>Configure only the services your forms use. For example, email settings are required before an email workflow can send a message, and AI settings are required before AI Designer can generate a plan.</p>
+<h2 id="verify-the-installation">Verify the installation</h2>
+<ol>
+<li>Open <strong>MegaForm → Dashboard</strong>.</li>
+<li>Select <strong>Create form</strong>.</li>
+<li>Confirm that the five-step form wizard opens.</li>
+<li>Create a small test form and publish it.</li>
+<li>Open its public URL and submit one test entry.</li>
+</ol>
+<p>See <a href="umbraco-create-form.html">Create a form</a> for the complete flow.</p>
+
+</article>
+
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          MegaForm — forms, submissions, workflows & AI. © 2026 MegaForm.
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
