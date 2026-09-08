@@ -1,7 +1,7 @@
 {
   "$schema": "https://marketplace.umbraco.com/umbraco-marketplace-schema.json",
   "Title": "MegaForm for Umbraco",
-  "Description": "Purchase package for building forms and applications in Umbraco 17 LTS, with multi-step forms, conditional logic, payment widgets, workflows, submission management, and headless-friendly rendering. Sales and support: daoa@dnndefender.com.",
+  "Description": "A complete visual form and application builder for Umbraco 17 LTS. Start quickly with 31 bundled QuickStart templates or the searchable Online Gallery, create and edit forms with AI, build multi-page wizards, publish multilingual experiences, accept payments, manage submissions, and automate work with approvals, email, webhooks, retry history, and C# after-submission actions. Sales and support: daoa@dnndefender.com.",
   "Category": "Editor Tools",
   "AlternateCategory": "Developer Tools",
   "PackageType": "Package",
@@ -21,7 +21,11 @@
     ".net 10",
     "megaform",
     "conditional logic",
-    "payments"
+    "payments",
+    "templates",
+    "online gallery",
+    "multilingual",
+    "wizard"
   ],
   "AuthorDetails": {
     "Name": "MegaForm Team",
