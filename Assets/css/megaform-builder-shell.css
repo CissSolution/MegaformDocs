@@ -3024,6 +3024,16 @@ body[data-mf-mode="design"] .mf-panel-left {
   background: #ffffff !important;
   font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
 }
+/* [CanvasExpandFix 2026-08-27] Collapsed left rail must release its width in Design mode
+   so the center canvas can grow to fill the space. The 288px rule above otherwise wins. */
+body[data-mf-mode="design"] .mf-panel-left.mf-collapsed {
+  width: 0 !important;
+  min-width: 0 !important;
+  max-width: 0 !important;
+  padding: 0 !important;
+  border-right-width: 0 !important;
+  overflow: hidden !important;
+}
 body[data-mf-mode="design"] .mf-panel-left #mf-left-collapse-btn.mf-close-btn:not(.mf-left-collapse-trigger),
 body[data-mf-mode="design"] .mf-panel-left .mf-panel-header {
   display: none !important;
@@ -3512,9 +3522,11 @@ body[data-mf-mode="design"] .mf-panel-left .mf-tlr-view-toggle button.active {
 .mf-secondary-tool.mf-reorder-tool .lbl { display: inline; }
 .mf-secondary-tool.mf-reorder-tool:hover { background: var(--muted, #f4f4f5); color: #09090b; }
 
-/* Push the 3-column builder layout down under the primary bar */
-.b-outer,
-#mf-builder-app {
+/* Standalone hosts use fixed header rows and must reserve their height. Workspace
+   hosts keep both rows in normal flow, so applying this offset to them creates a
+   blank band before the toolbox/canvas while the host attribute is initializing. */
+#mf-builder-root:not([data-mf-host="umbraco-workspace"]):not([data-mf-host="umbraco-v13"]):not([data-mf-host="megaform-workspace"]) .b-outer,
+#mf-builder-root:not([data-mf-host="umbraco-workspace"]):not([data-mf-host="umbraco-v13"]):not([data-mf-host="megaform-workspace"]) #mf-builder-app {
   padding-top: 44px !important;
 }
 #mf-builder-root .w-topbar {
@@ -3545,6 +3557,25 @@ body[data-mf-mode="design"] .mf-panel-left .mf-tlr-view-toggle button.active {
 .mf-panel-right.mf-flyout.mf-flyout-open {
   width: 420px !important;
   min-width: 420px !important;
+}
+
+/* [2026-08-21] Workflow flyout — wide Umbraco Forms-style side pane */
+.mf-panel-right.mf-flyout.mf-flyout-open.mf-workflow-flyout,
+#mf-builder-root[data-mf-host="umbraco-workspace"] .mf-panel-right.mf-flyout.mf-flyout-open.mf-workflow-flyout {
+  width: 50vw !important;
+  min-width: 560px !important;
+  max-width: 820px !important;
+}
+@media (max-width: 1100px) {
+  .mf-panel-right.mf-flyout.mf-flyout-open.mf-workflow-flyout,
+  #mf-builder-root[data-mf-host="umbraco-workspace"] .mf-panel-right.mf-flyout.mf-flyout-open.mf-workflow-flyout {
+    width: calc(100vw - 60px) !important;
+    /* `min-width: auto` only means anything on a flex/grid ITEM; on this block it is the
+       initial value and the 560px floor above would keep winning on a narrow viewport.
+       0 is what actually lets the panel shrink. */
+    min-width: 0 !important;
+    max-width: none !important;
+  }
 }
 
 /* Flyout header */
@@ -3634,6 +3665,73 @@ body[data-mf-mode="design"] .mf-panel-left .mf-tlr-view-toggle button.active {
 .mf-flyout-body .mf-right-tab-content {
   height: auto !important;
   overflow: visible !important;
+}
+
+/* [2026-08-21] Simple workflow panel inside the flyout */
+#mf-tab-workflow.mf-right-tab-content {
+  height: 100% !important;
+}
+#mf-simple-workflow-root {
+  height: 100%;
+  min-height: 0;
+}
+.mf-sw-flyout {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+.mf-sw-flyout__body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 14px;
+  min-height: 0;
+}
+.mf-sw-flyout__footer {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 14px;
+  border-top: 1px solid var(--border);
+  background: #ffffff;
+}
+/* [SimpleWorkflowStatus 2026-08-21] A strip in the flex flow, between the scrolling
+   body and the fixed footer. It was position:absolute with no positioned parent of its
+   own, so it resolved against .mf-flyout-body — whose bottom already stops 56px short of
+   the panel — and ended up floating INSIDE the scroll area, scrolling away from the Save
+   button that produced it. Nothing about that was visible in a build log: the element was
+   there, painted, and in the wrong box. */
+.mf-sw-flyout__status {
+  flex: 0 0 auto;
+  padding: 8px 14px;
+  font: 500 12px/1.45 var(--font);
+  color: #166534;
+  background: #f0fdf4;
+  border-top: 1px solid #bbf7d0;
+}
+.mf-sw-flyout__status.is-error {
+  color: #991b1b;
+  background: #fef2f2;
+  border-top-color: #fecaca;
+}
+
+/* Workflow has its own scroll body and its own Advanced/Save footer. Keeping the
+   generic flyout scroll/footer creates two scroll positions and hides the top actions. */
+.mf-panel-right.mf-workflow-flyout .mf-flyout-body {
+  /* builder-ts.css defines bottom:56px !important for ordinary flyouts.
+     Workflow supplies its own footer, so this override must win that rule. */
+  bottom: 0 !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+}
+.mf-panel-right.mf-workflow-flyout > .mf-flyout-footer {
+  display: none !important;
+}
+.mf-panel-right.mf-workflow-flyout #mf-tab-workflow {
+  position: absolute;
+  inset: 0;
+  min-height: 0;
 }
 
 /* Backdrop overlay */
@@ -3727,9 +3825,57 @@ body[data-mf-mode="design"] .mf-panel-left .mf-tlr-view-toggle button.active {
   flex: 0 0 auto;
   height: auto;
   min-height: var(--topbar);
+  grid-template-columns: minmax(0, 1fr) max-content;
+  gap: 0.375rem;
+  padding: 0 0.5rem;
 }
 #mf-builder-root[data-mf-host="umbraco-workspace"] .w-topbar .w-left {
   display: none !important;
+}
+#mf-builder-root[data-mf-host="umbraco-workspace"] .w-topbar .w-center {
+  display: flex !important;
+  width: 100%;
+  min-width: 0;
+  justify-self: stretch;
+  justify-content: flex-start;
+  overflow: hidden;
+}
+#mf-builder-root[data-mf-host="umbraco-workspace"] .w-topbar .w-actions {
+  min-width: max-content;
+  flex-shrink: 0;
+}
+
+/* The Umbraco workspace is narrower than the browser viewport because its own
+   navigation remains visible. Keep the three user-facing commands readable;
+   secondary icon commands already have tooltips and stay compact. */
+#mf-builder-root[data-mf-host="umbraco-workspace"] .w-actions .w-btn-ai-designer .mf-ai-lbl,
+#mf-builder-root[data-mf-host="umbraco-workspace"] .w-actions .w-btn-preview-theme .lbl,
+#mf-builder-root[data-mf-host="umbraco-workspace"] .w-actions .w-btn.primary .lbl {
+  display: inline !important;
+}
+#mf-builder-root[data-mf-host="umbraco-workspace"] .w-actions .w-btn-ai-designer,
+#mf-builder-root[data-mf-host="umbraco-workspace"] .w-actions .w-btn-preview-theme,
+#mf-builder-root[data-mf-host="umbraco-workspace"] .w-actions .w-btn.primary {
+  width: auto;
+  min-width: max-content;
+  padding-inline: 0.625rem;
+}
+
+/* At genuinely narrow workspace widths, use a compact second command row. It
+   carries controls, so it cannot become the empty header band fixed above. */
+@media (max-width: 900px) {
+  #mf-builder-root[data-mf-host="umbraco-workspace"] .w-topbar {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    align-items: center;
+    row-gap: 0.25rem;
+    padding-block: 0.25rem;
+  }
+  #mf-builder-root[data-mf-host="umbraco-workspace"] .w-topbar .w-actions {
+    width: 100%;
+    min-width: 0;
+    justify-content: flex-end;
+  }
 }
 
 #mf-builder-root[data-mf-host="umbraco-workspace"] .mf-primary-bar {
@@ -3744,6 +3890,144 @@ body[data-mf-mode="design"] .mf-panel-left .mf-tlr-view-toggle button.active {
 }
 #mf-builder-root[data-mf-host="umbraco-workspace"] .mf-primary-tabs {
   display: none !important;
+}
+
+/* Umbraco 13 hosts the builder in its Angular dashboard rather than Bellissima's workspace.
+   Keep both header rows in normal flow, then compose them like the Bellissima workspace:
+   title/tabs on row one and authoring/actions on row two. */
+#mf-builder-root[data-mf-host="umbraco-v13"] {
+  display: flex;
+  flex-direction: column;
+  height: 100% !important;
+  min-height: 0;
+}
+#mf-builder-root[data-mf-host="umbraco-v13"] .w-topbar,
+#mf-builder-root[data-mf-host="umbraco-v13"] .mf-primary-bar {
+  position: relative;
+  inset: auto;
+  flex: 0 0 auto;
+}
+#mf-builder-root[data-mf-host="umbraco-v13"] .w-topbar.mf-v13-workspace-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) max-content;
+  min-height: 70px;
+  height: 70px;
+  padding: 0 1.5rem;
+  gap: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+#mf-builder-root[data-mf-host="umbraco-v13"] .mf-v13-workspace-header .w-left {
+  min-width: 0;
+  gap: 0.25rem;
+}
+#mf-builder-root[data-mf-host="umbraco-v13"] .mf-v13-workspace-header .w-back,
+#mf-builder-root[data-mf-host="umbraco-v13"] .mf-v13-workspace-header .w-left > .w-sep,
+#mf-builder-root[data-mf-host="umbraco-v13"] .mf-v13-workspace-header .w-pill {
+  display: none !important;
+}
+#mf-builder-root[data-mf-host="umbraco-v13"] .mf-v13-workspace-header .w-title {
+  width: min(340px, 100%);
+  max-width: 340px;
+  min-width: 0;
+  padding-left: 0;
+  color: var(--uui-color-text, #0f172a);
+  font-size: 15px;
+  font-weight: 700;
+}
+#mf-builder-root[data-mf-host="umbraco-v13"] .mf-v13-form-id {
+  color: #71717a;
+  font: 400 13px/1 var(--font);
+  white-space: nowrap;
+}
+#mf-builder-root[data-mf-host="umbraco-v13"] .mf-v13-workspace-tabs {
+  height: 100%;
+  margin-left: auto;
+  align-self: stretch;
+}
+#mf-builder-root[data-mf-host="umbraco-v13"] .mf-v13-workspace-tabs .mf-primary-tab {
+  padding: 0 0.875rem;
+  border-bottom-width: 3px;
+  font-weight: 600;
+}
+#mf-builder-root[data-mf-host="umbraco-v13"] .mf-v13-workspace-tabs .mf-primary-tab.active,
+#mf-builder-root[data-mf-host="umbraco-v13"] .mf-v13-workspace-tabs .mf-primary-tab[aria-selected="true"] {
+  border-bottom-color: var(--uui-color-focus, #3544b1);
+}
+#mf-builder-root[data-mf-host="umbraco-v13"] .mf-primary-bar.mf-v13-command-bar {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr) max-content;
+  align-items: center;
+  min-height: var(--topbar);
+  height: var(--topbar);
+  padding: 0 0.75rem;
+  gap: 0.5rem;
+}
+#mf-builder-root[data-mf-host="umbraco-v13"] .mf-v13-command-bar .w-center {
+  justify-self: start;
+}
+#mf-builder-root[data-mf-host="umbraco-v13"] .mf-v13-command-bar .mf-secondary-toolbar {
+  width: 100%;
+  min-width: 0;
+  justify-content: flex-start;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+#mf-builder-root[data-mf-host="umbraco-v13"] .mf-v13-command-bar .mf-secondary-toolbar::-webkit-scrollbar {
+  display: none;
+}
+#mf-builder-root[data-mf-host="umbraco-v13"] .mf-v13-command-bar .w-actions {
+  min-width: max-content;
+  justify-self: end;
+}
+#mf-builder-root[data-mf-host="umbraco-v13"] .mf-v13-command-bar .w-actions .w-btn-ai-designer .mf-ai-lbl,
+#mf-builder-root[data-mf-host="umbraco-v13"] .mf-v13-command-bar .w-actions .w-btn-preview-theme .lbl,
+#mf-builder-root[data-mf-host="umbraco-v13"] .mf-v13-command-bar .w-actions .w-btn.primary .lbl {
+  display: inline !important;
+}
+#mf-builder-root[data-mf-host="umbraco-v13"] .mf-v13-command-bar .w-actions .w-btn-ai-designer,
+#mf-builder-root[data-mf-host="umbraco-v13"] .mf-v13-command-bar .w-actions .w-btn-preview-theme,
+#mf-builder-root[data-mf-host="umbraco-v13"] .mf-v13-command-bar .w-actions .w-btn.primary {
+  width: auto;
+  min-width: max-content;
+  padding-inline: 0.625rem;
+}
+#mf-builder-root[data-mf-host="umbraco-v13"] .b-outer,
+#mf-builder-root[data-mf-host="umbraco-v13"] #mf-builder-app {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  height: auto;
+  padding-top: 0 !important;
+}
+#mf-builder-root[data-mf-host="umbraco-v13"] .mf-builder-layout {
+  display: flex !important;
+  flex: 1 1 auto !important;
+  flex-direction: row !important;
+  min-height: 0 !important;
+  height: auto !important;
+}
+#mf-builder-root[data-mf-host="umbraco-v13"] .mf-panel-left,
+#mf-builder-root[data-mf-host="umbraco-v13"] .mf-panel-center {
+  min-height: 0 !important;
+  height: auto !important;
+}
+
+@media (max-width: 1050px) {
+  #mf-builder-root[data-mf-host="umbraco-v13"] .w-topbar.mf-v13-workspace-header {
+    padding-inline: 0.75rem;
+  }
+  #mf-builder-root[data-mf-host="umbraco-v13"] .mf-v13-workspace-tabs .mf-primary-tab {
+    padding-inline: 0.625rem;
+  }
+  #mf-builder-root[data-mf-host="umbraco-v13"] .mf-v13-command-bar .w-actions .w-btn-ai-designer .mf-ai-lbl,
+  #mf-builder-root[data-mf-host="umbraco-v13"] .mf-v13-command-bar .w-actions .w-btn:not(.primary) .lbl {
+    display: none !important;
+  }
+  #mf-builder-root[data-mf-host="umbraco-v13"] .mf-v13-command-bar .w-actions .w-btn:not(.primary) {
+    padding-inline: 0.5rem;
+  }
 }
 
 #mf-builder-root[data-mf-host="umbraco-workspace"] .b-outer,
@@ -3775,10 +4059,23 @@ body[data-mf-mode="design"] .mf-panel-left .mf-tlr-view-toggle button.active {
   width: 256px !important;
   min-width: 256px !important;
   max-width: 256px !important;
+  transition: width 0.18s ease, min-width 0.18s ease, max-width 0.18s ease, padding 0.18s ease !important;
+}
+#mf-builder-root[data-mf-host="umbraco-workspace"] .mf-panel-left.mf-collapsed {
+  width: 0 !important;
+  min-width: 0 !important;
+  max-width: 0 !important;
+  padding: 0 !important;
+  border-right-width: 0 !important;
+  overflow: hidden !important;
 }
 #mf-builder-root[data-mf-host="umbraco-workspace"] .mf-panel-center {
   flex: 1 1 auto !important;
+  min-width: 0 !important;
 }
+
+/* Workflow now mounts inline below the form canvas, so the left toolbox and
+   center panel keep their normal widths — no collapse, no side flyout. */
 
 /* [FlyoutLikeUmbraco 2026-08-17] An Umbraco sidebar covers the screen it belongs to,
    top to bottom, over a dimmed backdrop — it does not start below the toolbars and
@@ -3869,3 +4166,1182 @@ body[data-mf-mode="design"] .mf-panel-left .mf-tlr-view-toggle button.active {
   display: none;
 }
 
+/* ============================================================
+   DNN / OQTANE MODERN WORKSPACE
+   The shared builder owns the application rail and form workspace on
+   platforms which do not provide Umbraco's Bellissima workspace shell.
+   ============================================================ */
+#mf-builder-root[data-mf-host="megaform-workspace"] {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  background: #f7f7f8 !important;
+}
+
+#mf-builder-root[data-mf-host="megaform-workspace"] .mf-builder-workspace {
+  display: grid;
+  grid-template-columns: 214px minmax(0, 1fr);
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  background: #f7f7f8;
+  color: #18181b;
+  font-family: var(--font);
+}
+
+#mf-builder-root[data-mf-host="megaform-workspace"] .mf-builder-workspace__nav {
+  position: relative;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border-right: 1px solid #e4e4e7;
+  background: #fff;
+}
+
+#mf-builder-root[data-mf-host="megaform-workspace"] .mf-ws-brand {
+  display: flex;
+  flex: 0 0 64px;
+  align-items: center;
+  gap: 10px;
+  padding: 0 22px;
+  border-bottom: 1px solid #f1f1f3;
+  font-size: 14px;
+}
+
+#mf-builder-root[data-mf-host="megaform-workspace"] .mf-ws-brand__mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: #2563eb;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 750;
+}
+
+#mf-builder-root[data-mf-host="megaform-workspace"] .mf-ws-nav {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px 12px;
+}
+
+#mf-builder-root[data-mf-host="megaform-workspace"] .mf-ws-nav__item,
+#mf-builder-root[data-mf-host="megaform-workspace"] .mf-ws-form {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+  min-height: 36px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: #27272a;
+  padding: 7px 10px;
+  font: 500 13px/1.25 var(--font);
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+#mf-builder-root[data-mf-host="megaform-workspace"] .mf-ws-nav__item:hover,
+#mf-builder-root[data-mf-host="megaform-workspace"] .mf-ws-form:hover {
+  background: #f4f4f5;
+  color: #09090b;
+  text-decoration: none;
+}
+
+#mf-builder-root[data-mf-host="megaform-workspace"] .mf-ws-nav__item > i,
+#mf-builder-root[data-mf-host="megaform-workspace"] .mf-ws-form > i {
+  flex: 0 0 16px;
+  width: 16px;
+  color: #52525b;
+  text-align: center;
+  font-size: 13px;
+}
+
+#mf-builder-root[data-mf-host="megaform-workspace"] .mf-ws-nav__item > span,
+#mf-builder-root[data-mf-host="megaform-workspace"] .mf-ws-form > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#mf-builder-root[data-mf-host="megaform-workspace"] .mf-ws-forms__toggle {
+  font-weight: 650;
+}
+
+#mf-builder-root[data-mf-host="megaform-workspace"] .mf-ws-forms__toggle .fa-chevron-down {
+  margin-left: auto;
+  transition: transform .16s ease;
+}
+
+#mf-builder-root[data-mf-host="megaform-workspace"] .mf-ws-forms__body {
+  display: block;
+  padding: 2px 0 8px 18px;
+}
+
+#mf-builder-root[data-mf-host="megaform-workspace"] .mf-ws-forms-collapsed .mf-ws-forms__body {
+  display: none;
+}
+
+#mf-builder-root[data-mf-host="megaform-workspace"] .mf-ws-forms-collapsed .mf-ws-forms__toggle .fa-chevron-down {
+  transform: rotate(-90deg);
+}
+
+#mf-builder-root[data-mf-host="megaform-workspace"] .mf-ws-nav__create {
+  color: #18181b;
+}
+
+#mf-builder-root[data-mf-host="megaform-workspace"] .mf-ws-form {
+  min-height: 32px;
+  color: #52525b;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  font-size: 12px;
+}
+
+#mf-builder-root[data-mf-host="megaform-workspace"] .mf-ws-form.is-active {
+  background: #eef4ff;
+  color: #1d4ed8;
+  font-weight: 650;
+}
+
+#mf-builder-root[data-mf-host="megaform-workspace"] .mf-ws-user {
+  display: flex;
+  flex: 0 0 62px;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 18px;
+  border-top: 1px solid #e4e4e7;
+}
+
+#mf-builder-root[data-mf-host="megaform-workspace"] .mf-ws-user > span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  background: #f4f4f5;
+  color: #3f3f46;
+  font-weight: 700;
+}
+
+#mf-builder-root[data-mf-host="megaform-workspace"] .mf-ws-user div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+#mf-builder-root[data-mf-host="megaform-workspace"] .mf-ws-user strong,
+#mf-builder-root[data-mf-host="megaform-workspace"] .mf-ws-user small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#mf-builder-root[data-mf-host="megaform-workspace"] .mf-ws-user strong { font-size: 12px; }
+#mf-builder-root[data-mf-host="megaform-workspace"] .mf-ws-user small { color: #71717a; font-size: 10px; }
+
+#mf-builder-root[data-mf-host="megaform-workspace"] .mf-builder-workspace__main,
+#mf-builder-root[data-mf-host="megaform-workspace"] .mf-builder-workspace__content {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+#mf-builder-root[data-mf-host="megaform-workspace"] .mf-builder-workspace__content {
+  position: relative;
+  z-index: 20;
+}
+
+#mf-builder-root[data-mf-host="megaform-workspace"] .mf-builder-workspace__header {
+  position: relative;
+  z-index: 19;
+  display: flex;
+  flex: 0 0 64px;
+  align-items: stretch;
+  gap: 18px;
+  padding: 0 18px 0 24px;
+  border-bottom: 1px solid #e4e4e7;
+  background: #fff;
+}
+
+#mf-builder-root[data-mf-host="megaform-workspace"] .mf-ws-form-title {
+  display: flex;
+  min-width: 180px;
+  max-width: min(36vw, 430px);
+  align-items: center;
+  gap: 8px;
+  margin-right: auto;
+}
+
+#mf-builder-root[data-mf-host="megaform-workspace"] .mf-ws-form-title strong {
+  overflow: hidden;
+  color: #18181b;
+  font-size: 14px;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#mf-builder-root[data-mf-host="megaform-workspace"] .mf-ws-form-title span {
+  flex: 0 0 auto;
+  color: #71717a;
+  font-size: 12px;
+}
+
+#mf-builder-root[data-mf-host="megaform-workspace"] .mf-ws-primary-tabs,
+#mf-builder-root[data-mf-host="megaform-workspace"] .mf-ws-primary-tabs .mf-primary-tabs {
+  display: flex;
+  align-items: stretch;
+  height: 100%;
+}
+
+#mf-builder-root[data-mf-host="megaform-workspace"] .mf-ws-primary-tabs .mf-primary-tab {
+  height: 100%;
+  padding: 0 14px;
+  border-bottom-color: transparent;
+}
+
+#mf-builder-root[data-mf-host="megaform-workspace"] .mf-ws-primary-tabs .mf-primary-tab.active,
+#mf-builder-root[data-mf-host="megaform-workspace"] .mf-ws-primary-tabs .mf-primary-tab[aria-selected="true"] {
+  border-bottom-color: #2563eb;
+}
+
+#mf-builder-root[data-mf-host="megaform-workspace"] .mf-ws-mobile-toggle {
+  display: none;
+  align-self: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid #e4e4e7;
+  border-radius: 4px;
+  background: #fff;
+  color: #27272a;
+  cursor: pointer;
+}
+
+#mf-builder-root[data-mf-host="megaform-workspace"] .w-topbar {
+  position: relative;
+  top: auto;
+  right: auto;
+  left: auto;
+  z-index: 18;
+  flex: 0 0 auto;
+  width: 100%;
+  min-height: var(--topbar);
+}
+
+#mf-builder-root[data-mf-host="megaform-workspace"] .w-topbar .w-left {
+  display: none !important;
+}
+
+#mf-builder-root[data-mf-host="megaform-workspace"] .w-topbar .w-center {
+  justify-self: start;
+}
+
+#mf-builder-root[data-mf-host="megaform-workspace"] .w-center .mf-secondary-toolbar {
+  min-width: 0;
+  overflow-x: auto;
+  border-left: 0;
+  padding-left: 0;
+  scrollbar-width: none;
+}
+
+#mf-builder-root[data-mf-host="megaform-workspace"] .w-center .mf-secondary-toolbar::-webkit-scrollbar { display: none; }
+#mf-builder-root[data-mf-host="megaform-workspace"] .w-center #mf-color-scheme,
+#mf-builder-root[data-mf-host="megaform-workspace"] .w-center .w-sep-design-only { display: none; }
+
+#mf-builder-root[data-mf-host="megaform-workspace"] .mf-primary-bar {
+  position: relative;
+  top: auto;
+  right: auto;
+  left: auto;
+}
+
+#mf-builder-root[data-mf-host="megaform-workspace"] .b-outer,
+#mf-builder-root[data-mf-host="megaform-workspace"] #mf-builder-app {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  padding-top: 0 !important;
+}
+
+#mf-builder-root[data-mf-host="megaform-workspace"] .mf-builder-layout {
+  display: flex !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  height: auto !important;
+}
+
+#mf-builder-root[data-mf-host="megaform-workspace"] .mf-panel-left,
+#mf-builder-root[data-mf-host="megaform-workspace"] .mf-panel-center {
+  min-height: 0 !important;
+  height: auto !important;
+}
+
+#mf-builder-root[data-mf-host="megaform-workspace"] .mf-panel-left {
+  flex: 0 0 256px !important;
+  width: 256px !important;
+  min-width: 256px !important;
+  max-width: 256px !important;
+}
+
+/* DNN/Oqtane share the Umbraco collapse contract: hiding the toolbox must
+   release its width so the form canvas remains centered. */
+#mf-builder-root[data-mf-host="megaform-workspace"] .mf-panel-left.mf-collapsed {
+  flex: 0 0 0 !important;
+  width: 0 !important;
+  min-width: 0 !important;
+  max-width: 0 !important;
+  padding: 0 !important;
+  border-right: 0 !important;
+  overflow: hidden !important;
+}
+
+#mf-builder-root[data-mf-host="megaform-workspace"] .mf-panel-center {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+}
+
+#mf-builder-root[data-mf-host="megaform-workspace"] .tpl-gallery {
+  height: 100%;
+}
+
+#mf-builder-root[data-mf-host="megaform-workspace"] .mf-flyout {
+  position: fixed !important;
+  top: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  left: auto !important;
+  z-index: 1002 !important;
+}
+
+#mf-builder-root[data-mf-host="megaform-workspace"] .mf-flyout.mf-flyout-open {
+  width: min(560px, 62vw) !important;
+  min-width: min(560px, 62vw) !important;
+}
+
+/* Keep the workflow editor at the same working width as the Umbraco flyout.
+   Ordinary field/settings flyouts intentionally retain the compact width. */
+#mf-builder-root[data-mf-host="megaform-workspace"] .mf-flyout.mf-flyout-open.mf-workflow-flyout {
+  width: 50vw !important;
+  min-width: 560px !important;
+  max-width: 820px !important;
+}
+
+#mf-builder-root[data-mf-host="megaform-workspace"] .mf-flyout-backdrop {
+  z-index: 1001;
+  background: rgba(0,0,0,.22);
+}
+
+/* Oqtane's admin navbar is viewport-fixed. Keep the shared workspace fixed in
+   the remaining viewport so the host bar never covers MegaForm's title tabs or
+   intercepts their clicks. The offset is measured by workspace-shell.ts. */
+#mf-builder-root[data-mf-host="megaform-workspace"][data-platform="oqtane"] {
+  position: fixed !important;
+  inset: var(--mf-workspace-host-offset, 0px) 0 0 0 !important;
+  width: auto !important;
+  height: auto !important;
+  z-index: 1020 !important;
+}
+
+/* The host navbar is inert/hidden in fullscreen, so its inline offset must not
+   reserve space above the workspace. Keep this CSS guard as a first-paint
+   fallback while workspace-shell.ts synchronizes the measured custom property. */
+.mf-oq-surface.is-fs #mf-builder-root[data-mf-host="megaform-workspace"][data-platform="oqtane"] {
+  --mf-workspace-host-offset: 0px !important;
+  inset: 0 !important;
+}
+
+.mf-oq-surface.is-inline #mf-builder-root[data-mf-host="megaform-workspace"][data-platform="oqtane"] .w-topbar {
+  position: relative !important;
+}
+
+#mf-builder-root[data-mf-host="megaform-workspace"][data-platform="oqtane"] .mf-flyout {
+  top: var(--mf-workspace-host-offset, 0px) !important;
+}
+
+.mf-oq-surface.is-fs #mf-builder-root[data-mf-host="megaform-workspace"][data-platform="oqtane"] .mf-flyout {
+  top: 0 !important;
+}
+
+@media (max-width: 1120px) {
+  #mf-builder-root[data-mf-host="megaform-workspace"] .mf-builder-workspace {
+    grid-template-columns: 68px minmax(0, 1fr);
+  }
+  #mf-builder-root[data-mf-host="megaform-workspace"] .mf-ws-brand {
+    justify-content: center;
+    padding: 0;
+  }
+  #mf-builder-root[data-mf-host="megaform-workspace"] .mf-ws-brand strong,
+  #mf-builder-root[data-mf-host="megaform-workspace"] .mf-ws-nav__item > span,
+  #mf-builder-root[data-mf-host="megaform-workspace"] .mf-ws-form,
+  #mf-builder-root[data-mf-host="megaform-workspace"] .mf-ws-forms__toggle .fa-chevron-down,
+  #mf-builder-root[data-mf-host="megaform-workspace"] .mf-ws-user div { display: none; }
+  #mf-builder-root[data-mf-host="megaform-workspace"] .mf-ws-nav__item { justify-content: center; }
+  #mf-builder-root[data-mf-host="megaform-workspace"] .mf-ws-forms__body { padding-left: 0; }
+  #mf-builder-root[data-mf-host="megaform-workspace"] .mf-ws-user { justify-content: center; padding: 10px 0; }
+  #mf-builder-root[data-mf-host="megaform-workspace"] .mf-ws-primary-tabs .mf-primary-tab span { display: none; }
+}
+
+@media (max-width: 760px) {
+  #mf-builder-root[data-mf-host="megaform-workspace"] .mf-builder-workspace { grid-template-columns: minmax(0, 1fr); }
+  #mf-builder-root[data-mf-host="megaform-workspace"] .mf-builder-workspace__nav {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 60;
+    width: min(280px, 86vw);
+    transform: translateX(-101%);
+    box-shadow: 14px 0 30px rgba(15,23,42,.16);
+    transition: transform .18s ease;
+  }
+  #mf-builder-root[data-mf-host="megaform-workspace"] .mf-ws-nav-open .mf-builder-workspace__nav { transform: translateX(0); }
+  #mf-builder-root[data-mf-host="megaform-workspace"] .mf-ws-nav-open .mf-ws-brand {
+    justify-content: flex-start;
+    padding: 0 22px;
+  }
+  #mf-builder-root[data-mf-host="megaform-workspace"] .mf-ws-nav-open .mf-ws-brand strong,
+  #mf-builder-root[data-mf-host="megaform-workspace"] .mf-ws-nav-open .mf-ws-nav__item > span,
+  #mf-builder-root[data-mf-host="megaform-workspace"] .mf-ws-nav-open .mf-ws-forms__toggle .fa-chevron-down {
+    display: inline;
+  }
+  #mf-builder-root[data-mf-host="megaform-workspace"] .mf-ws-nav-open .mf-ws-form { display: flex; }
+  #mf-builder-root[data-mf-host="megaform-workspace"] .mf-ws-nav-open .mf-ws-user div { display: flex; }
+  #mf-builder-root[data-mf-host="megaform-workspace"] .mf-ws-nav-open .mf-ws-nav__item { justify-content: flex-start; }
+  #mf-builder-root[data-mf-host="megaform-workspace"] .mf-ws-nav-open .mf-ws-forms__body { padding-left: 18px; }
+  #mf-builder-root[data-mf-host="megaform-workspace"] .mf-ws-mobile-toggle { display: inline-flex; align-items: center; justify-content: center; }
+  #mf-builder-root[data-mf-host="megaform-workspace"] .mf-builder-workspace__header { padding: 0 10px; gap: 8px; }
+  #mf-builder-root[data-mf-host="megaform-workspace"] .mf-ws-form-title { min-width: 0; max-width: none; }
+  #mf-builder-root[data-mf-host="megaform-workspace"] .mf-ws-form-title span { display: none; }
+  #mf-builder-root[data-mf-host="megaform-workspace"] .mf-ws-primary-tabs .mf-primary-tab { width: 38px; padding: 0; justify-content: center; }
+  #mf-builder-root[data-mf-host="megaform-workspace"] .mf-panel-left {
+    flex-basis: 196px !important;
+    width: 196px !important;
+    min-width: 196px !important;
+    max-width: 196px !important;
+  }
+  #mf-builder-root[data-mf-host="megaform-workspace"] .mf-panel-left.mf-collapsed {
+    flex-basis: 0 !important;
+    width: 0 !important;
+    min-width: 0 !important;
+    max-width: 0 !important;
+  }
+  #mf-builder-root[data-mf-host="megaform-workspace"] .mf-flyout.mf-flyout-open {
+    width: calc(100vw - 28px) !important;
+    min-width: calc(100vw - 28px) !important;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════
+   [B95] INLINE THEME EDITING MODE
+   When the Theme tab is active we drop both side panes so the
+   user can edit the form preview directly.  A compact floating
+   toolbar gives quick access to presets / typography / colors /
+   images / SVG / device preview, while a contextual popup shows
+   up after picking an element on the form.
+   ════════════════════════════════════════════════════════════ */
+
+/* 1. Hide side rails and expand the canvas ------------------- */
+body.mf-theme-inline-mode .mf-panel-left {
+  width: 0 !important;
+  min-width: 0 !important;
+  opacity: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  border-right: none !important;
+}
+body.mf-theme-inline-mode .mf-panel-right.mf-flyout,
+body.mf-theme-inline-mode .mf-panel-right.mf-flyout.mf-flyout-open {
+  width: 0 !important;
+  min-width: 0 !important;
+  opacity: 0 !important;
+  overflow: hidden !important;
+  border-left: none !important;
+}
+body.mf-theme-inline-mode .mf-panel-center {
+  padding: 16px 24px 24px !important;
+  position: relative !important;
+}
+body.mf-theme-inline-mode .mf-canvas-dropzone,
+body.mf-theme-inline-mode #mf-canvas-dropzone {
+  max-width: none !important;
+}
+
+/* 2. Floating theme toolbar ---------------------------------- */
+.mf-theme-inline-toolbar {
+  position: fixed;
+  /* [B95c] Fixed at the top-center of the viewport so it stays visible while
+     scrolling the canvas, and is mounted directly on body to avoid clipping.
+     [B95d] z-index must sit above #mf-builder-root (z-index 2147483000) so the
+     inline theme chrome paints on top of the fullscreen builder takeover. */
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2147483646;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(15, 23, 42, 0.12), 0 2px 6px rgba(15, 23, 42, 0.06);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  font-family: var(--font);
+  max-width: calc(100vw - 40px);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.mf-theme-inline-toolbar .mf-theme-inline-sep {
+  width: 1px;
+  height: 22px;
+  background: #e2e8f0;
+  margin: 0 2px;
+  flex-shrink: 0;
+}
+.mf-theme-inline-toolbar .mf-theme-inline-label {
+  font: 600 11px/1 var(--font);
+  color: #64748b;
+  padding: 0 4px;
+  white-space: nowrap;
+}
+.mf-theme-inline-toolbar button,
+.mf-theme-inline-toolbar select,
+.mf-theme-inline-toolbar input[type="color"] {
+  height: 30px;
+  border: 1px solid #e2e8f0;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #334155;
+  font: 500 12px/1 var(--font);
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease, box-shadow 0.12s ease;
+  flex-shrink: 0;
+}
+.mf-theme-inline-toolbar button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 0 10px;
+}
+.mf-theme-inline-toolbar button:hover,
+.mf-theme-inline-toolbar select:hover {
+  background: #f8fafc;
+  border-color: #c7d2fe;
+  color: #1e293b;
+}
+.mf-theme-inline-toolbar button.active,
+.mf-theme-inline-toolbar button.is-active,
+.mf-theme-inline-toolbar select:focus,
+.mf-theme-inline-toolbar input[type="color"]:focus,
+.mf-theme-inline-toolbar button:focus-visible {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  outline: none;
+}
+.mf-theme-inline-toolbar input[type="color"] {
+  width: 34px;
+  padding: 2px;
+}
+.mf-theme-inline-toolbar select {
+  padding: 0 22px 0 8px;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 7px center;
+  background-size: 12px;
+  min-width: 110px;
+}
+.mf-theme-inline-toolbar .mf-theme-inline-btn-primary {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+  color: #ffffff !important;
+  border-color: transparent !important;
+}
+.mf-theme-inline-toolbar .mf-theme-inline-btn-primary:hover {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed) !important;
+}
+.mf-theme-inline-toolbar .mf-theme-inline-btn-ghost {
+  background: transparent !important;
+  color: #64748b !important;
+  border-color: transparent !important;
+}
+.mf-theme-inline-toolbar .mf-theme-inline-btn-ghost:hover {
+  background: #f1f5f9 !important;
+  color: #334155 !important;
+}
+
+/* Preset mini-grid inside toolbar (optional expanded view) */
+.mf-theme-inline-presets {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 320px;
+  max-width: calc(100vw - 40px);
+  max-height: 360px;
+  overflow-y: auto;
+  padding: 10px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(15, 23, 42, 0.14);
+  z-index: 901;
+}
+.mf-theme-inline-presets[data-hidden="1"] { display: none; }
+
+/* 3. Inline edit popup -------------------------------------- */
+.mf-theme-inline-popup {
+  position: fixed;
+  /* [B95d] Must paint above the fullscreen builder root (z-index 2147483000). */
+  z-index: 2147483646;
+  min-width: 220px;
+  max-width: 300px;
+  padding: 12px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(15, 23, 42, 0.14);
+  font-family: var(--font);
+}
+.mf-theme-inline-popup[data-hidden="1"] { display: none; }
+.mf-theme-inline-popup h5 {
+  font: 600 12px/1.3 var(--font);
+  color: #0f172a;
+  margin: 0 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.mf-theme-inline-popup .mf-theme-inline-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.mf-theme-inline-popup .mf-theme-inline-row label {
+  font: 500 11px/1 var(--font);
+  color: #64748b;
+  min-width: 60px;
+}
+.mf-theme-inline-popup select,
+.mf-theme-inline-popup input[type="color"],
+.mf-theme-inline-popup input[type="text"] {
+  flex: 1;
+  height: 28px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font: 500 12px/1 var(--font);
+}
+.mf-theme-inline-popup select { padding: 0 8px; }
+.mf-theme-inline-popup input[type="color"] { width: 40px; padding: 2px; }
+.mf-theme-inline-popup input[type="text"] { padding: 0 8px; }
+.mf-theme-inline-popup .mf-theme-inline-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+}
+
+/* 4. Picker-active cursor overlay on the canvas -------------- */
+body.mf-theme-inline-picker-active #mf-canvas-dropzone,
+body.mf-theme-inline-picker-active .mf-panel-center {
+  cursor: crosshair !important;
+}
+body.mf-theme-inline-picker-active .mf-theme-inline-toolbar .mf-theme-inline-btn-pick {
+  background: #eef2ff !important;
+  color: #4338ca !important;
+  border-color: #6366f1 !important;
+}
+
+/* [B95b] Wrapper guard — host/iframe CSS resets sometimes collapse the injected
+   wrapper, which would hide the fixed-position toolbar even though the toolbar
+   itself has display:flex. Keep the wrapper visible but pass pointer events
+   through to the canvas; the toolbar re-enables pointer-events for itself. */
+#mf-theme-inline-toolbar-wrap {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: static !important;
+  overflow: visible !important;
+  pointer-events: none !important;
+  z-index: 10000 !important;
+}
+#mf-theme-inline-toolbar-wrap .mf-theme-inline-toolbar {
+  pointer-events: auto !important;
+}
+
+/* [TemplateAssetEditor v2026-08-20] Asset Manager Modal */
+.mf-asset-modal {
+  position: fixed;
+  inset: 0;
+  /* Must cover the floating Theme toolbar (2147483646), otherwise its top row
+     intercepts clicks intended for the modal Close button. */
+  z-index: 2147483647;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: Inter, 'Segoe UI', system-ui, sans-serif;
+}
+.mf-asset-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.72);
+}
+.mf-asset-modal-panel {
+  position: relative;
+  width: 720px;
+  max-width: 94vw;
+  max-height: 86vh;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 32px 80px rgba(15, 23, 42, 0.35);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.mf-asset-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e2e8f0;
+}
+.mf-asset-modal-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+}
+.mf-asset-modal-close {
+  background: transparent;
+  border: 0;
+  font-size: 18px;
+  color: #64748b;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+}
+.mf-asset-modal-close:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+.mf-asset-modal-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 8px 16px 0;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+.mf-asset-select-notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-bottom: 1px solid #c7d2fe;
+  background: #eef2ff;
+  color: #3730a3;
+  font-size: 12px;
+  font-weight: 600;
+}
+.mf-asset-tab {
+  padding: 8px 14px;
+  border: 0;
+  background: transparent;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+.mf-asset-tab.is-active {
+  color: #4338ca;
+  border-bottom-color: #6366f1;
+}
+.mf-asset-count {
+  display: inline-block;
+  margin-left: 4px;
+  padding: 1px 6px;
+  background: #e2e8f0;
+  border-radius: 999px;
+  font-size: 11px;
+}
+.mf-asset-tab.is-active .mf-asset-count {
+  background: #c7d2fe;
+}
+.mf-asset-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px;
+}
+.mf-asset-tab-body.is-hidden {
+  display: none;
+}
+.mf-asset-toolbar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.mf-asset-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.mf-asset-btn:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+.mf-asset-btn-primary {
+  background: #6366f1;
+  border-color: #6366f1;
+  color: #fff;
+}
+.mf-asset-btn-primary:hover {
+  background: #4f46e5;
+}
+.mf-asset-btn-use {
+  justify-content: center;
+  background: #111827;
+  border-color: #111827;
+  color: #fff;
+}
+.mf-asset-btn-use:hover {
+  background: #1f2937;
+  border-color: #1f2937;
+}
+.mf-asset-btn:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+.mf-asset-btn-danger {
+  color: #dc2626;
+  border-color: #fecaca;
+}
+.mf-asset-btn-danger:hover {
+  background: #fef2f2;
+}
+.mf-asset-empty {
+  padding: 28px 12px;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 13px;
+}
+.mf-asset-row {
+  display: flex;
+  gap: 14px;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  margin-bottom: 10px;
+  background: #fff;
+}
+.mf-asset-row.is-focused {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+}
+.mf-asset-thumb {
+  width: 72px;
+  height: 72px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mf-asset-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.mf-asset-thumb-svg svg {
+  width: 100%;
+  height: 100%;
+}
+.mf-asset-info {
+  flex: 1;
+  min-width: 0;
+}
+.mf-asset-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 2px;
+}
+.mf-asset-meta {
+  font-size: 11px;
+  color: #94a3b8;
+  margin-bottom: 8px;
+}
+.mf-asset-url,
+.mf-asset-alt,
+.mf-asset-svg,
+.mf-asset-info input[type="text"] {
+  width: 100%;
+  padding: 7px 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 12px;
+  margin-bottom: 6px;
+  box-sizing: border-box;
+}
+.mf-asset-svg {
+  font-family: Consolas, Menlo, monospace;
+  resize: vertical;
+}
+.mf-asset-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.mf-asset-section {
+  margin-bottom: 16px;
+}
+.mf-asset-section-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #334155;
+  margin-bottom: 10px;
+}
+.mf-shape-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: 10px;
+}
+.mf-shape-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 10px 6px;
+  background: #fff;
+  cursor: pointer;
+  text-align: center;
+}
+.mf-shape-card:hover {
+  border-color: #6366f1;
+  background: #f5f7ff;
+}
+.mf-shape-preview {
+  height: 40px;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mf-shape-preview svg {
+  width: 100%;
+  height: 100%;
+}
+.mf-shape-card span {
+  font-size: 11px;
+  color: #475569;
+}
+.mf-asset-fields-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.mf-asset-fields-row input[type="color"] {
+  width: 36px;
+  height: 32px;
+  padding: 2px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+}
+.mf-asset-fields-row input[type="text"] {
+  flex: 1;
+  margin-bottom: 0;
+}
+.mf-asset-gallery-popover {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mf-asset-gallery-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+}
+.mf-asset-gallery-panel {
+  position: relative;
+  width: 560px;
+  max-width: 92vw;
+  max-height: 80vh;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.3);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.mf-asset-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 12px;
+  padding: 16px;
+  overflow-y: auto;
+}
+.mf-asset-gallery-thumb {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 8px;
+  background: #fff;
+  cursor: pointer;
+  text-align: center;
+}
+.mf-asset-gallery-thumb:hover {
+  border-color: #6366f1;
+}
+.mf-asset-gallery-thumb img {
+  width: 100%;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 6px;
+  margin-bottom: 6px;
+}
+.mf-asset-gallery-thumb span {
+  font-size: 11px;
+  color: #475569;
+  word-break: break-all;
+}
+
+/* [WorkflowInlineSummary 2026-08-27] Friendly single-bar workflow summary below the form canvas.
+   Mirrors Umbraco Forms: one rounded strip with check icon, trigger, arrow, step badges,
+   connector word, and a Configure workflow button on the far right. */
+.mf-inline-workflow-summary {
+  width: 100%;
+  padding: 14px 20px;
+  background: transparent;
+}
+.mf-iws-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+}
+.mf-iws-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #0f172a;
+  white-space: nowrap;
+}
+.mf-iws-trigger i {
+  color: #22c55e;
+  font-size: 16px;
+}
+.mf-iws-arrow {
+  display: inline-flex;
+  align-items: center;
+  color: #94a3b8;
+  font-size: 12px;
+}
+.mf-iws-steps {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  flex: 1 1 auto;
+}
+.mf-iws-empty {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 500;
+}
+.mf-iws-step-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.12s, border-color 0.12s, transform 0.08s;
+  outline: none;
+}
+.mf-iws-step-badge:hover,
+.mf-iws-step-badge:focus-visible {
+  background: #bbf7d0;
+  border-color: #86efac;
+  transform: translateY(-1px);
+}
+.mf-iws-step-badge:focus-visible {
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.25);
+}
+.mf-iws-connector {
+  font-size: 12px;
+  color: #64748b;
+  margin-right: -4px;
+}
+.mf-iws-configure {
+  appearance: none;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #334155;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  margin-left: auto;
+}
+.mf-iws-configure:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+}
+@media (max-width: 768px) {
+  .mf-iws-header { flex-wrap: wrap; }
+  .mf-iws-configure { margin-left: 0; width: 100%; }
+}

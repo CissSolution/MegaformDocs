@@ -411,6 +411,47 @@ body.state-theme-mode .mf-panel-body { background: #ffffff !important; }
 .mf-panel-center {
   background: #f4f4f5 !important;
   padding: 1.5rem !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+/* [CanvasExpandFix 2026-08-27] When left/right panels collapse, the center canvas must
+   grow to fill the freed space. Without flex:1 it kept its content width and left an
+   empty gutter next to the collapsed toolbox. */
+.mf-canvas-dropzone {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  width: 100% !important;
+}
+
+/* Builder canvas form card fills the available width, matching Umbraco Forms. */
+.mf-canvas-dropzone .mf-form-wrapper {
+  max-width: none !important;
+  width: 100% !important;
+}
+
+/* Live Preview fullscreen stays inside the MegaForm workspace iframe. It removes
+   builder side rails without disturbing the Umbraco navigation shell. */
+body.mf-preview-fullscreen .mf-panel-center {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 2147482500 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: none !important;
+  padding: 0 !important;
+  background: #f4f4f5 !important;
+}
+body.mf-preview-fullscreen .mf-preview-toolbar {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 3 !important;
+}
+body.mf-preview-fullscreen .mf-preview-toolbar-btn.is-active {
+  color: #4f46e5 !important;
+  background: #eef2ff !important;
 }
 
 /* Canvas header — now lives inside .mf-form, so no outer card styling.
@@ -1034,11 +1075,198 @@ html:not([data-mf-theme-iframe="1"]) body.state-theme-mode #mf-canvas-dropzone >
   min-height: 0 !important;
 }
 .mf-canvas-footer {
-  border-top: 1px solid #e4e4e7 !important;
-  padding: 1rem 1.5rem 1.5rem !important;
-  background: #fff !important;
-  border-radius: 0 0 0.75rem 0.75rem !important;
+  border: 0 !important;
+  padding: 0 1.5rem 1rem !important;
+  background: transparent !important;
+  border-radius: 0 !important;
   display: block !important;
+}
+.mf-workflow-summary {
+  box-sizing: border-box !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 14px !important;
+  width: 100% !important;
+  max-width: 768px !important;
+  min-height: 52px !important;
+  margin: 0 auto !important;
+  padding: 8px 12px 8px 14px !important;
+  border: 1px solid #d8dbe2 !important;
+  border-radius: 4px !important;
+  background: #fff !important;
+  color: #172033 !important;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04) !important;
+}
+.mf-workflow-summary.is-loading {
+  min-height: 52px !important;
+  opacity: .65 !important;
+}
+.mf-workflow-summary.is-error .mf-workflow-summary__status {
+  border-color: #cbd5e1 !important;
+  color: #94a3b8 !important;
+}
+.mf-workflow-summary__content {
+  display: flex !important;
+  flex: 1 1 auto !important;
+  flex-direction: column !important;
+  gap: 7px !important;
+  min-width: 0 !important;
+}
+.mf-workflow-summary__section {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  min-width: 0 !important;
+}
+.mf-workflow-summary__status {
+  display: inline-flex !important;
+  flex: 0 0 30px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 30px !important;
+  height: 30px !important;
+  border: 1px solid #a8b0bd !important;
+  border-radius: 50% !important;
+  color: #185c37 !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+}
+.mf-workflow-summary__event {
+  flex: 0 0 auto !important;
+  color: #111827 !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  white-space: nowrap !important;
+}
+.mf-workflow-summary__arrow {
+  flex: 0 0 auto !important;
+  color: #667085 !important;
+  font-size: 17px !important;
+}
+.mf-workflow-summary__steps {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+}
+.mf-workflow-summary__chip {
+  display: inline-block !important;
+  max-width: 210px !important;
+  padding: 5px 7px !important;
+  overflow: hidden !important;
+  border: 1px solid #d6dbe3 !important;
+  border-radius: 2px !important;
+  background: #f8fafc !important;
+  color: #17653c !important;
+  font-size: 12px !important;
+  line-height: 1.2 !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+.mf-workflow-summary__chip.is-disabled {
+  color: #98a2b3 !important;
+  text-decoration: line-through !important;
+}
+.mf-workflow-summary__and,
+.mf-workflow-summary__more,
+.mf-workflow-summary__empty,
+.mf-workflow-summary__mode {
+  flex: 0 0 auto !important;
+  color: #667085 !important;
+  font-size: 12px !important;
+}
+.mf-workflow-summary__mode {
+  align-self: flex-start !important;
+  margin-left: 38px !important;
+  padding: 2px 6px !important;
+  border-radius: 2px !important;
+  background: #f2f4f7 !important;
+}
+.mf-workflow-summary__configure {
+  flex: 0 0 auto !important;
+  min-height: 34px !important;
+  padding: 7px 12px !important;
+  border: 1px solid #cbd0d8 !important;
+  border-radius: 4px !important;
+  background: #fff !important;
+  color: #172033 !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+}
+.mf-workflow-summary__configure:hover {
+  border-color: #667085 !important;
+  background: #f8fafc !important;
+}
+.mf-workflow-summary__configure:focus-visible {
+  outline: 2px solid #2563eb !important;
+  outline-offset: 2px !important;
+}
+@media (max-width: 760px) {
+  .mf-canvas-footer { padding: 0 16px 18px !important; }
+  .mf-workflow-summary {
+    align-items: stretch !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+  .mf-workflow-summary__section { align-items: flex-start !important; flex-wrap: wrap !important; }
+  .mf-workflow-summary__steps { flex: 1 1 100% !important; margin-left: 38px !important; }
+  .mf-workflow-summary__configure { align-self: flex-end !important; }
+}
+/* [WorkflowCanvasHost 2026-08-27] Simple workflow editor now lives below the form
+   canvas and scrolls with it, not in a side flyout. */
+.mf-workflow-canvas-host {
+  display: none;
+  width: 100%;
+  max-width: 960px;
+  margin: 16px auto 0;
+  padding: 0;
+  background: #ffffff;
+  border: 1px solid #d8dbe2;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+  overflow: hidden;
+}
+#mf-builder-root[data-mf-primary-tab="workflow"] .mf-workflow-canvas-host {
+  display: block !important;
+}
+.mf-workflow-canvas-host .mf-sw-config {
+  height: auto !important;
+  min-height: 0 !important;
+  overflow: visible !important;
+  padding: 18px 22px !important;
+  background: #f8fafc !important;
+}
+.mf-workflow-canvas-host .mf-sw-section-panel {
+  margin-bottom: 16px !important;
+}
+.mf-workflow-canvas-host .mf-sw-section-panel:last-child {
+  margin-bottom: 0 !important;
+}
+.mf-workflow-canvas-host .mf-sw-card-list {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 10px !important;
+  padding-left: 28px !important;
+}
+.mf-workflow-canvas-host .mf-sw-card {
+  flex: 1 1 300px !important;
+  min-width: 260px !important;
+  max-width: 100% !important;
+  margin-bottom: 0 !important;
+}
+.mf-workflow-canvas-host .mf-sw-card__move {
+  left: -22px !important;
+  right: auto !important;
+}
+@media (max-width: 760px) {
+  .mf-workflow-canvas-host {
+    margin: 12px auto 0 !important;
+  }
+  .mf-workflow-canvas-host .mf-sw-card {
+    flex: 1 1 100% !important;
+  }
 }
 .mf-submit-editor-label {
   display: flex !important;
@@ -1713,8 +1941,9 @@ body[data-mf-mode="build"] .mf-canvas-field.mf-page-break-section.mf-selected {
   display: none !important;
 }
 
-/* The b-outer wrapper that handles layout */
-.b-outer {
+/* The standalone wrapper reserves the fixed topbar. Embedded workspace hosts use
+   normal-flow flex rows and must start at zero to avoid an empty header band. */
+#mf-builder-root:not([data-mf-host="umbraco-workspace"]):not([data-mf-host="umbraco-v13"]):not([data-mf-host="megaform-workspace"]) .b-outer {
   padding-top: 56px !important; /* match new --topbar */
   background: #f4f4f5 !important;
 }
@@ -3917,8 +4146,11 @@ body[data-mf-mode="build"] .mf-panel-right.mf-collapsed {
 body[data-mf-mode="build"] #mf-canvas-dropzone {
   box-sizing: border-box !important;
   display: flex !important;
+  flex-direction: column !important;
   align-items: flex-start !important;
-  justify-content: center !important;
+  /* Keep short forms anchored below the command bar. Centering this flex column
+     also centers the workflow-summary footer and creates a large dead band. */
+  justify-content: flex-start !important;
   flex: 1 1 auto !important;
   width: 100% !important;
   min-width: 0 !important;
@@ -3931,6 +4163,7 @@ body[data-mf-mode="build"] #mf-canvas-dropzone {
 }
 body[data-mf-mode="build"] .mf-form-wrapper {
   box-sizing: border-box !important;
+  flex: 0 0 auto !important;
   width: 100% !important;
   max-width: 768px !important;
   min-height: 0 !important;
@@ -3941,6 +4174,21 @@ body[data-mf-mode="build"] .mf-form-wrapper {
   border-radius: 12px !important;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
   overflow: visible !important;
+}
+
+/* The form card and workflow summary are one vertical document inside the canvas
+   scroller. This keeps the summary reachable at the natural end of long forms. */
+body[data-mf-mode="build"] #mf-canvas-dropzone > .mf-canvas-footer {
+  box-sizing: border-box !important;
+  flex: 0 0 auto !important;
+  width: 100% !important;
+  max-width: 768px !important;
+  margin: 0 auto !important;
+  padding: 14px 0 24px !important;
+}
+body[data-mf-mode="build"] #mf-canvas-dropzone > .mf-canvas-footer .mf-inline-workflow-summary {
+  box-sizing: border-box !important;
+  padding: 0 !important;
 }
 body[data-mf-mode="build"] .mf-form {
   box-sizing: border-box !important;
@@ -4233,18 +4481,18 @@ body.mf-builder-dragging #mf-canvas-dropzone .sortable-ghost > * {
    so the new primary tabs and flyout work correctly.
    ════════════════════════════════════════════════════════════ */
 
-/* Move builder surface down to make room for the 44px primary tab bar */
-.b-outer,
-#mf-builder-app {
+/* Only standalone builders use fixed topbar + primary-tab rows. */
+#mf-builder-root:not([data-mf-host="umbraco-workspace"]):not([data-mf-host="umbraco-v13"]):not([data-mf-host="megaform-workspace"]) .b-outer,
+#mf-builder-root:not([data-mf-host="umbraco-workspace"]):not([data-mf-host="umbraco-v13"]):not([data-mf-host="megaform-workspace"]) #mf-builder-app {
   padding-top: 100px !important; /* 56px topbar + 44px tab bar */
 }
 
 /* Builder layout height must account for both bars */
-body[data-mf-mode="build"] .mf-builder-layout {
+body[data-mf-mode="build"] #mf-builder-root:not([data-mf-host="umbraco-workspace"]):not([data-mf-host="umbraco-v13"]):not([data-mf-host="megaform-workspace"]) .mf-builder-layout {
   height: calc(100vh - var(--topbar, 56px) - 44px) !important;
 }
-body[data-mf-mode="build"] .mf-panel-left,
-body[data-mf-mode="build"] .mf-panel-center {
+body[data-mf-mode="build"] #mf-builder-root:not([data-mf-host="umbraco-workspace"]):not([data-mf-host="umbraco-v13"]):not([data-mf-host="megaform-workspace"]) .mf-panel-left,
+body[data-mf-mode="build"] #mf-builder-root:not([data-mf-host="umbraco-workspace"]):not([data-mf-host="umbraco-v13"]):not([data-mf-host="megaform-workspace"]) .mf-panel-center {
   height: calc(100vh - var(--topbar, 56px) - 44px) !important;
 }
 
@@ -4312,9 +4560,92 @@ body[data-mf-mode="build"] .mf-panel-right.mf-flyout.mf-flyout-open {
   top: 48px !important;
   left: 0 !important;
   right: 0 !important;
-  bottom: 0 !important;
+  bottom: 56px !important;
   overflow-y: auto !important;
   padding: 0.75rem !important;
+  scroll-padding-bottom: 1rem !important;
+}
+
+/* Compact conditional rules inside the field flyout. Keep every row on a
+   stable grid and reserve a real hit target for the remove action. */
+#mf-prop-condition-group .mf-cond-row {
+  margin: 0 0 8px !important;
+}
+#mf-prop-condition-group .mf-cond-grid {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1.15fr) minmax(88px, .8fr) minmax(0, 1fr) 32px !important;
+  gap: 8px !important;
+  align-items: center !important;
+}
+#mf-prop-condition-group .mf-cond-grid .form-control {
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 34px !important;
+  padding: 0 10px !important;
+  border: 1px solid #d7dce4 !important;
+  border-radius: 6px !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+#mf-prop-condition-group .mf-cond-grid .form-control:focus {
+  border-color: #6366f1 !important;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, .12) !important;
+  outline: none !important;
+}
+#mf-prop-condition-group .mf-cond-del {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  width: 32px !important;
+  height: 32px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 1px solid #fecaca !important;
+  border-radius: 6px !important;
+  background: #fff !important;
+  color: #dc2626 !important;
+  text-decoration: none !important;
+  cursor: pointer !important;
+}
+#mf-prop-condition-group .mf-cond-del:hover {
+  border-color: #fca5a5 !important;
+  background: #fef2f2 !important;
+}
+#mf-prop-condition-group #mf-add-condition {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 6px !important;
+  min-height: 32px !important;
+  margin: 2px 0 10px !important;
+  padding: 0 10px !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 6px !important;
+  background: #fff !important;
+  color: #334155 !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+  cursor: pointer !important;
+}
+#mf-prop-condition-group #mf-add-condition:hover {
+  border-color: #94a3b8 !important;
+  background: #f8fafc !important;
+}
+#mf-prop-condition-group #mf-condition-builder > .form-group {
+  margin: 0 !important;
+}
+@media (max-width: 440px) {
+  #mf-prop-condition-group .mf-cond-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(88px, .75fr) 32px !important;
+  }
+  #mf-prop-condition-group .mf-cond-val {
+    grid-column: 1 / 3 !important;
+  }
+  #mf-prop-condition-group .mf-cond-del {
+    grid-column: 3 !important;
+    grid-row: 1 / 3 !important;
+  }
 }
 
 /* Legacy right-rail tab strip is hidden inside the flyout */

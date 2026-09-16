@@ -1,29 +1,41 @@
 # MegaForm for Umbraco
 
-MegaForm is a schema-driven form and application builder for Umbraco 17 LTS, distributed as a Purchase package. It provides a native backoffice workspace for designing forms, managing submissions, configuring workflows, and publishing forms across Umbraco websites.
+MegaForm is a schema-driven form and application builder for Umbraco 13 through 18, distributed as a Purchase package. A single `MegaForm.Umbraco` NuGet package provides the shared dashboard, form builder, submission management, workflows, and public rendering experience across all supported Umbraco versions.
 
 ## Features
 
-- Drag-and-drop form designer in the Umbraco backoffice
-- Native Bellissima property editor (`MegaForm.FormPicker`) for picking a form on content nodes
+- Drag-and-drop form designer in the Umbraco backoffice, with a guided form-creation wizard
+- 31 ready-to-use QuickStart template definitions, with essential runtime artwork included
+- Searchable Online Gallery that downloads form-specific images and SVG assets on demand
+- AI-assisted form creation and editing from plain-English instructions
+- Multi-page forms, wizard navigation, conditional logic, validation, and calculation rules
+- Multilingual forms and localized public-form experiences
+- Native form picker (`MegaForm.FormPicker`) for selecting a form on content nodes
 - Content app showing linked-form summary and recent submissions directly on document workspaces
 - Multi-view rendering: inline, modal, embed, script
-- Submissions, validation, conditional logic, and rules
-- Configurable workflows for processing submissions and integrating external services
-- AI-assisted form building and knowledge-base answers
+- Submission management, filtering, export, workflow history, and retry controls
+- Configurable multi-step workflows for email, approvals, webhooks, C# after-submission actions, and external-service integrations
+- Payment widgets, data sources, prevalue sources, reporting, and reusable themes
 - Static web assets served under `/App_Plugins/MegaForm/`
 
-## Requirements
+## Supported versions
 
-- Umbraco 17 LTS (`Umbraco.Cms.Web.Common` 17.6.1 or later)
-- .NET 10 or later
+Install the same package ID on every supported host. NuGet selects the matching build automatically:
+
+| Umbraco | Runtime | Package asset |
+| --- | --- | --- |
+| 13-14 | .NET 8 | `lib/net8.0` |
+| 15-16 | .NET 9 | `lib/net9.0` |
+| 17-18 | .NET 10 | `lib/net10.0` |
+
+Umbraco 13 uses its legacy backoffice manifest adapter; Umbraco 14-18 use the modern backoffice manifest. These adapters are internal to the same NuGet package and use the same MegaForm UI and business logic.
 
 ## Quick start
 
 1. Install the NuGet package in your Umbraco website project:
 
    ```bash
-   dotnet add package MegaForm.Umbraco
+dotnet add package MegaForm.Umbraco --version 2.0.62
    ```
 
 2. The package registers itself automatically via `MegaFormComposer`.
@@ -48,7 +60,14 @@ MegaForm for Umbraco is distributed as a Purchase package. Installing the NuGet 
 
 To activate an installation, open **MegaForm > Settings > License** in the Umbraco backoffice and upload the purchased `license.lic` file. MegaForm validates the file using its current license mechanism and stores it privately at `App_Data/MegaForm/license.lic`. Umbraco activation does not use the Oqtane Marketplace license flow.
 
-Contact the MegaForm team through the project links below for licensing, pricing, evaluation access, and support.
+While MegaForm is in trial mode, the backoffice banner exposes two separate actions:
+
+- **Purchase** opens the configured checkout/download destination in a new tab.
+- **Activate license** opens the **MegaForm > Settings > License** pane directly, where an administrator can upload `license.lic`.
+
+Uploading a valid license updates the status in place to **Active**; it does not redirect the administrator to an external site.
+
+Contact the MegaForm team at **daoa@dnndefender.com** for licensing, pricing, evaluation access, and support.
 
 ## Marketplace
 
@@ -56,6 +75,6 @@ This package is listed on the official Umbraco Marketplace as a `Purchase` packa
 
 ## Documentation and support
 
-- Documentation: https://github.com/CissSolution/MegaformDocs
+- Documentation: https://cisssolution.github.io/MegaformDocs/articles/umbraco-overview.html
 - Issues: https://github.com/CissSolution/MegaformDocs/issues
 - Discussions: https://github.com/CissSolution/MegaformDocs/discussions

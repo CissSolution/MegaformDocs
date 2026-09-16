@@ -13,7 +13,7 @@ import { UMB_AUTH_CONTEXT } from '@umbraco-cms/backoffice/auth';
 // of defining the custom element; the manifest only knows about this one view.
 import './megaform-prevalue-sources-view.js';
 import './megaform-data-sources-view.js';
-import './megaform-form-settings-view.js';
+import './megaform-form-settings-view.js?v=2.0.44';
 import './megaform-security-view.js';
 
 /**
@@ -115,6 +115,22 @@ export default class MegaFormWorkspaceView extends UmbLitElement {
         return;
       }
 
+      if (data.type === 'megaform:form-created') {
+        const id = Number(data.formId || 0);
+        // `WindowProxy` identity is not stable across all Bellissima/Chromium iframe
+        // transitions.  Checking it here caused a valid message from the wizard to be
+        // discarded after the iframe changed its own URL.  Origin is already verified
+        // above; additionally restrict this command to the create-form workspace route.
+        if (!(id > 0) || !/\/view\/open\/builder\/new(?:\/|$)/i.test(window.location.pathname)) return;
+        // Replace builder/new instead of stacking it in history. The route change gives the
+        // workspace a real form id, paints its title/tabs, and reloads the builder with
+        // ?host=umbraco-workspace so no duplicate toolbar space is reserved.
+        this.#suppressFrameBeforeUnload();
+        window.history.replaceState({}, '', `/umbraco/section/megaform/view/open/builder/${id}`);
+        window.dispatchEvent(new PopStateEvent('popstate'));
+        return;
+      }
+
       // [TokenBridge 2026-08-17] The screens inside the frame are served anonymously and
       // authenticated on the backoffice COOKIE, which lapses about half an hour into a
       // session — after which every API call is answered with the login PAGE and the screen
@@ -144,7 +160,16 @@ export default class MegaFormWorkspaceView extends UmbLitElement {
         this._formName = '';
         this.#loadFormName();
       }
+      const currentIsBuilder = this.#isBuilderSrc(this._src);
+      const nextIsBuilder = this.#isBuilderSrc(next.src);
+      if (currentIsBuilder && nextIsBuilder && this.#sameBuilderForm(this._src, next.src)) {
+        this._title = next.title;
+        this._native = '';
+        this.#activateBuilderTab(next.tab || 'design');
+        return;
+      }
       if (next.src !== this._src || (next.native || '') !== this._native) {
+        this.#suppressFrameBeforeUnload();
         this._src = next.src; this._title = next.title; this._native = next.native || '';
       }
     };
@@ -174,12 +199,124 @@ export default class MegaFormWorkspaceView extends UmbLitElement {
 
   #go(route) {
     const href = `/umbraco/section/megaform/view/open/${route}/${this._formId}`;
+    this.#suppressFrameBeforeUnload();
     window.history.pushState({}, '', href);
     window.dispatchEvent(new PopStateEvent('popstate'));
   }
 
+  #currentFrame() {
+    try { return this.shadowRoot?.querySelector('iframe') || null; }
+    catch (_e) { return null; }
+  }
+
+  #isBuilderSrc(src) {
+    return /\/umbraco\/MegaForm\/Builder(?:\/|\?|$)/i.test(String(src || ''));
+  }
+
+  #sameBuilderForm(a, b) {
+    const read = (src) => {
+      const s = String(src || '');
+      const m = /\/umbraco\/MegaForm\/Builder(?:\/(\d+))?/i.exec(s);
+      if (!m) return -1;
+      return Number(m[1] || 0);
+    };
+    return read(a) >= 0 && read(a) === read(b);
+  }
+
+  #suppressFrameBeforeUnload(ms = 2500) {
+    const frame = this.#currentFrame();
+    const until = Date.now() + ms;
+    try { frame?.contentWindow && (frame.contentWindow.__MFSuppressBeforeUnloadUntil = until); } catch (_e) {}
+    try { frame?.contentWindow?.postMessage({ type: 'megaform:suppress-beforeunload', until }, window.location.origin); } catch (_e) {}
+  }
+
+  #syncRouteFromFrame = () => {
+    const frame = this.#currentFrame();
+    if (!frame?.contentWindow) return;
+
+    try {
+      const url = new URL(frame.contentWindow.location.href);
+      if (url.origin !== window.location.origin) return;
+
+      const path = url.pathname;
+      const builder = /\/umbraco\/MegaForm\/Builder(?:\/(\d+))?\/?$/i.exec(path);
+      const submissions = /\/umbraco\/MegaForm\/Submissions\/?$/i.test(path);
+      const languages = /\/umbraco\/MegaForm\/Languages\/?$/i.test(path);
+      const admin = /\/umbraco\/MegaForm\/Admin\/?$/i.test(path);
+      let target = '';
+
+      if (builder) {
+        const id = Number(builder[1] || url.searchParams.get('formId') || 0);
+        target = id > 0
+          ? `/umbraco/section/megaform/view/open/builder/${id}`
+          : '/umbraco/section/megaform/view/open/builder/new';
+      } else if (submissions) {
+        const id = Number(url.searchParams.get('formId') || 0);
+        target = id > 0
+          ? `/umbraco/section/megaform/view/open/submissions/${id}`
+          : '/umbraco/section/megaform/view/open/submissions';
+      } else if (languages) {
+        target = '/umbraco/section/megaform/view/open/languages';
+      } else if (admin) {
+        if (url.hash === '#settings' || url.searchParams.get('mfsettings')) {
+          target = '/umbraco/section/megaform/view/open/settings';
+        } else if (!url.hash || url.hash === '#mf-dashboard') {
+          target = '/umbraco/section/megaform/view/open/dashboard';
+        }
+      }
+
+      if (!target || window.location.pathname === target) return;
+
+      // Dashboard links initially navigate the same-origin iframe. Mirror that navigation
+      // into Bellissima so the native form header receives the form id and the replacement
+      // iframe is loaded with host=umbraco-workspace. Without this bridge the URL remains at
+      // /section/megaform while a standalone builder is rendered inside it, restoring both
+      // obsolete header bands and their 100px reserved padding.
+      this.#suppressFrameBeforeUnload();
+      window.history.pushState({}, '', target);
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    } catch (_e) {
+      // Auth redirects and a frame being replaced can make its location briefly unreadable.
+    }
+  };
+
+  #activateBuilderTab(tab) {
+    const targetTab = tab || 'design';
+    if (this.#tabActivationTimer) clearTimeout(this.#tabActivationTimer);
+
+    const activate = (attempt) => {
+      // A newer navigation wins. This also prevents a delayed Workflow retry from
+      // reopening the panel after the user has already returned to Design.
+      if ((MegaFormWorkspaceView.resolve().tab || 'design') !== targetTab) return;
+      const frame = this.#currentFrame();
+      if (!frame || !frame.contentWindow) return;
+      this.#suppressFrameBeforeUnload();
+      try {
+        const fn = frame.contentWindow.MFSetPrimaryTab;
+        if (typeof fn === 'function') {
+          fn(targetTab);
+          this.#tabActivationTimer = 0;
+          return;
+        }
+      } catch (_e) { /* the frame may still be replacing its document */ }
+
+      // postMessage covers the narrow window where the listener exists but the global
+      // function is not published yet. Retry covers the earlier window where neither is
+      // ready; a one-shot message there is simply lost.
+      try {
+        frame.contentWindow.postMessage({ type: 'megaform:set-primary-tab', tab: targetTab }, window.location.origin);
+      } catch (_e2) { /* retry below */ }
+      if (attempt < 40) {
+        this.#tabActivationTimer = window.setTimeout(() => activate(attempt + 1), 250);
+      }
+    };
+    activate(0);
+    return true;
+  }
+
   #onNav;
   #onMsg;
+  #tabActivationTimer = 0;
 
   connectedCallback() {
     super.connectedCallback();
@@ -191,6 +328,8 @@ export default class MegaFormWorkspaceView extends UmbLitElement {
   }
 
   disconnectedCallback() {
+    if (this.#tabActivationTimer) clearTimeout(this.#tabActivationTimer);
+    this.#tabActivationTimer = 0;
     window.removeEventListener('popstate', this.#onNav);
     window.removeEventListener('umb:route-change', this.#onNav);
     window.removeEventListener('message', this.#onMsg);
@@ -225,7 +364,6 @@ export default class MegaFormWorkspaceView extends UmbLitElement {
   }
 
   #mountHeader() {
-    if (this._headEl && this._headEl.isConnected) return;
     const host = this.#sectionViewsHost();
     const layout = host?.shadowRoot?.querySelector('umb-body-layout');
     if (!layout) return;
@@ -263,6 +401,17 @@ export default class MegaFormWorkspaceView extends UmbLitElement {
       host.shadowRoot.appendChild(style);
     }
 
+    // Dashboard/new-form routes do not have a form header. Merely assigning an empty node to
+    // the header slot makes Umbraco 14+ reserve a conspicuous blank band, so leave the slot
+    // genuinely empty until a concrete form is open.
+    if (!(this._formId > 0)) {
+      try { this._headEl?.remove(); } catch (_e) { /* already gone */ }
+      this._headEl = null;
+      return;
+    }
+
+    if (this._headEl && this._headEl.isConnected) return;
+
     const bar = document.createElement('div');
     bar.className = 'mf-ws-head';
     bar.setAttribute('slot', 'header');
@@ -278,18 +427,14 @@ export default class MegaFormWorkspaceView extends UmbLitElement {
   #paintHeader() {
     const bar = this._headEl;
     if (!bar || !bar.isConnected) return;
-    // No form open (dashboard, languages): leave the band to whatever Umbraco puts there.
-    if (!(this._formId > 0)) { bar.innerHTML = ''; return; }
+    if (!(this._formId > 0)) return;
 
-    // [ToolbarCleanup 2026-08-18] Workflow is a tab, not a toolbar icon. The BPMN editor
-    // takes over the whole screen when it opens — it was never an inspector pane — so it
-    // belongs beside Design and Entries, which is also where Umbraco Forms puts a
-    // full-screen editor.
+    // [WorkflowInlineOnly 2026-08-27] Workflow is entered from the footer summary's
+    // "Configure workflow" button, not a top-level tab — the same pattern Umbraco Forms uses.
     const tabs = [
       ['design',    'builder',       'icon-brush',        'Design'],
       ['entries',   'submissions',   'icon-inbox',        'Entries'],
       ['analytics', 'analytics',     'icon-chart-curve',  'Analytics'],
-      ['workflow',  'workflow',      'icon-diagram',      'Workflow'],
       ['settings',  'form-settings', 'icon-settings',     'Settings'],
     ];
     const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -320,6 +465,8 @@ export default class MegaFormWorkspaceView extends UmbLitElement {
     const num = (v) => (/^\d+$/.test(v || '') ? Number(v) : 0);
 
     switch ((what || '').toLowerCase()) {
+      case 'dashboard':
+        return { src: '/umbraco/MegaForm/Admin?host=umbraco-workspace', title: 'MegaForm Dashboard' };
       case 'builder': {
         const id = num(arg);
         const qs = '?host=umbraco-workspace';
@@ -338,7 +485,7 @@ export default class MegaFormWorkspaceView extends UmbLitElement {
         // nên chỗ này chỉ việc đi tới đúng liên kết ấy.
         if (!id && String(arg || '').toLowerCase() === 'new') {
           const nonce = new URLSearchParams(window.location.search).get('n') || '';
-          const q = nonce ? `?n=${encodeURIComponent(nonce)}` : '';
+          const q = `?host=umbraco-workspace${nonce ? `&n=${encodeURIComponent(nonce)}` : ''}`;
           return { src: `/umbraco/MegaForm/Admin${q}#mf-new-form`,
                    title: 'MegaForm', formId: 0, tab: '' };
         }
@@ -401,9 +548,9 @@ export default class MegaFormWorkspaceView extends UmbLitElement {
       case 'languages':
         return { src: '/umbraco/MegaForm/Languages', title: 'MegaForm Languages' };
       case 'settings':
-        return { src: '/umbraco/MegaForm/Admin#settings', title: 'MegaForm Settings' };
+        return { src: '/umbraco/MegaForm/Admin?host=umbraco-workspace#settings', title: 'MegaForm Settings' };
       default:
-        return { src: '/umbraco/MegaForm/Admin', title: 'MegaForm Dashboard' };
+        return { src: '/umbraco/MegaForm/Admin?host=umbraco-workspace', title: 'MegaForm Dashboard' };
     }
   }
 
@@ -423,7 +570,7 @@ export default class MegaFormWorkspaceView extends UmbLitElement {
     if (this._native === 'megaform-security-view') {
       return html`<megaform-security-view></megaform-security-view>`;
     }
-    return html`<iframe src="${this._src}" title="${this._title}" allow="fullscreen"></iframe>`;
+    return html`<iframe src="${this._src}" title="${this._title}" allow="fullscreen" @load=${this.#syncRouteFromFrame}></iframe>`;
   }
 }
 

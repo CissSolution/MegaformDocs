@@ -1,0 +1,15 @@
+<div ng-controller="MegaForm.V13FormPickerController as vm">
+  <umb-load-indicator ng-if="vm.loading"></umb-load-indicator>
+
+  <div class="alert alert-error" ng-if="vm.error">{{ vm.error }}</div>
+
+  <div class="controls" ng-if="!vm.loading && !vm.error">
+    <select class="umb-property-editor umb-dropdown"
+            ng-model="model.value"
+            ng-options="form.formId as (form.title + ' (#' + form.formId + ')') for form in vm.forms track by form.formId">
+      <option value="">-- Select a MegaForm --</option>
+    </select>
+    <button type="button" class="btn btn-link" ng-if="model.value" ng-click="vm.clear()">Remove</button>
+    <p class="help-block" ng-if="!vm.forms.length">No MegaForm forms are available.</p>
+  </div>
+</div>

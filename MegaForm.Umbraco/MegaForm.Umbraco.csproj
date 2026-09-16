@@ -1,9 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk.Razor">
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <!-- One customer package carries one assembly per supported .NET generation:
+         Umbraco 13-14 use .NET 8, 15-16 use .NET 9, and 17-18 use .NET 10. -->
+    <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
     <RootNamespace>MegaForm.Umbraco</RootNamespace>
     <AssemblyName>MegaForm.Umbraco</AssemblyName>
-    <Version>2.0.37</Version>
+    <Version>2.0.62</Version>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>disable</Nullable>
     <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
@@ -16,17 +18,37 @@
     <Authors>MegaForm Team</Authors>
     <Company>MegaForm</Company>
     <Product>MegaForm for Umbraco</Product>
-    <Description>Purchase package for building forms and applications in Umbraco 17 LTS with multi-view rendering, submission management, workflows, and AI-assisted design.</Description>
+    <Description>Visual form and application builder for Umbraco 13-18 with 31 bundled templates, an Online Gallery, a guided form wizard, AI-assisted design, multilingual forms, payments, submissions, and multi-step workflows.</Description>
     <Copyright>© 2026 MegaForm. All rights reserved.</Copyright>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
-    <PackageProjectUrl>https://github.com/CissSolution/MegaformDocs</PackageProjectUrl>
+    <PackageProjectUrl>https://cisssolution.github.io/MegaformDocs/articles/umbraco-overview.html</PackageProjectUrl>
     <RepositoryUrl>https://github.com/CissSolution/MegaformDocs.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageIcon>icon.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageTags>umbraco;umbraco-marketplace;form-builder;forms;workflow;submissions;bellissima;umbraco17</PackageTags>
-    <PackageReleaseNotes>MegaForm 2.0.37 for Umbraco 17 LTS. Adds backoffice license.lic activation, bundles MegaForm Core, SDK, and cloud-storage runtime assemblies for one-package installation, restores runtime flags and core artwork, moves template-specific artwork to on-demand Gallery archives, removes duplicate catalogs and source maps, and adds clean-site installation QA.</PackageReleaseNotes>
+    <PackageTags>umbraco;umbraco-marketplace;form-builder;forms;workflow;submissions;bellissima;umbraco13;umbraco14;umbraco15;umbraco16;umbraco17;umbraco18;templates;online-gallery;multilingual;wizard;ai;payments</PackageTags>
+    <PackageReleaseNotes>MegaForm 2.0.62 fixes Bellissima workspace routing so Umbraco 14+ opens forms through the native form route instead of rendering a standalone builder inside the dashboard frame. This removes duplicate header bands and reserved padding on Umbraco 18 while preserving the 2.0.61 canvas anchoring, Umbraco 13 host context, and Workflow Summary fixes.</PackageReleaseNotes>
     <NoWarn>$(NoWarn);NU5104</NoWarn>
+    <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);IncludeMegaFormInternalAssemblies</TargetsForTfmSpecificBuildOutput>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net8.0'">
+    <MegaFormUmbracoVersion Condition="'$(MegaFormUmbracoVersionOverride)' == ''">13.16.2</MegaFormUmbracoVersion>
+    <MegaFormEfVersion>8.0.21</MegaFormEfVersion>
+    <DefineConstants>$(DefineConstants);UMBRACO_13_14</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net9.0'">
+    <MegaFormUmbracoVersion Condition="'$(MegaFormUmbracoVersionOverride)' == ''">15.4.4</MegaFormUmbracoVersion>
+    <MegaFormEfVersion>9.0.10</MegaFormEfVersion>
+    <DefineConstants>$(DefineConstants);UMBRACO_15_16</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net10.0'">
+    <MegaFormUmbracoVersion Condition="'$(MegaFormUmbracoVersionOverride)' == ''">17.6.2</MegaFormUmbracoVersion>
+    <MegaFormEfVersion>10.0.8</MegaFormEfVersion>
+    <DefineConstants>$(DefineConstants);UMBRACO_17_18</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(MegaFormUmbracoVersionOverride)' != ''">
+    <MegaFormUmbracoVersion>$(MegaFormUmbracoVersionOverride)</MegaFormUmbracoVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -42,16 +64,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Umbraco 17 LTS (Bellissima) -->
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.8" />
-    <!-- Pin the tested Umbraco 17 LTS range. The upper bound excludes Umbraco 18. -->
-    <PackageReference Include="Umbraco.Cms.Web.Common" Version="[17.6.1,18.0.0)" />
-    <PackageReference Include="Umbraco.Cms.Core" Version="[17.6.1,18.0.0)" />
-    <PackageReference Include="Umbraco.Cms.Infrastructure" Version="[17.6.1,18.0.0)" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.8" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.8" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="$(MegaFormEfVersion)" />
+    <PackageReference Include="Umbraco.Cms.Web.Common" Version="$(MegaFormUmbracoVersion)" />
+    <PackageReference Include="Umbraco.Cms.Core" Version="$(MegaFormUmbracoVersion)" />
+    <PackageReference Include="Umbraco.Cms.Infrastructure" Version="$(MegaFormUmbracoVersion)" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="$(MegaFormEfVersion)" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="$(MegaFormEfVersion)" />
     <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" Version="2.1.12" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <!-- Dependencies used by the bundled Core/SDK/CloudStorage assemblies. These are
          restored automatically when the single MegaForm.Umbraco package is installed. -->
     <PackageReference Include="AWSSDK.S3" Version="4.0.101.4" />
@@ -62,8 +82,16 @@
     <None Include="icon.png" Pack="true" PackagePath="\" />
     <None Include="README.md" Pack="true" PackagePath="\" />
     <None Include="umbraco-marketplace.json" Pack="true" PackagePath="\" />
-    <None Update="LICENSE.txt" Pack="true" PackagePath="\" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Remove="LICENSE.txt" />
+    <None Include="LICENSE.txt" Pack="true" PackagePath="" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Remove="umbraco-marketplace.json" />
+    <EmbeddedResource Include="Configuration\megaform-settings.json" />
+    <!-- The same 31 free QuickStart templates shipped by DNN/Oqtane. Embedding them
+         keeps first-run seeding reliable for NuGet/RCL installs, whose static web
+         assets live in the global package cache rather than the site's wwwroot. -->
+    <EmbeddedResource Include="..\Samples\FormTemplates\QuickStart\*.json"
+                      Link="Resources\Templates\%(Filename)%(Extension)"
+                      LogicalName="MegaForm.Umbraco.Resources.Templates.%(Filename)%(Extension)" />
 
     <!-- Runtime assets stay in the NuGet package. Template-specific artwork is installed
          on demand from the signed MegaForm Gallery asset archives. -->
@@ -79,21 +107,17 @@
     <Content Remove="wwwroot/js/builder/i18n/**" />
     <Content Remove="wwwroot/js/plugins/i18n/**" />
 
-    <!-- Core, SDK, and cloud storage are implementation assemblies of the Umbraco
-         product. Ship them beside MegaForm.Umbraco.dll so customers install one
-         MegaForm package and never need unpublished internal packages. -->
-    <None Include="$(OutputPath)MegaForm.Core.dll"
-          Pack="true"
-          PackagePath="lib/$(TargetFramework)/"
-          Visible="false" />
-    <None Include="$(OutputPath)MegaForm.Sdk.dll"
-          Pack="true"
-          PackagePath="lib/$(TargetFramework)/"
-          Visible="false" />
-    <None Include="$(OutputPath)MegaForm.Integrations.CloudStorage.dll"
-          Pack="true"
-          PackagePath="lib/$(TargetFramework)/"
-          Visible="false" />
   </ItemGroup>
+
+  <!-- Pack invokes this target once per TFM. BuildOutputInPackage automatically
+       places each implementation assembly beside MegaForm.Umbraco.dll in the
+       matching lib/netX.Y folder, keeping the customer install to one package. -->
+  <Target Name="IncludeMegaFormInternalAssemblies">
+    <ItemGroup>
+      <BuildOutputInPackage Include="$(OutputPath)MegaForm.Core.dll" />
+      <BuildOutputInPackage Include="$(OutputPath)MegaForm.Sdk.dll" />
+      <BuildOutputInPackage Include="$(OutputPath)MegaForm.Integrations.CloudStorage.dll" />
+    </ItemGroup>
+  </Target>
 
 </Project>

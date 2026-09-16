@@ -1,5 +1,14 @@
 @{
     Layout = null;
+    bool productionMode = ViewBag.MegaFormProductionMode is bool value && value;
+    string trialUpgradeUrl = ViewBag.MegaFormTrialUpgradeUrl as string ?? string.Empty;
+    string requestedHost = Context.Request.Query["host"].ToString();
+    string dashboardHost = string.Equals(requestedHost, "umbraco-v13", StringComparison.OrdinalIgnoreCase)
+        ? "umbraco-v13"
+        : (string.Equals(requestedHost, "umbraco-workspace", StringComparison.OrdinalIgnoreCase)
+            ? "umbraco-workspace"
+            : string.Empty);
+    string hostQuery = string.IsNullOrEmpty(dashboardHost) ? string.Empty : $"?host={dashboardHost}";
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -22,13 +31,14 @@
          data-module-id="0"
          data-api-base="/umbraco/MegaForm/MegaFormApi/"
          data-assets-base="/App_Plugins/MegaForm/"
-         data-dashboard-url="/umbraco/MegaForm/Admin"
-         data-builder-url="/umbraco/MegaForm/Builder"
+         data-dashboard-url="/umbraco/MegaForm/Admin@(hostQuery)"
+         data-builder-url="/umbraco/MegaForm/Builder@(hostQuery)"
          data-submissions-url="/umbraco/MegaForm/Submissions"
          data-languages-url="/umbraco/MegaForm/Languages"
          data-myinbox-url="/umbraco/MegaForm/Submissions"
          data-logout-url="/umbraco"
          data-return-url="/umbraco"
+         data-mf-host="@dashboardHost"
          data-mf-locale="en-US">
         <div style="display:flex;align-items:center;justify-content:center;height:100vh;color:#64748b;font-family:system-ui,sans-serif;">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:10px;animation:spin 1s linear infinite;">
@@ -44,6 +54,11 @@
 
     <script>
         window.__MF_TOKEN = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.MegaFormAccessToken as string ?? ""));
+        window.__MF_PRODUCTION_MODE__ = @productionMode.ToString().ToLowerInvariant();
+        window.__MF_TRIAL_UPGRADE_URL__ = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(trialUpgradeUrl));
+        window.__MF_PLATFORM__ = window.__MF_PLATFORM__ || {};
+        window.__MF_PLATFORM__.productionMode = window.__MF_PRODUCTION_MODE__;
+        window.__MF_PLATFORM__.trialUpgradeUrl = window.__MF_TRIAL_UPGRADE_URL__;
     </script>
     <script src="/App_Plugins/MegaForm/js/megaform-umbraco-host.js?v=@MegaForm.Umbraco.Services.MegaFormAssetVersion.Value"></script>
     <script>

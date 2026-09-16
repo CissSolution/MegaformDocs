@@ -11,7 +11,7 @@
 
 import { createPermissionsTab } from './permissions/markup';
 import { fetchFormGetOnce } from './boot-fetch-dedup';
-import dbStrings from './db-tables-strings.json';
+import { mountBuilderWorkspace } from './workspace-shell';
 
 (function () {
   'use strict';
@@ -59,7 +59,7 @@ import dbStrings from './db-tables-strings.json';
       if (!loc || loc === 'en-US') return;
       // Right-rail inspector panels only (content divs are #mf-tab-<id>; the
       // Design-Studio accordion moves settings/field/html bodies into .mf-design-acc-body).
-      var scopes = document.querySelectorAll('#mf-tab-field, #mf-tab-settings, #mf-tab-html, #mf-tab-theme, #mf-tab-db, #mf-tab-rules, #mf-tab-perms, #mf-tab-workflow, #mf-tab-print, .mf-design-acc-body');
+      var scopes = document.querySelectorAll('#mf-tab-field, #mf-tab-settings, #mf-tab-html, #mf-tab-theme, #mf-tab-rules, #mf-tab-perms, #mf-tab-workflow, #mf-tab-print, .mf-design-acc-body');
       for (var s = 0; s < scopes.length; s++) {
         if (typeof document.createTreeWalker !== 'function') break;
         var walker = document.createTreeWalker(scopes[s], NodeFilter.SHOW_TEXT, null as any);
@@ -138,7 +138,7 @@ import dbStrings from './db-tables-strings.json';
    *
    * On the Umbraco workspace the four form-wide ones are left out on purpose: Print and Rules
    * are sections of the Settings screen, per-form permissions are an area of the Security
-   * screen, and the BPMN editor is a workspace tab. Two doors to one room is what this cleanup
+   * screen, and the BPMN editor opens from the canvas workflow summary. Two doors to one room is what this cleanup
    * exists to remove. Everywhere else those screens do not exist, so the menu is the door —
    * dropping the entries there would simply lose the features.
    *
@@ -151,7 +151,6 @@ import dbStrings from './db-tables-strings.json';
     var tools: Array<[string, string, string]> = [
       ['steps', 'fa-list-ol', bt('builder.tabtitle_steps', 'Steps')],
       ['html', 'fa-code', bt('builder.tabtitle_html', 'Custom HTML')],
-      ['db', 'fa-database', bt('builder.tabtitle_db', 'Database Tables')],
     ];
     if (isUmbracoWorkspace()) return tools;
     return tools.concat([
@@ -588,7 +587,6 @@ import dbStrings from './db-tables-strings.json';
         // styling controls beside it. So it comes up here, labelled for what it does.
         '<button class="w-btn w-btn-preview-theme" id="mf-btn-theme-preview" data-tip="Preview the form and style it" aria-label="Preview">' +
           '<i class="fa-solid fa-palette"></i><span class="lbl"> ' + bt('builder.preview','Preview') + '</span></button>' +
-        '<button class="w-btn w-btn-icon" id="mf-btn-preview" data-tip="Quick preview in a dialog" aria-label="Quick preview"><i class="fa-regular fa-eye"></i></button>' +
         '<a class="w-btn" id="mf-btn-view-live" href="#" target="_blank" data-tip="Open live form in new tab" aria-label="View Live Form" style="display:none">' +
           '<i class="fa-solid fa-arrow-up-right-from-square"></i><span class="lbl"> ' + bt('builder.view_live','View Live') + '</span></a>' +
         '<button class="w-btn" id="mf-btn-save-draft" data-tip="Save changes (draft)" aria-label="Save draft"><i class="fa-regular fa-floppy-disk"></i><span class="lbl"> ' + bt('builder.save','Save') + '</span></button>' +
@@ -698,6 +696,9 @@ import dbStrings from './db-tables-strings.json';
         primaryTab('entries', 'fa-inbox', 'Entries') +
         primaryTab('analytics', 'fa-chart-line', 'Analytics') +
         primaryTab('settings', 'fa-gear', 'Settings') +
+        // [WorkflowInlineSummary 2026-08-27] No "Workflow" header tab here —
+        // Umbraco Forms keeps workflow settings behind the canvas footer summary only.
+        // The workflow editor still opens in the right flyout from "Configure workflow".
       '</div>' +
       // [ToolbarCleanup 2026-08-18] Authoring only, the way Umbraco Forms' Design toolbar is
       // laid out: two page actions and Reorder (which appends itself here, see
@@ -879,16 +880,19 @@ import dbStrings from './db-tables-strings.json';
               '<div id="mf-canvas-fields"></div>' +
             '</div>' +
           '</div>' +
+          // Keep the workflow summary in the canvas scroll flow. The dropzone owns vertical
+          // scrolling, so placing this footer outside it made the summary disappear below the
+          // clipped center panel on long forms.
+          '<div class="mf-canvas-footer" data-builder-footer-badge="WorkflowInlineSummary v20260828-01">' +
+            '<div id="mf-inline-workflow-summary" class="mf-inline-workflow-summary" style="display:none"></div>' +
+          '</div>' +
         '</div>' +
-        // [FormActionMoved v20260506-06] The Form action texts editor (Submit /
-        // Default language / multi-step Previous-Next) used to live here in the
-        // canvas footer. It's now rendered inside createTabHtml() so admins can
-        // manage UI strings together with HTML/CSS overrides. The empty footer
-        // div is kept (no children) for css alignment + future use.
-        '<div class="mf-canvas-footer" data-builder-footer-badge="BuilderDropWrap v20260403-06"></div>' +
       '</div>'
     );
   }
+
+  // The inline summary stays in the canvas scroll flow so long forms still expose their
+  // workflow state and the Configure workflow action at the natural end of the form.
 
   // ── 6. PROPERTIES (right panel) ───────────────────────────
   function createPropertiesPanel(): string {
@@ -925,7 +929,6 @@ import dbStrings from './db-tables-strings.json';
           createTabHtml() +
           createTabTheme() +
           createTabAi() +
-          createTabDb() +
           createTabEmbed() +
           createTabRules() +
           createPermissionsTab() +
@@ -976,15 +979,10 @@ import dbStrings from './db-tables-strings.json';
         // chat bot already handles every design intent. The prompt library
         // it generated lives in the KB as form_pattern entries.
         // rightTab('ai',       'fa-robot',                  'AI Assistant',     'AI') +
-        // [DBTab v20260528-16] Database Tables tab — list SQL tables on
-        // DashboardDatabase, drag-drop column chips into form canvas, or
-        // bulk-add a table as a Subform (DataGrid). Tab content is mounted
-        // by builder/db-tables-panel.ts on first activation.
-        rightTab('db',       'fa-database',               'Database Tables',  'DB') +
         // [B65d] EMBED tab removed — already exposed in Dashboard form-card actions, redundant here.
         rightTab('rules',    'fa-code-branch',            'Rule Builder',     'Rules') +
         rightTab('perms',    'fa-user-shield',            'Permissions & Access', 'Access') +
-        rightTab('workflow', 'fa-project-diagram',        'BPMN 2.0 Workflow',  'BPMN') +
+        rightTab('workflow', 'fa-project-diagram',        'Workflow',          'Workflow') +
         rightTab('print',    'fa-print',                  'Print Settings',   'Print') +
         '<a href="#" id="mf-panel-expand-btn" class="mf-right-tab mf-expand-btn">' +
           '<i class="fas fa-expand-arrows-alt" id="mf-expand-icon"></i></a>'
@@ -1659,7 +1657,8 @@ import dbStrings from './db-tables-strings.json';
           // mapping rows + the Manage-connections modal are rendered by
           // cloud-storage-settings.ts (reads/writes schema.settings.cloudStorage).
           '<div class="mf-prop-group"><h6><i class="fas fa-cloud-upload-alt"></i> ' + bt('builder.cloudStorage.title','Cloud Storage') + '</h6>' +
-            '<p style="font-size:11px;color:#64748b;margin:0 0 10px">' + bt('builder.cloudStorage.desc','Copy submitted files to cloud storage after each submission.') + '</p>' +
+            '<p style="font-size:11px;color:#64748b;margin:0 0 8px">' + bt('builder.cloudStorage.desc','Copy selected upload fields to a saved cloud connection after each submission.') + '</p>' +
+            '<div style="font-size:10.5px;line-height:1.45;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:7px 8px;margin-bottom:9px"><b>Connection</b> → <b>target folder</b> → <b>upload fields</b>. Create or test connections with <i class="fas fa-cog"></i> Manage connections.</div>' +
             '<div class="form-check mb-2" style="display:flex;align-items:center;gap:6px;padding:4px 0">' +
               '<input type="checkbox" id="mf-setting-cloud-storage-enabled" class="form-check-input" style="margin:0;flex-shrink:0"/>' +
               '<label class="form-check-label" for="mf-setting-cloud-storage-enabled" style="margin:0;white-space:nowrap">' + bt('builder.cloudStorage.enable','Enable Cloud Storage') + '</label>' +
@@ -1892,28 +1891,6 @@ import dbStrings from './db-tables-strings.json';
     );
   }
 
-  function createTabDb(): string {
-    // [DBTab v20260529-01] Static markup — all visible strings live in
-    // src/builder/db-tables-strings.json so QA/localization can swap them
-    // without touching code. db-tables-panel.ts re-imports the same JSON
-    // and mounts the table list + column drag-drop UI on first activation.
-    var S = dbStrings;
-    return (
-      '<div id="mf-tab-db" class="mf-right-tab-content" style="display:none;padding:0;height:100%">' +
-        '<div id="mf-db-tables-host" style="height:100%;display:flex;flex-direction:column;font-family:Inter,system-ui,sans-serif">' +
-          '<div style="padding:16px 18px 12px;border-bottom:1px solid #e2e8f0;background:#f8fafc">' +
-            '<div style="font-weight:700;font-size:14px;color:#0f172a;margin-bottom:4px"><i class="fas fa-database" style="color:#0ea5e9;margin-right:6px"></i>' + S.panelTitle + '</div>' +
-            '<div style="font-size:12px;color:#64748b">' + S.panelHint + '</div>' +
-          '</div>' +
-          '<div id="mf-db-tables-body" style="flex:1;overflow:auto;padding:8px 0;background:#fff">' +
-            '<div style="padding:24px;text-align:center;color:#94a3b8;font-size:12px">' + S.loadingTables + '</div>' +
-          '</div>' +
-          '<div data-conn-footer style="padding:8px 12px;border-top:1px solid #e2e8f0;background:#f8fafc;font-size:11px;color:#64748b">' + S.connectionPrefix + '<code>' + S.connectionValue + '</code></div>' +
-        '</div>' +
-      '</div>'
-    );
-  }
-
   function createTabEmbed(): string {
     return (
       '<div id="mf-tab-embed" class="mf-right-tab-content" style="display:none">' +
@@ -1953,11 +1930,7 @@ import dbStrings from './db-tables-strings.json';
   function createTabWorkflow(): string {
     return (
       '<div id="mf-tab-workflow" class="mf-right-tab-content" style="display:none;padding:0;height:100%">' +
-        '<div style="padding:20px 14px;text-align:center;color:#64748b">' +
-          '<div style="font-size:28px;margin-bottom:8px">🔀</div>' +
-          '<div style="font-weight:600;color:#1e293b;font-size:13px;margin-bottom:4px">BPMN 2.0 Workflow Canvas</div>' +
-          '<div style="font-size:11px;color:#94a3b8">Opening executable workflow editor…</div>' +
-        '</div>' +
+        '<div id="mf-simple-workflow-root" style="height:100%"></div>' +
       '</div>'
     );
   }
@@ -1993,6 +1966,11 @@ import dbStrings from './db-tables-strings.json';
     if (!root) return;
     var requested = requestedRightTab();
     if (!requested || requested === 'field') return;
+    // [WorkflowFlyoutOnly 2026-08-27] Workflow also opens in the right flyout.
+    if (requested === 'workflow') {
+      openRequestedWorkflowEditor();
+      return;
+    }
 
     var tries = 0;
     var timer = setInterval(function () {
@@ -2028,26 +2006,24 @@ import dbStrings from './db-tables-strings.json';
   function openRequestedWorkflowEditor(): void {
     if (!root) return;
     if (requestedRightTab() !== 'workflow') return;
-
+    // Open the simple Workflow flyout panel instead of jumping straight to the BPMN canvas.
+    //
+    // setPrimaryTab is a closure inside initBehaviours(); this function is at module scope,
+    // so it can only reach it through the global initBehaviours publishes. On the deep-link
+    // path the builder is still loading when we get here (loadAndInitBuilder is async), so
+    // retry on the same cadence activateRequestedRightTab() uses instead of firing once
+    // into a builder that has not wired itself up yet.
     var tries = 0;
     var timer = setInterval(function () {
       tries++;
-      var fid = parseInt((document.getElementById('mf-builder-form-id') as HTMLInputElement | null)?.value || String(formId || 0), 10) || 0;
-      var apiUrl = (document.getElementById('mf-builder-api-url') as HTMLInputElement | null)?.value || apiBase || '/api/MegaForm/';
-      if (!fid || document.getElementById('mf-wfrf-overlay')) {
+      var setTab = (window as any).MFSetPrimaryTab;
+      if (typeof setTab === 'function') {
         clearInterval(timer);
-        return;
+        try { setTab('workflow'); } catch (_e) { /* never let a deep link break boot */ }
+      } else if (tries >= 16) {
+        clearInterval(timer);
       }
-      var MFW = (window as any).MFWorkflowRF;
-      if (MFW && typeof MFW.init === 'function') {
-        clearInterval(timer);
-        console.log('[MF-Workflow] auto-open BPMN editor â€“ fid=' + fid + ' apiUrl=' + apiUrl + ' badge=' + workflowEntryBadge);
-        MFW.init(fid, apiUrl);
-      } else if (tries >= 20) {
-        clearInterval(timer);
-        console.error('[MF-Workflow] auto-open failed â€“ MFWorkflowRF unavailable after retries. badge=' + workflowEntryBadge);
-      }
-    }, 220);
+    }, 180);
   }
 
   function createTabPrint(): string {
@@ -2221,16 +2197,215 @@ import dbStrings from './db-tables-strings.json';
     var entriesPane = document.getElementById('mf-entries-pane');
     var analyticsPane = document.getElementById('mf-analytics-pane');
 
+    // Umbraco 13 still renders the shared builder inside an Angular dashboard iframe,
+    // so it cannot use Bellissima's native workspace header. Re-home the same controls
+    // into the same two-row composition instead of maintaining a second toolbar:
+    //   row 1: form title + Design/Entries/Analytics/Settings
+    //   row 2: undo/device + page tools + builder actions
+    // Moving the existing nodes preserves every handler mounted by toolbar/reorder modules.
+    if (root!.getAttribute('data-mf-host') === 'umbraco-v13' && primaryBar) {
+      var v13Topbar = root!.querySelector('.w-topbar-builder') as HTMLElement | null;
+      var v13Title = v13Topbar?.querySelector('.w-title') as HTMLElement | null;
+      var v13Center = v13Topbar?.querySelector('.w-center') as HTMLElement | null;
+      var v13Actions = v13Topbar?.querySelector('.w-actions') as HTMLElement | null;
+      var v13Tabs = primaryBar.querySelector('.mf-primary-tabs') as HTMLElement | null;
+      var v13Tools = primaryBar.querySelector('.mf-secondary-toolbar') as HTMLElement | null;
+
+      if (v13Topbar && v13Tabs && v13Center && v13Actions && v13Tools) {
+        v13Topbar.classList.add('mf-v13-workspace-header');
+        primaryBar.classList.add('mf-v13-command-bar');
+        v13Tabs.classList.add('mf-v13-workspace-tabs');
+        v13Topbar.appendChild(v13Tabs);
+        primaryBar.insertBefore(v13Center, v13Tools);
+        primaryBar.appendChild(v13Actions);
+
+        if (v13Title && formId > 0 && !v13Topbar.querySelector('.mf-v13-form-id')) {
+          var v13FormId = document.createElement('span');
+          v13FormId.className = 'mf-v13-form-id';
+          v13FormId.textContent = '#' + formId;
+          v13Title.insertAdjacentElement('afterend', v13FormId);
+        }
+      }
+    }
+
+    // [WorkflowInlineSummary 2026-08-27] Compact read-only summary below the form canvas.
+    // The full editor lives in the right flyout; this footer only shows what is configured
+    // and offers a one-click path into the Workflow tab.
+    function renderInlineWorkflowSummary(): void {
+      var container = document.getElementById('mf-inline-workflow-summary') as HTMLElement | null;
+      if (!container) return;
+      var fid = getEffectiveFormId();
+      if (!fid) { container.style.display = 'none'; return; }
+
+      // Keep the workflow entry point visible even while the API is loading or temporarily
+      // unavailable. Previously any DNN authorization error hid the whole footer, leaving a
+      // blank strip below the form and no way to discover workflow configuration.
+      var escSummary = function(s: any) { return String(s || '').replace(/[&<>\"]/g, function(c: string){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c] || c); }); };
+      var showEmptySummary = function () {
+        container!.innerHTML =
+          '<div class="mf-iws-header">' +
+            '<span class="mf-iws-trigger"><i class="fas fa-check-circle"></i> ' + escSummary(bt('builder.on_submit','On Submit')) + '</span>' +
+            '<span class="mf-iws-arrow"><i class="fas fa-arrow-right"></i></span>' +
+            '<span class="mf-iws-steps"><span class="mf-iws-empty">' + escSummary(bt('builder.simpleWorkflow.no_steps_yet', 'No steps yet')) + '</span></span>' +
+            '<button type="button" class="mf-iws-configure">' + escSummary(bt('builder.configure_workflow','Configure workflow')) + '</button>' +
+          '</div>';
+        container!.style.display = '';
+        container!.querySelector('.mf-iws-configure')?.addEventListener('click', function () { setPrimaryTab('workflow'); });
+      };
+      showEmptySummary();
+
+      var apiUrl = (document.getElementById('mf-builder-api-url') as HTMLInputElement | null)?.value || apiBase || '/api/MegaForm/';
+      var prefix = (platform === 'oqtane' || platform === 'umbraco') ? '/Form/Workflow' : '/Workflow';
+      var url = apiUrl.replace(/\/?$/, '') + prefix + '/Get?formId=' + fid;
+
+      var headers: Record<string, string> = {};
+      var token = (window as any).__MF_TOKEN;
+      if (token) headers['Authorization'] = 'Bearer ' + token;
+      if (platform === 'dnn') {
+        try {
+          var sf = resolveDnnServicesFramework();
+          var requestToken = sf && typeof sf.getAntiForgeryValue === 'function'
+            ? sf.getAntiForgeryValue()
+            : '';
+          if (requestToken) headers['RequestVerificationToken'] = requestToken;
+          var summaryRoot = document.getElementById('mf-builder-root') as HTMLElement | null;
+          var summaryModuleId = (sf && typeof sf.getModuleId === 'function' ? sf.getModuleId() : 0)
+            || (summaryRoot && summaryRoot.dataset.moduleId) || moduleId || 0;
+          var summaryTabId = (sf && typeof sf.getTabId === 'function' ? sf.getTabId() : 0)
+            || (summaryRoot && summaryRoot.dataset.tabId) || tabId || 0;
+          if (summaryModuleId) headers['ModuleId'] = String(summaryModuleId);
+          if (summaryTabId) headers['TabId'] = String(summaryTabId);
+        } catch (_dnnAuthError) { /* empty summary remains usable */ }
+      }
+
+      var fallbackPrefix = prefix === '/Workflow' ? '/Form/Workflow' : '/Workflow';
+      var urls = [url, apiUrl.replace(/\/?$/, '') + fallbackPrefix + '/Get?formId=' + fid];
+      var fetchWorkflowSummary = function(index: number): Promise<any> {
+        return fetch(urls[index], { credentials: 'same-origin', headers: headers })
+          .then(function (r) {
+            if (r.status === 404 && index + 1 < urls.length) return fetchWorkflowSummary(index + 1);
+            if (r.status === 404) return { workflow: null };
+            if (!r.ok) {
+              if (index + 1 < urls.length) return fetchWorkflowSummary(index + 1);
+              return Promise.reject(r.status);
+            }
+            return r.json();
+          });
+      };
+
+      fetchWorkflowSummary(0)
+        // Oqtane uses 404 to mean that this form has not configured a workflow
+        // yet. That is a valid empty state, not a reason to hide the entry point.
+        .then(function (data: any) {
+          var raw = data && (data.workflow != null ? data.workflow : (data.Workflow != null ? data.Workflow : null));
+          var def = raw ? (typeof raw === 'string' ? JSON.parse(raw) : raw) : {};
+          var nodes = def.nodes || def.Nodes || [];
+
+          var executable: Record<string, boolean> = {
+            SendEmail: true, Approval: true, Webhook: true, Database: true,
+            GoogleSheets: true, Delay: true, SetVariable: true, Calculate: true, SubWorkflow: true,
+            AddRole: true, AddUser: true, AddUserToRole: true, Condition: true
+          };
+          var typeNameMap: Record<number, string> = {
+            1: 'FormField', 2: 'Condition', 3: 'Webhook', 4: 'SendEmail', 5: 'End',
+            10: 'Fork', 11: 'Join', 12: 'Calculate',
+            20: 'SetVariable', 21: 'Delay', 22: 'Approval', 23: 'SubWorkflow',
+            24: 'Database', 25: 'GoogleSheets', 26: 'Switch', 27: 'Loop',
+            28: 'AddRole', 29: 'AddUser', 30: 'AddUserToRole'
+          };
+          var actions = nodes.filter(function (node: any) {
+            var typeName = typeNameMap[Number(node.type || node.Type || 0)] || String(node.type || node.Type || '');
+            return node && !(node.isDisabled || node.IsDisabled) && executable[typeName];
+          });
+          function nodeMeta(type: string): { icon: string; label: string; accent: string; bg: string } {
+            var map: Record<string, any> = {
+              Approval: { icon: 'UT', label: bt('builder.simpleWorkflow.type_approval_title','Approval'), accent: '#ca8a04', bg: '#fefce8' },
+              SendEmail: { icon: '✉', label: bt('builder.simpleWorkflow.type_email_title','Send email'), accent: '#10b981', bg: '#ecfdf5' },
+              Webhook: { icon: 'API', label: bt('builder.simpleWorkflow.type_webhook_title','Push to API'), accent: '#0ea5e9', bg: '#e0f2fe' },
+              Database: { icon: 'DB', label: bt('builder.simpleWorkflow.type_database_title','Insert into database'), accent: '#0f766e', bg: '#f0fdfa' },
+              GoogleSheets: { icon: 'GS', label: bt('builder.simpleWorkflow.type_sheets_title','Google Sheets'), accent: '#16a34a', bg: '#ecfdf5' },
+              Calculate: { icon: 'Σ', label: bt('builder.simpleWorkflow.type_calculate_title','Calculate'), accent: '#ec4899', bg: '#fdf2f8' },
+              SetVariable: { icon: 'SV', label: bt('builder.simpleWorkflow.type_setVariable_title','Set variable'), accent: '#0ea5e9', bg: '#e0f2fe' },
+              Delay: { icon: '⏱', label: bt('builder.simpleWorkflow.type_delay_title','Wait (delay)'), accent: '#0d9488', bg: '#f0fdfa' },
+              End: { icon: '◉', label: bt('builder.simpleWorkflow.type_end_title','End'), accent: '#ef4444', bg: '#fee2e2' },
+              Condition: { icon: '◇', label: bt('builder.simpleWorkflow.type_condition_title','Condition'), accent: '#8b5cf6', bg: '#f5f3ff' }
+            };
+            return map[type] || { icon: 'WF', label: String(type || 'Workflow'), accent: '#64748b', bg: '#f1f5f9' };
+          }
+
+          var esc = escSummary;
+
+          var badges = actions.map(function(node: any) {
+            var typeName = typeNameMap[Number(node.type || node.Type || 0)] || String(node.type || node.Type || '');
+            var meta = nodeMeta(typeName);
+            var nodeId = esc(node.id || node.Id || '');
+            return '<span class="mf-iws-step-badge" role="button" tabindex="0" data-node-id="' + nodeId + '" data-node-type="' + esc(typeName) + '" title="' + esc(bt('builder.click_to_edit_workflow','Click to edit workflow')) + '">' +
+                     esc(node.label || node.Label || meta.label) +
+                   '</span>';
+          });
+          if (badges.length > 1) {
+            badges[badges.length - 1] = '<span class="mf-iws-connector">and</span>' + badges[badges.length - 1];
+          }
+          if (!badges.length) {
+            badges.push('<span class="mf-iws-empty">' + esc(bt('builder.simpleWorkflow.no_steps_yet', 'No steps yet')) + '</span>');
+          }
+
+          var configureText = esc(bt('builder.configure_workflow','Configure workflow'));
+          var onSubmitText = esc(bt('builder.on_submit','On Submit'));
+
+          container.innerHTML =
+            '<div class="mf-iws-header">' +
+              '<span class="mf-iws-trigger"><i class="fas fa-check-circle"></i> ' + onSubmitText + '</span>' +
+              '<span class="mf-iws-arrow"><i class="fas fa-arrow-right"></i></span>' +
+              '<span class="mf-iws-steps">' + badges.join('') + '</span>' +
+              '<button type="button" class="mf-iws-configure">' + configureText + '</button>' +
+            '</div>';
+
+          container.style.display = '';
+
+          var openWorkflowEditor = function () { setPrimaryTab('workflow'); };
+          var btn = container.querySelector('.mf-iws-configure') as HTMLElement | null;
+          if (btn) btn.addEventListener('click', openWorkflowEditor);
+
+          container.querySelectorAll<HTMLElement>('.mf-iws-step-badge').forEach(function(badge) {
+            badge.addEventListener('click', openWorkflowEditor);
+            badge.addEventListener('keydown', function(e) {
+              if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openWorkflowEditor(); }
+            });
+          });
+        })
+        .catch(function () { showEmptySummary(); });
+    }
+    // Expose for cross-scope calls (e.g. bootBuilderWithSchema may be hoisted by the bundler
+    // to module scope, so a direct local reference is not always visible there).
+    (window as any).MFBuilderDom = (window as any).MFBuilderDom || {};
+    (window as any).MFBuilderDom.renderInlineWorkflowSummary = renderInlineWorkflowSummary;
+    // Persona Bar creates #mf-builder-root dynamically and supplies no server-side schema.
+    // That route can bypass bootBuilderWithSchema(), which used to be the only caller and left
+    // this footer at its markup default (display:none). Render once now for the entry point, then
+    // refresh after the asynchronous form/workflow boot has settled.
+    setTimeout(renderInlineWorkflowSummary, 0);
+    setTimeout(renderInlineWorkflowSummary, 900);
+
     function setPrimaryTab(tab: string): void {
+      // [WorkflowOverlayAutoClose 2026-08-21] Advanced BPMN is a fixed, full-viewport
+      // overlay on <body>, not part of the flyout. Leaving Workflow closes it; if the
+      // graph has unsaved edits the user is asked first, and declining keeps them on
+      // the Workflow surface.
+      if (tab !== 'workflow' && !closeAdvancedWorkflowOverlay()) return;
       try { root!.setAttribute('data-mf-primary-tab', tab); } catch (_e) {}
+      // [WorkflowFlyoutOnly 2026-08-27] Workflow is a real primary tab; it opens the right
+      // flyout rather than expanding inline below the canvas. This matches Umbraco Forms:
+      // workflow settings live in a side pane, while the Design canvas only scrolls its form
+      // body and footer.
       document.querySelectorAll<HTMLElement>('.mf-primary-tab').forEach(function(b) {
         var on = b.getAttribute('data-mf-primary-tab') === tab;
         b.classList.toggle('active', on);
         b.setAttribute('aria-selected', on ? 'true' : 'false');
       });
-      // Show/hide builder app vs placeholder panes
+      // Show/hide builder app vs placeholder panes.
       if (builderApp) {
-        var showBuilder = tab === 'design' || tab === 'settings';
+        var showBuilder = tab === 'design' || tab === 'settings' || tab === 'workflow';
         builderApp.style.display = showBuilder ? '' : 'none';
       }
       if (entriesPane) entriesPane.style.display = tab === 'entries' ? '' : 'none';
@@ -2239,10 +2414,19 @@ import dbStrings from './db-tables-strings.json';
       document.querySelectorAll<HTMLElement>('.mf-secondary-toolbar').forEach(function(tb) {
         tb.style.display = tab === 'design' ? '' : 'none';
       });
-      if (tab === 'settings') {
-        toggleFlyout(true);
+
+      if (tab === 'workflow') {
+        // Collapse left toolbox and open the wide workflow flyout on the right.
+        collapseLeftToolboxForWorkflow();
+        if (flyout) flyout.classList.add('mf-workflow-flyout');
+        openFlyoutTab('workflow');
+        mountWorkflowCanvasHost();
       } else {
-        toggleFlyout(false);
+        // Workflow flyout closes when leaving the Workflow tab.
+        if (flyout) flyout.classList.remove('mf-workflow-flyout');
+        toggleFlyout(tab === 'settings');
+        restoreLeftToolboxAfterWorkflow();
+        if (tab === 'design') renderInlineWorkflowSummary();
       }
     }
     function toggleFlyout(show: boolean): void {
@@ -2252,6 +2436,7 @@ import dbStrings from './db-tables-strings.json';
         if (backdrop) backdrop.classList.add('active');
       } else {
         flyout.classList.remove('mf-flyout-open');
+        flyout.classList.remove('mf-workflow-flyout');
         if (backdrop) backdrop.classList.remove('active');
         // [ThemeModeExit 2026-08-18] Leaving the panel has to leave THEME MODE with it.
         //
@@ -2271,13 +2456,20 @@ import dbStrings from './db-tables-strings.json';
           }
         } catch (_e) { /* defensive — never block closing the panel */ }
       }
-      // [2026-08-17] An Umbraco sidebar is as tall as the SCREEN. This panel can only
-      // be as tall as the frame it lives in, so while it is open the frame takes the
-      // screen: the workspace view listens for this and pins the iframe to the viewport.
-      // Same origin, but postMessage keeps the parent in charge of its own layout.
+      // [FlyoutScope 2026-08-22] Field settings belong to the builder content area.
+      // Pinning the WHOLE iframe to the viewport for every inspector hid Umbraco's own
+      // MegaForm sidebar and made a field-gear click look like a page navigation. Only
+      // the dedicated Workflow surface may request viewport mode; ordinary field/form
+      // flyouts stay inside the workspace frame and leave all host chrome untouched.
       try {
         if (root!.getAttribute('data-mf-host') === 'umbraco-workspace' && window.parent && window.parent !== window) {
-          window.parent.postMessage({ type: 'megaform:flyout', open: !!show }, window.location.origin);
+          var viewport = !!show && flyout.classList.contains('mf-workflow-flyout');
+          window.parent.postMessage({
+            type: 'megaform:flyout',
+            open: viewport,
+            panelOpen: !!show,
+            scope: viewport ? 'workflow' : 'inline'
+          }, window.location.origin);
         }
       } catch (_e) { /* cross-origin host: the panel stays frame-height */ }
     }
@@ -2286,9 +2478,9 @@ import dbStrings from './db-tables-strings.json';
     // canvas was the panel lying about itself.
     var FLYOUT_TITLES: { [k: string]: string } = {
       field: 'Field Properties', settings: 'Form Settings', steps: 'Steps',
-      html: 'Custom HTML', theme: 'Theme Designer', db: 'Database Tables',
+      html: 'Custom HTML', theme: 'Theme Designer',
       rules: 'Rule Builder', perms: 'Permissions & Access',
-      workflow: 'BPMN 2.0 Workflow', print: 'Print Settings',
+      workflow: 'Workflow', print: 'Print Settings',
       ai: 'AI Assistant', embed: 'Embed', widget: 'Widget'
     };
     function setFlyoutTitle(tabId: string, override?: string): void {
@@ -2304,6 +2496,15 @@ import dbStrings from './db-tables-strings.json';
     function openFlyoutTab(tabId: string, titleOverride?: string): void {
       toggleFlyout(true);
       setFlyoutTitle(tabId, titleOverride);
+      // Every pane shares the same flyout body. A previously opened long pane can leave
+      // its scroll position behind, which made the Simple workflow heading and actions
+      // start above the viewport. Workflow owns its inner scroller, so reset both layers.
+      if (tabId === 'workflow' && flyout) {
+        var flyoutBody = flyout.querySelector('.mf-flyout-body') as HTMLElement | null;
+        var workflowBody = flyout.querySelector('.mf-sw-flyout__body') as HTMLElement | null;
+        if (flyoutBody) flyoutBody.scrollTop = 0;
+        if (workflowBody) workflowBody.scrollTop = 0;
+      }
       var isAccordion = ACCORDION_TABS.indexOf(tabId) >= 0;
       var paneId = isAccordion ? 'field' : tabId;
       // One panel, one subject: the scope drives the CSS that hides the accordion's
@@ -2338,9 +2539,36 @@ import dbStrings from './db-tables-strings.json';
     try {
       (window as any).MFOpenFlyout = openFlyoutTab;
       (window as any).MFCloseFlyout = function () { toggleFlyout(false); };
+      // [PrimaryTabDeepLink 2026-08-22] setPrimaryTab lives inside initBehaviours() and
+      // closes over root/builderApp/flyout/backdrop, so it is NOT visible from module
+      // scope — openRequestedWorkflowEditor() called it from out there and threw
+      // "ReferenceError: setPrimaryTab is not defined" on every ?pane=workflow deep link
+      // (the /view/open/workflow/<id> route). Publish it the same way this file already
+      // publishes MFOpenFlyout rather than hoisting a closure out of its own scope.
+      (window as any).MFSetPrimaryTab = setPrimaryTab;
     } catch (_e) {}
-    if (primaryBar) {
-      primaryBar.addEventListener('click', function(e) {
+    // [WorkflowFlyoutOnly 2026-08-27] Workflow no longer mounts inline below the canvas.
+    try {
+      window.addEventListener('message', function(e) {
+        if (e.origin !== window.location.origin) return;
+        var data = e.data || {};
+        if (data.type === 'megaform:suppress-beforeunload') {
+          (window as any).__MFSuppressBeforeUnloadUntil = Number(data.until || (Date.now() + 2500));
+          return;
+        }
+        if (data.type === 'megaform:set-primary-tab') {
+          var tab = String(data.tab || 'design').toLowerCase();
+          if (tab === 'builder') tab = 'design';
+          if (tab === 'flow' || tab === 'bpmn' || tab === 'bpmn2') tab = 'workflow';
+          if (['design','entries','analytics','workflow','settings'].indexOf(tab) >= 0) setPrimaryTab(tab);
+        }
+      });
+    } catch (_eMsg) {}
+    // DNN/Oqtane workspace parity moves the tab strip into the workspace header.
+    // Bind to its current host, not the legacy bar it was detached from.
+    var primaryTabHost = root ? (root.querySelector('.mf-primary-tabs') || root.querySelector('.mf-ws-primary-tabs') || primaryBar) : primaryBar;
+    if (primaryTabHost) {
+      primaryTabHost.addEventListener('click', function(e) {
         var btn = (e.target as HTMLElement).closest<HTMLElement>('.mf-primary-tab');
         if (!btn) return;
         var tab = btn.getAttribute('data-mf-primary-tab') || 'design';
@@ -2415,6 +2643,32 @@ import dbStrings from './db-tables-strings.json';
         openFlyoutTab('theme');
       });
     }
+    // Live Preview toolbar actions are rendered with the canvas, so wire them here
+    // once with the rest of the builder chrome. Previously these buttons were visual
+    // only: both Refresh and Fullscreen accepted clicks but performed no action.
+    root!.querySelectorAll<HTMLElement>('[data-mf-preview-action]').forEach(function (button) {
+      button.addEventListener('click', function (e) {
+        e.preventDefault();
+        var action = button.getAttribute('data-mf-preview-action') || '';
+        if (action === 'refresh') {
+          try {
+            var previewApi = (window as any).MFCanvasThemePreview;
+            if (previewApi && typeof previewApi.requestRefresh === 'function') previewApi.requestRefresh();
+            else if ((window as any).MegaFormBuilder) (window as any).MegaFormBuilder.callModule('canvas', 'render');
+          } catch (_eRefresh) { /* defensive */ }
+          return;
+        }
+        if (action === 'fullscreen') {
+          var active = !document.body.classList.contains('mf-preview-fullscreen');
+          document.body.classList.toggle('mf-preview-fullscreen', active);
+          button.classList.toggle('is-active', active);
+          button.setAttribute('aria-pressed', active ? 'true' : 'false');
+          var label = button.querySelector('span');
+          if (label) label.textContent = active ? bt('builder.exit_fullscreen', 'Exit fullscreen') : bt('builder.fullscreen', 'Fullscreen');
+          try { window.dispatchEvent(new Event('resize')); } catch (_eResize) { /* defensive */ }
+        }
+      });
+    });
     var flyoutClose = document.getElementById('mf-flyout-close');
     if (flyoutClose) {
       flyoutClose.addEventListener('click', function() { toggleFlyout(false); });
@@ -2579,48 +2833,105 @@ import dbStrings from './db-tables-strings.json';
       });
     });
 
-    // Workflow tab lazy-init
+    // Workflow tab lazy-init: mount the Simple workflow flyout panel.
+    // The full BPMN canvas is only opened when the user clicks "Advanced BPMN →".
     var wfLastInitedFormId = -1;  // -1 = never inited
     var wfTabLink = document.getElementById('mf-tab-link-workflow');
-    if (wfTabLink) {
-      wfTabLink.addEventListener('click', function () {
-        var fid    = parseInt((document.getElementById('mf-builder-form-id') as HTMLInputElement)?.value || '0');
-        var apiUrl = (document.getElementById('mf-builder-api-url') as HTMLInputElement)?.value || '';
-        if (document.getElementById('mf-wfrf-overlay') && fid > 0) {
-          wfLastInitedFormId = fid;
+    function collapseLeftToolboxForWorkflow(): void {
+      var panel = document.getElementById('mf-panel-left') as HTMLElement | null;
+      var openBtn = document.getElementById('mf-left-open-btn') as HTMLElement | null;
+      if (panel && !panel.classList.contains('mf-collapsed')) {
+        panel.classList.add('mf-collapsed');
+        panel.setAttribute('data-mf-collapsed-by-workflow', '1');
+        if (openBtn) openBtn.style.display = 'flex';
+      }
+    }
+    // Returns false only when the user chose to keep unsaved BPMN edits — the caller
+    // must then abandon the tab switch.
+    function closeAdvancedWorkflowOverlay(): boolean {
+      var overlay = document.getElementById('mf-wfrf-overlay');
+      if (!overlay) return true;
+      var MFW = (window as any).MFWorkflowRF;
+      try {
+        if (MFW && MFW._state && MFW._state.dirty) {
+          var msg = bt('builder.simpleWorkflow.discard_bpmn_confirm',
+            'The BPMN workflow has unsaved changes. Leave the Workflow tab and discard them?');
+          if (!window.confirm(msg)) return false;
+        }
+      } catch (_e) { /* no readable state — close it rather than trap the user */ }
+      // cleanupHostChrome(), NOT close(): close() navigates back to the builder shell on
+      // the DNN host, which would turn a tab click into a page load. cleanup just removes
+      // the overlay and puts the host chrome it hid back.
+      try {
+        if (MFW && typeof MFW.cleanupHostChrome === 'function') { MFW.cleanupHostChrome(true); }
+      } catch (_e) { /* fall through to removing the node ourselves */ }
+      try {
+        var still = document.getElementById('mf-wfrf-overlay');
+        if (still && still.parentNode) still.parentNode.removeChild(still);
+      } catch (_e2) { /* already gone */ }
+      return true;
+    }
+    function restoreLeftToolboxAfterWorkflow(): void {
+      var panel = document.getElementById('mf-panel-left') as HTMLElement | null;
+      var openBtn = document.getElementById('mf-left-open-btn') as HTMLElement | null;
+      if (panel && panel.getAttribute('data-mf-collapsed-by-workflow') === '1') {
+        panel.classList.remove('mf-collapsed');
+        panel.removeAttribute('data-mf-collapsed-by-workflow');
+        if (openBtn) openBtn.style.display = 'none';
+      }
+    }
+    function mountWorkflowCanvasHost(): void {
+      // [WorkflowFlyoutOnly 2026-08-27] Mount into the right flyout, not the inline canvas host.
+      var container = document.getElementById('mf-simple-workflow-root') as HTMLElement | null;
+      if (!container) return;
+      var fid = parseInt((document.getElementById('mf-builder-form-id') as HTMLInputElement)?.value || '0', 10) || 0;
+      var apiUrl = (document.getElementById('mf-builder-api-url') as HTMLInputElement)?.value || '';
+      // If the full BPMN overlay is already open, leave it alone.
+      if (document.getElementById('mf-wfrf-overlay') && fid > 0) {
+        wfLastInitedFormId = fid;
+        return;
+      }
+      // Avoid re-mounting and losing unsaved edits when returning to the Workflow tab.
+      if (container.children.length > 0 && fid === wfLastInitedFormId && fid > 0) {
+        wfLastInitedFormId = fid;
+        return;
+      }
+      wfLastInitedFormId = fid;
+      function mountSimple(MFW: any): void {
+        if (typeof MFW.mountSimplePanel !== 'function') {
+          console.error('[MF-Workflow] mountSimplePanel not exported by MFWorkflowRF');
           return;
         }
-        // Reaching here means the overlay is NOT mounted (the guard above returned otherwise).
-        // Re-init whenever we have a real form: previously this only fired when the formId had
-        // changed, so "Return to App Builder" (which removes the overlay) left wfLastInitedFormId
-        // set and a second click on BPMN silently did nothing. Keep the legacy fid=0 first-open
-        // path for a form that has not been saved yet.
-        if (fid > 0 || fid !== wfLastInitedFormId) {
-          wfLastInitedFormId = fid;
-          console.log('[MF-Workflow] click – fid=' + fid + ' apiUrl=' + apiUrl + ' MFWorkflowRF=' + typeof (window as any).MFWorkflowRF);
-          var MFW = (window as any).MFWorkflowRF;
-          if (typeof MFW !== 'undefined') {
-            MFW.init(fid, apiUrl);
-          } else {
-            // MFWorkflowRF chưa load xong → retry mỗi 500ms, tối đa 5 lần
-            var retries = 0;
-            var timer = setInterval(function () {
-              retries++;
-              var MFW2 = (window as any).MFWorkflowRF;
-              console.log('[MF-Workflow] retry ' + retries + ' – MFWorkflowRF=' + typeof MFW2);
-              if (typeof MFW2 !== 'undefined') {
-                clearInterval(timer);
-                wfLastInitedFormId = fid;
-                MFW2.init(fid, apiUrl);
-              } else if (retries >= 5) {
-                clearInterval(timer);
-                console.error('[MF-Workflow] MFWorkflowRF vẫn undefined sau 5 lần retry.');
-              }
-            }, 500);
+        MFW.mountSimplePanel(container, fid || 0, apiUrl, function () {
+          // Advanced opens the full BPMN canvas overlay.
+          MFW.init(fid, apiUrl, 'advanced');
+        });
+      }
+      var MFW = (window as any).MFWorkflowRF;
+      if (typeof MFW !== 'undefined') {
+        mountSimple(MFW);
+      } else {
+        // MFWorkflowRF chưa load xong → retry mỗi 500ms, tối đa 5 lần
+        var retries = 0;
+        var timer = setInterval(function () {
+          retries++;
+          var MFW2 = (window as any).MFWorkflowRF;
+          if (typeof MFW2 !== 'undefined') {
+            clearInterval(timer);
+            mountSimple(MFW2);
+          } else if (retries >= 5) {
+            clearInterval(timer);
+            console.error('[MF-Workflow] MFWorkflowRF vẫn undefined sau 5 lần retry.');
           }
-        }
+        }, 500);
+      }
+    }
+    if (wfTabLink) {
+      wfTabLink.addEventListener('click', function () {
+        setPrimaryTab('workflow');
       });
     }
+
 
     document.querySelectorAll('.w-back, .w-topbar-builder a[href*="#mf-dashboard"], .w-topbar-gallery a[href*="#mf-dashboard"], .tpl-bar-btn[href*="#mf-dashboard"]').forEach(function (link) {
       link.addEventListener('click', function () {
@@ -2674,8 +2985,9 @@ import dbStrings from './db-tables-strings.json';
     }
 
     // When the user clicks ANY OTHER right-rail tab, deactivate the
-    // Theme tab so its listeners unbind. We attach in capture phase so
-    // we fire before properties-patch.ts hides the panes.
+    // Theme tab so its listeners unbind and restore the left toolbox if
+    // it was auto-collapsed by the Workflow tab. We attach in capture phase
+    // so we fire before properties-patch.ts hides the panes.
     var rightPanelForThemeCleanup = document.getElementById('mf-panel-right');
     if (rightPanelForThemeCleanup) {
       rightPanelForThemeCleanup.addEventListener('click', function (e: Event) {
@@ -2684,6 +2996,7 @@ import dbStrings from './db-tables-strings.json';
         if (!link) return;
         var tabName = link.getAttribute('data-tab');
         if (!tabName || tabName === 'theme') return;
+        if (tabName !== 'workflow') restoreLeftToolboxAfterWorkflow();
         var TA = (window as any).MFThemeTabAdapter;
         if (TA && typeof TA.deactivate === 'function') {
           try { TA.deactivate(); } catch (_e) { /* defensive */ }
@@ -2745,15 +3058,16 @@ import dbStrings from './db-tables-strings.json';
     // Design/Entries/Analytics/Settings tabs. Switch the builder to a co-hosting layout
     // that hides the duplicated internal title/tabs and avoids fixed-position clipping
     // inside the iframe.
-    var workspaceHost = false;
+    var workspaceHost = root?.getAttribute('data-mf-host') === 'umbraco-workspace';
     try {
-      workspaceHost = new URLSearchParams(window.location.search).get('host') === 'umbraco-workspace';
+      workspaceHost = workspaceHost || new URLSearchParams(window.location.search).get('host') === 'umbraco-workspace';
     } catch (_e) { /* older browsers / invalid URL */ }
     if (workspaceHost && formId > 0 && root) {
       root.setAttribute('data-mf-host', 'umbraco-workspace');
     }
 
     build();
+    mountBuilderWorkspace({ root, platform, formId, apiBase, moduleId, portalId });
     initBehaviours();
     activateRequestedRightTab();
     openRequestedWorkflowEditor();
@@ -2878,6 +3192,12 @@ import dbStrings from './db-tables-strings.json';
       if (typeof MFB !== 'undefined') {
         MFB.init({ moduleId:moduleId, portalId:portalId, tabId:tabId, formId:fid2, apiBaseUrl:apiBase, servicesFramework:sf, existingSchema:canonicalSchema });
       }
+      // [WorkflowInlineSummary] Refresh the compact footer summary once the builder has
+      // rendered the canvas (and therefore the footer host exists).
+      setTimeout(function () {
+        var fn = (window as any).MFBuilderDom && (window as any).MFBuilderDom.renderInlineWorkflowSummary;
+        if (typeof fn === 'function') fn();
+      }, 600);
     }
 
     // ── FAST PATH: schema already server-rendered on data-schema-json ──────────
@@ -2920,7 +3240,26 @@ import dbStrings from './db-tables-strings.json';
 
   // Expose setStatus globally (used by legacy builder on save/publish)
   (window as any).setStatus = setStatus;
-  (window as any).MFBuilderDom = { setStatus: setStatus, apiBase: apiBase, formId: formId };
+  function reInitCurrentRoot(): void {
+    var currentRoot = document.getElementById('mf-builder-root') as HTMLElement | null;
+    if (!currentRoot || currentRoot.children.length > 0) return;
+
+    // Blazor enhanced navigation can replace the root after the bundle has already run.
+    // Rebuild the current root first; panel wiring depends on the DOM created by init().
+    init();
+    var panelBoot = (window as any).__MF_REINIT_BUILDER_PANELS__;
+    if (typeof panelBoot === 'function') panelBoot();
+  }
+
+  (window as any).MFBuilderDom = {
+    setStatus: setStatus,
+    apiBase: apiBase,
+    formId: formId,
+    reInit: reInitCurrentRoot
+  };
+  if ((window as any).MegaFormBuilder) {
+    (window as any).MegaFormBuilder.reInit = reInitCurrentRoot;
+  }
 
   // BUG FIX: dnn-host/index.ts calls window.MegaForm?.initBuilder(root) to boot/re-boot
   // the builder when opening the builder overlay or clicking "New". However, panels.ts
@@ -2943,6 +3282,17 @@ import dbStrings from './db-tables-strings.json';
      */
     w.MegaForm.initBuilder = function reBootBuilder(root: HTMLElement): void {
       if (!root) return;
+
+      // PersonaBar reuses the already-loaded builder bundle but replaces the
+      // host element whenever another form is opened. The replacement root is
+      // empty, so the lightweight re-boot path below has no app markup to
+      // update and would leave the panel white. Rebuild the full DOM contract
+      // for that new root; init() will also load the requested form.
+      if (!root.querySelector('#mf-builder-app, .mf-builder-app, .tpl-gallery')) {
+        root.innerHTML = '';
+        init();
+        return;
+      }
 
       // Re-read all context from data-* so changes made by dnn-host take effect
       // (e.g. data-is-new="true", data-form-id="0" for "New" button flow).

@@ -1,0 +1,34 @@
+{
+  "javascript": [
+    "/App_Plugins/MegaForm/backoffice-v13/megaform-dashboard.controller.js?v=2.0.62",
+    "/App_Plugins/MegaForm/backoffice-v13/megaform-form-picker.controller.js?v=2.0.62"
+  ],
+  "propertyEditors": [
+    {
+      "alias": "MegaForm.FormPicker",
+      "name": "MegaForm Form Picker",
+      "icon": "icon-umb-contour",
+      "group": "pickers",
+      "editor": {
+      "view": "/App_Plugins/MegaForm/backoffice-v13/megaform-form-picker.html?v=2.0.62",
+        "valueType": "TEXT"
+      }
+    }
+  ],
+  "sections": [
+    {
+      "alias": "megaform",
+      "name": "MegaForm"
+    }
+  ],
+  "dashboards": [
+    {
+      "alias": "MegaForm.Dashboard",
+      "view": "/App_Plugins/MegaForm/backoffice-v13/megaform-dashboard.html?v=2.0.62",
+      "sections": [
+        "megaform"
+      ],
+      "weight": 10
+    }
+  ]
+}

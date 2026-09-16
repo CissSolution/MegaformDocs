@@ -2,7 +2,7 @@
   "$schema": "../../umbraco-package-schema.json",
   "id": "MegaForm.Umbraco",
   "name": "MegaForm",
-  "version": "1.7.0",
+  "version": "2.0.62",
   "allowTelemetry": true,
   "allowPublicAccess": true,
   "extensions": [
@@ -114,6 +114,19 @@
         "icon": "icon-umb-contour",
         "group": "pickers",
         "propertyEditorSchemaAlias": "MegaForm.FormPicker"
+      }
+    },
+    {
+      "type": "propertyEditorUi",
+      "alias": "MegaForm.PropertyEditorUi.FormPicker.StringSchema",
+      "name": "MegaForm Form Picker UI (String Schema)",
+      "element": "/App_Plugins/MegaForm/backoffice/property-editors/megaform-form-picker.js",
+      "elementName": "megaform-form-picker",
+      "meta": {
+        "label": "MegaForm Form Picker",
+        "icon": "icon-umb-contour",
+        "group": "pickers",
+        "propertyEditorSchemaAlias": "Umbraco.Plain.String"
       }
     },
     {
