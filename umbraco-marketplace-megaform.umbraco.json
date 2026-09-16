@@ -1,7 +1,7 @@
 {
   "$schema": "https://marketplace.umbraco.com/umbraco-marketplace-schema.json",
   "Title": "MegaForm for Umbraco",
-  "Description": "A complete visual form and application builder for Umbraco 17 LTS. Start quickly with 31 bundled QuickStart templates or the searchable Online Gallery, create and edit forms with AI, build multi-page wizards, publish multilingual experiences, accept payments, manage submissions, and automate work with approvals, email, webhooks, retry history, and C# after-submission actions. Sales and support: daoa@dnndefender.com.",
+  "Description": "A complete visual form and application builder for Umbraco 13 through 18. Start quickly with 31 bundled QuickStart templates or the searchable Online Gallery with working template previews. Create and iteratively edit forms with AI using Google Gemini support, including Gemini Flash models that work well on the free Gemini API tier for most everyday form-design tasks. Build multi-page wizards, publish multilingual experiences, accept payments, manage submissions, and automate work with approvals, email, webhooks, retry history, and C# after-submission actions. Sales and support: daoa@dnndefender.com.",
   "Category": "Editor Tools",
   "AlternateCategory": "Developer Tools",
   "PackageType": "Package",
@@ -13,12 +13,17 @@
     "workflow",
     "submissions",
     "ai",
+    "google gemini",
+    "gemini flash",
     "multi-step",
     "headless",
     "bellissima",
+    "umbraco 13",
+    "umbraco 14",
+    "umbraco 15",
+    "umbraco 16",
     "umbraco 17",
-    "lts",
-    ".net 10",
+    "umbraco 18",
     "megaform",
     "conditional logic",
     "payments",
@@ -45,16 +50,5 @@
       "Caption": "MegaForm visual form builder inside the Umbraco backoffice"
     }
   ],
-  "VersionDependencyMode": "SemVer",
-  "RelatedPackages": [
-    {
-      "PackageId": "MegaForm.Core",
-      "GroupTitle": "MegaForm ecosystem",
-      "Description": "Shared core logic used by all MegaForm platform packages."
-    },
-    {
-      "PackageId": "MegaForm.Sdk",
-      "Description": "HTTP SDK for headless integrations with MegaForm."
-    }
-  ]
+  "VersionDependencyMode": "SemVer"
 }
