@@ -10,8 +10,10 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Umbraco.Cms.Core.Mail;
 using Umbraco.Cms.Core.Services;
 using Umbraco.Cms.Core.Web;
+using UmbracoEmailSender = Umbraco.Cms.Core.Mail.IEmailSender;
 
 namespace MegaForm.Umbraco.Services
 {
@@ -170,8 +172,11 @@ namespace MegaForm.Umbraco.Services
             if (_umbracoContextAccessor.TryGetUmbracoContext(out var umbracoContext))
             {
                 var current = umbracoContext?.PublishedRequest?.PublishedContent;
-                while (current?.Parent != null) current = current.Parent;
-                if (current?.Id > 0) return current.Id;
+                // Umbraco 18 moved Id from IPublishedContent to IPublishedElement.
+                // Reading the stable Path property avoids a binary method-token break
+                // while still resolving the site root on every supported version.
+                var publishedRootId = TryResolveRootFromPath(current?.Path);
+                if (publishedRootId > 0) return publishedRootId;
             }
 
             // Fallback to the content service for backoffice/unpublished contexts.
@@ -191,7 +196,13 @@ namespace MegaForm.Umbraco.Services
         {
             var content = _contentService.GetById(contentId);
             if (content == null || string.IsNullOrWhiteSpace(content.Path)) return 0;
-            var segments = content.Path.Split(',', StringSplitOptions.RemoveEmptyEntries);
+            return TryResolveRootFromPath(content.Path);
+        }
+
+        private static int TryResolveRootFromPath(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path)) return 0;
+            var segments = path.Split(',', StringSplitOptions.RemoveEmptyEntries);
             return segments.Length >= 2 && int.TryParse(segments[1], out var rootId) ? rootId : 0;
         }
     }
@@ -213,17 +224,19 @@ namespace MegaForm.Umbraco.Services
         public string ReplyTo { get; set; }
     }
 
-    public class SmtpEmailSender : IEmailSender
+    public class SmtpEmailSender : MegaForm.Core.Interfaces.IEmailSender
     {
         private readonly IConfiguration _cfg;
         private readonly IModuleSettingsService _settings;
         private readonly ILogService _log;
+        private readonly UmbracoEmailSender _umbracoEmailSender;
 
-        public SmtpEmailSender(IConfiguration cfg, IModuleSettingsService settings, ILogService log = null)
+        public SmtpEmailSender(IConfiguration cfg, IModuleSettingsService settings, ILogService log = null, UmbracoEmailSender umbracoEmailSender = null)
         {
             _cfg = cfg;
             _settings = settings;
             _log = log;
+            _umbracoEmailSender = umbracoEmailSender;
         }
 
         private string GetSetting(string dbKey, params string[] configKeys)
@@ -251,10 +264,13 @@ namespace MegaForm.Umbraco.Services
         private static int ParseInt(string value, int fallback)
             => int.TryParse(value, out var p) ? p : fallback;
 
-        public SmtpEmailOptions ResolveOptions(string fromOverride = null, string replyToOverride = null)
+        public SmtpEmailOptions ResolveOptions(string fromOverride = null, string fromNameOverride = null, string replyToOverride = null)
         {
-            var username = GetSetting("Email_User", "Email:Username", "Email:User") ?? string.Empty;
-            var fromEmail = fromOverride ?? GetSetting("Email_From", "Email:From");
+            // [v20260826-01] Also read Umbraco's built-in Global SMTP config as a fallback.
+            // This prevents the DNN-style failure where the platform has a working SMTP
+            // password but MegaForm's own module settings are empty.
+            var username = GetSmtpSetting("Email_User", "UserName", "Email:Username", "Email:User") ?? string.Empty;
+            var fromEmail = fromOverride ?? GetSmtpSetting("Email_From", "From", "Email:From");
             if (string.IsNullOrWhiteSpace(fromEmail))
                 fromEmail = username;
             if (string.IsNullOrWhiteSpace(fromEmail))
@@ -262,16 +278,45 @@ namespace MegaForm.Umbraco.Services
 
             return new SmtpEmailOptions
             {
-                Host = GetSetting("Email_Host", "Email:Host") ?? "localhost",
-                Port = ParseInt(GetSetting("Email_Port", "Email:Port"), 25),
+                Host = GetSmtpSetting("Email_Host", "Host", "Email:Host") ?? "localhost",
+                Port = ParseInt(GetSmtpSetting("Email_Port", "Port", "Email:Port"), 25),
                 FromEmail = fromEmail,
-                FromName = GetSetting("Email_FromName", "Email:FromName") ?? string.Empty,
+                FromName = fromNameOverride ?? GetSetting("Email_FromName", "Email:FromName") ?? string.Empty,
                 Username = username,
-                Password = GetSetting("Email_Password", "Email:Password") ?? string.Empty,
-                EnableSsl = ParseBool(GetSetting("Email_EnableSsl", "Email:EnableSsl")),
+                Password = GetSmtpSetting("Email_Password", "Password", "Email:Password") ?? string.Empty,
+                EnableSsl = ParseBool(GetSmtpSetting("Email_EnableSsl", "EnableSsl", "Email:EnableSsl")),
                 TimeoutMs = ParseInt(GetSetting("Email_TimeoutMs", "Email:TimeoutMs"), 20000),
                 ReplyTo = !string.IsNullOrWhiteSpace(replyToOverride) ? replyToOverride : (GetSetting("Email_ReplyTo", "Email:ReplyTo") ?? string.Empty)
             };
+        }
+
+        /// <summary>
+        /// Resolves an SMTP setting with the precedence:
+        /// 1. MegaForm module settings (stored in the Umbraco database via IModuleSettingsService)
+        /// 2. MegaForm-specific configuration keys (e.g. Email:Host)
+        /// 3. Umbraco's built-in Global SMTP configuration (Umbraco:CMS:Global:Smtp:*)
+        /// </summary>
+        private string GetSmtpSetting(string moduleKey, string umbracoSmtpKey, params string[] megaFormConfigKeys)
+        {
+            var v = GetSetting(moduleKey, megaFormConfigKeys);
+            if (!string.IsNullOrWhiteSpace(v)) return v;
+
+            if (_cfg != null)
+            {
+                v = _cfg[$"Umbraco:CMS:Global:Smtp:{umbracoSmtpKey}"];
+                if (!string.IsNullOrWhiteSpace(v)) return v;
+            }
+
+            return null;
+        }
+
+        private bool HasCustomSmtpHost()
+        {
+            var v = _settings?.GetSetting(0, "Email_Host", null);
+            if (!string.IsNullOrWhiteSpace(v)) return true;
+            v = _cfg?["Email:Host"];
+            if (!string.IsNullOrWhiteSpace(v)) return true;
+            return false;
         }
 
         public void SendUsingOptions(SmtpEmailOptions options, string to, string subject, string htmlBody, string replyTo = null)
@@ -280,6 +325,38 @@ namespace MegaForm.Umbraco.Services
             options ??= ResolveOptions();
 
             var host = options.Host ?? "localhost";
+
+            // If MegaForm does not have its own custom SMTP host, delegate to Umbraco's built-in
+            // email sender. This uses the platform's configured SMTP (often with an encrypted
+            // password) and avoids the SmtpClient spam-filter rejections seen on DNN.
+            if (!HasCustomSmtpHost() && _umbracoEmailSender != null)
+            {
+                try
+                {
+                    var replyToArray = string.IsNullOrWhiteSpace(replyTo) ? Array.Empty<string>() : new[] { replyTo };
+                    var msg = new global::Umbraco.Cms.Core.Models.Email.EmailMessage(
+                        options.FromEmail,
+                        (to ?? string.Empty).Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim()).Where(x => !string.IsNullOrWhiteSpace(x)).ToArray(),
+                        Array.Empty<string>(),
+                        Array.Empty<string>(),
+                        replyToArray,
+                        subject ?? string.Empty,
+                        htmlBody ?? string.Empty,
+                        true,
+                        null);
+#if UMBRACO_17_18
+                    _umbracoEmailSender.SendAsync(msg, "MegaForm", false, null).GetAwaiter().GetResult();
+#else
+                    _umbracoEmailSender.SendAsync(msg, "MegaForm").GetAwaiter().GetResult();
+#endif
+                    _log?.LogInfo("MegaForm.Email", $"Email delegated to Umbraco sender. To={to} Subject={subject}");
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    _log?.LogError("MegaForm.Email", $"Umbraco email sender failed, falling back to SmtpClient. {ex.Message}", ex);
+                }
+            }
             var port = options.Port > 0 ? options.Port : 25;
             var senderEmail = !string.IsNullOrWhiteSpace(options.FromEmail) ? options.FromEmail : (!string.IsNullOrWhiteSpace(options.Username) ? options.Username : "noreply@megaform.local");
             var senderName = options.FromName ?? string.Empty;

@@ -6,8 +6,9 @@ MegaForm is a schema-driven form and application builder for Umbraco 13 through 
 
 - Drag-and-drop form designer in the Umbraco backoffice, with a guided form-creation wizard
 - 31 ready-to-use QuickStart template definitions, with essential runtime artwork included
-- Searchable Online Gallery that downloads form-specific images and SVG assets on demand
-- AI-assisted form creation and editing from plain-English instructions
+- Searchable Online Gallery with working template previews and on-demand downloads for form-specific images and SVG assets
+- AI-assisted form creation and iterative editing from plain-English instructions, with Google Gemini support
+- Gemini Flash models work well on the free Gemini API tier and can handle most everyday form creation and editing tasks
 - Multi-page forms, wizard navigation, conditional logic, validation, and calculation rules
 - Multilingual forms and localized public-form experiences
 - Native form picker (`MegaForm.FormPicker`) for selecting a form on content nodes

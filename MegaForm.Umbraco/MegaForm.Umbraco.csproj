@@ -18,16 +18,16 @@
     <Authors>MegaForm Team</Authors>
     <Company>MegaForm</Company>
     <Product>MegaForm for Umbraco</Product>
-    <Description>Visual form and application builder for Umbraco 13-18 with 31 bundled templates, an Online Gallery, a guided form wizard, AI-assisted design, multilingual forms, payments, submissions, and multi-step workflows.</Description>
+    <Description>Visual form and application builder for Umbraco 13-18 with 31 bundled templates, an Online Gallery with template previews, Google Gemini and Gemini Flash AI-assisted design, multilingual forms, payments, submissions, and multi-step workflows.</Description>
     <Copyright>© 2026 MegaForm. All rights reserved.</Copyright>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
-    <PackageProjectUrl>https://cisssolution.github.io/MegaformDocs/articles/umbraco-overview.html</PackageProjectUrl>
+    <PackageProjectUrl>https://cisssolution.github.io/MegaformDocs</PackageProjectUrl>
     <RepositoryUrl>https://github.com/CissSolution/MegaformDocs.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageIcon>icon.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageTags>umbraco;umbraco-marketplace;form-builder;forms;workflow;submissions;bellissima;umbraco13;umbraco14;umbraco15;umbraco16;umbraco17;umbraco18;templates;online-gallery;multilingual;wizard;ai;payments</PackageTags>
-    <PackageReleaseNotes>MegaForm 2.0.62 fixes Bellissima workspace routing so Umbraco 14+ opens forms through the native form route instead of rendering a standalone builder inside the dashboard frame. This removes duplicate header bands and reserved padding on Umbraco 18 while preserving the 2.0.61 canvas anchoring, Umbraco 13 host context, and Workflow Summary fixes.</PackageReleaseNotes>
+    <PackageTags>umbraco;umbraco-marketplace;form-builder;forms;workflow;submissions;bellissima;umbraco13;umbraco14;umbraco15;umbraco16;umbraco17;umbraco18;templates;online-gallery;multilingual;wizard;ai;google-gemini;gemini-flash;payments</PackageTags>
+    <PackageReleaseNotes>MegaForm 2.0.62 adds Google Gemini support, including Gemini Flash models that work well on the free Gemini API tier for most everyday form creation and editing tasks. It fixes Online Gallery template previews and Bellissima workspace routing, so Umbraco 14+ opens forms through the native form route instead of rendering a standalone builder inside the dashboard frame. This removes duplicate header bands and reserved padding on Umbraco 18 while preserving canvas anchoring, Umbraco 13 host context, and Workflow Summary fixes.</PackageReleaseNotes>
     <NoWarn>$(NoWarn);NU5104</NoWarn>
     <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);IncludeMegaFormInternalAssemblies</TargetsForTfmSpecificBuildOutput>
   </PropertyGroup>
@@ -75,6 +75,13 @@
     <!-- Dependencies used by the bundled Core/SDK/CloudStorage assemblies. These are
          restored automatically when the single MegaForm.Umbraco package is installed. -->
     <PackageReference Include="AWSSDK.S3" Version="4.0.101.4" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net9.0'">
+    <!-- Umbraco 15.4.4 resolves older vulnerable transitive versions. Keep the
+         Umbraco API surface while raising only the affected dependency floors. -->
+    <PackageReference Include="MailKit" Version="4.17.0" />
+    <PackageReference Include="MessagePack" Version="2.5.302" />
   </ItemGroup>
 
   <ItemGroup>
