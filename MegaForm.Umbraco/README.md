@@ -68,7 +68,7 @@ While MegaForm is in trial mode, the backoffice banner exposes two separate acti
 
 Uploading a valid license updates the status in place to **Active**; it does not redirect the administrator to an external site.
 
-Contact the MegaForm team at **daoa@dnndefender.com** for licensing, pricing, evaluation access, and support.
+Contact and support: **daoa@dnndefender.com**.
 
 ## Marketplace
 
