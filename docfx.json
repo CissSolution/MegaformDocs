@@ -1,25 +1,5 @@
 {
-  "metadata": [
-    {
-      "src": [
-        {
-          "files": [
-            "MegaForm.Sdk/MegaForm.Sdk.csproj"
-          ],
-          "src": "../.."
-        }
-      ],
-      "dest": "api",
-      "outputFormat": "mref",
-      "properties": {
-        "TargetFramework": "net10.0"
-      },
-      "disableGitFeatures": false,
-      "disableDefaultFilter": false,
-      "namespaceLayout": "flattened",
-      "memberLayout": "samePage"
-    }
-  ],
+  "metadata": [],
   "build": {
     "content": [
       {
@@ -56,6 +36,11 @@
           "images/oqtane-sdk-listview.png",
           "images/31-webhook-crm.gif",
           "images/33-bpmn-api-task.gif"
+        ]
+      },
+      {
+        "files": [
+          "samples/**"
         ]
       }
     ],

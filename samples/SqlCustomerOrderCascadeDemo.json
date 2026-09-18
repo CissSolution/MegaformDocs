@@ -1,0 +1,89 @@
+{
+  "version": "1.0",
+  "fields": [
+    {
+      "key": "customer_id",
+      "type": "Select",
+      "label": "Customer",
+      "required": true,
+      "width": "Half",
+      "options": [
+        { "value": "", "label": "-- choose a customer --" }
+      ],
+      "properties": {
+        "optionsSource": "sql",
+        "optionsType": "query",
+        "optionsConnectionKey": "DashboardDatabase",
+        "optionsDatabaseType": "SqlServer",
+        "optionsSql": "SELECT CAST(CustomerId AS nvarchar(20)) AS Value, CompanyName AS Label FROM dbo.MF_Demo_Customers WHERE IsActive = 1 ORDER BY CompanyName",
+        "optionsDependsOn": [],
+        "optionsReloadOnChange": true
+      }
+    },
+    {
+      "key": "order_id",
+      "type": "Select",
+      "label": "Order",
+      "required": true,
+      "width": "Half",
+      "options": [
+        { "value": "", "label": "-- choose a customer first --" }
+      ],
+      "properties": {
+        "optionsSource": "sql",
+        "optionsType": "query",
+        "optionsConnectionKey": "DashboardDatabase",
+        "optionsDatabaseType": "SqlServer",
+        "optionsSql": "SELECT CAST(OrderId AS nvarchar(20)) AS Value, CONCAT(OrderNumber, ' - ', Status) AS Label FROM dbo.MF_Demo_Orders WHERE CustomerId = TRY_CONVERT(int, NULLIF(:customer_id, '')) ORDER BY OrderDate DESC, OrderId DESC",
+        "optionsDependsOn": ["customer_id"],
+        "optionsReloadOnChange": true
+      }
+    },
+    {
+      "key": "contact_email",
+      "type": "Email",
+      "label": "Contact email",
+      "required": true,
+      "width": "Half"
+    },
+    {
+      "key": "request_type",
+      "type": "Select",
+      "label": "Request type",
+      "required": true,
+      "width": "Half",
+      "options": [
+        { "value": "status", "label": "Order status" },
+        { "value": "change", "label": "Change request" },
+        { "value": "return", "label": "Return request" }
+      ]
+    },
+    {
+      "key": "notes",
+      "type": "Textarea",
+      "label": "Notes",
+      "required": false,
+      "width": "Full"
+    }
+  ],
+  "settings": {
+    "displayOnly": false,
+    "submitButtonText": "Send request",
+    "successMessage": "Your order request has been recorded.",
+    "databaseInsert": {
+      "enabled": true,
+      "connectionKey": "DashboardDatabase",
+      "databaseType": "SqlServer",
+      "insertSql": "INSERT INTO dbo.MF_Demo_OrderRequests (OrderId, ContactEmail, RequestType, Notes) VALUES (TRY_CONVERT(int, :order_id), :contact_email, :request_type, :notes);"
+    }
+  },
+  "_template": {
+    "name": "SQL Customer and Order Cascade",
+    "slug": "sql-customer-order-cascade-demo",
+    "description": "Reads customers and their related orders from SQL Server, reloads the Order dropdown when Customer changes, and inserts the submitted request into an application-owned table.",
+    "category": "Data and SQL",
+    "icon": "fas fa-database",
+    "version": "2.0.0",
+    "author": "MegaForm"
+  }
+}

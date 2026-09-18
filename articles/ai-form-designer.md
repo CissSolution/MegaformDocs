@@ -1,137 +1,70 @@
 # AI Form Designer
 
-The **AI Form Designer** is a chat assistant inside the MegaForm builder. You describe the form
-you need in plain English; the AI proposes fields, SQL bindings, layouts, and business rules as a
-staged set of operations you can review before applying.
+MegaForm AI Form Designer lets you create a form by describing what you need in everyday language.
+You can then continue the conversation to add fields, change the layout, improve validation, or
+adjust what happens after submission.
 
-## How it works
+The same experience is available on **DNN**, **Oqtane**, and **Umbraco**. The way you open MegaForm
+is different on each platform, but the create, preview, refine, and save workflow is consistent.
 
-```
-User prompt
-    │
-    ▼
-AI chat panel  →  system prompt + history
-    │
-    ▼
-Provider (OpenAI / Anthropic / OpenRouter / local OpenAI-compatible)
-    │
-    ▼
-Tool dispatcher  →  list_widgets / get_widget / list_sql_tables /
-                    get_table_columns / list_knowledge / find_cascade_pattern /
-                    propose_table_schema
-    │
-    ▼
-MegaForm AI Tools API (DNN / Oqtane)
-    │
-    ▼
-AI emits structured ops  →  staging card  →  Apply / Discard
-    │
-    ▼
-Builder schema mutates
-```
+## Before you start
 
-Key design decisions:
+1. Open **MegaForm > Settings > AI Settings**.
+2. Choose your AI provider.
+3. Enter the provider API key and select a model.
+4. Use **Test connection**, then save the settings.
 
-1. **Tool-use loop**, not a giant system prompt. The AI fetches widget schemas, SQL tables, and
-   knowledge entries on demand so the static prompt stays small and cache-friendly.
-2. **Structured ops**, not code. The AI emits JSON operations such as `add_field` or
-   `replace_form_schema`. You review them in a staging card before applying.
-3. **Browser-side dispatcher**. The actual DOM mutation happens locally; the AI is only the planner.
+Google Gemini, OpenAI, Anthropic, OpenRouter, and OpenAI-compatible providers are supported. A
+Gemini Flash model is a practical low-cost option for routine form creation and editing.
 
-## Entry points
+## Create a form with AI
 
-| Surface | How to open |
-|---|---|
-| Floating bubble | Click the AI bubble in the builder header |
-| `+ AI Form` | In the DB tab, pick tables and ask the AI to build a form from them |
-| `Build fields with AI` | One-click batch from selected SQL tables |
-| `Create DB Table` | Ask the AI to draft a `CREATE TABLE` for the current form |
-| Widget-drop watcher | Empty DataRepeater / DynamicLabel / DataGrid greets contextually |
+1. Open the MegaForm dashboard and choose **Create form**.
+2. Select **Create with AI**.
+3. Describe the form, its audience, and the information you need to collect.
+4. Review the live preview.
+5. Ask for any changes in the same conversation.
+6. Select **Save & Use Now** or open the result in the full builder.
 
-All entry points route through `window.MFAiChat.sendProgrammatic(text)` so history, error handling,
-and tool loops are consistent.
+For example:
 
-## Tools the AI can call
+> Create a customer support form with name, email, product, priority, message, screenshots, and a
+> consent checkbox. Send urgent requests to the support workflow.
 
-| Group | Tools |
-|---|---|
-| **Knowledge** | `list_kinds`, `list_knowledge`, `get_knowledge` |
-| **Widgets** | `list_widgets`, `get_widget` |
-| **Forms** | `list_forms`, `get_form` |
-| **SQL** | `list_sql_tables`, `get_table_columns` |
-| **Designers** | `list_designers`, `get_designer` |
-| **Patterns** | `find_cascade_pattern`, `propose_table_schema` |
+## Refine an existing form
 
-Tool results are capped at ~3 KB and arrays are sliced to 50 items to stay within model token
-budgets.
+Open a form in the builder and select **AI Designer**. Describe the change you want without
+recreating the form:
 
-## Knowledge base
+- "Add an appointment date and available time slot."
+- "Split this form into Contact details and Request details."
+- "Make phone optional and require either email or phone."
+- "Add a manager approval step for requests above $1,000."
+- "Translate the labels and messages into French."
 
-The AI's long-term memory is stored in `MF_AI_Knowledge`:
+The preview updates as the form changes. Continue asking for refinements until the form is ready,
+then save and publish it normally.
 
-| Column | Purpose |
-|---|---|
-| `Slug` | Unique identifier |
-| `Kind` | `widget`, `sql_sample`, `row_template`, `pager_template`, `form_pattern`, `designer`, `cascade_pattern`, `system_arch` |
-| `Title` / `Summary` | Shown when the AI lists knowledge |
-| `Body` | Full markdown/JSON content, fetched only when needed |
-| `Tags` | CSV filters |
-| `Examples` | JSON array of example ops |
-| `PortalId` | `NULL` = global; non-null = per-portal override |
-| `Source` | `megaform-builtin` (upgradable) or `customer` (preserved) |
+## Create forms from existing data
 
-Built-in entries ship with MegaForm upgrades via `MERGE` statements that only touch
-`Source='megaform-builtin'`, so your custom entries are never overwritten.
+When your site already contains business data, name the source in your request. MegaForm can help
+build a form around an available SQL table or an imported Umbraco Forms definition. Always review
+field mappings, validation, and submission behavior before publishing.
 
-Manage entries from the admin dashboard: **AI Knowledge Base**.
+- [Use Umbraco Forms data in MegaForm](umbraco-forms-data-source.md)
+- [Build forms from SQL tables](sql-table-forms-and-cascades.md)
 
-## Op vocabulary
+## Platform guides
 
-After the tool loop, the AI emits one or more ops:
+- [AI Form Designer on Umbraco](umbraco-ai-form-designer.md)
+- [AI Form Designer on Oqtane](oqtane-ai-form-designer.md)
+- [AI Form Designer on DNN](dnn-ai-form-designer.md)
 
-| Op | Effect |
-|---|---|
-| `add_field` | Add a new field |
-| `remove_field` | Remove a field by key |
-| `set_field_property` | Set a nested property (`path`, `value`) |
-| `set_field_sql` | Configure SQL options for a field |
-| `apply_dynlabel_preset` | Apply a DynamicLabel preset |
-| `set_form_meta` | Update title, description, submit button, success message |
-| `reorder_fields` | Reorder fields by key list |
-| `replace_form_schema` | Bulk overwrite the whole schema |
-| `set_field_image_unsplash` | Set an Unsplash image |
-| `add_subform_from_table` | Add a subform from a SQL table |
-| `add_field_from_column` | Add a field from a SQL column |
-| `save_form` | Trigger Save |
-| `chat_message` | Reply without changing the form |
+## Tips for better results
 
-The dispatcher normalizes legacy shapes automatically, so older prompts and model drift do not
-break the builder.
-
-## Writing effective prompts
-
-Good prompts are specific:
-
-- *"Create a contact form with full name, email, phone, and a dropdown for inquiry type."*
-- *"Build a golf score viewer: dropdown player → dropdown round → DataRepeater showing scores."*
-- *"Add a leave request form with start date, end date, reason textarea, and manager approval."*
-
-For SQL-backed forms, mention the table names or let the AI discover them with `list_sql_tables`.
-
-## Dev vs production mode
-
-When a `dev.lock` file is present on the server, the AI panel shows raw provider errors and
-thinking text. In production it shows friendly messages such as *"AI is busy right now. Please try
-again in a moment."*
-
-## Extending the AI
-
-To teach the AI about a new widget or pattern:
-
-1. Add a `MF_AI_Knowledge` row with the appropriate `Kind`.
-2. If it is a new widget, ensure the widget catalog lists the type.
-3. If it needs new data, add a method on `AiToolsController` (DNN and Oqtane) and register the tool
-   in `tools.ts`.
-4. If it needs a new operation, add a handler in `ops.ts` and advertise it in `listOpSchemas()`.
-
-For full architecture details, see `Docs/AI_FORM_DESIGN_ARCHITECTURE.md`.
+- State the purpose of the form and who will complete it.
+- List required fields and any fields that should be optional.
+- Mention approvals, notifications, confirmation messages, and redirects.
+- For multi-step forms, describe the desired sections in order.
+- Ask for one focused refinement at a time when polishing a complex form.
+- Test the published form as a visitor before making it available to everyone.

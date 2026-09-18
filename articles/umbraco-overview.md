@@ -1,6 +1,6 @@
-# MegaForm for Umbraco
+# MegaForm for Umbraco 13 and Later
 
-MegaForm adds a visual form workspace to Umbraco 17. Use it to create forms, publish them, review entries, automate follow-up actions, and manage access without leaving the Umbraco backoffice.
+MegaForm adds a visual form workspace to Umbraco 13, 14, 15, 16, 17, and 18. Use it to create forms, publish them, review entries, automate follow-up actions, and manage access without leaving the Umbraco backoffice.
 
 ![MegaForm dashboard in the Umbraco backoffice](../images/umbraco/01-backoffice-dashboard.png)
 
@@ -12,6 +12,8 @@ MegaForm adds a visual form workspace to Umbraco 17. Use it to create forms, pub
 - Search, filter, and review submitted entries.
 - Run simple submission actions or advanced BPMN workflows.
 - Reuse option lists and named database sources across forms.
+- Use existing SQL tables for option lists, related fields, and controlled submission targets.
+- Import an Umbraco Forms definition and work with its existing submissions.
 - Translate the MegaForm interface and form labels.
 - Ask AI Designer to prepare a form plan that you can review before applying.
 - Create a complete new form from a plain-language AI prompt.
@@ -45,12 +47,31 @@ Sign in to the Umbraco backoffice and select **MegaForm** from the top navigatio
 5. Open the public form or select it on an Umbraco content page.
 6. Review new entries in **Entries** or **Submissions**.
 
+## Version compatibility
+
+One `MegaForm.Umbraco` NuGet package supports Umbraco 13 and later. The package selects the
+appropriate runtime and backoffice integration for the installed Umbraco version. After an
+Umbraco upgrade, update MegaForm to the latest compatible release and verify the dashboard,
+builder, published forms, submissions, and configured integrations on a staging site.
+
+## Place a form on a content page
+
+Add the **MegaForm Form Picker** property editor to a Document Type or Block element. Content
+editors can then select the form on the content item and publish the page without editing a
+template. MegaForm also supports server-side rendering from Razor when a form ID is already known.
+
+See [Publish and place a form](umbraco-place-form.md) for the supported picker, Block Grid, and
+Razor options.
+
 ## Next steps
 
 - [Install and activate MegaForm](umbraco-installation.md)
 - [Create a form](umbraco-create-form.md)
 - [Create a form with AI](umbraco-create-with-ai.md)
+- [Create and refine a form with AI](umbraco-ai-form-designer.md)
 - [Use the form builder](umbraco-form-builder.md)
 - [Publish and place a form](umbraco-place-form.md)
+- [Use Umbraco Forms data in MegaForm](umbraco-forms-data-source.md)
+- [Build forms from SQL tables](sql-table-forms-and-cascades.md)
 - [Configure after-submission behavior](umbraco-after-submission.md)
 - [Inspect workflow history and retry](umbraco-workflow-retry.md)

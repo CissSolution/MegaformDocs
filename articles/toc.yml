@@ -1,5 +1,7 @@
 - name: Using MegaForm on Oqtane
   items:
+    - name: AI Form Designer
+      href: oqtane-ai-form-designer.md
     - name: Create a Form on Oqtane
       href: oqtane-create-form.md
     - name: From a Blank Page to a Working Form
@@ -44,7 +46,7 @@
       href: storage-options.md
     - name: Multi-language
       href: multi-language.md
-    - name: AI Form Designer
+    - name: AI Form Designer Overview
       href: ai-form-designer.md
     - name: Configuring the AI Assistant
       href: ai-configuration.md
@@ -52,6 +54,8 @@
       href: ai-prompts-form-design.md
 - name: Using MegaForm on DNN
   items:
+    - name: AI Form Designer
+      href: dnn-ai-form-designer.md
     - name: Managing MegaForm from the Persona Bar
       href: dnn-persona-bar.md
 - name: Using MegaForm on Umbraco
@@ -64,6 +68,8 @@
       href: umbraco-create-form.md
     - name: Create a Form with AI
       href: umbraco-create-with-ai.md
+    - name: AI Form Designer Walkthrough
+      href: umbraco-ai-form-designer.md
     - name: Form Templates
       href: umbraco-form-templates.md
     - name: Form Builder
@@ -90,6 +96,10 @@
       href: umbraco-ai-designer.md
     - name: Prevalues and Data Sources
       href: umbraco-data-sources.md
+    - name: Umbraco Forms Data Source
+      href: umbraco-forms-data-source.md
+    - name: SQL Tables and Cascading Forms
+      href: sql-table-forms-and-cascades.md
     - name: Security
       href: umbraco-security.md
     - name: Languages and Global Settings

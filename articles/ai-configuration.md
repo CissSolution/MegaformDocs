@@ -16,15 +16,15 @@ Open **Form Dashboard → Settings → AI Settings**:
 | Field | What it does |
 |---|---|
 | **Enable AI Assistant** | Master switch. When on, the AI chatbot appears in the Form Builder and the *Create with AI* button appears on the dashboard. Turn it off to hide AI entirely. |
-| **Provider** | Pick your AI provider — **OpenAI**, **Anthropic (Claude)**, **OpenRouter**, **Kimi (Moonshot)**, or any **OpenAI-compatible** endpoint. Choosing a provider auto-fills the Base URL and a default model. |
-| **Base URL** | The provider's API endpoint (e.g. `https://api.openai.com/v1`). Leave blank to use the provider default. Point this at a local/self-hosted OpenAI-compatible server if you run your own. |
+| **Provider** | Pick your AI provider: **Google Gemini**, **OpenAI**, **Anthropic (Claude)**, **OpenRouter**, **Kimi (Moonshot)**, or an **OpenAI-compatible** endpoint. Choosing a provider fills in its default Base URL and model. |
+| **Base URL** | The provider API endpoint. Keep the supplied value for a standard provider, or change it when you use a compatible gateway or self-hosted service. |
 | **Model** | The model to use (e.g. `gpt-4o`). Leave blank to use the provider default. |
 | **API Key** | Your provider API key. It is **stored on the server** and only ever returned to administrators. The field is masked; click the 👁 icon to reveal it while typing. |
 
 ## Steps
 
 1. Toggle **Enable AI Assistant** on.
-2. Choose your **Provider** — the Base URL and Model fill in automatically. Adjust the model if
+2. Choose your **Provider**. The Base URL and Model fill in automatically. Adjust the model if
    you want a different one.
 3. Paste your **API Key**. Use the **Get … API key →** link under the field to create one on the
    provider's site if you don't have one yet.
@@ -32,8 +32,8 @@ Open **Form Dashboard → Settings → AI Settings**:
    *OK* or a clear error.
 5. Click **Save AI Settings**.
 
-That's it — open any form in the Form Builder and the AI bubble is ready, or use **✨ Create
-with AI** on the dashboard.
+Open any form in the Form Builder and select **AI Designer**, or use **Create with AI** on the
+dashboard.
 
 ## Good to know
 
@@ -48,8 +48,8 @@ with AI** on the dashboard.
 
 ## Choosing a model
 
-`gpt-4o` (OpenAI) and `claude-*` (Anthropic) both work well for form generation. Larger,
-more capable models produce better multi-field forms, premium layouts, and SQL-aware designs;
-smaller models are cheaper but may need more precise prompts. See
+Gemini Flash is a practical free or low-cost choice for routine form creation and refinement.
+OpenAI and Anthropic models also work well for complex multi-field forms. Smaller models may need
+more precise prompts. See
 [AI Prompts for Form Design](ai-prompts-form-design.md) for prompt patterns that get good
 results on any model.

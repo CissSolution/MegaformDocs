@@ -7,6 +7,7 @@ on:
       - 'articles/**'
       - 'api/**'
       - 'images/**'
+      - 'samples/**'
       - 'index.md'
       - 'toc.yml'
       - 'docfx.json'
