@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Build Forms from SQL Tables | MegaForm Documentation </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Build Forms from SQL Tables | MegaForm Documentation ">
+      
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/main/articles/sql-table-forms-and-cascades.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="MegaForm">
+            MegaForm
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="build-forms-from-sql-tables">Build Forms from SQL Tables</h1>
+
+<p>MegaForm can use existing SQL tables as option sources, read-only views, and submit targets. The
+database remains owned by the application. MegaForm does not migrate a customer table or infer
+destructive changes.</p>
+<h2 id="prepare-a-named-connection">Prepare a named connection</h2>
+<p>Configure a named connection such as <code>DashboardDatabase</code> in the host application. Grant the
+minimum permissions needed by the form:</p>
+<ul>
+<li><code>SELECT</code> for dropdowns and read-only views.</li>
+<li><code>INSERT</code> or execute permission for the chosen submit target.</li>
+<li>No schema modification permission is required for normal form execution.</li>
+</ul>
+<h2 id="create-a-cascading-relationship-form">Create a cascading relationship form</h2>
+<p>Download the ready-to-run sample files:</p>
+<ul>
+<li><a href="../samples/sql/megaform-sql-cascade-demo.sql">SQL Server demo schema and data</a></li>
+<li><a href="../samples/SqlCustomerOrderCascadeDemo.json">MegaForm customer/order cascade template</a></li>
+</ul>
+<p>Run the SQL script, then import the JSON form. The Customer field reads <code>MF_Demo_Customers</code>. The
+Order field reloads from <code>MF_Demo_Orders</code> whenever <code>customer_id</code> changes:</p>
+<pre><code class="lang-json">{
+  &quot;optionsSource&quot;: &quot;sql&quot;,
+  &quot;optionsConnectionKey&quot;: &quot;DashboardDatabase&quot;,
+  &quot;optionsSql&quot;: &quot;SELECT CAST(OrderId AS nvarchar(20)) AS Value, OrderNumber AS Label FROM dbo.MF_Demo_Orders WHERE CustomerId = TRY_CONVERT(int, NULLIF(:customer_id, ''))&quot;,
+  &quot;optionsDependsOn&quot;: [&quot;customer_id&quot;],
+  &quot;optionsReloadOnChange&quot;: true
+}
+</code></pre>
+<p>The submit action inserts one row into <code>MF_Demo_OrderRequests</code>. Values are parameterized; do not
+build SQL by concatenating submitted text.</p>
+<h2 id="relational-cascade-behavior">Relational cascade behavior</h2>
+<p><code>ON DELETE CASCADE</code> in the sample is a database foreign-key rule. MegaForm neither emulates nor
+overrides it. Use cascade delete only where deleting a parent should intentionally delete every
+child row. For audit or regulated records, prefer restrictive foreign keys or soft deletion.</p>
+<h2 id="generate-from-sql-with-ai">Generate from SQL with AI</h2>
+<p>Ask the AI Designer to build a form from named tables. MegaForm reviews the available schema and
+proposes fields, dependent options, and write mappings for you to inspect before saving. Confirm
+all table names, column mappings, validation, and permissions before publishing the form.</p>
+<p>Example prompt:</p>
+<blockquote>
+<p>Build an order support form from MF_Demo_Customers, MF_Demo_Orders, and
+MF_Demo_OrderRequests. Customer should filter Order. Write the result to the request table.</p>
+</blockquote>
+<h2 id="operational-guidance">Operational guidance</h2>
+<ul>
+<li>Use a view or stored procedure when the form should not know the physical table layout.</li>
+<li>Whitelist displayed columns and avoid returning secrets or internal identifiers unnecessarily.</li>
+<li>Keep submit-time writes idempotent when a visitor may retry.</li>
+<li>Test connection failures. MegaForm retains its canonical submission when an optional external
+write fails.</li>
+</ul>
+
+</article>
+
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          MegaForm — forms, submissions, workflows & AI. © 2026 MegaForm.
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

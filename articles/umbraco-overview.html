@@ -2,9 +2,9 @@
 <html>
   <head>
     <meta charset="utf-8">
-      <title>MegaForm for Umbraco | MegaForm Documentation </title>
+      <title>MegaForm for Umbraco 13 and Later | MegaForm Documentation </title>
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <meta name="title" content="MegaForm for Umbraco | MegaForm Documentation ">
+      <meta name="title" content="MegaForm for Umbraco 13 and Later | MegaForm Documentation ">
       
       
       <link rel="icon" href="../favicon.ico">
@@ -85,9 +85,9 @@
         </div>
 
         <article data-uid="">
-<h1 id="megaform-for-umbraco">MegaForm for Umbraco</h1>
+<h1 id="megaform-for-umbraco-13-and-later">MegaForm for Umbraco 13 and Later</h1>
 
-<p>MegaForm adds a visual form workspace to Umbraco 17. Use it to create forms, publish them, review entries, automate follow-up actions, and manage access without leaving the Umbraco backoffice.</p>
+<p>MegaForm adds a visual form workspace to Umbraco 13, 14, 15, 16, 17, and 18. Use it to create forms, publish them, review entries, automate follow-up actions, and manage access without leaving the Umbraco backoffice.</p>
 <p><img src="../images/umbraco/01-backoffice-dashboard.png" alt="MegaForm dashboard in the Umbraco backoffice"></p>
 <h2 id="what-you-can-do">What you can do</h2>
 <ul>
@@ -97,6 +97,8 @@
 <li>Search, filter, and review submitted entries.</li>
 <li>Run simple submission actions or advanced BPMN workflows.</li>
 <li>Reuse option lists and named database sources across forms.</li>
+<li>Use existing SQL tables for option lists, related fields, and controlled submission targets.</li>
+<li>Import an Umbraco Forms definition and work with its existing submissions.</li>
 <li>Translate the MegaForm interface and form labels.</li>
 <li>Ask AI Designer to prepare a form plan that you can review before applying.</li>
 <li>Create a complete new form from a plain-language AI prompt.</li>
@@ -160,13 +162,27 @@
 <li>Open the public form or select it on an Umbraco content page.</li>
 <li>Review new entries in <strong>Entries</strong> or <strong>Submissions</strong>.</li>
 </ol>
+<h2 id="version-compatibility">Version compatibility</h2>
+<p>One <code>MegaForm.Umbraco</code> NuGet package supports Umbraco 13 and later. The package selects the
+appropriate runtime and backoffice integration for the installed Umbraco version. After an
+Umbraco upgrade, update MegaForm to the latest compatible release and verify the dashboard,
+builder, published forms, submissions, and configured integrations on a staging site.</p>
+<h2 id="place-a-form-on-a-content-page">Place a form on a content page</h2>
+<p>Add the <strong>MegaForm Form Picker</strong> property editor to a Document Type or Block element. Content
+editors can then select the form on the content item and publish the page without editing a
+template. MegaForm also supports server-side rendering from Razor when a form ID is already known.</p>
+<p>See <a href="umbraco-place-form.html">Publish and place a form</a> for the supported picker, Block Grid, and
+Razor options.</p>
 <h2 id="next-steps">Next steps</h2>
 <ul>
 <li><a href="umbraco-installation.html">Install and activate MegaForm</a></li>
 <li><a href="umbraco-create-form.html">Create a form</a></li>
 <li><a href="umbraco-create-with-ai.html">Create a form with AI</a></li>
+<li><a href="umbraco-ai-form-designer.html">Create and refine a form with AI</a></li>
 <li><a href="umbraco-form-builder.html">Use the form builder</a></li>
 <li><a href="umbraco-place-form.html">Publish and place a form</a></li>
+<li><a href="umbraco-forms-data-source.html">Use Umbraco Forms data in MegaForm</a></li>
+<li><a href="sql-table-forms-and-cascades.html">Build forms from SQL tables</a></li>
 <li><a href="umbraco-after-submission.html">Configure after-submission behavior</a></li>
 <li><a href="umbraco-workflow-retry.html">Inspect workflow history and retry</a></li>
 </ul>

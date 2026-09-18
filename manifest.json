@@ -847,6 +847,16 @@
     },
     {
       "type": "Conceptual",
+      "source_relative_path": "articles/dnn-ai-form-designer.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/dnn-ai-form-designer.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
       "source_relative_path": "articles/dnn-persona-bar.md",
       "output": {
         ".html": {
@@ -997,6 +1007,16 @@
     },
     {
       "type": "Conceptual",
+      "source_relative_path": "articles/oqtane-ai-form-designer.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/oqtane-ai-form-designer.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
       "source_relative_path": "articles/oqtane-consumer.md",
       "output": {
         ".html": {
@@ -1097,6 +1117,16 @@
     },
     {
       "type": "Conceptual",
+      "source_relative_path": "articles/sql-table-forms-and-cascades.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/sql-table-forms-and-cascades.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
       "source_relative_path": "articles/standalone-host.md",
       "output": {
         ".html": {
@@ -1180,6 +1210,16 @@
     },
     {
       "type": "Conceptual",
+      "source_relative_path": "articles/umbraco-ai-form-designer.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/umbraco-ai-form-designer.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
       "source_relative_path": "articles/umbraco-controls-widgets.md",
       "output": {
         ".html": {
@@ -1234,6 +1274,16 @@
       "output": {
         ".html": {
           "relative_path": "articles/umbraco-form-templates.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/umbraco-forms-data-source.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/umbraco-forms-data-source.html"
         }
       },
       "version": ""
@@ -2140,6 +2190,26 @@
     },
     {
       "type": "Resource",
+      "source_relative_path": "images/umbraco-ai-create-and-refine.gif",
+      "output": {
+        "resource": {
+          "relative_path": "images/umbraco-ai-create-and-refine.gif"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/umbraco-forms-import-and-submissions.mp4",
+      "output": {
+        "resource": {
+          "relative_path": "images/umbraco-forms-import-and-submissions.mp4"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
       "source_relative_path": "images/umbraco/01-backoffice-dashboard.png",
       "output": {
         "resource": {
@@ -2794,6 +2864,26 @@
       "output": {
         ".html": {
           "relative_path": "index.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "samples/SqlCustomerOrderCascadeDemo.json",
+      "output": {
+        "resource": {
+          "relative_path": "samples/SqlCustomerOrderCascadeDemo.json"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "samples/sql/megaform-sql-cascade-demo.sql",
+      "output": {
+        "resource": {
+          "relative_path": "samples/sql/megaform-sql-cascade-demo.sql"
         }
       },
       "version": ""

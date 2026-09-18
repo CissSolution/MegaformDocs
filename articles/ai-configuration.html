@@ -109,11 +109,11 @@ you choose.</p>
 </tr>
 <tr>
 <td><strong>Provider</strong></td>
-<td>Pick your AI provider — <strong>OpenAI</strong>, <strong>Anthropic (Claude)</strong>, <strong>OpenRouter</strong>, <strong>Kimi (Moonshot)</strong>, or any <strong>OpenAI-compatible</strong> endpoint. Choosing a provider auto-fills the Base URL and a default model.</td>
+<td>Pick your AI provider: <strong>Google Gemini</strong>, <strong>OpenAI</strong>, <strong>Anthropic (Claude)</strong>, <strong>OpenRouter</strong>, <strong>Kimi (Moonshot)</strong>, or an <strong>OpenAI-compatible</strong> endpoint. Choosing a provider fills in its default Base URL and model.</td>
 </tr>
 <tr>
 <td><strong>Base URL</strong></td>
-<td>The provider's API endpoint (e.g. <code>https://api.openai.com/v1</code>). Leave blank to use the provider default. Point this at a local/self-hosted OpenAI-compatible server if you run your own.</td>
+<td>The provider API endpoint. Keep the supplied value for a standard provider, or change it when you use a compatible gateway or self-hosted service.</td>
 </tr>
 <tr>
 <td><strong>Model</strong></td>
@@ -128,7 +128,7 @@ you choose.</p>
 <h2 id="steps">Steps</h2>
 <ol>
 <li>Toggle <strong>Enable AI Assistant</strong> on.</li>
-<li>Choose your <strong>Provider</strong> — the Base URL and Model fill in automatically. Adjust the model if
+<li>Choose your <strong>Provider</strong>. The Base URL and Model fill in automatically. Adjust the model if
 you want a different one.</li>
 <li>Paste your <strong>API Key</strong>. Use the <strong>Get … API key →</strong> link under the field to create one on the
 provider's site if you don't have one yet.</li>
@@ -136,8 +136,8 @@ provider's site if you don't have one yet.</li>
 <em>OK</em> or a clear error.</li>
 <li>Click <strong>Save AI Settings</strong>.</li>
 </ol>
-<p>That's it — open any form in the Form Builder and the AI bubble is ready, or use <strong>✨ Create
-with AI</strong> on the dashboard.</p>
+<p>Open any form in the Form Builder and select <strong>AI Designer</strong>, or use <strong>Create with AI</strong> on the
+dashboard.</p>
 <h2 id="good-to-know">Good to know</h2>
 <ul>
 <li><strong>Security.</strong> The API key never leaves your server except back to signed-in administrators;
@@ -150,9 +150,9 @@ control of usage and spend.</li>
 it.</li>
 </ul>
 <h2 id="choosing-a-model">Choosing a model</h2>
-<p><code>gpt-4o</code> (OpenAI) and <code>claude-*</code> (Anthropic) both work well for form generation. Larger,
-more capable models produce better multi-field forms, premium layouts, and SQL-aware designs;
-smaller models are cheaper but may need more precise prompts. See
+<p>Gemini Flash is a practical free or low-cost choice for routine form creation and refinement.
+OpenAI and Anthropic models also work well for complex multi-field forms. Smaller models may need
+more precise prompts. See
 <a href="ai-prompts-form-design.html">AI Prompts for Form Design</a> for prompt patterns that get good
 results on any model.</p>
 

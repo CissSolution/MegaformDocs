@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Use Umbraco Forms Data in MegaForm | MegaForm Documentation </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Use Umbraco Forms Data in MegaForm | MegaForm Documentation ">
+      
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/CissSolution/MegaformDocs/blob/main/articles/umbraco-forms-data-source.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="MegaForm">
+            MegaForm
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="use-umbraco-forms-data-in-megaform">Use Umbraco Forms Data in MegaForm</h1>
+
+<p>MegaForm can use an existing Umbraco Forms form and its submissions. This lets a site adopt
+MegaForm gradually while keeping useful form definitions and historical records.</p>
+<h2 id="requirements">Requirements</h2>
+<ul>
+<li>Umbraco Forms and MegaForm must be installed in the same Umbraco site.</li>
+<li>Your backoffice account must be allowed to view the source form and create MegaForm forms.</li>
+<li>Back up the site before importing production data.</li>
+</ul>
+<h2 id="import-an-umbraco-forms-form">Import an Umbraco Forms form</h2>
+<ol>
+<li>Open <strong>MegaForm &gt; Dashboard</strong>.</li>
+<li>Open the <strong>More</strong> menu and select <strong>Import Umbraco Forms</strong>.</li>
+<li>Choose the source form.</li>
+<li>Select <strong>Preview</strong> to review fields, validation, rules, and workflows.</li>
+<li>Choose whether to copy existing submissions.</li>
+<li>Choose whether new MegaForm submissions should also be written to Umbraco Forms.</li>
+<li>Select <strong>Import draft</strong>.</li>
+<li>Open the imported draft in the builder, review it, and publish when ready.</li>
+</ol>
+<video controls muted playsinline style="max-width: 100%; height: auto;">
+  <source src="../images/umbraco-forms-import-and-submissions.mp4" type="video/mp4">
+  Your browser does not support embedded video. Download the
+  <a href="../images/umbraco-forms-import-and-submissions.mp4">Umbraco Forms import demo</a>.
+</video>
+<h2 id="review-submissions">Review submissions</h2>
+<p>Open the imported form and select <strong>Entries</strong>. Choose the Umbraco Forms source to browse current
+records, use the available filters, and open an entry for details. For a migration, you can instead
+copy a selected set of records into MegaForm during import.</p>
+<h2 id="create-a-related-form-with-ai">Create a related form with AI</h2>
+<p>After importing the source form, open <strong>Create with AI</strong> or <strong>AI Designer</strong> and describe what you
+want to reuse or change. For example:</p>
+<blockquote>
+<p>Create a shorter event registration form based on the imported Annual Conference form. Keep the
+attendee contact fields, remove accommodation questions, and add a dietary requirements field.</p>
+</blockquote>
+<p>Review the result in the form canvas, verify field mappings and submission behavior, then save it
+as a new form.</p>
+<h2 id="choose-the-right-submission-mode">Choose the right submission mode</h2>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>Use it when</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Copy submissions</td>
+<td>Migrating or archiving records</td>
+<td>Selected records are copied into MegaForm</td>
+</tr>
+<tr>
+<td>Read current records</td>
+<td>Running both products together</td>
+<td>MegaForm displays current Umbraco Forms entries</td>
+</tr>
+<tr>
+<td>Write new submissions to both</td>
+<td>Keeping a shared operational record set</td>
+<td>New MegaForm entries are also added to Umbraco Forms</td>
+</tr>
+</tbody>
+</table>
+<p>Start with a test form and a small submission set. Confirm required fields, uploaded files,
+workflow results, and entry counts before enabling the integration on a production form.</p>
+<p>For additional Umbraco Forms record guidance, see
+<a href="https://docs.umbraco.com/umbraco-forms/developer/working-with-data">Working with Umbraco Forms record data</a>.</p>
+
+</article>
+
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          MegaForm — forms, submissions, workflows & AI. © 2026 MegaForm.
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
