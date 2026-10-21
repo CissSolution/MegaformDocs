@@ -1,0 +1,76 @@
+{
+  "$schema": "https://marketplace.umbraco.com/umbraco-marketplace-schema.json",
+  "Title": "MegaForm for Umbraco",
+  "Description": "Visual form and application builder for Umbraco with a guided wizard, AI-assisted editing, reusable templates, conditional logic, multilingual forms, submissions, SQL data sources, PDF widgets, and workflow automation. Includes native Umbraco Member and Member Group actions, workflow retry history, and host-managed C# after-submit scripting.",
+  "Category": "Editor Tools",
+  "AlternateCategory": "Developer Tools",
+  "PackageType": "Package",
+  "LicenseTypes": [
+    "Purchase"
+  ],
+  "Tags": [
+    "form builder",
+    "forms",
+    "survey",
+    "workflow",
+    "submissions",
+    "ai",
+    "google gemini",
+    "gemini flash",
+    "multi-step",
+    "headless",
+    "bellissima",
+    "umbraco 13",
+    "umbraco 14",
+    "umbraco 15",
+    "umbraco 16",
+    "umbraco 17",
+    "umbraco 18",
+    "megaform",
+    "conditional logic",
+    "payments",
+    "templates",
+    "online gallery",
+    "multilingual",
+    "wizard"
+  ],
+  "AuthorDetails": {
+    "Name": "MegaForm Team",
+    "Url": "https://github.com/CissSolution/MegaformDocs",
+    "SyncContributorsFromRepository": true
+  },
+  "DocumentationUrl": "https://um.dnndefender.com/documentation/",
+  "IssueTrackerUrl": "https://github.com/CissSolution/MegaformDocs/issues",
+  "DiscussionForumUrl": "https://github.com/CissSolution/MegaformDocs/discussions",
+  "Screenshots": [
+    {
+      "ImageUrl": "https://um.dnndefender.com/media/documentation/reference/field-cards.webp",
+      "Caption": "Configure form fields in the visual builder"
+    },
+    {
+      "ImageUrl": "https://um.dnndefender.com/media/documentation/reference/composite-address.webp",
+      "Caption": "Reusable composite address fields"
+    },
+    {
+      "ImageUrl": "https://um.dnndefender.com/media/documentation/reference/widget-pdf-form.webp",
+      "Caption": "PDF form widget in the builder"
+    },
+    {
+      "ImageUrl": "https://um.dnndefender.com/media/documentation/reference/workflow-add-user.webp",
+      "Caption": "Create a native Umbraco Member in a submission workflow"
+    },
+    {
+      "ImageUrl": "https://um.dnndefender.com/media/documentation/reference/workflow-add-role.webp",
+      "Caption": "Create a native Umbraco Member Group"
+    },
+    {
+      "ImageUrl": "https://um.dnndefender.com/media/documentation/reference/workflow-database.webp",
+      "Caption": "Configure a workflow database operation"
+    },
+    {
+      "ImageUrl": "https://um.dnndefender.com/media/documentation/sql-server-submit.webp",
+      "Caption": "Successful browser submission on the SQL Server verification site"
+    }
+  ],
+  "VersionDependencyMode": "SemVer"
+}

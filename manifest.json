@@ -2901,6 +2901,26 @@
         }
       },
       "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "umbraco-marketplace-readme.md",
+      "output": {
+        "resource": {
+          "relative_path": "umbraco-marketplace-readme.md"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "umbraco-marketplace.json",
+      "output": {
+        "resource": {
+          "relative_path": "umbraco-marketplace.json"
+        }
+      },
+      "version": ""
     }
   ],
   "groups": [
