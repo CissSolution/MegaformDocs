@@ -16,6 +16,7 @@
           "*.md"
         ],
         "exclude": [
+          "umbraco-marketplace-readme.md",
           "articles/automation-fraud-check.md",
           "articles/automation-field-encryption.md",
           "articles/automation-realtime-pricing.md",
@@ -27,6 +28,12 @@
       }
     ],
     "resource": [
+      {
+        "files": [
+          "umbraco-marketplace.json",
+          "umbraco-marketplace-readme.md"
+        ]
+      },
       {
         "files": [
           "images/**"

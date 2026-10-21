@@ -11,6 +11,8 @@ on:
       - 'index.md'
       - 'toc.yml'
       - 'docfx.json'
+      - 'umbraco-marketplace.json'
+      - 'umbraco-marketplace-readme.md'
       - '.github/workflows/docs.yml'
   workflow_dispatch:
 
