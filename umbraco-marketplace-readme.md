@@ -56,5 +56,3 @@ SQL Server installation, ordinary submissions, direct-table submissions, and Uni
 MegaForm is a **Purchase** package. Production deployments require a purchased license, activated through **MegaForm > Settings > License**. The customer NuGet package contains no activation license file.
 
 Read the [Umbraco handbook](https://um.dnndefender.com/documentation/) or report a reproducible problem in the [issue tracker](https://github.com/CissSolution/MegaformDocs/issues).
-
-For product enquiries, licensing and support, contact [daoa@dnndefender.com](mailto:daoa@dnndefender.com).

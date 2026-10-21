@@ -37,29 +37,12 @@
   "AuthorDetails": {
     "Name": "MegaForm Team",
     "Url": "https://github.com/CissSolution/MegaformDocs",
-    "SyncContributorsFromRepository": true,
-    "Description": "MegaForm product team. Contact: daoa@dnndefender.com."
+    "SyncContributorsFromRepository": true
   },
   "DocumentationUrl": "https://um.dnndefender.com/documentation/",
   "IssueTrackerUrl": "https://github.com/CissSolution/MegaformDocs/issues",
   "DiscussionForumUrl": "https://github.com/CissSolution/MegaformDocs/discussions",
   "Screenshots": [
-    {
-      "ImageUrl": "https://cisssolution.github.io/MegaformDocs/images/umbraco/marketplace/template-gallery.jpg",
-      "Caption": "Explore 82 live form templates in the Umbraco demo gallery"
-    },
-    {
-      "ImageUrl": "https://cisssolution.github.io/MegaformDocs/images/umbraco/marketplace/ai-assistant-live-preview.jpg",
-      "Caption": "AI Assistant: describe a form in English, review the generated form and save it"
-    },
-    {
-      "ImageUrl": "https://cisssolution.github.io/MegaformDocs/images/umbraco/marketplace/form-wizard.jpg",
-      "Caption": "Create a form with the guided wizard and configure its fields"
-    },
-    {
-      "ImageUrl": "https://cisssolution.github.io/MegaformDocs/images/umbraco/marketplace/visual-form-builder.jpg",
-      "Caption": "Edit a template in the visual builder with fields, layouts and widgets"
-    },
     {
       "ImageUrl": "https://um.dnndefender.com/media/documentation/reference/field-cards.webp",
       "Caption": "Configure form fields in the visual builder"

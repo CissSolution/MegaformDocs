@@ -2361,46 +2361,6 @@
     },
     {
       "type": "Resource",
-      "source_relative_path": "images/umbraco/marketplace/ai-assistant-live-preview.jpg",
-      "output": {
-        "resource": {
-          "relative_path": "images/umbraco/marketplace/ai-assistant-live-preview.jpg"
-        }
-      },
-      "version": ""
-    },
-    {
-      "type": "Resource",
-      "source_relative_path": "images/umbraco/marketplace/form-wizard.jpg",
-      "output": {
-        "resource": {
-          "relative_path": "images/umbraco/marketplace/form-wizard.jpg"
-        }
-      },
-      "version": ""
-    },
-    {
-      "type": "Resource",
-      "source_relative_path": "images/umbraco/marketplace/template-gallery.jpg",
-      "output": {
-        "resource": {
-          "relative_path": "images/umbraco/marketplace/template-gallery.jpg"
-        }
-      },
-      "version": ""
-    },
-    {
-      "type": "Resource",
-      "source_relative_path": "images/umbraco/marketplace/visual-form-builder.jpg",
-      "output": {
-        "resource": {
-          "relative_path": "images/umbraco/marketplace/visual-form-builder.jpg"
-        }
-      },
-      "version": ""
-    },
-    {
-      "type": "Resource",
       "source_relative_path": "images/umbraco/umbraco-ai-create-form.gif",
       "output": {
         "resource": {
