@@ -2,6 +2,21 @@
 
 MegaForm adds a visual form workspace to Umbraco 13, 14, 15, 16, 17, and 18. Use it to create forms, publish them, review entries, automate follow-up actions, and manage access without leaving the Umbraco backoffice.
 
+## Umbraco demo website
+
+The Umbraco demonstration website is [um.dnndefender.com](https://um.dnndefender.com/). Explore the [template gallery](https://um.dnndefender.com/template-gallery/), [working examples](https://um.dnndefender.com/examples/) and [native English handbook](https://um.dnndefender.com/documentation/).
+
+The handbook includes recorded GIF walkthroughs:
+
+- [Create a form with the wizard](https://um.dnndefender.com/documentation/create-with-wizard/)
+- [Create a form with AI](https://um.dnndefender.com/documentation/create-with-ai/)
+- [Choose a template and edit it](https://um.dnndefender.com/documentation/edit-template/)
+- [Configure shared prevalue sources](https://um.dnndefender.com/documentation/prevalue-sources/)
+- [Copy a workflow to another form](https://um.dnndefender.com/documentation/copy-workflow/)
+- [Diagnose and retry a failed workflow](https://um.dnndefender.com/documentation/retry-workflow/)
+
+For data and automation, try the [SQL table example](https://um.dnndefender.com/examples/sql-table/), [PDF form example](https://um.dnndefender.com/examples/pdf-forms/) and [C# after-submit example](https://um.dnndefender.com/examples/after-submit-csharp/). Use fictional data when trying a demonstration form.
+
 ![MegaForm dashboard in the Umbraco backoffice](../images/umbraco/01-backoffice-dashboard.png)
 
 ## What you can do

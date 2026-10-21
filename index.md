@@ -1,5 +1,7 @@
 # MegaForm SDK
 
+Looking for MegaForm in Umbraco? Start with the [Umbraco guide](articles/umbraco-overview.md), visit the [Umbraco demo website](https://um.dnndefender.com/), or explore its [template gallery](https://um.dnndefender.com/template-gallery/) and [native handbook with GIF walkthroughs](https://um.dnndefender.com/documentation/).
+
 **MegaForm SDK** is a thin, stable, host-agnostic facade over the MegaForm engine. It lets
 your own code — an Oqtane module, a DNN Razor Host script, a background job, or any .NET
 application — work with MegaForm **forms**, **submissions**, and **uploaded files**
